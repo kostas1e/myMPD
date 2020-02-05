@@ -213,6 +213,8 @@ void default_mpd_state(t_mpd_state *mpd_state) {
     mpd_state->love_message = sdsempty();
     mpd_state->taglist = sdsempty();
     mpd_state->searchtaglist = sdsempty();
+    mpd_state->searchtidaltaglist = sdsempty();
+    mpd_state->searchqobuztaglist = sdsempty();
     mpd_state->browsetaglist = sdsempty();
     mpd_state->mpd_host = sdsempty();
     mpd_state->mpd_port = 0;
@@ -220,6 +222,8 @@ void default_mpd_state(t_mpd_state *mpd_state) {
     reset_t_tags(&mpd_state->mpd_tag_types);
     reset_t_tags(&mpd_state->mympd_tag_types);
     reset_t_tags(&mpd_state->search_tag_types);
+    reset_t_tags(&mpd_state->search_tidal_tag_types);
+    reset_t_tags(&mpd_state->search_qobuz_tag_types);
     reset_t_tags(&mpd_state->browse_tag_types);
 }
 
@@ -234,6 +238,8 @@ void free_mpd_state(t_mpd_state *mpd_state) {
     sdsfree(mpd_state->love_message);
     sdsfree(mpd_state->taglist);
     sdsfree(mpd_state->searchtaglist);
+    sdsfree(mpd_state->searchtidaltaglist);
+    sdsfree(mpd_state->searchqobuztaglist);
     sdsfree(mpd_state->browsetaglist);
     sdsfree(mpd_state->mpd_host);
     sdsfree(mpd_state->mpd_pass);

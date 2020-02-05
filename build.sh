@@ -158,7 +158,7 @@ buildrelease() {
   JSSRCFILES="htdocs/js/api.js htdocs/js/browse.js htdocs/js/locale.js htdocs/js/log.js htdocs/js/misc.js htdocs/js/mympd.js"
   JSSRCFILES="$JSSRCFILES htdocs/js/notification.js htdocs/js/playlists.js htdocs/js/popover.js htdocs/js/queue.js"
   JSSRCFILES="$JSSRCFILES htdocs/js/search.js htdocs/js/settings.js htdocs/js/song.js htdocs/js/state.js htdocs/js/tables.js"
-  JSSRCFILES="$JSSRCFILES htdocs/js/utility.js htdocs/js/validate.js"
+  JSSRCFILES="$JSSRCFILES htdocs/js/utility.js htdocs/js/validate.js htdocs/js/tidal.js htdocs/js/album.js htdocs/js/artist.js"
   for F in $JSSRCFILES
   do
     if tail -1 "$F" | perl -npe 'exit 1 if m/\n/; exit 0'

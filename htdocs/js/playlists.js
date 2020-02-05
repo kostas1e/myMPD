@@ -329,6 +329,12 @@ function addToPlaylist() {
         if (uri === 'SEARCH') {
             addAllFromSearchPlist(plist);
         }
+        else if (uri === 'SEARCHTIDAL') {
+            addAllFromSearchTidalPlist(plist);
+        }
+        else if (uri === 'SEARCHQOBUZ') {
+            //addAllFromSearchQobuzPlist(plist);
+        }
         else if (uri === 'DATABASE') {
             addAllFromBrowseDatabasePlist(plist);
         }

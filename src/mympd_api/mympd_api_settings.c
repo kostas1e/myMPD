@@ -34,7 +34,9 @@ void mympd_api_settings_delete(t_config *config) {
         "cols_search", "coverimage", "coverimage_name", "coverimage_size", "jukebox_mode", "jukebox_playlist", "jukebox_queue_length",
         "last_played", "last_played_count", "locale", "localplayer", "localplayer_autoplay", "love", "love_channel", "love_message",
         "max_elements_per_page",  "mpd_host", "mpd_pass", "mpd_port", "notification_page", "notification_web", "searchtaglist",
-        "smartpls", "stickers", "stream_port", "stream_url", "taglist", "music_directory", "bookmarks", 0};
+        "smartpls", "stickers", "stream_port", "stream_url", "taglist", "music_directory", "bookmarks",
+        "cols_search_tidal", "cols_search_qobuz", "searchtiddaltaglist", "searchqobuztaglist",
+        "tidal_username", "tidal_password", "tidal_audioquality", "qobuz_username", "qobuz_password", "qobuz_format_id", 0};
     const char** ptr = state_files;
     while (*ptr != 0) {
         sds filename = sdscatfmt(sdsempty(), "%s/state/%s", config->varlibdir, *ptr);
@@ -93,9 +95,17 @@ bool mympd_api_cols_save(t_config *config, t_mympd_state *mympd_state, const cha
         mympd_state->cols_queue_last_played = sdsreplace(mympd_state->cols_queue_last_played, cols);
         tablename = sdsreplace(tablename, "cols_queue_last_played");
     }
-    else if (strcmp(table, "colsSearch") == 0) {
+    else if (strcmp(table, "colsSearchDatabase") == 0) {
         mympd_state->cols_search = sdsreplace(mympd_state->cols_search, cols);
         tablename = sdsreplace(tablename, "cols_search");
+    }
+    else if (strcmp(table, "colsSearchTidal") == 0) {
+        mympd_state->cols_search_tidal = sdsreplace(mympd_state->cols_search_tidal, cols);
+        tablename = sdsreplace(tablename, "cols_search_tidal");
+    }
+    else if (strcmp(table, "colsSearchQobuz") == 0) {
+        mympd_state->cols_search_qobuz = sdsreplace(mympd_state->cols_search_qobuz, cols);
+        tablename = sdsreplace(tablename, "cols_search_qobuz");
     }
     else if (strcmp(table, "colsBrowseDatabase") == 0) {
         mympd_state->cols_browse_database = sdsreplace(mympd_state->cols_browse_database, cols);
@@ -241,6 +251,14 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
         mympd_state->searchtaglist = sdsreplacelen(mympd_state->searchtaglist, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "searchtaglist");
     }
+    else if (strncmp(key->ptr, "searchtidaltaglist", key->len) == 0) {
+        mympd_state->searchtidaltaglist = sdsreplacelen(mympd_state->searchtidaltaglist, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "searchtidaltaglist");
+    }
+    else if (strncmp(key->ptr, "searchqobuztaglist", key->len) == 0) {
+        mympd_state->searchqobuztaglist = sdsreplacelen(mympd_state->searchqobuztaglist, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "searchqobuztaglist");
+    }
     else if (strncmp(key->ptr, "browsetaglist", key->len) == 0) {
         mympd_state->browsetaglist = sdsreplacelen(mympd_state->browsetaglist, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "browsetaglist");
@@ -285,6 +303,30 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
         }
         settingname = sdscat(settingname, "bookmarks");
     }
+    else if (strncmp(key->ptr, "tidalUsername", key->len) == 0) {
+        mympd_state->tidal_username = sdsreplacelen(mympd_state->tidal_username, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "tidal_username");
+        }
+    else if (strncmp(key->ptr, "tidalPassword", key->len) == 0) {
+        mympd_state->tidal_password = sdsreplacelen(mympd_state->tidal_password, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "tidal_password");
+        }
+    else if (strncmp(key->ptr, "tidalAudioquality", key->len) == 0) {
+        mympd_state->tidal_audioquality = sdsreplacelen(mympd_state->tidal_audioquality, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "tidal_audioquality");
+        }
+    else if (strncmp(key->ptr, "qobuzUsername", key->len) == 0) {
+        mympd_state->qobuz_username = sdsreplacelen(mympd_state->qobuz_username, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "qobuz_username");
+    }
+    else if (strncmp(key->ptr, "qobuzPassword", key->len) == 0) {
+        mympd_state->qobuz_password = sdsreplacelen(mympd_state->qobuz_password, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "qobuz_password");
+    }
+    else if (strncmp(key->ptr, "qobuzFormatId", key->len) == 0) {
+        mympd_state->qobuz_format_id = strtoimax(settingvalue, &crap, 10);
+        settingname = sdscat(settingname, "qobuz_format_id");
+    }
     else {
         sdsfree(settingname);
         sdsfree(settingvalue);
@@ -310,6 +352,8 @@ void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state) {
     mympd_state->stickers = state_file_rw_bool(config, "stickers", config->stickers, false);
     mympd_state->taglist = state_file_rw_string(config, "taglist", config->taglist, false);
     mympd_state->searchtaglist = state_file_rw_string(config, "searchtaglist", config->searchtaglist, false);
+    mympd_state->searchtidaltaglist = state_file_rw_string(config, "searchtidaltaglist", config->searchtidaltaglist, false);
+    mympd_state->searchqobuztaglist = state_file_rw_string(config, "searchqobuztaglist", config->searchqobuztaglist, false);
     mympd_state->browsetaglist = state_file_rw_string(config, "browsetaglist", config->browsetaglist, false);
     mympd_state->smartpls = state_file_rw_bool(config, "smartpls", config->smartpls, false);
     mympd_state->max_elements_per_page = state_file_rw_int(config, "max_elements_per_page", config->max_elements_per_page, false);
@@ -325,6 +369,8 @@ void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state) {
     mympd_state->jukebox_queue_length = state_file_rw_int(config, "jukebox_queue_length", config->jukebox_queue_length, false);
     mympd_state->cols_queue_current = state_file_rw_string(config, "cols_queue_current", config->cols_queue_current, false);
     mympd_state->cols_search = state_file_rw_string(config, "cols_search", config->cols_search, false);
+    mympd_state->cols_search_tidal = state_file_rw_string(config, "cols_search_tidal", config->cols_search_tidal, false);
+    mympd_state->cols_search_qobuz = state_file_rw_string(config, "cols_search_qobuz", config->cols_search_qobuz, false);
     mympd_state->cols_browse_database = state_file_rw_string(config, "cols_browse_database", config->cols_browse_database, false);
     mympd_state->cols_browse_playlists_detail = state_file_rw_string(config, "cols_browse_playlists_detail", config->cols_browse_playlists_detail, false);
     mympd_state->cols_browse_filesystem = state_file_rw_string(config, "cols_browse_filesystem", config->cols_browse_filesystem, false);
@@ -343,6 +389,12 @@ void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state) {
     mympd_state->locale = state_file_rw_string(config, "locale", config->locale, false);
     mympd_state->music_directory = state_file_rw_string(config, "music_directory", config->music_directory, false);
     mympd_state->bookmarks = state_file_rw_bool(config, "bookmarks", config->bookmarks, false);
+    mympd_state->tidal_username = state_file_rw_string(config, "tidal_username", config->tidal_username, false);
+    mympd_state->tidal_password = state_file_rw_string(config, "tidal_password", config->tidal_password, false);
+    mympd_state->tidal_audioquality = state_file_rw_string(config, "tidal_audioquality", config->tidal_audioquality, false);
+    mympd_state->qobuz_username = state_file_rw_string(config, "qobuz_username", config->qobuz_username, false);
+    mympd_state->qobuz_password = state_file_rw_string(config, "qobuz_password", config->qobuz_password, false);
+    mympd_state->qobuz_format_id = state_file_rw_int(config, "qobuz_format_id", config->qobuz_format_id, false);
     if (config->readonly == true) {
         mympd_state->bookmarks = false;
         mympd_state->smartpls = false;
@@ -478,8 +530,16 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = tojson_bool(buffer, "readonly", config->readonly, true);
     buffer = tojson_bool(buffer, "featBookmarks", mympd_state->bookmarks, true);
     buffer = tojson_long(buffer, "volumeStep", config->volume_step, true);
+    buffer = tojson_char(buffer, "tidalUsername", mympd_state->tidal_username, true);
+    buffer = tojson_char(buffer, "tidalPassword", mympd_state->tidal_password, true);
+    buffer = tojson_char(buffer, "tidalAudioquality", mympd_state->tidal_audioquality, true);
+    buffer = tojson_char(buffer, "qobuzUsername", mympd_state->qobuz_username, true);
+    buffer = tojson_char(buffer, "qobuzPassword", mympd_state->qobuz_password, true);
+    buffer = tojson_long(buffer, "qobuzFormatId", mympd_state->qobuz_format_id, true);
     buffer = sdscatfmt(buffer, "\"colsQueueCurrent\":%s,", mympd_state->cols_queue_current);
-    buffer = sdscatfmt(buffer, "\"colsSearch\":%s,", mympd_state->cols_search);
+    buffer = sdscatfmt(buffer, "\"colsSearchDatabase\":%s,", mympd_state->cols_search);
+    buffer = sdscatfmt(buffer, "\"colsSearchTidal\":%s,", mympd_state->cols_search_tidal);
+    buffer = sdscatfmt(buffer, "\"colsSearchQobuz\":%s,", mympd_state->cols_search_qobuz);
     buffer = sdscatfmt(buffer, "\"colsBrowseDatabase\":%s,", mympd_state->cols_browse_database);
     buffer = sdscatfmt(buffer, "\"colsBrowsePlaylistsDetail\":%s,", mympd_state->cols_browse_playlists_detail);
     buffer = sdscatfmt(buffer, "\"colsBrowseFilesystem\":%s,", mympd_state->cols_browse_filesystem);

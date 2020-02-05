@@ -32,7 +32,7 @@ static void mpd_client_feature_music_directory(t_mpd_state *mpd_state);
 //public functions
 void mpd_client_mpd_features(t_config *config, t_mpd_state *mpd_state) {
     mpd_state->protocol = mpd_connection_get_server_version(mpd_state->conn);
-    LOG_INFO("MPD protocoll version: %u.%u.%u", mpd_state->protocol[0], mpd_state->protocol[1], mpd_state->protocol[2]);
+    LOG_INFO("MPD protocol version: %u.%u.%u", mpd_state->protocol[0], mpd_state->protocol[1], mpd_state->protocol[2]);
 
     // Defaults
     mpd_state->feat_sticker = false;
@@ -133,7 +133,9 @@ static void mpd_client_feature_commands(t_mpd_state *mpd_state) {
 
 static void mpd_client_feature_tags(t_mpd_state *mpd_state) {
     sds taglist = sdsnew(mpd_state->taglist);
-    sds searchtaglist = sdsnew(mpd_state->searchtaglist);    
+    sds searchtaglist = sdsnew(mpd_state->searchtaglist);
+    sds searchtidaltaglist = sdsnew(mpd_state->searchtidaltaglist);
+    sds searchqobuztaglist = sdsnew(mpd_state->searchqobuztaglist);
     sds browsetaglist = sdsnew(mpd_state->browsetaglist);
     sds *tokens;
     int tokens_count;
@@ -142,6 +144,8 @@ static void mpd_client_feature_tags(t_mpd_state *mpd_state) {
 //    reset_t_tags(&mpd_state->mpd_tag_types);
     reset_t_tags(&mpd_state->mympd_tag_types);
     reset_t_tags(&mpd_state->search_tag_types);
+    reset_t_tags(&mpd_state->search_tidal_tag_types);
+    reset_t_tags(&mpd_state->search_qobuz_tag_types);
     reset_t_tags(&mpd_state->browse_tag_types);
     
     sds logline = sdsnew("MPD supported tags: ");
@@ -232,6 +236,48 @@ static void mpd_client_feature_tags(t_mpd_state *mpd_state) {
         sdsfreesplitres(tokens, tokens_count);
         LOG_INFO(logline);
 
+        logline = sdsreplace(logline, "myMPD enabled searchtidaltags: ");
+        tokens = sdssplitlen(searchtidaltaglist, sdslen(searchtidaltaglist), ",", 1, &tokens_count);
+        for (int i = 0; i < tokens_count; i++) {
+            sdstrim(tokens[i], " ");
+            enum mpd_tag_type tag = mpd_tag_name_iparse(tokens[i]);
+            if (tag == MPD_TAG_UNKNOWN) {
+                LOG_WARN("Unknown tag %s", tokens[i]);
+            }
+            else {
+                if (mpd_client_tag_exists(mpd_state->mympd_tag_types.tags, mpd_state->mympd_tag_types.len, tag) == true) {
+                    logline = sdscatfmt(logline, "%s ", mpd_tag_name(tag));
+                    mpd_state->search_tidal_tag_types.tags[mpd_state->search_tidal_tag_types.len++] = tag;
+                }
+                else {
+                    LOG_DEBUG("Disabling tag %s", mpd_tag_name(tag));
+                }
+            }
+        }
+        sdsfreesplitres(tokens, tokens_count);
+        LOG_INFO(logline);
+        
+        logline = sdsreplace(logline, "myMPD enabled searchqobuztags: ");
+        tokens = sdssplitlen(searchqobuztaglist, sdslen(searchqobuztaglist), ",", 1, &tokens_count);
+        for (int i = 0; i < tokens_count; i++) {
+            sdstrim(tokens[i], " ");
+            enum mpd_tag_type tag = mpd_tag_name_iparse(tokens[i]);
+            if (tag == MPD_TAG_UNKNOWN) {
+                LOG_WARN("Unknown tag %s", tokens[i]);
+            }
+            else {
+                if (mpd_client_tag_exists(mpd_state->mympd_tag_types.tags, mpd_state->mympd_tag_types.len, tag) == true) {
+                    logline = sdscatfmt(logline, "%s ", mpd_tag_name(tag));
+                    mpd_state->search_qobuz_tag_types.tags[mpd_state->search_qobuz_tag_types.len++] = tag;
+                }
+                else {
+                    LOG_DEBUG("Disabling tag %s", mpd_tag_name(tag));
+                }
+            }
+        }
+        sdsfreesplitres(tokens, tokens_count);
+        LOG_INFO(logline);
+
         logline = sdsreplace(logline, "myMPD enabled browsetags: ");
         tokens = sdssplitlen(browsetaglist, sdslen(browsetaglist), ",", 1, &tokens_count);
         for (int i = 0; i < tokens_count; i++) {
@@ -256,6 +302,8 @@ static void mpd_client_feature_tags(t_mpd_state *mpd_state) {
     sdsfree(logline);
     sdsfree(taglist);
     sdsfree(searchtaglist);
+    sdsfree(searchtidaltaglist);
+    sdsfree(searchqobuztaglist);
     sdsfree(browsetaglist);
 }
 

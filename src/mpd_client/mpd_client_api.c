@@ -33,6 +33,7 @@
 #include "mpd_client_stats.h"
 #include "mpd_client_settings.h"
 #include "mpd_client_api.h"
+#include "../tidal.h"
 
 void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request) {
     t_work_request *request = (t_work_request*) arg_request;
@@ -250,6 +251,47 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
             if (je == 1) {
                 mpd_run_play_id(mpd_state->conn, uint_buf1);
                 data = respond_with_mpd_error_or_ok(mpd_state, data, request->method, request->id);
+                // tidal check
+                // if tidal uri
+                /*
+                char *message = NULL;
+                printf("\n\tdata %s\n\n", data);
+                json_scanf(data, sdslen(data), "{error:{message:%Q}}", &message);
+                printf("\n\tmessage %s\n\n", message);
+                if (1) { // != 0 error
+                    printf("\n\tin\n\n");
+                    // replace track uri in queue and play
+                    //int_buf1 = mpd_run_add_id(mpd_state->conn, p_charbuf1);
+                    //if (int_buf1 != -1) {
+                    //    mpd_run_play_id(mpd_state->conn, int_buf1);
+                    //}
+                    struct mpd_song *song = mpd_run_get_queue_song_id(mpd_state->conn, uint_buf1);
+                    const char *comment = (char *)mpd_song_get_tag(song, MPD_TAG_COMMENT, 0);
+                    const char *title = mpd_song_get_tag(song, MPD_TAG_TITLE, 0);
+                    const char *artist = mpd_song_get_tag(song, MPD_TAG_ARTIST, 0);
+                    const char *album = mpd_song_get_tag(song, MPD_TAG_ALBUM, 0);
+                    printf("\n\tcomment %s\n\n", comment);
+                    printf("\n\ttitle %s\n\n", title);
+                    sds u = tidal_get_track_url(sdsempty(), comment);
+
+                    int_buf1 = mpd_run_add_id(mpd_state->conn, u);
+                    // add tags
+                    if (int_buf1 != -1 && mpd_command_list_begin(mpd_state->conn, false)) {
+                        mpd_send_add_tag_id(mpd_state->conn, int_buf1, MPD_TAG_TITLE, title);
+                        mpd_send_add_tag_id(mpd_state->conn, int_buf1, MPD_TAG_ARTIST, artist);
+                        mpd_send_add_tag_id(mpd_state->conn, int_buf1, MPD_TAG_ALBUM, album);
+                        mpd_send_add_tag_id(mpd_state->conn, int_buf1, MPD_TAG_COMMENT, comment);
+                        if (mpd_command_list_end(mpd_state->conn)) {
+                            mpd_response_finish(mpd_state->conn);
+                        }
+                    }
+                    printf("\n\turl %s\n\n", u);
+                    mpd_run_play_id(mpd_state->conn, int_buf1);
+                    data = respond_with_mpd_error_or_ok(mpd_state, data, request->method, request->id);
+                }
+                FREE_PTR(message);
+                //
+                */
             }
             break;
         case MPD_API_PLAYER_OUTPUT_LIST:
@@ -386,6 +428,23 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
                 }
             }
             break;
+        case MPD_API_PLAYLIST_ADD_ALL_TRACKS:
+            je = json_scanf(request->data, sdslen(request->data), "{params: {plist:%Q, uris:%Q}}", &p_charbuf1, &p_charbuf2);
+            if (je == 2) {
+                if (mpd_command_list_begin(mpd_state->conn, false)) {
+                    int count;
+                    sds *tokens = sdssplitlen(p_charbuf2, strlen(p_charbuf2), " ", 1, &count);
+                    for (int i = 0; i < count; i++) {
+                        mpd_send_playlist_add(mpd_state->conn, p_charbuf1, tokens[i]);
+                    }
+                    if (mpd_command_list_end(mpd_state->conn)) {
+                        mpd_response_finish(mpd_state->conn);
+                    }
+                    sdsfreesplitres(tokens, count);
+                }
+                data = respond_with_mpd_error_or_ok(mpd_state, data, request->method, request->id);
+            }
+            break;
         case MPD_API_PLAYLIST_CLEAR:
             je = json_scanf(request->data, sdslen(request->data), "{params: {uri:%Q}}", &p_charbuf1);
             if (je == 1) {
@@ -435,7 +494,57 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
         case MPD_API_QUEUE_ADD_TRACK:
             je = json_scanf(request->data, sdslen(request->data), "{params: {uri:%Q}}", &p_charbuf1);
             if (je == 1) {
-                mpd_run_add(mpd_state->conn, p_charbuf1);
+                /*
+                if (strstr(p_charbuf1, "tidal://")) { // add streamUrl to queue
+                    sds track = tidal_queue_add_track(sdsempty(), p_charbuf1);
+                    char *url = NULL;
+                    int time;
+                    char *title = NULL;
+                    char *artist = NULL;
+                    char *album = NULL;
+                    char *id = NULL;
+                    json_scanf(track, sdslen(track), "{url:%Q,Duration:%d,Title:%Q,Artist:%Q,Album:%Q,id:%Q}",
+                        &url, &time, &title, &artist, &album, &id);
+                    printf("\n\tcomment %s\n\n", id);
+                    int_buf1 = mpd_run_add_id(mpd_state->conn, url);
+                    // add tags
+                    if (int_buf1 != -1 && mpd_command_list_begin(mpd_state->conn, false)) {
+                        mpd_send_add_tag_id(mpd_state->conn, int_buf1, MPD_TAG_TITLE, title);
+                        mpd_send_add_tag_id(mpd_state->conn, int_buf1, MPD_TAG_ARTIST, artist);
+                        mpd_send_add_tag_id(mpd_state->conn, int_buf1, MPD_TAG_ALBUM, album);
+                        mpd_send_add_tag_id(mpd_state->conn, int_buf1, MPD_TAG_COMMENT, id);
+                        if (mpd_command_list_end(mpd_state->conn)) {
+                            mpd_response_finish(mpd_state->conn);
+                        }
+                    }
+                    //data = respond_with_mpd_error_or_ok(mpd_state, data, request->method, request->id);
+                    FREE_PTR(url);
+                    FREE_PTR(title);
+                    FREE_PTR(artist);
+                    FREE_PTR(album);
+                    FREE_PTR(id);
+                    sdsfree(track);
+                }
+                else {*/
+                    mpd_run_add(mpd_state->conn, p_charbuf1);
+                //}
+                data = respond_with_mpd_error_or_ok(mpd_state, data, request->method, request->id);
+            }
+            break;
+        case MPD_API_QUEUE_ADD_ALL_TRACKS:
+            je = json_scanf(request->data, sdslen(request->data), "{params: {uris:%Q}}", &p_charbuf1);
+            if (je == 1) {
+                if (mpd_command_list_begin(mpd_state->conn, false)) {
+                    int count;
+                    sds *tokens = sdssplitlen(p_charbuf1, strlen(p_charbuf1), " ", 1, &count);
+                    for (int i = 0; i < count; i++) {
+                        mpd_send_add(mpd_state->conn, tokens[i]);
+                    }
+                    if (mpd_command_list_end(mpd_state->conn)) {
+                        mpd_response_finish(mpd_state->conn);
+                    }
+                    sdsfreesplitres(tokens, count);
+                }
                 data = respond_with_mpd_error_or_ok(mpd_state, data, request->method, request->id);
             }
             break;

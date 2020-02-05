@@ -26,7 +26,7 @@ var keymap = {
     "4": {"cmd": "appGoto", "options": ["Browse","Database"], "desc": "Goto browse database", "req": "featTags"},
     "5": {"cmd": "appGoto", "options": ["Browse","Playlists"], "desc": "Goto browse playlists", "req": "featPlaylists"},
     "6": {"cmd": "appGoto", "options": ["Browse","Filesystem"], "desc": "Goto browse filesystem"},
-    "7": {"cmd": "appGoto", "options": ["Search"], "desc": "Goto search"},
+    "7": {"cmd": "appGoto", "options": ["Search","Database"], "desc": "Goto search"},
     "m": {"cmd": "openDropdown", "options": ["dropdownMainMenu"], "desc": "Open main menu"},
     "v": {"cmd": "openDropdown", "options": ["dropdownVolumeMenu"], "desc": "Open volume menu"},
     "S": {"cmd": "sendAPI", "options": [{"cmd": "MPD_API_QUEUE_SHUFFLE"}], "desc": "Shuffle queue"},

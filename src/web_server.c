@@ -267,6 +267,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
             static const struct mg_str library_prefix = MG_MK_STR("/library");
             static const struct mg_str albumart_prefix = MG_MK_STR("/albumart");
             static const struct mg_str pics_prefix = MG_MK_STR("/pics");
+            static const struct mg_str image_prefix = MG_MK_STR("/image"); // tidal qobuz
             LOG_VERBOSE("HTTP request (%d): %.*s", (intptr_t)nc->user_data, (int)hm->uri.len, hm->uri.p);
             if (mg_vcmp(&hm->uri, "/api") == 0) {
                 //api request
@@ -321,6 +322,17 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
                     mg_printf(nc, "%s", "HTTP/1.1 404 NOT FOUND\r\n\r\n");   
                     nc->flags |= MG_F_SEND_AND_CLOSE;
                 }
+            }
+            else if (has_prefix(&hm->uri, &image_prefix)) {
+                sds image_file = sdscatlen(sdsempty(), hm->uri.p, (int)hm->uri.len);
+                // remove /image prefix
+                sdsrange(image_file, 7, -1);
+                replacechar(image_file, '/', '_');
+                sds path = sdscatfmt(sdsempty(), "%s/covercache/%s", config->varlibdir, image_file);
+                sdsfree(image_file);
+                LOG_DEBUG("Serving file %s (%s)", path, "image/jpeg");
+                mg_http_serve_file(nc, hm, path, mg_mk_str("image/jpeg"), mg_mk_str(""));
+                sdsfree(path);
             }
             else {
                 //all other uris
@@ -385,7 +397,7 @@ static void ev_handler_redirect(struct mg_connection *nc, int ev, void *ev_data)
 }
 
 static bool handle_api(int conn_id, const char *request_body, int request_len) {
-    if (request_len > 1000) {
+    if (request_len > 1100) { // tmp +100
         LOG_ERROR("Request to long, discarding)");
         return false;
     }

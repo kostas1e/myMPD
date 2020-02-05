@@ -296,6 +296,13 @@ function parseSettings() {
         document.getElementById('inputMusicDirectory').removeAttribute('readonly');
     }
 
+    document.getElementById('inputTidalUser').value = settings.tidalUsername;
+    document.getElementById('inputTidalPass').value = settings.tidalPassword;
+    document.getElementById('selectTidalQual').value = settings.tidalAudioquality;
+    document.getElementById('inputQobuzUser').value = settings.qobuzUsername;
+    document.getElementById('inputQobuzPass').value = settings.qobuzPassword;
+    document.getElementById('selectQobuzQual').value = settings.qobuzFormatId;
+
     if (app.current.app === 'Queue' && app.current.tab === 'Current') {
         getQueue();
     }
@@ -429,7 +436,9 @@ function parseMPDSettings() {
         app.apps.Queue.state = '0/filename/-/';
         settings.colsQueueCurrent = ["Pos", "Title", "Duration"];
         settings.colsQueueLastPlayed = ["Pos", "Title", "LastPlayed"];
-        settings.colsSearch = ["Title", "Duration"];
+        settings.colsSearchDatabase = ["Title", "Duration"];
+        settings.colsSearchTidal = ["Title", "Duration"];
+        settings.colsSearchQobuz = ["Title", "Duration"];
         settings.colsBrowseFilesystem = ["Type", "Title", "Duration"];
         settings.colsBrowseDatabase = ["Track", "Title", "Duration"];
         settings.colsPlayback = [];
@@ -468,7 +477,9 @@ function parseMPDSettings() {
         }
     }
     if (settings.tags.includes('Title')) {
-        app.apps.Search.state = '0/any/Title/';
+        app.apps.Search.tabs.Database.state = '0/any/Title/';
+        app.apps.Search.tabs.Tidal.views.All.state = '0/any/Title/';
+        app.apps.Search.tabs.Qobuz.views.All.state = '0/any/Title/';
     }
     
     if (settings.featPlaylists) {
@@ -481,8 +492,13 @@ function parseMPDSettings() {
 
     settings.tags.sort();
     settings.searchtags.sort();
+    settings.searchtidaltags.sort();
+    settings.searchqobuztags.sort();
     settings.browsetags.sort();
-    filterCols('colsSearch');
+
+    filterCols('colsSearchDatabase');
+    filterCols('colsSearchTidal');
+    filterCols('colsSearchQobuz');
     filterCols('colsQueueCurrent');
     filterCols('colsQueueLastPlayed');
     filterCols('colsBrowsePlaylistsDetail');
@@ -491,7 +507,9 @@ function parseMPDSettings() {
     filterCols('colsPlayback');
     
     setCols('QueueCurrent');
-    setCols('Search');
+    setCols('SearchDatabase');
+    setCols('SearchTidal');
+    setCols('SearchQobuz');
     setCols('QueueLastPlayed');
     setCols('BrowseFilesystem');
     setCols('BrowsePlaylistsDetail');
@@ -501,6 +519,8 @@ function parseMPDSettings() {
     addTagList('BrowseDatabaseByTagDropdown', 'browsetags');
     addTagList('searchqueuetags', 'searchtags');
     addTagList('searchtags', 'searchtags');
+    addTagList('searchtidaltags', 'searchtidaltags');
+    addTagList('searchqobuztags', 'searchqobuztags');
     
     for (let i = 0; i < settings.tags.length; i++) {
         app.apps.Browse.tabs.Database.views[settings.tags[i]] = { "state": "0/-/-/", "scrollPos": 0 };
@@ -508,6 +528,8 @@ function parseMPDSettings() {
     
     initTagMultiSelect('inputEnabledTags', 'listEnabledTags', settings.allmpdtags, settings.tags);
     initTagMultiSelect('inputSearchTags', 'listSearchTags', settings.tags, settings.searchtags);
+    //initTagMultiSelect('inputSearchTidalTags', 'listSearchTidalTags', settings.tags, settings.searchtidaltags);
+    //initTagMultiSelect('inputSearchQobuzTags', 'listSearchQobuzTags', settings.tags, settings.searchqobuztags);
     initTagMultiSelect('inputBrowseTags', 'listBrowseTags', settings.tags, settings.browsetags);
 }
 
@@ -603,6 +625,8 @@ function saveSettings() {
         let selectJukeboxPlaylist = document.getElementById('selectJukeboxPlaylist');
         let selectJukeboxMode = document.getElementById('selectJukeboxMode');
         let selectLocale = document.getElementById('selectLocale');
+        let selectTidalQual = document.getElementById('selectTidalQual');
+        let selectQobuzQual = document.getElementById('selectQobuzQual');
         sendAPI("MYMPD_API_SETTINGS_SET", {
             "consume": (document.getElementById('btnConsume').classList.contains('active') ? 1 : 0),
             "random": (document.getElementById('btnRandom').classList.contains('active') ? 1 : 0),
@@ -639,7 +663,15 @@ function saveSettings() {
             "smartpls": (document.getElementById('btnSmartpls').classList.contains('active') ? true : false),
             "taglist": getTagMultiSelectValues('listEnabledTags'),
             "searchtaglist": getTagMultiSelectValues('listSearchTags'),
-            "browsetaglist": getTagMultiSelectValues('listBrowseTags')
+            //"searchtidaltaglist": getTagMultiSelectValues('listSearchTidalTags'),
+            //"searchqobuztaglist": getTagMultiSelectValues('listSearchQobuzTags'),
+            "browsetaglist": getTagMultiSelectValues('listBrowseTags'),
+            "tidalUsername": document.getElementById('inputTidalUser').value,
+            "tidalPassword": document.getElementById('inputTidalPass').value,
+            "tidalAudioquality": selectTidalQual.options[selectTidalQual.selectedIndex].value,
+            "qobuzUsername": document.getElementById('inputQobuzUser').value,
+            "qobuzPassword": document.getElementById('inputQobuzPass').value,
+            "qobuzFormatId": parseInt(selectQobuzQual.options[selectQobuzQual.selectedIndex].value)
         }, getSettings);
         modalSettings.hide();
     }
@@ -696,7 +728,7 @@ function filterCols(x) {
     if (x === 'colsQueueCurrent' || x === 'colsBrowsePlaylistsDetail' || x === 'colsQueueLastPlayed') {
         tags.push('Pos');
     }
-    else if (x === 'colsBrowseFilesystem') {
+    else if (x === 'colsBrowseFilesystem' || x === 'colsSearchTidal' || x === 'colsSearchQobuz') {
         tags.push('Type');
     }
     if (x === 'colsQueueLastPlayed') {

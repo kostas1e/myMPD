@@ -216,11 +216,11 @@ function gotoBrowse(x) {
 }
 
 function parseFilesystem(obj) {
-    let list = app.current.app + (app.current.tab === 'Filesystem' ? app.current.tab : '');
+    let list = app.current.app + app.current.tab;
     let colspan = settings['cols' + list].length;
     colspan--;
     let nrItems = obj.result.returnedEntities;
-    let table = document.getElementById(app.current.app + (app.current.tab === undefined ? '' : app.current.tab) + 'List');
+    let table = document.getElementById(list + 'List');
     let tbody = table.getElementsByTagName('tbody')[0];
     let tr = tbody.getElementsByTagName('tr');
     let navigate = document.activeElement.parentNode.parentNode === table ? true : false;
@@ -298,10 +298,10 @@ function parseFilesystem(obj) {
     if (nrItems === 0)
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
                           '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
-    document.getElementById(app.current.app + (app.current.tab === undefined ? '' : app.current.tab) + 'List').classList.remove('opacity05');
+    //document.getElementById(app.current.app + (app.current.tab === undefined ? '' : app.current.tab) + 'List').classList.remove('opacity05');
+    document.getElementById(list + 'List').classList.remove('opacity05');
     document.getElementById('cardFooterBrowse').innerText = t('Num entries', obj.result.totalEntities);
 }
-
 
 function parseListDBtags(obj) {
     scrollToPosY(0);
@@ -491,7 +491,7 @@ function addAllFromBrowseFilesystem() {
 
 function addAllFromBrowseDatabasePlist(plist) {
     if (app.current.search.length >= 2) {
-        sendAPI("MPD_API_DATABASE_SEARCH", {"plist": plist, "filter": app.current.view, "searchstr": app.current.search, "offset": 0, "cols": settings.colsSearch});
+        sendAPI("MPD_API_DATABASE_SEARCH", {"plist": plist, "filter": app.current.view, "searchstr": app.current.search, "offset": 0, "cols": settings.colsSearchDatabase});
     }
 }
 
@@ -851,11 +851,34 @@ app.apps = { "Playback":   { "state": "0/-/-/", "scrollPos": 0 },
                              }
                   }
              },
-             "Search": { "state": "0/any/-/", "scrollPos": 0 }
+             // radio/mix(/track) view plus back history
+             "Search":     {
+                 "active": "Database",
+                 "tabs": { "Database": { "state": "0/any/-/", "scrollPos": 0 },
+                           "Tidal": {
+                               "active": "All",
+                               "views": { "All": { "state": "0/any/-/", "scrollPos": 0 },
+                                          "Album": { "state": "0/any/-/", "scrollPos": 0 },
+                                          "Artist": { "state": "0/any/-/", "scrollPos": 0 },
+                                          "ArtistRadio": { "state": "0/any/-/", "scrollPos": 0 },
+                                          "TrackRadio": { "state": "0/any/-/", "scrollPos": 0 }
+                               }
+                 },
+                           "Qobuz": { 
+                               "active": "All",
+                               "views": { "All": { "state": "0/any/-/", "scrollPos": 0 },
+                                          "Album": { "state": "0/any/-/", "scrollPos": 0 },
+                                          "Artist": { "state": "0/any/-/", "scrollPos": 0 }
+                               }
+                           }
+                 }
+             }
            };
 
 app.current = { "app": "Playback", "tab": undefined, "view": undefined, "page": 0, "filter": "", "search": "", "sort": "", "scrollPos": 0 };
 app.last = { "app": undefined, "tab": undefined, "view": undefined, "filter": "", "search": "", "sort": "", "scrollPos": 0 };
+// wip tq views history wip
+app.back1 = { "app": undefined, "tab": undefined, "view": undefined, "filter": "", "search": "", "sort": "", "scrollPos": 0 };
 
 var domCache = {};
 domCache.navbarBottomBtns = document.getElementById('navbar-bottom').getElementsByTagName('div');
@@ -864,6 +887,8 @@ domCache.cardHeaderBrowse = document.getElementById('cardHeaderBrowse').getEleme
 domCache.cardHeaderBrowseLen = domCache.cardHeaderBrowse.length;
 domCache.cardHeaderQueue = document.getElementById('cardHeaderQueue').getElementsByTagName('a');
 domCache.cardHeaderQueueLen = domCache.cardHeaderQueue.length;
+domCache.cardHeaderSearch = document.getElementById('cardHeaderSearch').getElementsByTagName('a');
+domCache.cardHeaderSearchLen = domCache.cardHeaderSearch.length;
 domCache.counter = document.getElementById('counter');
 domCache.volumePrct = document.getElementById('volumePrct');
 domCache.volumeControl = document.getElementById('volumeControl');
@@ -883,6 +908,8 @@ domCache.btnVoteDown = document.getElementById('btnVoteDown');
 domCache.badgeQueueItems = document.getElementById('badgeQueueItems');
 domCache.searchstr = document.getElementById('searchstr');
 domCache.searchCrumb = document.getElementById('searchCrumb');
+domCache.searchtidalstr = document.getElementById('searchtidalstr');
+domCache.searchqobuzstr = document.getElementById('searchqobuzstr');
 
 /* eslint-disable no-unused-vars */
 var modalConnection = new Modal(document.getElementById('modalConnection'));
@@ -891,6 +918,8 @@ var modalAbout = new Modal(document.getElementById('modalAbout'));
 var modalSaveQueue = new Modal(document.getElementById('modalSaveQueue'));
 var modalAddToQueue = new Modal(document.getElementById('modalAddToQueue'));
 var modalSongDetails = new Modal(document.getElementById('modalSongDetails'));
+var modalAlbumDetails = new Modal(document.getElementById('modalAlbumDetails'));
+var modalArtistDetails = new Modal(document.getElementById('modalArtistDetails'));
 var modalAddToPlaylist = new Modal(document.getElementById('modalAddToPlaylist'));
 var modalRenamePlaylist = new Modal(document.getElementById('modalRenamePlaylist'));
 var modalUpdateDB = new Modal(document.getElementById('modalUpdateDB'));
@@ -923,11 +952,17 @@ function appPrepare(scrollPos) {
         for (let i = 0; i < domCache.cardHeaderQueueLen; i++) {
             domCache.cardHeaderQueue[i].classList.remove('active');
         }
+        for (let i = 0; i < domCache.cardHeaderSearchLen; i++) {
+            domCache.cardHeaderSearch[i].classList.remove('active');
+        }
         document.getElementById('cardQueueCurrent').classList.add('hide');
         document.getElementById('cardQueueLastPlayed').classList.add('hide');
         document.getElementById('cardBrowsePlaylists').classList.add('hide');
         document.getElementById('cardBrowseDatabase').classList.add('hide');
-        document.getElementById('cardBrowseFilesystem').classList.add('hide');        
+        document.getElementById('cardBrowseFilesystem').classList.add('hide');
+        document.getElementById('cardSearchDatabase').classList.add('hide');
+        document.getElementById('cardSearchTidal').classList.add('hide');
+        document.getElementById('cardSearchQobuz').classList.add('hide');
         //show active card + nav
         document.getElementById('card' + app.current.app).classList.remove('hide');
         if (document.getElementById('nav' + app.current.app)) {
@@ -1080,7 +1115,7 @@ function appRoute() {
         document.getElementById('BrowseBreadcrumb').innerHTML = breadcrumbs;
         doSetFilterLetter('BrowseFilesystemFilter');
     }
-    else if (app.current.app === 'Search') {
+    else if (app.current.app === 'Search' && app.current.tab === 'Database') {
         domCache.searchstr.focus();
         if (settings.featAdvsearch) {
             let crumbs = '';
@@ -1110,9 +1145,9 @@ function appRoute() {
         }
         if (app.last.app !== app.current.app) {
             if (app.current.search !== '') {
-                let colspan = settings['cols' + app.current.app].length;
+                let colspan = settings['cols' + app.current.app + app.current.tab].length;
                 colspan--;
-                document.getElementById('SearchList').getElementsByTagName('tbody')[0].innerHTML=
+                document.getElementById('SearchDatabaseList').getElementsByTagName('tbody')[0].innerHTML=
                     '<tr><td><span class="material-icons">search</span></td>' +
                     '<td colspan="' + colspan + '">' + t('Searching...') + '</td></tr>';
             }
@@ -1129,7 +1164,7 @@ function appRoute() {
                     else {
                         sort = '-';
                     }
-                    document.getElementById('SearchList').setAttribute('data-sort', sort);
+                    document.getElementById('SearchDatabaseList').setAttribute('data-sort', sort);
                 }
                 else {
                     if (sort.indexOf('-') === 0) {
@@ -1137,21 +1172,75 @@ function appRoute() {
                         sort = sort.substring(1);
                     }
                 }
-                sendAPI("MPD_API_DATABASE_SEARCH_ADV", {"plist": "", "offset": app.current.page, "sort": sort, "sortdesc": sortdesc, "expression": app.current.search, "cols": settings.colsSearch}, parseSearch);
+                sendAPI("MPD_API_DATABASE_SEARCH_ADV", {"plist": "", "offset": app.current.page, "sort": sort, "sortdesc": sortdesc, "expression": app.current.search, "cols": settings.colsSearchDatabase}, parseSearch);
             }
             else {
-                sendAPI("MPD_API_DATABASE_SEARCH", {"plist": "", "offset": app.current.page, "filter": app.current.filter, "searchstr": app.current.search, "cols": settings.colsSearch}, parseSearch);
+                sendAPI("MPD_API_DATABASE_SEARCH", {"plist": "", "offset": app.current.page, "filter": app.current.filter, "searchstr": app.current.search, "cols": settings.colsSearchDatabase}, parseSearch);
             }
         } else {
-            document.getElementById('SearchList').getElementsByTagName('tbody')[0].innerHTML = '';
+            document.getElementById('SearchDatabaseList').getElementsByTagName('tbody')[0].innerHTML = '';
             document.getElementById('searchAddAllSongs').setAttribute('disabled', 'disabled');
             document.getElementById('searchAddAllSongsBtn').setAttribute('disabled', 'disabled');
-            document.getElementById('panel-heading-search').innerText = '';
+            //document.getElementById('panel-heading-search').innerText = '';
             document.getElementById('cardFooterSearch').innerText = '';
-            document.getElementById('SearchList').classList.remove('opacity05');
+            document.getElementById('SearchDatabaseList').classList.remove('opacity05');
             setPagination(0, 0);
         }
         selectTag('searchtags', 'searchtagsdesc', app.current.filter);
+    }
+    else if (app.current.app === 'Search' && app.current.tab === 'Tidal') {
+        domCache.searchtidalstr.focus();
+        if (domCache.searchtidalstr.value === '' && app.current.search !== '') {
+            domCache.searchtidalstr.value = app.current.search;
+        }
+        if (app.last.app !== app.current.app) {
+            if (app.current.search !== '') {
+                let colspan = settings['cols' + app.current.app + app.current.tab].length;
+                colspan--;
+                document.getElementById('SearchTidalList').getElementsByTagName('tbody')[0].innerHTML=
+                    '<tr><td><span class="material-icons">search</span></td>' +
+                    '<td colspan="' + colspan + '">' + t('Searching...') + '</td></tr>';
+            }
+        }
+        if (domCache.searchtidalstr.value.length >= 2) {
+            sendAPI("MYMPD_API_TIDAL_SEARCH", {"plist": "", "offset": app.current.page, "filter": app.current.filter, "searchstr": app.current.search}, parseSearch);
+        } else {
+            document.getElementById('SearchTidalList').getElementsByTagName('tbody')[0].innerHTML = '';
+            document.getElementById('searchTidalAddAllSongs').setAttribute('disabled', 'disabled');
+            document.getElementById('searchTidalAddAllSongsBtn').setAttribute('disabled', 'disabled');
+            //document.getElementById('panel-heading-search').innerText = '';
+            document.getElementById('cardFooterSearch').innerText = '';
+            document.getElementById('SearchTidalList').classList.remove('opacity05');
+            setPagination(0, 0);
+        }
+        selectTag('searchtidaltags', 'searchtidaltagsdesc', app.current.filter);
+    }
+    else if (app.current.app === 'Search' && app.current.tab === 'Qobuz') {
+        domCache.searchqobuzstr.focus();
+        if (domCache.searchqobuzstr.value === '' && app.current.search !== '') {
+            domCache.searchqobuzstr.value = app.current.search;
+        }
+        if (app.last.app !== app.current.app) {
+            if (app.current.search !== '') {
+                let colspan = settings['cols' + app.current.app + app.current.tab].length;
+                colspan--;
+                document.getElementById('SearchQobuzList').getElementsByTagName('tbody')[0].innerHTML=
+                    '<tr><td><span class="material-icons">search</span></td>' +
+                    '<td colspan="' + colspan + '">' + t('Searching...') + '</td></tr>';
+            }
+        }
+        if (domCache.searchqobuzstr.value.length >= 2) {
+            sendAPI("MYMPD_API_QOBUZ_SEARCH", {"plist": "", "offset": app.current.page, "filter": app.current.filter, "searchstr": app.current.search}, parseSearch);
+        } else {
+            document.getElementById('SearchQobuzList').getElementsByTagName('tbody')[0].innerHTML = '';
+            document.getElementById('searchQobuzAddAllSongs').setAttribute('disabled', 'disabled');
+            document.getElementById('searchQobuzAddAllSongsBtn').setAttribute('disabled', 'disabled');
+            //document.getElementById('panel-heading-search').innerText = '';
+            document.getElementById('cardFooterSearch').innerText = '';
+            document.getElementById('SearchQobuzList').classList.remove('opacity05');
+            setPagination(0, 0);
+        }
+        selectTag('searchqobuztags', 'searchqobuztagsdesc', app.current.filter);
     }
     else {
         appGoto("Playback");
@@ -1477,6 +1566,10 @@ function appInit() {
         }
     }, false);
 
+    // modalAlbumDetails
+    
+    // modalArtistDetails
+
     document.getElementById('outputs').addEventListener('click', function(event) {
         if (event.target.nodeName === 'BUTTON') {
             event.stopPropagation();
@@ -1568,9 +1661,58 @@ function appInit() {
         }
     }, false);
     
-    document.getElementById('SearchList').addEventListener('click', function(event) {
+    document.getElementById('SearchDatabaseList').addEventListener('click', function(event) {
         if (event.target.nodeName === 'TD') {
             appendQueue('song', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
+        }
+        else if (event.target.nodeName === 'A') {
+            showMenu(event.target, event);
+        }
+    }, false);
+
+    document.getElementById('SearchTidalList').addEventListener('click', function(event) {
+        if (event.target.nodeName === 'TD') {
+            let uri = decodeURI(event.target.parentNode.getAttribute("data-uri"));
+            switch(event.target.parentNode.getAttribute('data-type')) {
+                case 'song': // tidal://track/track_id
+                    appendQueue('song', uri, event.target.parentNode.getAttribute("data-name"));
+                    break;
+                case 'artist': // tidal://artist/artist_id
+                    uri = uri.split("://").pop();
+                    searchTidal(uri);
+                    break;
+                case 'album': // tidal://album/album_id
+                    uri = uri.split("://").pop();
+                    searchTidal(uri);
+                    break;
+            }
+        }
+        else if (event.target.nodeName === 'A') {
+            showMenu(event.target, event);
+        }
+    }, false);
+
+    document.getElementById('SearchQobuzList').addEventListener('click', function(event) {
+        if (event.target.nodeName === 'TD') {
+            let uri = decodeURI(event.target.parentNode.getAttribute("data-uri"));
+            switch(event.target.parentNode.getAttribute('data-type')) {
+                case 'song': // qobuz://track/track_id
+                    appendQueue('song', uri, event.target.parentNode.getAttribute("data-name"));
+                    break;
+                case 'artist': // qobuz://artist/artist_id
+                    uri = uri.split("://").pop();
+                    searchQobuz(uri);
+                    break;
+                case 'album': // qobuz://album/album_id
+                    uri = uri.split("://").pop();
+                    // wip - all or artist view
+                    app.back1.view = app.current.view;
+                    app.back1.search = app.current.search;
+                    app.back1.page = app.current.page;
+                    console.log(app.back1);
+                    searchQobuz(uri);
+                    break;
+            }
         }
         else if (event.target.nodeName === 'A') {
             showMenu(event.target, event);
@@ -1602,6 +1744,23 @@ function appInit() {
         }
     }, false);
     
+    document.getElementById('searchTidalAddAllSongsDropdown').addEventListener('click', function(event) {
+        if (event.target.nodeName === 'BUTTON') {
+            if (event.target.getAttribute('data-phrase') === 'Add all to queue') {
+                addAllFromSearchTidalPlist('queue');
+            }
+            else if (event.target.getAttribute('data-phrase') === 'Add all to playlist') {
+                showAddToPlaylist('SEARCHTIDAL');                
+            }
+            else if (event.target.getAttribute('data-phrase') === 'Save as smart playlist') {
+                saveSearchAsSmartPlaylist(); // not yet implemented
+            }
+            
+        }
+    }, false);
+
+    // qobuz
+    
     document.getElementById('BrowseDatabaseAddAllSongsDropdown').addEventListener('click', function(event) {
         if (event.target.nodeName === 'BUTTON') {
             if (event.target.getAttribute('data-phrase') === 'Add all to queue') {
@@ -1620,6 +1779,20 @@ function appInit() {
         }
     }, false);
 
+    document.getElementById('searchtidaltags').addEventListener('click', function(event) {
+        if (event.target.nodeName === 'BUTTON') {
+            app.current.filter = event.target.getAttribute('data-tag');
+            searchTidal(domCache.searchtidalstr.value);
+        }
+    }, false);
+
+    document.getElementById('searchqobuztags').addEventListener('click', function(event) {
+        if (event.target.nodeName === 'BUTTON') {
+            app.current.filter = event.target.getAttribute('data-tag');
+            searchQobuz(domCache.searchqobuzstr.value);
+        }
+    }, false);
+
     document.getElementById('searchqueuestr').addEventListener('keyup', function(event) {
         if (event.key === 'Escape') {
             this.blur();
@@ -1634,8 +1807,8 @@ function appInit() {
             appGoto(app.current.app, app.current.tab, app.current.view, app.current.page + '/' + event.target.getAttribute('data-tag') + '/' + app.current.sort  + '/' + app.current.search);
     }, false);
 
-    let dropdowns = ['QueueCurrentColsDropdown', 'BrowseFilesystemColsDropdown', 'SearchColsDropdown', 'BrowsePlaylistsDetailColsDropdown', 
-        'BrowseDatabaseColsDropdown', 'PlaybackColsDropdown', 'QueueLastPlayedColsDropdown'];
+    let dropdowns = ['QueueCurrentColsDropdown', 'BrowseFilesystemColsDropdown', 'SearchDatabaseColsDropdown', 'BrowsePlaylistsDetailColsDropdown', 
+        'BrowseDatabaseColsDropdown', 'PlaybackColsDropdown', 'QueueLastPlayedColsDropdown', 'SearchTidalColsDropdown', 'SearchQobuzColsDropdown'];
     for (let i = 0; i < dropdowns.length; i++) {
         document.getElementById(dropdowns[i]).addEventListener('click', function(event) {
             if (event.target.nodeName === 'INPUT')
@@ -1644,6 +1817,14 @@ function appInit() {
     }
     
     document.getElementById('search').addEventListener('submit', function() {
+        return false;
+    }, false);
+
+    document.getElementById('searchtidal').addEventListener('submit', function() {
+        return false;
+    }, false);
+
+    document.getElementById('searchqobuz').addEventListener('submit', function() {
         return false;
     }, false);
 
@@ -1694,11 +1875,29 @@ function appInit() {
         }
     }, false);
 
+    domCache.searchtidalstr.addEventListener('keyup', function(event) {
+        if (event.key === 'Escape') {
+            this.blur();
+        }
+        else {
+            searchTidal(this.value);
+        }
+    }, false);
+
+    domCache.searchqobuzstr.addEventListener('keyup', function(event) {
+        if (event.key === 'Escape') {
+            this.blur();
+        }
+        else {
+            searchQobuz(this.value);
+        }
+    }, false);
+
     document.getElementById('searchMatch').addEventListener('change', function() {
         search(domCache.searchstr.value);
     }, false);
     
-    document.getElementById('SearchList').getElementsByTagName('tr')[0].addEventListener('click', function(event) {
+    document.getElementById('SearchDatabaseList').getElementsByTagName('tr')[0].addEventListener('click', function(event) {
         if (settings.featAdvsearch) {
             if (event.target.nodeName === 'TH') {
                 let col = event.target.getAttribute('data-col');
@@ -1726,7 +1925,7 @@ function appInit() {
                     sortcol = col;
                 }
                 
-                let s = document.getElementById('SearchList').getElementsByClassName('sort-dir');
+                let s = document.getElementById('SearchDatabaseList').getElementsByClassName('sort-dir');
                 for (let i = 0; i < s.length; i++) {
                     s[i].remove();
                 }
@@ -1735,6 +1934,14 @@ function appInit() {
                 appGoto(app.current.app, app.current.tab, app.current.view, app.current.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
             }
         }
+    }, false);
+
+    document.getElementById('SearchTidalList').getElementsByTagName('tr')[0].addEventListener('click', function(event) {
+        //
+    }, false);
+
+    document.getElementById('SearchQobuzList').getElementsByTagName('tr')[0].addEventListener('click', function(event) {
+        //
     }, false);
 
     document.getElementById('BrowseDatabaseByTagDropdown').addEventListener('click', function(event) {
@@ -1751,7 +1958,9 @@ function appInit() {
     dragAndDropTable('BrowsePlaylistsDetailList');
     dragAndDropTableHeader('QueueCurrent');
     dragAndDropTableHeader('QueueLastPlayed');
-    dragAndDropTableHeader('Search');
+    dragAndDropTableHeader('SearchDatabase');
+    dragAndDropTableHeader('SearchTidal');
+    dragAndDropTableHeader('SearchQobuz');
     dragAndDropTableHeader('BrowseFilesystem');
     dragAndDropTableHeader('BrowsePlaylistsDetail');
 
@@ -1775,7 +1984,6 @@ function appInit() {
         
     }, false);
     
-
     let tables = document.getElementsByTagName('table');
     for (let i = 0; i < tables.length; i++) {
         tables[i].setAttribute('tabindex', 0);
@@ -2285,6 +2493,12 @@ function addToPlaylist() {
         if (uri === 'SEARCH') {
             addAllFromSearchPlist(plist);
         }
+        else if (uri === 'SEARCHTIDAL') {
+            addAllFromSearchTidalPlist(plist);
+        }
+        else if (uri === 'SEARCHQOBUZ') {
+            //addAllFromSearchQobuzPlist(plist);
+        }
         else if (uri === 'DATABASE') {
             addAllFromBrowseDatabasePlist(plist);
         }
@@ -2413,7 +2627,8 @@ function showMenu(el, event) {
         nextsongpos = lastState.nextSongPos;
 
     let menu = '';
-    if ((app.current.app === 'Browse' && app.current.tab === 'Filesystem') || app.current.app === 'Search' ||
+    if ((app.current.app === 'Browse' && app.current.tab === 'Filesystem') ||
+        (app.current.app === 'Search' && app.current.tab === 'Database') ||
         (app.current.app === 'Browse' && app.current.tab === 'Database')) {
         menu += addMenuItem({"cmd": "appendQueue", "options": [type, uri, name]}, t('Append to queue')) +
             (type === 'song' ? addMenuItem({"cmd": "appendAfterQueue", "options": [type, uri, nextsongpos, name]}, t('Add after current playing song')) : '') +
@@ -2434,6 +2649,29 @@ function showMenu(el, event) {
                     (settings.featPlaylists ? addMenuItem({"cmd": "showAddToPlaylist", "options": [baseuri]}, t('Add to playlist')) : '') +
                 '</div>';
         }
+    }
+    else if (app.current.tab === 'Tidal') {
+        menu += (type === 'song' ? addMenuItem({"cmd": "appendQueue", "options": [type, uri, name]}, t('Add to queue')) : '') +
+        (type === 'song' ? addMenuItem({"cmd": "appendAfterQueue", "options": [type, uri, nextsongpos, name]}, t('Add after current playing song')) : '') +
+        (type === 'song' ? addMenuItem({"cmd": "replaceQueue", "options": [type, uri, name]}, t('Replace queue')) : '') +
+        (type === 'song' && settings.featPlaylists ? addMenuItem({"cmd": "showAddToPlaylist", "options": [uri]}, t('Add to playlist')) : '') +
+        (type === 'song' ? addMenuItem({"cmd": "songDetails", "options": [uri]}, t('Song details')) : '') +
+        (type === 'album' ? addMenuItem({"cmd": "albumDetails", "options": [uri]}, t('Album details')) : '') +
+        (type === 'artist' ? addMenuItem({"cmd": "artistDetails", "options": [uri]}, t('Artist info')) : '') +
+        (type === 'song' ? addMenuItem({"cmd": "songRadio", "options": [uri]}, t('Go to song radio')) : '') +
+        // credits
+        (type === 'artist' ? addMenuItem({"cmd": "artistRadio", "options": [uri]}, t('Go to artist radio')) : '');
+        // go to artist
+    }
+    else if (app.current.tab === 'Qobuz') {
+        menu += (type !== 'song' ? addMenuItem({"cmd": "appendQueue", "options": [type, uri, name]}, t('Add to queue')) : '') +
+        (type === 'song' ? addMenuItem({"cmd": "appendAfterQueue", "options": [type, uri, nextsongpos, name]}, t('Add after current playing song')) : '') +
+        (type === 'song' ? addMenuItem({"cmd": "replaceQueue", "options": [type, uri, name]}, t('Replace queue')) : '') +
+        (type === 'song' && settings.featPlaylists ? addMenuItem({"cmd": "showAddToPlaylist", "options": [uri]}, t('Add to playlist')) : '') +
+        (type === 'song' ? addMenuItem({"cmd": "songDetails", "options": [uri]}, t('Song details')) : '') +
+        (type === 'album' ? addMenuItem({"cmd": "albumDetails", "options": [uri]}, t('Album details')) : '') +
+        (type === 'artist' ? addMenuItem({"cmd": "artistDetails", "options": [uri]}, t('Artist info')) : '');
+        // mr
     }
     else if (app.current.app === 'Browse' && app.current.tab === 'Playlists' && app.current.view === 'All') {
         menu += addMenuItem({"cmd": "appendQueue", "options": [type, uri, name]}, t('Append to queue')) +
@@ -2743,7 +2981,12 @@ function appendQueue(type, uri, name) {
     switch(type) {
         case 'song':
         case 'dir':
-            sendAPI("MPD_API_QUEUE_ADD_TRACK", {"uri": uri});
+            //if (uri.includes('tidal')) {
+            //    sendAPI("MPD_API_QUEUE_ADD_TIDAL_TRACK", {"uri": uri}); // streamUrl
+            //}
+            //else {
+                sendAPI("MPD_API_QUEUE_ADD_TRACK", {"uri": uri});
+            //}
             showNotification(t('%{name} added to queue', {"name": name}), '', '', 'success');
             break;
         case 'plist':
@@ -2840,38 +3083,198 @@ function search(x) {
             expression += ')';
         if (expression.length <= 2)
             expression = '';
-        appGoto('Search', undefined, undefined, '0/' + app.current.filter + '/' + app.current.sort + '/' + encodeURI(expression));
+        appGoto('Search', 'Database', undefined, '0/' + app.current.filter + '/' + app.current.sort + '/' + encodeURI(expression));
     }
     else
-        appGoto('Search', undefined, undefined, '0/' + app.current.filter + '/' + app.current.sort + '/' + x);
+        appGoto('Search', 'Database', undefined, '0/' + app.current.filter + '/' + app.current.sort + '/' + x);
 }
 
 function parseSearch(obj) {
-    document.getElementById('panel-heading-search').innerText = gtPage('Num songs', obj.result.returnedEntities, obj.result.totalEntities);
+    //document.getElementById('panel-heading-search').innerText = gtPage('Num songs', obj.result.returnedEntities, obj.result.totalEntities);
     document.getElementById('cardFooterSearch').innerText = gtPage('Num songs', obj.result.returnedEntities, obj.result.totalEntities);
     
-    if (obj.result.returnedEntities > 0) {
-        document.getElementById('searchAddAllSongs').removeAttribute('disabled');
-        document.getElementById('searchAddAllSongsBtn').removeAttribute('disabled');
+    let tab = app.current.tab === 'Database' ? '' : app.current.tab;
+    if (obj.result.returnedEntities > 0 || obj.result.sumReturnedItems > 0) {
+        document.getElementById('search' + tab + 'AddAllSongs').removeAttribute('disabled');
+        document.getElementById('search' + tab + 'AddAllSongsBtn').removeAttribute('disabled');
     } 
     else {
-        document.getElementById('searchAddAllSongs').setAttribute('disabled', 'disabled');
-        document.getElementById('searchAddAllSongsBtn').setAttribute('disabled', 'disabled');
+        document.getElementById('search' + tab + 'AddAllSongs').setAttribute('disabled', 'disabled');
+        document.getElementById('search' + tab + 'AddAllSongsBtn').setAttribute('disabled', 'disabled');
     }
-    parseFilesystem(obj);
+
+    if (tab === '' || tab === 'Qobuz') // database
+        parseFilesystem(obj);
+    else // tidal/qobuz
+        parseTidal(obj);
 }
 
 function saveSearchAsSmartPlaylist() {
-    parseSmartPlaylist({"type": "smartpls", "data": {"playlist": "", "type": "search", "tag": app.current.filter, "searchstr": app.current.search}});
+    parseSmartPlaylist({"type": "smartpls", "result": {"playlist": "", "type": "search", "tag": app.current.filter, "searchstr": app.current.search}});
 }
 
 function addAllFromSearchPlist(plist) {
     if (settings.featAdvsearch) {
-        sendAPI("MPD_API_DATABASE_SEARCH_ADV", {"plist": plist, "sort": "", "sortdesc": false, "expression": app.current.search, "offset": 0, "cols": settings.colsSearch});
+        sendAPI("MPD_API_DATABASE_SEARCH_ADV", {"plist": plist, "sort": "", "sortdesc": false, "expression": app.current.search, "offset": 0, "cols": settings.colsSearchDatabase});
     }
     else {
-        sendAPI("MPD_API_DATABASE_SEARCH", {"plist": plist, "filter": app.current.filter, "searchstr": app.current.search, "offset": 0, "cols": settings.colsSearch});
+        sendAPI("MPD_API_DATABASE_SEARCH", {"plist": plist, "filter": app.current.filter, "searchstr": app.current.search, "offset": 0, "cols": settings.colsSearchDatabase});
     }
+}
+
+function searchTidal(x) {
+    if (x.startsWith('track/') && x.includes('/mix')) {
+        appGoto('Search', 'Tidal', 'TrackRadio', '0/' + app.current.filter + '/' + app.current.sort + '/' + x);
+    }
+    else if (x.startsWith('artist/')) {
+        if (x.includes('/mix')) {
+            appGoto('Search', 'Tidal', 'ArtistRadio', '0/' + app.current.filter + '/' + app.current.sort + '/' + x);
+        }
+        else {
+            appGoto('Search', 'Tidal', 'Artist', '0/' + app.current.filter + '/' + app.current.sort + '/' + x);
+        }
+    }
+    else if (x.startsWith('album/')) {
+        appGoto('Search', 'Tidal', 'Album', '0/' + app.current.filter + '/' + app.current.sort + '/' + x);
+    }
+    else {
+        appGoto('Search', 'Tidal', 'All', '0/' + app.current.filter + '/' + app.current.sort + '/' + x);
+    }
+}
+
+function parseTidal(obj) {
+    let list = 'Search' + app.current.tab;
+    let colspan = settings['cols' + list].length - 1;
+    let nrItems = obj.result.sumReturnedItems;
+    let table = document.getElementById(list + 'List');
+    let tbody = table.getElementsByTagName('tbody')[0];
+    let tr = tbody.getElementsByTagName('tr');
+    let navigate = document.activeElement.parentNode.parentNode === table ? true : false;
+    let activeRow = 0;
+    for (let i = 0; i < nrItems; i++) {
+        let type = obj.result.data[i].Type;
+        let uri = 'tidal://' + (type === 'song' ? 'track' : type) + '/' + obj.result.data[i].id;
+        let row = document.createElement('tr');
+        let tds = '';
+        row.setAttribute('data-type', type);
+        row.setAttribute('data-uri', uri);
+        row.setAttribute('tabindex', 0);
+        if (type !== 'artist') { // song/album
+            row.setAttribute('data-name', obj.result.data[i].Title);
+            obj.result.data[i].Duration = beautifySongDuration(obj.result.data[i].Duration);
+            if (app.current.tab === 'Qobuz')
+                obj.result.data[i].Date = new Date(obj.result.data[i].Date).toLocaleDateString();
+        }
+        else { // artist
+            row.setAttribute('data-name', obj.result.data[i].Artist);
+        }
+        for (let c = 0; c < settings['cols' + list].length; c++) {
+            tds += '<td data-col="' + settings['cols' + list][c] + '">';
+            if (settings['cols' + list][c] === 'Type') {
+                if (type === 'song')
+                    tds += '<span class="material-icons">music_note</span>';
+                else if (type === 'artist')
+                    tds += '<span class="material-icons">person</span>';
+                else if (type === 'album')
+                    tds += '<span class="material-icons">album</span>';
+            }
+            else {
+                tds += e(obj.result.data[i][settings['cols' + list][c]]);
+            }
+            tds += '</td>';
+        }
+        tds += '<td data-col="Action"><a href="#" class="material-icons color-darkgrey">' + ligatureMore + '</a></td>';
+        row.innerHTML = tds;
+
+        if (i < tr.length)
+            activeRow = replaceTblRow(tr[i], row) === true ? i : activeRow;
+        else
+            tbody.append(row);
+    }
+    let trLen = tr.length - 1;
+    for (let i = trLen; i >= nrItems; i --)
+        tr[i].remove();
+
+    if (navigate === true)
+        focusTable(0);
+
+    setTidalPagination(obj.result.maxTotalItems, obj.result.maxReturnedItems, obj.result.limit);
+
+    if (nrItems === 0)
+        tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
+                          '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
+    document.getElementById(list + 'List').classList.remove('opacity05');
+    document.getElementById('cardFooterSearch').innerText = gtTidalPage('Num entries', obj.result.maxReturnedItems, obj.result.sumTotalItems, obj.result.limit);
+
+    if (app.current.view === 'All') {
+        document.getElementById('btnSearch' + app.current.tab + 'All').parentNode.classList.add('hide');
+    }
+    else {
+        document.getElementById('btnSearch' + app.current.tab + 'All').parentNode.classList.remove('hide');
+    }
+
+}
+
+function addAllFromSearchTidalPlist(plist) {
+    let table = document.getElementById('SearchTidalList');
+    let tbody = table.getElementsByTagName('tbody')[0];
+    let trs = tbody.getElementsByTagName('tr');
+    let uris = '';
+    let i;
+    for (i = 0; i < trs.length; i++) { // ++i
+        if (trs[i].getAttribute('data-type') === 'song') {
+            uris += trs[i].getAttribute("data-uri") + " ";
+        }
+        if (i % 30 == 0 || i == trs.length - 1) {
+            uris = uris.slice(0, -1);
+            if (plist === 'queue') {
+                sendAPI("MPD_API_QUEUE_ADD_ALL_TRACKS", {"uris": uris});
+            }
+            else {
+                sendAPI("MPD_API_PLAYLIST_ADD_ALL_TRACKS", {"uris": uris, "plist": plist});
+            }
+            uris = '';
+        }
+    }
+    //uris = uris.slice(0, -1);// rm last space
+    if (plist === 'queue') {
+        //sendAPI("MPD_API_QUEUE_ADD_ALL_TRACKS", {"uris": uris});
+        showNotification('Added songs to queue', '', '', 'success');
+    }
+    else {
+        //sendAPI("MPD_API_PLAYLIST_ADD_ALL_TRACKS", {"uri": uris, "plist": plist});
+        showNotification(t('Added songs to %{playlist}', {"playlist": plist}), '', '', 'success');
+    }
+}
+
+function searchQobuz(x) { // mrg w/ st
+    if (x.startsWith('album/'))
+        appGoto('Search', 'Qobuz', 'Album', '0/' + app.current.filter + '/' + app.current.sort + '/' + x);
+    else if (x.startsWith('artist/'))
+        appGoto('Search', 'Qobuz', 'Artist', '0/' + app.current.filter + '/' + app.current.sort + '/' + x);
+    else
+        appGoto('Search', 'Qobuz', 'All', '0/' + app.current.filter + '/' + app.current.sort + '/' + x);
+}
+
+function goBack() { // wip
+    // tidal/qobaz table history to browse between diff types
+    /*
+    console.log(app.back1, app.current);
+    if (app.current.search.startsWith('album/')) { //&& app.last.tab === 'Tidal')
+        // can goback to artist too
+        //appGoto('Search', 'Qobuz', 'All', app.last.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.last.search);
+        //appGoto('Search', 'Qobuz', 'All');
+        //appGoto(app.back1);
+        appGoto('Search', 'Qobuz', app.back1.view, app.back1.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.back1.search);
+    }
+    else { // artist/
+        // can only go back to all until goto artist menu items is added
+        appGoto('Search', 'Qobuz', 'All', app.last.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.last.search);
+    }
+    */
+    
+    // temp
+    appGoto('Search', 'Qobuz', 'All');
 }
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
@@ -3170,6 +3573,13 @@ function parseSettings() {
         document.getElementById('inputMusicDirectory').removeAttribute('readonly');
     }
 
+    document.getElementById('inputTidalUser').value = settings.tidalUsername;
+    document.getElementById('inputTidalPass').value = settings.tidalPassword;
+    document.getElementById('selectTidalQual').value = settings.tidalAudioquality;
+    document.getElementById('inputQobuzUser').value = settings.qobuzUsername;
+    document.getElementById('inputQobuzPass').value = settings.qobuzPassword;
+    document.getElementById('selectQobuzQual').value = settings.qobuzFormatId;
+
     if (app.current.app === 'Queue' && app.current.tab === 'Current') {
         getQueue();
     }
@@ -3303,7 +3713,9 @@ function parseMPDSettings() {
         app.apps.Queue.state = '0/filename/-/';
         settings.colsQueueCurrent = ["Pos", "Title", "Duration"];
         settings.colsQueueLastPlayed = ["Pos", "Title", "LastPlayed"];
-        settings.colsSearch = ["Title", "Duration"];
+        settings.colsSearchDatabase = ["Title", "Duration"];
+        settings.colsSearchTidal = ["Title", "Duration"];
+        settings.colsSearchQobuz = ["Title", "Duration"];
         settings.colsBrowseFilesystem = ["Type", "Title", "Duration"];
         settings.colsBrowseDatabase = ["Track", "Title", "Duration"];
         settings.colsPlayback = [];
@@ -3342,7 +3754,9 @@ function parseMPDSettings() {
         }
     }
     if (settings.tags.includes('Title')) {
-        app.apps.Search.state = '0/any/Title/';
+        app.apps.Search.tabs.Database.state = '0/any/Title/';
+        app.apps.Search.tabs.Tidal.views.All.state = '0/any/Title/';
+        app.apps.Search.tabs.Qobuz.views.All.state = '0/any/Title/';
     }
     
     if (settings.featPlaylists) {
@@ -3355,8 +3769,13 @@ function parseMPDSettings() {
 
     settings.tags.sort();
     settings.searchtags.sort();
+    settings.searchtidaltags.sort();
+    settings.searchqobuztags.sort();
     settings.browsetags.sort();
-    filterCols('colsSearch');
+
+    filterCols('colsSearchDatabase');
+    filterCols('colsSearchTidal');
+    filterCols('colsSearchQobuz');
     filterCols('colsQueueCurrent');
     filterCols('colsQueueLastPlayed');
     filterCols('colsBrowsePlaylistsDetail');
@@ -3365,7 +3784,9 @@ function parseMPDSettings() {
     filterCols('colsPlayback');
     
     setCols('QueueCurrent');
-    setCols('Search');
+    setCols('SearchDatabase');
+    setCols('SearchTidal');
+    setCols('SearchQobuz');
     setCols('QueueLastPlayed');
     setCols('BrowseFilesystem');
     setCols('BrowsePlaylistsDetail');
@@ -3375,6 +3796,8 @@ function parseMPDSettings() {
     addTagList('BrowseDatabaseByTagDropdown', 'browsetags');
     addTagList('searchqueuetags', 'searchtags');
     addTagList('searchtags', 'searchtags');
+    addTagList('searchtidaltags', 'searchtidaltags');
+    addTagList('searchqobuztags', 'searchqobuztags');
     
     for (let i = 0; i < settings.tags.length; i++) {
         app.apps.Browse.tabs.Database.views[settings.tags[i]] = { "state": "0/-/-/", "scrollPos": 0 };
@@ -3382,6 +3805,8 @@ function parseMPDSettings() {
     
     initTagMultiSelect('inputEnabledTags', 'listEnabledTags', settings.allmpdtags, settings.tags);
     initTagMultiSelect('inputSearchTags', 'listSearchTags', settings.tags, settings.searchtags);
+    //initTagMultiSelect('inputSearchTidalTags', 'listSearchTidalTags', settings.tags, settings.searchtidaltags);
+    //initTagMultiSelect('inputSearchQobuzTags', 'listSearchQobuzTags', settings.tags, settings.searchqobuztags);
     initTagMultiSelect('inputBrowseTags', 'listBrowseTags', settings.tags, settings.browsetags);
 }
 
@@ -3477,6 +3902,8 @@ function saveSettings() {
         let selectJukeboxPlaylist = document.getElementById('selectJukeboxPlaylist');
         let selectJukeboxMode = document.getElementById('selectJukeboxMode');
         let selectLocale = document.getElementById('selectLocale');
+        let selectTidalQual = document.getElementById('selectTidalQual');
+        let selectQobuzQual = document.getElementById('selectQobuzQual');
         sendAPI("MYMPD_API_SETTINGS_SET", {
             "consume": (document.getElementById('btnConsume').classList.contains('active') ? 1 : 0),
             "random": (document.getElementById('btnRandom').classList.contains('active') ? 1 : 0),
@@ -3513,7 +3940,15 @@ function saveSettings() {
             "smartpls": (document.getElementById('btnSmartpls').classList.contains('active') ? true : false),
             "taglist": getTagMultiSelectValues('listEnabledTags'),
             "searchtaglist": getTagMultiSelectValues('listSearchTags'),
-            "browsetaglist": getTagMultiSelectValues('listBrowseTags')
+            //"searchtidaltaglist": getTagMultiSelectValues('listSearchTidalTags'),
+            //"searchqobuztaglist": getTagMultiSelectValues('listSearchQobuzTags'),
+            "browsetaglist": getTagMultiSelectValues('listBrowseTags'),
+            "tidalUsername": document.getElementById('inputTidalUser').value,
+            "tidalPassword": document.getElementById('inputTidalPass').value,
+            "tidalAudioquality": selectTidalQual.options[selectTidalQual.selectedIndex].value,
+            "qobuzUsername": document.getElementById('inputQobuzUser').value,
+            "qobuzPassword": document.getElementById('inputQobuzPass').value,
+            "qobuzFormatId": parseInt(selectQobuzQual.options[selectQobuzQual.selectedIndex].value)
         }, getSettings);
         modalSettings.hide();
     }
@@ -3570,7 +4005,7 @@ function filterCols(x) {
     if (x === 'colsQueueCurrent' || x === 'colsBrowsePlaylistsDetail' || x === 'colsQueueLastPlayed') {
         tags.push('Pos');
     }
-    else if (x === 'colsBrowseFilesystem') {
+    else if (x === 'colsBrowseFilesystem' || x === 'colsSearchTidal' || x === 'colsSearchQobuz') {
         tags.push('Type');
     }
     if (x === 'colsQueueLastPlayed') {
@@ -3595,7 +4030,15 @@ function filterCols(x) {
 */
 
 function songDetails(uri) {
-    sendAPI("MPD_API_DATABASE_SONGDETAILS", {"uri": uri}, parseSongDetails);
+    if (uri.includes("tidal")) {
+        sendAPI("MYMPD_API_TIDAL_SONGDETAILS", {"uri": uri}, parseTidalSongDetails);
+    }
+    else if (uri.includes("qobuz")) {
+        sendAPI("MYMPD_API_QOBUZ_SONGDETAILS", {"uri": uri}, parseQobuzSongDetails);
+    }
+    else {
+        sendAPI("MPD_API_DATABASE_SONGDETAILS", {"uri": uri}, parseSongDetails);
+    }
     modalSongDetails.show();
 }
 
@@ -3658,6 +4101,59 @@ function parseSongDetails(obj) {
     
     modal.getElementsByTagName('tbody')[0].innerHTML = songDetails;
     setVoteSongBtns(obj.result.like, obj.result.uri);
+}
+
+function parseTidalSongDetails(obj) {
+    let modal = document.getElementById('modalSongDetails');
+    let cover = obj.result.album.cover;
+    if (cover) {
+        cover = subdir + '/image/' + obj.result.album.cover.replace(/-/g, '/') + '/320x320.jpg';
+    }
+    else {
+        cover = subdir + '/assets/coverimage-notavailable.svg';
+    }
+    modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + cover + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
+    modal.getElementsByTagName('h1')[0].innerText = obj.result.title;
+    
+    let songDetails = '';
+    songDetails += '<tr><th>' + t('Album') + '</th><td>' + obj.result.album.title + '</td></tr>';
+    songDetails += '<tr><th>' + t('AlbumArtist') + '</th><td>' + obj.result.album.artist + '</td></tr>';
+    songDetails += '<tr><th>' + t('Artist') + '</th><td>' + obj.result.artist.name + '</td></tr>';
+    songDetails += '<tr><th>' + t('Date') + '</th><td>' + obj.result.album.releaseDate + '</td></tr>';
+    songDetails += '<tr><th>' + t('Track') + '</th><td>' + obj.result.trackNumber + '</td></tr>';
+    songDetails += '<tr><th>' + t('Duration') + '</th><td>' + beautifyDuration(obj.result.duration) + '</td></tr>';
+    
+    modal.getElementsByTagName('tbody')[0].innerHTML = songDetails;
+    //setVoteSongBtns(obj.result.like, obj.result.uri); // replace w/ tidal fav
+}
+
+function parseQobuzSongDetails(obj) {
+    let modal = document.getElementById('modalSongDetails');
+    let cover = obj.result.cover;
+    if (cover) {
+        cover = subdir + '/image/' + obj.result.cover.split('/').pop();
+    }
+    else {
+        cover = subdir + '/assets/coverimage-notavailable.svg';
+    }
+    modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + cover + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
+    modal.getElementsByTagName('h1')[0].innerText = obj.result.Title;
+    
+    let songDetails = '';
+    obj.result.Date = new Date(obj.result.Date).toLocaleDateString();
+    for (let i = 0; i < settings.tags.length; i++) {
+        if (settings.tags[i] === 'Title')
+            continue;
+        songDetails += '<tr><th>' + t(settings.tags[i]) + '</th><td>' + obj.result[settings.tags[i]] + '</td></tr>';
+    }
+    songDetails += '<tr><th>' + t('Duration') + '</th><td>' + beautifyDuration(obj.result.Duration) + '</td></tr>';
+
+    modal.getElementsByTagName('tbody')[0].innerHTML = songDetails;
+}
+
+function songRadio(uri) { // for tidal track
+    uri = uri.split('://').pop() + '/mix';
+    searchTidal(uri);
 }
 
 //eslint-disable-next-line no-unused-vars
@@ -4413,6 +4909,12 @@ function setCols(table, className) {
         tags.push('Filetype');
         tags.push('Fileformat');
     }
+    if (table == 'SearchTidal') { // wip - add more cols
+        tags = settings.searchtidaltags.slice();
+        tags.push('Type');
+        tags.push('Duration');
+        tags.push('Track');
+    }
     
     tags.sort();
     
@@ -4433,8 +4935,8 @@ function setCols(table, className) {
 
     let sort = app.current.sort;
     
-    if (table === 'Search') {
-        if (app.apps.Search.state === '0/any/Title/') {
+    if (table === 'SearchDatabase') {
+        if (app.apps.Search.tabs.Database.state === '0/any/Title/') {
             if (settings.tags.includes('Title')) {
                 sort = 'Title';
             }
@@ -4446,7 +4948,29 @@ function setCols(table, className) {
             }
         }
     }
-    
+
+    if (table === 'SearchTidal') {
+        if (app.apps.Search.tabs.Tidal.views.All.state === '0/any/Title/') {
+            if (settings.tags.includes('Title')) {
+                sort = 'Title';
+            }
+            else {
+                sort = '-';
+            }
+        }
+    }
+
+    if (table === 'SearchQobuz') {
+        if (app.apps.Search.tabs.Qobuz.views.All.state === '0/any/Title/') {
+            if (settings.tags.includes('Title')) {
+                sort = 'Title';
+            }
+            else {
+                sort = '-';
+            }
+        }
+    }
+
     if (table !== 'Playback') {
         let heading = '';
         for (let i = 0; i < settings['cols' + table].length; i++) {
@@ -4457,7 +4981,7 @@ function setCols(table, className) {
             }
             heading += t(h);
 
-            if (table === 'Search' && (h === sort || '-' + h === sort) ) {
+            if ((table === 'SearchDatabase' || table === 'SearchTidal' || table === 'SearchQobuz') && (h === sort || '-' + h === sort) ) {
                 let sortdesc = false;
                 if (app.current.sort.indexOf('-') === 0) {
                     sortdesc = true;
@@ -4584,6 +5108,9 @@ function filetype(uri) {
         return '';
     }
     let ext = uri.split('.').pop().toUpperCase();
+    if (uri.includes('tidal')) {
+        ext = ext.slice(0, ext.indexOf('?')); // remove token from tidal streamUrl
+    }
     switch (ext) {
         case 'MP3':  return ext + ' - MPEG-1 Audio Layer III';
         case 'FLAC': return ext + ' - Free Lossless Audio Codec';
@@ -4594,6 +5121,7 @@ function filetype(uri) {
         case 'AAC':  return ext + ' - Advancded Audio Coding';
         case 'MPC':  return ext + ' - Musepack';
         case 'MP4':  return ext + ' - MPEG-4';
+        case 'M4A':  return ext + ' - MPEG-4 Audio';
         default:     return ext;
     }
 }
@@ -4677,6 +5205,9 @@ function addTagList(el, list) {
         }
         tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="filename">' + t('Filename') + '</button>';
     }
+    else if (list === 'searchtidaltags' || list === 'searchqobuztags') {
+        tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="any">' + t('Any Tag') + '</button>';
+    }
     for (let i = 0; i < settings[list].length; i++) {
         tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="' + settings[list][i] + '">' + t(settings[list][i]) + '</button>';
     }
@@ -4698,8 +5229,14 @@ function focusSearch() {
     if (app.current.app === 'Queue') {
         document.getElementById('searchqueuestr').focus();
     }
-    else if (app.current.app === 'Search') {
+    else if (app.current.app === 'Search' && app.current.tab === 'Database') {
         domCache.searchstr.focus();
+    }
+    else if (app.current.app === 'Search' && app.current.tab === 'Tidal') {
+        domCache.searchtidalstr.focus();
+    }
+    else if (app.current.app === 'Search' && app.current.tab === 'Qobuz') {
+        domCache.searchqobuzstr.focus();
     }
     else {
         appGoto('Search');
@@ -4753,7 +5290,7 @@ function toggleBtnChk(btn, state) {
 }
 
 function setPagination(total, returned) {
-    let cat = app.current.app + (app.current.tab === undefined ? '': app.current.tab);
+    let cat = app.current.app + app.current.tab;
     let totalPages = Math.ceil(total / settings.maxElementsPerPage);
     if (totalPages === 0) 
         totalPages = 1;
@@ -4827,6 +5364,31 @@ function parseCmd(event, href) {
 }
 
 function gotoPage(x) {
+    let offset = settings.maxElementsPerPage;
+    if (app.current.tab === 'Tidal') {
+        if (app.current.view === 'All') {
+            offset = 30;
+        }
+        else if (app.current.view === 'Artist') {
+            offset = 50;
+        }
+    }
+    switch (x) {
+        case 'next':
+            app.current.page += offset;
+            break;
+        case 'prev':
+            app.current.page -= offset;
+            if (app.current.page < 0)
+                app.current.page = 0;
+            break;
+        default:
+            app.current.page = x;
+    }
+    appGoto(app.current.app, app.current.tab, app.current.view, app.current.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
+}
+
+function gotoPage2(x) { // old one - rm
     switch (x) {
         case 'next':
             app.current.page += settings.maxElementsPerPage;
@@ -4945,4 +5507,192 @@ function validateHost(el) {
         el.classList.add('is-invalid');
         return false;
     }
+}
+
+// mw/ locale/gtPage
+function gtTidalPage(phrase, returned, total, limit = settings.maxElementsPerPage) {
+    if (total > -1) {
+        return t(phrase, total);
+    }
+    else if (returned + app.current.page < limit) {
+        return t(phrase, returned);
+    }
+    else {
+        return '> ' + t(phrase, limit);
+    }
+}
+
+// mw/ utility/setPagination
+function setTidalPagination(total, returned, limit = settings.maxElementsPerPage) {
+    let cat = app.current.app + app.current.tab;
+    let totalPages = Math.ceil(total / limit);
+    if (totalPages === 0)
+        totalPages = 1;
+    let p = ['PaginationTop', 'PaginationBottom'];
+    for (let i = 0; i < 2; i++) {
+        document.getElementById(cat + p[i] + 'Page').innerText = (app.current.page / limit + 1) + ' / ' + totalPages;
+        if (totalPages > 1) {
+            document.getElementById(cat + p[i] + 'Page').removeAttribute('disabled');
+            let pl = '';
+            for (let j = 0; j < totalPages; j++) {
+                pl += '<button data-page="' + (j * limit) + '" type="button" class="mr-1 mb-1 btn-sm btn btn-secondary">' +
+                    (j + 1) + '</button>';
+            }
+            document.getElementById(cat + p[i] + 'Pages').innerHTML = pl;
+            document.getElementById(cat + p[i] + 'Page').classList.remove('nodropdown');
+        }
+        else if (total === -1) {
+            document.getElementById(cat + p[i] + 'Page').setAttribute('disabled', 'disabled');
+            document.getElementById(cat + p[i] + 'Page').innerText = (app.current.page / limit + 1);
+            document.getElementById(cat + p[i] + 'Page').classList.add('nodropdown');
+        }
+        else {
+            document.getElementById(cat + p[i] + 'Page').setAttribute('disabled', 'disabled');
+            document.getElementById(cat + p[i] + 'Page').classList.add('nodropdown');
+        }
+    
+        if (total > app.current.page + limit || total === -1 && returned >= limit) {
+            document.getElementById(cat + p[i] + 'Next').removeAttribute('disabled');
+            document.getElementById(cat + p[i]).classList.remove('hide');
+            document.getElementById(cat + 'ButtonsBottom').classList.remove('hide');
+        }
+        else {
+            document.getElementById(cat + p[i] + 'Next').setAttribute('disabled', 'disabled');
+            document.getElementById(cat + p[i]).classList.add('hide');
+            document.getElementById(cat + 'ButtonsBottom').classList.add('hide');
+        }
+    
+        if (app.current.page > 0) {
+            document.getElementById(cat + p[i] + 'Prev').removeAttribute('disabled');
+            document.getElementById(cat + p[i]).classList.remove('hide');
+            document.getElementById(cat + 'ButtonsBottom').classList.remove('hide');
+        } else {
+            document.getElementById(cat + p[i] + 'Prev').setAttribute('disabled', 'disabled');
+        }
+    }
+}
+
+function albumDetails(uri) {
+    if (uri.includes("tidal")) {
+        sendAPI("MYMPD_API_TIDAL_ALBUMDETAILS", {"uri": uri}, parseTidalAlbumDetails);
+    }
+    else if (uri.includes("qobuz")) {
+        sendAPI("MYMPD_API_QOBUZ_ALBUMDETAILS", {"uri": uri}, parseQobuzAlbumDetails);
+    }
+    modalAlbumDetails.show();
+}
+
+function parseTidalAlbumDetails(obj) {
+    let modal = document.getElementById('modalAlbumDetails');
+    let cover = obj.result.cover;
+    if (cover) {
+        cover = subdir + '/image/' + obj.result.cover.replace(/-/g, '/') + '/320x320.jpg';
+        // csp check
+        //cover = subdir + 'https://resources.tidal.com/images/cb23981d/e1f6/404f/9902/840a5ec20f59/80x80.jpg';
+    }
+    else {
+        image = subdir + '/assets/coverimage-notavailable.svg';
+    }
+    modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + cover + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
+    modal.getElementsByTagName('h1')[0].innerText = obj.result.title;
+    
+    let albumDetails = '';
+    albumDetails += '<tr><th>' + t('AlbumArtist') + '</th><td>' + obj.result.artist.name + '</td></tr>';
+    albumDetails += '<tr><th>' + t('Date') + '</th><td>' + obj.result.releaseDate + '</td></tr>';
+    albumDetails += '<tr><th>' + t('NumberOfTracks') + '</th><td>' + obj.result.numberOfTracks + '</td></tr>';
+    albumDetails += '<tr><th>' + t('Duration') + '</th><td>' + beautifyDuration(obj.result.duration) + '</td></tr>';
+        
+    modal.getElementsByTagName('tbody')[0].innerHTML = albumDetails;
+}
+
+function parseQobuzAlbumDetails(obj) {
+    let modal = document.getElementById('modalAlbumDetails');
+    let image = obj.result.image.large;
+    if (image) {
+        image = subdir + '/image/' + image.split('/').pop();
+    }
+    else {
+        image = subdir + '/assets/coverimage-notavailable.svg';
+    }
+    modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + image + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
+    modal.getElementsByTagName('h1')[0].innerText = obj.result.title;
+
+    // wip - add more fields
+    let albumDetails = '';
+    albumDetails += '<tr><th>' + t('AlbumArtist') + '</th><td>' + obj.result.artist.name + '</td></tr>';
+    albumDetails += '<tr><th>' + t('Date') + '</th><td>' + new Date(obj.result.released_at).toLocaleDateString() + '</td></tr>';
+    albumDetails += '<tr><th>' + t('NumberOfTracks') + '</th><td>' + obj.result.tracks_count + '</td></tr>';
+    albumDetails += '<tr><th>' + t('Duration') + '</th><td>' + beautifyDuration(obj.result.duration) + '</td></tr>';
+    // label.name
+    // composer.name
+    //descriptiun
+    // copyright
+    // tracks.total tracks.items[]
+    albumDetails += '<tr><th>' + t('Genre') + '</th><td>' + obj.result.genre.name + '</td></tr>';
+    // quality
+    // release_date_original
+    modal.getElementsByTagName('tbody')[0].innerHTML = albumDetails;
+}
+
+function artistDetails(uri) {
+    if (uri.includes("tidal")) {
+        sendAPI("MYMPD_API_TIDAL_ARTISTDETAILS", {"uri": uri}, parseTidalArtistDetails);
+    }
+    else if (uri.includes("qobuz")) {
+        sendAPI("MYMPD_API_QOBUZ_ARTISTDETAILS", {"uri": uri}, parseQobuzArtistDetails);
+    }
+    modalArtistDetails.show();
+}
+
+function parseTidalArtistDetails(obj) {
+    let modal = document.getElementById('modalArtistDetails');
+    let picture = obj.result.picture;
+    if (picture) {
+        picture = subdir + '/image/' + picture.replace(/-/g, '/') + '/320x320.jpg';
+    }
+    else {
+        picture = subdir + '/assets/coverimage-notavailable.svg';
+    }
+    modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + picture + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
+    modal.getElementsByTagName('h1')[0].innerText = obj.result.name;
+    
+    let artistDetails = '';
+    artistDetails += '<tr><th>' + t('Biography') + '</th></tr>';
+    // id name artistTypes url picture popularity
+    // source lastUpdated text summary
+    let bio = obj.result.bio;
+    // let text = obj.result.bio.text; // cmp null
+    if (bio.hasOwnProperty('text')) {
+        bio.text = bio.text.replace(/\[.*?\]/g, '');
+        bio.text = bio.text.replace(/<br\s*[\/]?>/gi, '\n');
+        artistDetails += '<tr><td>' + bio.text + '</td></tr>';
+        artistDetails += '<tr><th>' + t('Artist bio from ') + bio.source + '.</th></tr>';
+    }
+    modal.getElementsByTagName('tbody')[0].innerHTML = artistDetails;
+}
+
+function parseQobuzArtistDetails(obj) {
+    let modal = document.getElementById('modalArtistDetails');
+    let image = obj.result.image.large;
+    if (image) {
+        image = subdir + '/image/' + image.split('/').pop();
+    }
+    else {
+        image = subdir + '/assets/coverimage-notavailable.svg';
+    }
+    modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + image + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
+    modal.getElementsByTagName('h1')[0].innerText = obj.result.name;
+    
+    // summury plus read link
+
+    let artistDetails = '';
+    artistDetails += '<tr><th>' + t('Portrait') + '</th></tr>';
+    artistDetails += '<tr><td>' + obj.result.biography.content + '</td></tr>';
+
+    modal.getElementsByTagName('tbody')[0].innerHTML = artistDetails;
+}
+
+function artistRadio(uri) { // for tidal artist
+    uri = uri.split('://').pop() + '/mix';
+    searchTidal(uri);
 }

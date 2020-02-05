@@ -329,6 +329,12 @@ function setCols(table, className) {
         tags.push('Filetype');
         tags.push('Fileformat');
     }
+    if (table == 'SearchTidal') { // wip - add more cols
+        tags = settings.searchtidaltags.slice();
+        tags.push('Type');
+        tags.push('Duration');
+        tags.push('Track');
+    }
     
     tags.sort();
     
@@ -349,8 +355,8 @@ function setCols(table, className) {
 
     let sort = app.current.sort;
     
-    if (table === 'Search') {
-        if (app.apps.Search.state === '0/any/Title/') {
+    if (table === 'SearchDatabase') {
+        if (app.apps.Search.tabs.Database.state === '0/any/Title/') {
             if (settings.tags.includes('Title')) {
                 sort = 'Title';
             }
@@ -362,7 +368,29 @@ function setCols(table, className) {
             }
         }
     }
-    
+
+    if (table === 'SearchTidal') {
+        if (app.apps.Search.tabs.Tidal.views.All.state === '0/any/Title/') {
+            if (settings.tags.includes('Title')) {
+                sort = 'Title';
+            }
+            else {
+                sort = '-';
+            }
+        }
+    }
+
+    if (table === 'SearchQobuz') {
+        if (app.apps.Search.tabs.Qobuz.views.All.state === '0/any/Title/') {
+            if (settings.tags.includes('Title')) {
+                sort = 'Title';
+            }
+            else {
+                sort = '-';
+            }
+        }
+    }
+
     if (table !== 'Playback') {
         let heading = '';
         for (let i = 0; i < settings['cols' + table].length; i++) {
@@ -373,7 +401,7 @@ function setCols(table, className) {
             }
             heading += t(h);
 
-            if (table === 'Search' && (h === sort || '-' + h === sort) ) {
+            if ((table === 'SearchDatabase' || table === 'SearchTidal' || table === 'SearchQobuz') && (h === sort || '-' + h === sort) ) {
                 let sortdesc = false;
                 if (app.current.sort.indexOf('-') === 0) {
                     sortdesc = true;

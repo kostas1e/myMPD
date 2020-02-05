@@ -18,6 +18,9 @@ function filetype(uri) {
         return '';
     }
     let ext = uri.split('.').pop().toUpperCase();
+    if (uri.includes('tidal')) {
+        ext = ext.slice(0, ext.indexOf('?')); // remove token from tidal streamUrl
+    }
     switch (ext) {
         case 'MP3':  return ext + ' - MPEG-1 Audio Layer III';
         case 'FLAC': return ext + ' - Free Lossless Audio Codec';
@@ -28,6 +31,7 @@ function filetype(uri) {
         case 'AAC':  return ext + ' - Advancded Audio Coding';
         case 'MPC':  return ext + ' - Musepack';
         case 'MP4':  return ext + ' - MPEG-4';
+        case 'M4A':  return ext + ' - MPEG-4 Audio';
         default:     return ext;
     }
 }
@@ -111,6 +115,9 @@ function addTagList(el, list) {
         }
         tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="filename">' + t('Filename') + '</button>';
     }
+    else if (list === 'searchtidaltags' || list === 'searchqobuztags') {
+        tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="any">' + t('Any Tag') + '</button>';
+    }
     for (let i = 0; i < settings[list].length; i++) {
         tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="' + settings[list][i] + '">' + t(settings[list][i]) + '</button>';
     }
@@ -132,8 +139,14 @@ function focusSearch() {
     if (app.current.app === 'Queue') {
         document.getElementById('searchqueuestr').focus();
     }
-    else if (app.current.app === 'Search') {
+    else if (app.current.app === 'Search' && app.current.tab === 'Database') {
         domCache.searchstr.focus();
+    }
+    else if (app.current.app === 'Search' && app.current.tab === 'Tidal') {
+        domCache.searchtidalstr.focus();
+    }
+    else if (app.current.app === 'Search' && app.current.tab === 'Qobuz') {
+        domCache.searchqobuzstr.focus();
     }
     else {
         appGoto('Search');
@@ -187,7 +200,7 @@ function toggleBtnChk(btn, state) {
 }
 
 function setPagination(total, returned) {
-    let cat = app.current.app + (app.current.tab === undefined ? '': app.current.tab);
+    let cat = app.current.app + app.current.tab;
     let totalPages = Math.ceil(total / settings.maxElementsPerPage);
     if (totalPages === 0) 
         totalPages = 1;
@@ -261,6 +274,31 @@ function parseCmd(event, href) {
 }
 
 function gotoPage(x) {
+    let offset = settings.maxElementsPerPage;
+    if (app.current.tab === 'Tidal') {
+        if (app.current.view === 'All') {
+            offset = 30;
+        }
+        else if (app.current.view === 'Artist') {
+            offset = 50;
+        }
+    }
+    switch (x) {
+        case 'next':
+            app.current.page += offset;
+            break;
+        case 'prev':
+            app.current.page -= offset;
+            if (app.current.page < 0)
+                app.current.page = 0;
+            break;
+        default:
+            app.current.page = x;
+    }
+    appGoto(app.current.app, app.current.tab, app.current.view, app.current.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
+}
+
+function gotoPage2(x) { // old one - rm
     switch (x) {
         case 'next':
             app.current.page += settings.maxElementsPerPage;

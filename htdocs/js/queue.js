@@ -215,7 +215,12 @@ function appendQueue(type, uri, name) {
     switch(type) {
         case 'song':
         case 'dir':
-            sendAPI("MPD_API_QUEUE_ADD_TRACK", {"uri": uri});
+            //if (uri.includes('tidal')) {
+            //    sendAPI("MPD_API_QUEUE_ADD_TIDAL_TRACK", {"uri": uri}); // streamUrl
+            //}
+            //else {
+                sendAPI("MPD_API_QUEUE_ADD_TRACK", {"uri": uri});
+            //}
             showNotification(t('%{name} added to queue', {"name": name}), '', '', 'success');
             break;
         case 'plist':

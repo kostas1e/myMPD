@@ -56,7 +56,8 @@ function showMenu(el, event) {
         nextsongpos = lastState.nextSongPos;
 
     let menu = '';
-    if ((app.current.app === 'Browse' && app.current.tab === 'Filesystem') || app.current.app === 'Search' ||
+    if ((app.current.app === 'Browse' && app.current.tab === 'Filesystem') ||
+        (app.current.app === 'Search' && app.current.tab === 'Database') ||
         (app.current.app === 'Browse' && app.current.tab === 'Database')) {
         menu += addMenuItem({"cmd": "appendQueue", "options": [type, uri, name]}, t('Append to queue')) +
             (type === 'song' ? addMenuItem({"cmd": "appendAfterQueue", "options": [type, uri, nextsongpos, name]}, t('Add after current playing song')) : '') +
@@ -77,6 +78,29 @@ function showMenu(el, event) {
                     (settings.featPlaylists ? addMenuItem({"cmd": "showAddToPlaylist", "options": [baseuri]}, t('Add to playlist')) : '') +
                 '</div>';
         }
+    }
+    else if (app.current.tab === 'Tidal') {
+        menu += (type === 'song' ? addMenuItem({"cmd": "appendQueue", "options": [type, uri, name]}, t('Add to queue')) : '') +
+        (type === 'song' ? addMenuItem({"cmd": "appendAfterQueue", "options": [type, uri, nextsongpos, name]}, t('Add after current playing song')) : '') +
+        (type === 'song' ? addMenuItem({"cmd": "replaceQueue", "options": [type, uri, name]}, t('Replace queue')) : '') +
+        (type === 'song' && settings.featPlaylists ? addMenuItem({"cmd": "showAddToPlaylist", "options": [uri]}, t('Add to playlist')) : '') +
+        (type === 'song' ? addMenuItem({"cmd": "songDetails", "options": [uri]}, t('Song details')) : '') +
+        (type === 'album' ? addMenuItem({"cmd": "albumDetails", "options": [uri]}, t('Album details')) : '') +
+        (type === 'artist' ? addMenuItem({"cmd": "artistDetails", "options": [uri]}, t('Artist info')) : '') +
+        (type === 'song' ? addMenuItem({"cmd": "songRadio", "options": [uri]}, t('Go to song radio')) : '') +
+        // credits
+        (type === 'artist' ? addMenuItem({"cmd": "artistRadio", "options": [uri]}, t('Go to artist radio')) : '');
+        // go to artist
+    }
+    else if (app.current.tab === 'Qobuz') {
+        menu += (type !== 'song' ? addMenuItem({"cmd": "appendQueue", "options": [type, uri, name]}, t('Add to queue')) : '') +
+        (type === 'song' ? addMenuItem({"cmd": "appendAfterQueue", "options": [type, uri, nextsongpos, name]}, t('Add after current playing song')) : '') +
+        (type === 'song' ? addMenuItem({"cmd": "replaceQueue", "options": [type, uri, name]}, t('Replace queue')) : '') +
+        (type === 'song' && settings.featPlaylists ? addMenuItem({"cmd": "showAddToPlaylist", "options": [uri]}, t('Add to playlist')) : '') +
+        (type === 'song' ? addMenuItem({"cmd": "songDetails", "options": [uri]}, t('Song details')) : '') +
+        (type === 'album' ? addMenuItem({"cmd": "albumDetails", "options": [uri]}, t('Album details')) : '') +
+        (type === 'artist' ? addMenuItem({"cmd": "artistDetails", "options": [uri]}, t('Artist info')) : '');
+        // mr
     }
     else if (app.current.app === 'Browse' && app.current.tab === 'Playlists' && app.current.view === 'All') {
         menu += addMenuItem({"cmd": "appendQueue", "options": [type, uri, name]}, t('Append to queue')) +

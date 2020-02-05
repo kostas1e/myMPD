@@ -22,6 +22,7 @@
 #include "mpd_client_cover.h"
 #include "mpd_client_api.h"
 #include "mpd_client_state.h"
+#include "../tidal.h"
 
 sds mpd_client_get_updatedb_state(t_mpd_state *mpd_state, sds buffer) {
     struct mpd_status *status = mpd_run_status(mpd_state->conn);
@@ -207,12 +208,22 @@ sds mpd_client_put_current_song(t_config *config, t_mpd_state *mpd_state, sds bu
     buffer = sdscat(buffer, ",");
     buffer = tojson_long(buffer, "pos", mpd_song_get_pos(song), true);
     buffer = tojson_long(buffer, "currentSongId", mpd_state->song_id, true);
-    buffer = put_song_tags(buffer, mpd_state, &mpd_state->mympd_tag_types, song);
+    // check song uri for tidal then put tidal song tags instead
+    //if (strstr(mpd_song_get_uri(song), "tidal")) {
+        // put tidal song tags & cover
+        //buffer = tidal_put_song_tags(buffer, mpd_song_get_uri(song));
+    //    char *tag_value = mpd_client_get_tag(song, MPD_TAG_COMMENT);
+    //    buffer = tidal_put_song_tags(buffer, tag_value);
+        // call tidal_get_cover here (rm below !!!)
+    //}
+    //else {
+        buffer = put_song_tags(buffer, mpd_state, &mpd_state->mympd_tag_types, song);
+    //}
 
     mpd_response_finish(mpd_state->conn);
 
     sds cover = sdsempty();
-    cover = mpd_client_get_cover(config, mpd_state, mpd_song_get_uri(song), cover);
+    cover = mpd_client_get_cover(config, mpd_state, mpd_song_get_uri(song), cover); // !!!
     buffer = sdscat(buffer, ",");
     buffer = tojson_char(buffer, "cover", cover, false);
     sdsfree(cover);

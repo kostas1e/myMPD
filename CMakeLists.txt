@@ -149,6 +149,9 @@ set(SOURCES
     src/mympd_api/mympd_api_utility.c
     src/mympd_api/mympd_api_settings.c
     src/mympd_api/mympd_api_syscmds.c
+    src/tidal.c
+    src/tidal/tidal_utility.c
+    src/qobuz.c
     dist/src/mongoose/mongoose.c
     dist/src/frozen/frozen.c
     dist/src/inih/ini.c
@@ -156,7 +159,7 @@ set(SOURCES
 )
 
 add_executable(mympd ${SOURCES})
-target_link_libraries(mympd ${LIBMPDCLIENT_LIBRARY} ${OPENSSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
+target_link_libraries(mympd ${LIBMPDCLIENT_LIBRARY} ${OPENSSL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS} -lcurl)
 
 if(LIBMEDIAINFO_FOUND)
   add_library(mympd_coverextract SHARED src/plugins/mympd_coverextract.cpp)

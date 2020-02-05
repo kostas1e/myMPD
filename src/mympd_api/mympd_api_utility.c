@@ -44,6 +44,8 @@ void mympd_api_push_to_mpd_client(t_mympd_state *mympd_state) {
     data = tojson_char(data, "loveMessage", mympd_state->love_message, true);
     data = tojson_char(data, "taglist", mympd_state->taglist, true);
     data = tojson_char(data, "searchtaglist", mympd_state->searchtaglist, true);
+    data = tojson_char(data, "searchtidaltaglist", mympd_state->searchtidaltaglist, true);
+    data = tojson_char(data, "searchqobuztaglist", mympd_state->searchqobuztaglist, true);
     data = tojson_char(data, "browsetaglist", mympd_state->browsetaglist, true);
     data = tojson_bool(data, "stickers", mympd_state->stickers, true);
     data = tojson_bool(data, "smartpls", mympd_state->smartpls, true);
@@ -64,12 +66,16 @@ void free_mympd_state(t_mympd_state *mympd_state) {
     sdsfree(mympd_state->mpd_pass);
     sdsfree(mympd_state->taglist);
     sdsfree(mympd_state->searchtaglist);
+    sdsfree(mympd_state->searchtidaltaglist);
+    sdsfree(mympd_state->searchqobuztaglist);
     sdsfree(mympd_state->browsetaglist);
     sdsfree(mympd_state->love_channel);
     sdsfree(mympd_state->love_message);
     sdsfree(mympd_state->jukebox_playlist);
     sdsfree(mympd_state->cols_queue_current);
     sdsfree(mympd_state->cols_search);
+    sdsfree(mympd_state->cols_search_tidal);
+    sdsfree(mympd_state->cols_search_qobuz);
     sdsfree(mympd_state->cols_browse_database);
     sdsfree(mympd_state->cols_browse_playlists_detail);
     sdsfree(mympd_state->cols_browse_filesystem);
@@ -81,6 +87,11 @@ void free_mympd_state(t_mympd_state *mympd_state) {
     sdsfree(mympd_state->coverimage_name);
     sdsfree(mympd_state->locale);
     sdsfree(mympd_state->music_directory);
+    sdsfree(mympd_state->tidal_username);
+    sdsfree(mympd_state->tidal_password);
+    sdsfree(mympd_state->tidal_audioquality);
+    sdsfree(mympd_state->qobuz_username);
+    sdsfree(mympd_state->qobuz_password);
     FREE_PTR(mympd_state);
 }
 

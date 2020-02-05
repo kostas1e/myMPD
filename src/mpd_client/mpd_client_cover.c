@@ -21,6 +21,8 @@
 #include "../plugins.h"
 #include "mpd_client_utility.h"
 #include "mpd_client_cover.h"
+#include "../tidal.h"
+#include "../qobuz.h"
 
 sds mpd_client_get_cover(t_config *config, t_mpd_state *mpd_state, const char *uri, sds cover) {
     char *orgpath = strdup(uri);
@@ -30,6 +32,14 @@ sds mpd_client_get_cover(t_config *config, t_mpd_state *mpd_state, const char *u
         cover = sdsreplace(cover, "/assets/coverimage-notavailable.svg");
     }
     else if (strstr(path, "://") != NULL) {
+        if (strstr(path, "tidal")) {
+            cover = tidal_get_cover(uri, cover);
+            //check for null ret
+        }
+        else if (strstr(path, "qobuz")) {
+            cover = qobuz_get_cover(uri, cover);
+        }
+        else { // check end bracket
         char *name = strstr(path, "://");
         name += 3;
         replacechar(name, '/', '_');
@@ -44,6 +54,7 @@ sds mpd_client_get_cover(t_config *config, t_mpd_state *mpd_state, const char *u
         else {
             cover = sdscrop(cover);
             cover = sdscatfmt(cover, "/pics/%s.png", name);
+        }
         }
     }
     else if (mpd_state->feat_library == true && sdslen(mpd_state->music_directory_value) > 0) {

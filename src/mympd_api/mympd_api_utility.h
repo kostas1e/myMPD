@@ -13,6 +13,8 @@ typedef struct t_mympd_state {
     bool stickers;
     sds taglist;
     sds searchtaglist;
+    sds searchtidaltaglist;
+    sds searchqobuztaglist;
     sds browsetaglist;
     bool smartpls;
     int max_elements_per_page;
@@ -28,6 +30,8 @@ typedef struct t_mympd_state {
     int jukebox_queue_length;
     sds cols_queue_current;
     sds cols_search;
+    sds cols_search_tidal;
+    sds cols_search_qobuz;
     sds cols_browse_database;
     sds cols_browse_playlists_detail;
     sds cols_browse_filesystem;
@@ -46,6 +50,15 @@ typedef struct t_mympd_state {
     sds locale;
     sds music_directory;
     bool bookmarks;
+    //sds tidal_token;
+    sds tidal_username;
+    sds tidal_password;
+    sds tidal_audioquality;
+    //int qobuz_app_id;
+    //sds qobuz_app_secret;
+    sds qobuz_username;
+    sds qobuz_password;
+    int qobuz_format_id;
 } t_mympd_state;
 
 void free_mympd_state(t_mympd_state *mympd_state);

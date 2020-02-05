@@ -63,6 +63,8 @@ typedef struct t_config {
     bool mixramp;
     sds taglist;
     sds searchtaglist;
+    sds searchtidaltaglist;
+    sds searchqobuztaglist;
     sds browsetaglist;
     bool smartpls;
     sds varlibdir;
@@ -84,6 +86,8 @@ typedef struct t_config {
     int jukebox_queue_length;
     sds cols_queue_current;
     sds cols_search;
+    sds cols_search_tidal;
+    sds cols_search_qobuz;
     sds cols_browse_database;
     sds cols_browse_playlists_detail;
     sds cols_browse_filesystem;
@@ -104,6 +108,17 @@ typedef struct t_config {
     bool readonly;
     bool bookmarks;
     int volume_step;
+    //tidal
+    sds tidal_token;
+    sds tidal_username;
+    sds tidal_password;
+    sds tidal_audioquality;
+    //qobuz
+    int qobuz_app_id;// change to long
+    sds qobuz_app_secret;
+    sds qobuz_username;
+    sds qobuz_password;
+    int qobuz_format_id;
     //system commands
     struct list syscmd_list;
 } t_config;

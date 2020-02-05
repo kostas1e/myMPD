@@ -14,11 +14,11 @@ function gotoBrowse(x) {
 }
 
 function parseFilesystem(obj) {
-    let list = app.current.app + (app.current.tab === 'Filesystem' ? app.current.tab : '');
+    let list = app.current.app + app.current.tab;
     let colspan = settings['cols' + list].length;
     colspan--;
     let nrItems = obj.result.returnedEntities;
-    let table = document.getElementById(app.current.app + (app.current.tab === undefined ? '' : app.current.tab) + 'List');
+    let table = document.getElementById(list + 'List');
     let tbody = table.getElementsByTagName('tbody')[0];
     let tr = tbody.getElementsByTagName('tr');
     let navigate = document.activeElement.parentNode.parentNode === table ? true : false;
@@ -96,10 +96,10 @@ function parseFilesystem(obj) {
     if (nrItems === 0)
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
                           '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
-    document.getElementById(app.current.app + (app.current.tab === undefined ? '' : app.current.tab) + 'List').classList.remove('opacity05');
+    //document.getElementById(app.current.app + (app.current.tab === undefined ? '' : app.current.tab) + 'List').classList.remove('opacity05');
+    document.getElementById(list + 'List').classList.remove('opacity05');
     document.getElementById('cardFooterBrowse').innerText = t('Num entries', obj.result.totalEntities);
 }
-
 
 function parseListDBtags(obj) {
     scrollToPosY(0);
@@ -289,7 +289,7 @@ function addAllFromBrowseFilesystem() {
 
 function addAllFromBrowseDatabasePlist(plist) {
     if (app.current.search.length >= 2) {
-        sendAPI("MPD_API_DATABASE_SEARCH", {"plist": plist, "filter": app.current.view, "searchstr": app.current.search, "offset": 0, "cols": settings.colsSearch});
+        sendAPI("MPD_API_DATABASE_SEARCH", {"plist": plist, "filter": app.current.view, "searchstr": app.current.search, "offset": 0, "cols": settings.colsSearchDatabase});
     }
 }
 
