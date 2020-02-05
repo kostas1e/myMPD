@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2019 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -8,18 +8,17 @@
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <assert.h>
 #include <mpd/client.h>
 
 #include "../../dist/src/sds/sds.h"
 #include "../sds_extras.h"
 #include "../log.h"
 #include "../list.h"
+#include "config_defs.h"
 #include "../utility.h"
 #include "../api.h"
 #include "../tiny_queue.h"
 #include "../global.h"
-#include "config_defs.h"
 #include "mpd_client_utility.h"
 #include "mpd_client_state.h"
 #include "mpd_client_features.h"
@@ -42,6 +41,9 @@ void mpd_client_mpd_features(t_config *config, t_mpd_state *mpd_state) {
     mpd_state->feat_fingerprint = false;
     mpd_state->feat_smartpls = mpd_state->smartpls;;
     mpd_state->feat_coverimage = true;
+    mpd_state->feat_mpd_albumart = false;
+    mpd_state->feat_mpd_readpicture = false;
+    mpd_state->feat_single_oneshot = false;
     
     //get features
     mpd_client_feature_commands(mpd_state);
@@ -61,6 +63,26 @@ void mpd_client_mpd_features(t_config *config, t_mpd_state *mpd_state) {
     else {
         LOG_WARN("Disabling advanced search, depends on mpd >= 0.21.0 and libmpdclient >= 2.17.0.");
     }
+    
+    if (LIBMPDCLIENT_CHECK_VERSION(2, 18, 0) && mpd_connection_cmp_server_version(mpd_state->conn, 0, 21, 0) >= 0) {
+        mpd_state->feat_single_oneshot = true;
+        LOG_INFO("Enabling single oneshot feature");
+    } 
+    else {
+        LOG_WARN("Disabling single oneshot feature, depends on mpd >= 0.21.0 and libmpdclient >= 2.18.0.");
+    }
+    
+    //push settings to web_server_queue
+    t_work_result *web_server_response = create_result_new(-1, 0, 0, "");
+    sds data = sdsnew("{");
+    data = tojson_char(data, "musicDirectory", mpd_state->music_directory_value, true);
+    data = tojson_char(data, "coverimageName", mpd_state->coverimage_name, true);
+    data = tojson_bool(data, "featLibrary", mpd_state->feat_library, false);
+    data = tojson_bool(data, "featMpdAlbumart", mpd_state->feat_mpd_albumart, false);
+    data = sdscat(data, "}");
+    web_server_response->data = sdsreplace(web_server_response->data, data);
+    sdsfree(data);
+    tiny_queue_push(web_server_queue, web_server_response);
 }
 
 void mpd_client_feature_love(t_mpd_state *mpd_state) {
@@ -99,13 +121,30 @@ static void mpd_client_feature_commands(t_mpd_state *mpd_state) {
                 mpd_state->feat_playlists = true;
             }
             else if (strcmp(pair->value, "getfingerprint") == 0) {
-                LOG_DEBUG("MPD supports fingerprint command");
+                LOG_DEBUG("MPD supports fingerprint");
                 if (LIBMPDCLIENT_CHECK_VERSION(2, 17, 0)) {
                     mpd_state->feat_fingerprint = true;
                 }
                 else {
                     LOG_DEBUG("libmpdclient don't support fingerprint command");
                 }
+            }
+            else if (strcmp(pair->value, "albumart") == 0) {
+                LOG_DEBUG("MPD supports albumart");
+                #ifdef EMBEDDED_LIBMPDCLIENT
+                    mpd_state->feat_mpd_albumart = true;
+                #else
+                    LOG_DEBUG("libmpdclient don't support albumart command");
+                #endif
+
+            }
+            else if (strcmp(pair->value, "readpicture") == 0) {
+                LOG_DEBUG("MPD supports readpicture");
+                #ifdef EMBEDDED_LIBMPDCLIENT
+                    mpd_state->feat_mpd_readpicture = true;
+                #else
+                    LOG_DEBUG("libmpdclient don't support readpicture command");
+                #endif
             }
             mpd_return_pair(mpd_state->conn, pair);
         }
@@ -202,19 +241,8 @@ static void mpd_client_feature_tags(t_mpd_state *mpd_state) {
         sdsfreesplitres(tokens, tokens_count);
         LOG_INFO(logline);
         
-        #if LIBMPDCLIENT_CHECK_VERSION(2,12,0)
-        if (mpd_connection_cmp_server_version(mpd_state->conn, 0, 21, 0) >= 0) {
-            LOG_VERBOSE("Enabling mpd tag types");
-            if (mpd_command_list_begin(mpd_state->conn, false)) {
-                mpd_send_clear_tag_types(mpd_state->conn);
-                mpd_send_enable_tag_types(mpd_state->conn, mpd_state->mympd_tag_types.tags, mpd_state->mympd_tag_types.len);
-                if (mpd_command_list_end(mpd_state->conn)) {
-                    mpd_response_finish(mpd_state->conn);
-                }
-            }
-            check_error_and_recover(mpd_state, NULL, NULL, 0);
-        }
-        #endif
+        enable_mpd_tags(mpd_state, mpd_state->mympd_tag_types);
+        
         logline = sdsreplace(logline, "myMPD enabled searchtags: ");
         tokens = sdssplitlen(searchtaglist, sdslen(searchtaglist), ",", 1, &tokens_count);
         for (int i = 0; i < tokens_count; i++) {
@@ -353,19 +381,14 @@ static void mpd_client_feature_music_directory(t_mpd_state *mpd_state) {
     }
     
     if (mpd_state->feat_library == false) {
+        #ifdef EMBEDDED_LIBMPDCLIENT
+        if (mpd_connection_cmp_server_version(mpd_state->conn, 0, 21, 0) < 0) {
+            LOG_WARN("Disabling coverimage support");
+            mpd_state->feat_coverimage = false;
+        }
+        #else
         LOG_WARN("Disabling coverimage support");
         mpd_state->feat_coverimage = false;
+        #endif
     }
-
-    //push music_directory setting to web_server_queue
-    t_work_result *web_server_response = (t_work_result *)malloc(sizeof(t_work_result));
-    assert(web_server_response);
-    web_server_response->conn_id = -1;
-    
-    sds data = sdsnew("{");
-    data = tojson_char(data, "musicDirectory", mpd_state->music_directory_value, true);
-    data = tojson_bool(data, "featLibrary", mpd_state->feat_library, false);
-    data = sdscat(data, "}");
-    web_server_response->data = data;
-    tiny_queue_push(web_server_queue, web_server_response);
 }

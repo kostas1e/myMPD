@@ -1,11 +1,12 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2019 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
 :root {
   --mympd-coverimagesize: 250px;
+  --mympd-covergridsize: 200px;
 }
 
 #splashScreen {
@@ -61,6 +62,10 @@ body {
 .breakAll, td[data-col=Title] {
   word-break: break-all;
   min-width: 6rem;
+}
+
+td[data-col=Action] {
+  text-align: right;
 }
 
 .albumartbg {
@@ -204,6 +209,31 @@ small {
   z-index: 1;
 }
 
+.card-grid {
+  width: var(--mympd-covergridsize, 200px);
+  min-height: 0 !important;
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+  transition: width 0.5s, height 0.5s;
+  max-width: 100%;
+}
+
+.card-footer-grid {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.album-cover-grid {
+  background-size: cover;
+  overflow: hidden;
+  background-color: #eee;
+  width: var(--mympd-covergridsize, 200px);
+  height: var(--mympd-covergridsize, 200px);
+  max-width: 100%;
+  padding: 0 0.5rem;
+}
+
 a.card-img-left {
   overflow: hidden;
   display: block;
@@ -226,7 +256,7 @@ a.card-img-left {
 .album-desc {
   min-width: 240px;
   float: left;
-  padding-bottom:1.25rem;
+  padding-bottom: 1.25rem;
 }
 
 .hide {
@@ -247,11 +277,12 @@ a.card-img-left {
 }
 
 .card-toolbar {
-  margin-bottom: 10px;
+  margin-bottom: 0.8rem;
+  margin-right: -0.5rem
 }
 
 .card-toolbar > div, .card-toolbar > form {
-  margin-bottom: 5px;
+  margin-bottom: 0.2rem;
 }
 
 @font-face {
@@ -313,6 +344,10 @@ a.card-img-left {
 
 #btn-outputs-block > button:last-child {
   margin-bottom: 0;
+}
+
+.btnCleanup {
+  min-width: 8rem;
 }
 
 .progressBarPlay {
@@ -475,7 +510,7 @@ ol#searchCrumb {
 }
 
 .nodropdown::after {
-  content: none;
+  content: none !important;
 }
 
 .dropdown-header-lx {
@@ -488,7 +523,7 @@ ol#searchCrumb {
 }
 
 tr:focus {
-  background-color: #ccc;
+  background-color: rgba(0, 0, 0, 0.075);
 }
 
 textarea.small {
@@ -499,3 +534,109 @@ textarea.small {
   align-self: baseline;
 }
 
+.form-control:focus {
+  border-color: #28A745 !important;
+  outline: 0;
+  box-shadow: none !important;
+}
+
+.btn-light:not(:disabled):not(.disabled):active, .btn-light:not(:disabled):not(.disabled).active,
+.show > .btn-light.dropdown-toggle,
+.btn-secondary:not(:disabled):not(.disabled):active, .btn-secondary:not(:disabled):not(.disabled).active,
+.show > .btn-secondary.dropdown-toggle {
+  color: #fff;
+  background-color: #28a745 !important;
+  border-color: #28a745 !important;
+}
+
+.btn-light:focus, .btn-light.focus,
+.btn-secondary:focus, .btn-secondary.focus {
+  color: #fff;
+  box-shadow: none;
+}
+
+.btn-light:not(:disabled):not(.disabled):active:focus, .btn-light:not(:disabled):not(.disabled).active:focus,
+.show > .btn-light.dropdown-toggle:focus,
+.btn-secondary:not(:disabled):not(.disabled):active:focus, .btn-secondary:not(:disabled):not(.disabled).active:focus,
+.show > .btn-secondary.dropdown-toggle:focus {
+  box-shadow: none !important;
+}
+
+.custom-select:focus {
+  border-color: #218838;
+  box-shadow: none;
+}
+
+.btn-xs, .btn-group-xs > .btn {
+  padding: 0.12rem;
+  border-radius: 0.2rem;
+}
+
+.popover {
+  font-size: 1rem;
+  max-width: none;
+}
+
+img.covergrid-header {
+  width: 50px;
+  height: 50px;
+  display: block;
+  float: left;
+  margin-right: 1rem;
+}
+
+div.covergrid-header {
+  padding: 0.37rem 0.75rem !important;
+}
+
+@media (min-width: 576px) {
+  .container {
+    max-width: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 992px) {
+  .container {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1140px;
+  }
+}
+
+div#playDropdown .row {
+  word-wrap: normal;
+  flex-wrap: nowrap;
+  margin-right: 10px;
+}
+
+.bg-lite-dark {
+  background-color: #494f56 !important;
+}
+
+.btn:focus, .btn.focus {
+  box-shadow: none;
+}
+
+.form-check {
+  padding-left: 0;
+}
+
+.dropdown-item:hover, 
+.dropdown-item:focus {
+  background-color: #3c4248;
+}
+
+.popover-content .dropdown-item:hover, 
+.popover-content .dropdown-item:focus {
+  background-color: #e9ecef;
+}

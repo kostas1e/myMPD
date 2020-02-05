@@ -1,7 +1,7 @@
 "use strict";
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2019 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -12,7 +12,7 @@ async function localplayerPlay() {
             await localPlayer.play();
         } 
         catch(err) {
-            showNotification(t('Local playback'), t('Can not start playing'), '', 'error');
+            showNotification(t('Local playback'), t('Can not start playing'), '', 'danger');
         }
     }
 }
@@ -58,14 +58,24 @@ function execSyscmd(cmd) {
 }
 
 //eslint-disable-next-line no-unused-vars
-function updateDB() {
-    sendAPI("MPD_API_DATABASE_UPDATE", {});
+function clearCovercache() {
+    sendAPI("MYMPD_API_COVERCACHE_CLEAR", {});
+}
+
+//eslint-disable-next-line no-unused-vars
+function cropCovercache() {
+    sendAPI("MYMPD_API_COVERCACHE_CROP", {});
+}
+
+//eslint-disable-next-line no-unused-vars
+function updateDB(uri) {
+    sendAPI("MPD_API_DATABASE_UPDATE", {"uri": uri});
     updateDBstarted(true);
 }
 
 //eslint-disable-next-line no-unused-vars
 function rescanDB() {
-    sendAPI("MPD_API_DATABASE_RESCAN", {});
+    sendAPI("MPD_API_DATABASE_RESCAN", {"uri": uri});
     updateDBstarted(true);
 }
 

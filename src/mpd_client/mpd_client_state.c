@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2019 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -14,15 +14,17 @@
 
 #include "../dist/src/sds/sds.h"
 #include "../sds_extras.h"
-#include "../utility.h"
+#include "../api.h"
 #include "../log.h"
 #include "../list.h"
 #include "config_defs.h"
+#include "../utility.h"
 #include "mpd_client_utility.h"
 #include "mpd_client_cover.h"
 #include "mpd_client_api.h"
+#include "mpd_client_sticker.h"
 #include "mpd_client_state.h"
-#include "../tidal.h"
+//#include "../tidal.h"
 
 sds mpd_client_get_updatedb_state(t_mpd_state *mpd_state, sds buffer) {
     struct mpd_status *status = mpd_run_status(mpd_state->conn);
@@ -197,7 +199,7 @@ sds mpd_client_put_outputs(t_mpd_state *mpd_state, sds buffer, sds method, int r
     return buffer;
 }
 
-sds mpd_client_put_current_song(t_config *config, t_mpd_state *mpd_state, sds buffer, sds method, int request_id) {
+sds mpd_client_put_current_song(t_mpd_state *mpd_state, sds buffer, sds method, int request_id) {
     struct mpd_song *song = mpd_run_current_song(mpd_state->conn);
     if (song == NULL) {
         buffer = jsonrpc_respond_message(buffer, method, request_id, "No current song", false);
@@ -208,26 +210,18 @@ sds mpd_client_put_current_song(t_config *config, t_mpd_state *mpd_state, sds bu
     buffer = sdscat(buffer, ",");
     buffer = tojson_long(buffer, "pos", mpd_song_get_pos(song), true);
     buffer = tojson_long(buffer, "currentSongId", mpd_state->song_id, true);
-    // check song uri for tidal then put tidal song tags instead
-    //if (strstr(mpd_song_get_uri(song), "tidal")) {
-        // put tidal song tags & cover
-        //buffer = tidal_put_song_tags(buffer, mpd_song_get_uri(song));
-    //    char *tag_value = mpd_client_get_tag(song, MPD_TAG_COMMENT);
-    //    buffer = tidal_put_song_tags(buffer, tag_value);
-        // call tidal_get_cover here (rm below !!!)
-    //}
-    //else {
-        buffer = put_song_tags(buffer, mpd_state, &mpd_state->mympd_tag_types, song);
-    //}
-
+    buffer = put_song_tags(buffer, mpd_state, &mpd_state->mympd_tag_types, song);
+    
     mpd_response_finish(mpd_state->conn);
 
+    /*
     sds cover = sdsempty();
     cover = mpd_client_get_cover(config, mpd_state, mpd_song_get_uri(song), cover); // !!!
     buffer = sdscat(buffer, ",");
     buffer = tojson_char(buffer, "cover", cover, false);
     sdsfree(cover);
-
+    */
+    
     if (mpd_state->feat_sticker) {
         t_sticker *sticker = (t_sticker *) malloc(sizeof(t_sticker));
         assert(sticker);

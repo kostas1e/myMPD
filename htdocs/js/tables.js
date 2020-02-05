@@ -1,7 +1,7 @@
 "use strict";
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2019 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -9,7 +9,7 @@ function focusTable(rownr, table) {
     if (table === undefined) {
         table = document.getElementById(app.current.app + (app.current.tab !== undefined ? app.current.tab : '') + (app.current.view !== undefined ? app.current.view : '') + 'List');
         //support for BrowseDatabaseAlbum list
-        if (table === undefined) {
+        if (table === null) {
             table = document.getElementById(app.current.app + app.current.tab + 'TagList');
         }
         //support for BrowseDatabaseAlbum cards
@@ -20,7 +20,15 @@ function focusTable(rownr, table) {
         }
     }
 
-    if (table !== undefined) {
+    if (app.current.app === 'Browse' && app.current.tab === 'Covergrid' &&
+            table.getElementsByTagName('tbody').length === 0) 
+    {
+        table = document.getElementsByClassName('card-grid')[0];
+        table.focus();        
+        return;
+    }
+
+    if (table !== null) {
         let sel = table.getElementsByClassName('selected');
         if (rownr === undefined) {
             if (sel.length === 0) {
@@ -49,7 +57,7 @@ function focusTable(rownr, table) {
         //insert goto parent row
         if (table.id === 'BrowseFilesystemList') {
             let tbody = table.getElementsByTagName('tbody')[0];
-            if (tbody.rows[0].getAttribute('data-type') !== 'parentDir' && app.current.search !== '') {
+            if (tbody.rows.length > 0 && tbody.rows[0].getAttribute('data-type') !== 'parentDir' && app.current.search !== '') {
                 let nrCells = table.getElementsByTagName('thead')[0].rows[0].cells.length;
                 let uri = app.current.search.replace(/\/?([^/]+)$/,'');
                 let row = tbody.insertRow(0);
@@ -309,9 +317,8 @@ function dragAndDropTableHeader(table) {
     }, false);
 }
 
-function setCols(table, className) {
-    let tagChks = '';
-    var tags = settings.tags.slice();
+function setColTags(table) {
+    let tags = settings.tags.slice();
     if (settings.featTags === false) {
         tags.push('Title');
     }
@@ -337,35 +344,43 @@ function setCols(table, className) {
     }
     
     tags.sort();
+    return tags;
+}
+
+function setColsChecklist(table) {
+    let tagChks = '';
+    let tags = setColTags(table);
     
     for (let i = 0; i < tags.length; i++) {
         if (table === 'Playback' && tags[i] === 'Title') {
             continue;
         }
-        tagChks += '<div class="form-check">' +
-            '<input class="form-check-input" type="checkbox" value="1" name="' + tags[i] + '"';
-        if (settings['cols' + table].includes(tags[i])) {
-            tagChks += 'checked';
-        }
-        tagChks += '>' +
-            '<label class="form-check-label text-light" for="' + tags[i] + '">&nbsp;&nbsp;' + t(tags[i]) + '</label>' +
+        tagChks += '<div>' +
+            '<button class="btn btn-secondary btn-xs clickable material-icons material-icons-small' +
+            (settings['cols' + table].includes(tags[i]) ? ' active' : '') + '" name="' + tags[i] + '">' +
+            (settings['cols' + table].includes(tags[i]) ? 'check' : 'radio_button_unchecked') + '</button>' +
+            '<label class="form-check-label" for="' + tags[i] + '">&nbsp;&nbsp;' + t(tags[i]) + '</label>' +
             '</div>';
     }
-    document.getElementById(table + 'ColsDropdown').firstChild.innerHTML = tagChks;
+    return tagChks;
+}
 
+function setCols(table, className) {
+    let colsChkList = document.getElementById(table + 'ColsDropdown');
+    if (colsChkList) {
+        colsChkList.firstChild.innerHTML = setColsChecklist(table);
+    }
     let sort = app.current.sort;
     
-    if (table === 'SearchDatabase') {
-        if (app.apps.Search.tabs.Database.state === '0/any/Title/') {
-            if (settings.tags.includes('Title')) {
-                sort = 'Title';
-            }
-            else if (settings.featTags === false) {
-                sort = 'Filename';
-            }
-            else {
-                sort = '-';
-            }
+    if (table === 'SearchDatabase' && app.apps.Search.tabs.Database.state === '0/any/Title/') {
+        if (settings.tags.includes('Title')) {
+            sort = 'Title';
+        }
+        else if (settings.featTags === false) {
+            sort = 'Filename';
+        }
+        else {
+            sort = '-';
         }
     }
 
@@ -410,8 +425,13 @@ function setCols(table, className) {
             }
             heading += '</th>';
         }
-        heading += '<th></th>';
-        
+        if (settings.featTags === true && table !== 'BrowseDatabase') {
+            heading += '<th data-col="Action"><a href="#" class="text-secondary align-middle material-icons material-icons-small">settings</a></th>';
+        }
+        else {
+            heading += '<th></th>';
+        }
+
         if (className === undefined) {
             document.getElementById(table + 'List').getElementsByTagName('tr')[0].innerHTML = heading;
         }
@@ -425,10 +445,10 @@ function setCols(table, className) {
 }
 
 function saveCols(table, tableEl) {
-    let colInputs = document.getElementById(table + 'ColsDropdown').firstChild.getElementsByTagName('input');
-    var header;
+    let colsDropdown = document.getElementById(table + 'ColsDropdown');
+    let header;
     if (tableEl === undefined) {
-         header = document.getElementById(table + 'List').getElementsByTagName('tr')[0];
+        header = document.getElementById(table + 'List').getElementsByTagName('tr')[0];
     }
     else if (typeof(tableEl) === 'string') {
         header = document.querySelector(tableEl).getElementsByTagName('tr')[0];
@@ -436,19 +456,24 @@ function saveCols(table, tableEl) {
     else {
         header = tableEl.getElementsByTagName('tr')[0];
     }
-    
-    for (let i = 0; i < colInputs.length; i++) {
-        let th = header.querySelector('[data-col=' + colInputs[i].name + ']');
-        if (colInputs[i].checked === false) {
-            if (th) {
-                th.remove();
+    if (colsDropdown) {
+        let colInputs = colsDropdown.firstChild.getElementsByTagName('button');
+        for (let i = 0; i < colInputs.length; i++) {
+            if (colInputs[i].getAttribute('name') == undefined) {
+                continue;
             }
-        } 
-        else if (!th) {
-            th = document.createElement('th');
-            th.innerText = colInputs[i].name;
-            th.setAttribute('data-col', colInputs[i].name);
-            header.appendChild(th);
+            let th = header.querySelector('[data-col=' + colInputs[i].name + ']');
+            if (colInputs[i].classList.contains('active') === false) {
+                if (th) {
+                    th.remove();
+                }
+            } 
+            else if (!th) {
+                th = document.createElement('th');
+                th.innerText = colInputs[i].name;
+                th.setAttribute('data-col', colInputs[i].name);
+                header.insertBefore(th, header.lastChild);
+            }
         }
     }
     
@@ -456,7 +481,7 @@ function saveCols(table, tableEl) {
     let ths = header.getElementsByTagName('th');
     for (let i = 0; i < ths.length; i++) {
         let name = ths[i].getAttribute('data-col');
-        if (name) {
+        if (name !== 'Action' && name !== null) {
             params.cols.push(name);
         }
     }
@@ -465,12 +490,12 @@ function saveCols(table, tableEl) {
 
 //eslint-disable-next-line no-unused-vars
 function saveColsPlayback(table) {
-    let colInputs = document.getElementById(table + 'ColsDropdown').firstChild.getElementsByTagName('input');
+    let colInputs = document.getElementById(table + 'ColsDropdown').firstChild.getElementsByTagName('button');
     let header = document.getElementById('cardPlaybackTags');
 
-    for (let i = 0; i < colInputs.length; i++) {
+    for (let i = 0; i < colInputs.length -1; i++) {
         let th = document.getElementById('current' + colInputs[i].name);
-        if (colInputs[i].checked === false) {
+        if (colInputs[i].classList.contains('active') === false) {
             if (th) {
                 th.remove();
             }

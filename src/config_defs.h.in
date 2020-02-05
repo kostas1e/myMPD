@@ -1,5 +1,5 @@
 /* myMPD
-   (c) 2018-2019 Juergen Mang <mail@jcgames.de>
+   (c) 2018-2020 Juergen Mang <mail@jcgames.de>
    This project's homepage is: https://github.com/jcorporation/mympd
    
    myMPD ist fork of:
@@ -28,6 +28,18 @@
 //Debug build
 #cmakedefine DEBUG
 
+//Embedded libmpdclient
+#cmakedefine EMBEDDED_LIBMPDCLIENT
+
+//libid3tag
+#cmakedefine ENABLE_LIBID3TAG
+
+//flac
+#cmakedefine ENABLE_FLAC
+
+//openssl
+#cmakedefine ENABLE_SSL
+
 //myMPD version from cmake
 #define MYMPD_VERSION_MAJOR ${CPACK_PACKAGE_VERSION_MAJOR}
 #define MYMPD_VERSION_MINOR ${CPACK_PACKAGE_VERSION_MINOR}
@@ -52,12 +64,14 @@ typedef struct t_config {
     int mpd_port;
     sds mpd_pass;
     sds webport;
+#ifdef ENABLE_SSL
     bool ssl;
     sds ssl_port;
     sds ssl_cert;
     sds ssl_key;
     bool custom_cert;
     sds ssl_san;
+#endif
     sds user;
     bool stickers;
     bool mixramp;
@@ -76,7 +90,6 @@ typedef struct t_config {
     bool love;
     sds love_channel;
     sds love_message;
-    bool plugins_coverextract;
     sds music_directory;
     bool notification_web;
     bool notification_page;
@@ -84,6 +97,8 @@ typedef struct t_config {
     int jukebox_mode;
     sds jukebox_playlist;
     int jukebox_queue_length;
+    int jukebox_last_played;
+    sds jukebox_unique_tag;
     sds cols_queue_current;
     sds cols_search;
     sds cols_search_tidal;
@@ -103,11 +118,20 @@ typedef struct t_config {
     bool coverimage;
     sds coverimage_name;
     int coverimage_size;
+    int covergrid_size;
     sds locale;
     time_t startup_time;
     bool readonly;
     bool bookmarks;
     int volume_step;
+    bool publish_library;
+    int covercache_keep_days;
+    bool covercache;
+    sds theme;
+    bool custom_placeholder_images;
+    bool regex;
+    bool timer;
+    bool sticker_cache;
     //tidal
     sds tidal_token;
     sds tidal_username;

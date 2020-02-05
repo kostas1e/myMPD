@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2019 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -24,8 +24,7 @@ var ignoreRequests = new RegExp('(' + [
   subdir + '/ca.crt',
   subdir + '/ws',
   subdir + '/library/(.*)',
-  subdir + '/albumart/(.*)',
-  subdir + '/pics/(.*)'].join('(/?)|\\') + ')$')
+  subdir + '/albumart/(.*)'].join('(/?)|\\') + ')$')
 
 self.addEventListener('install', function(event) {
     event.waitUntil(

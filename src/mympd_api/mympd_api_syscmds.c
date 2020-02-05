@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2019 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -13,17 +13,17 @@
 
 #include "../dist/src/sds/sds.h"
 #include "../sds_extras.h"
-#include "../utility.h"
 #include "../log.h"
 #include "../list.h"
 #include "config_defs.h"
+#include "../utility.h"
 #include "mympd_api_utility.h"
 #include "mympd_api_syscmds.h"
 
 sds mympd_api_syscmd(t_config *config, sds buffer, sds method, int request_id, 
                      const char *cmd)
 {
-    sds cmdline = list_get_extra(&config->syscmd_list, cmd);
+    sds cmdline = list_get_value_p(&config->syscmd_list, cmd);
     if (cmdline == NULL) {
         LOG_ERROR("Syscmd not defined: %s", cmd);
         buffer = jsonrpc_respond_message(buffer, method, request_id, "System command not defined", true);

@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2019 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -12,10 +12,11 @@
 
 #include "../dist/src/sds/sds.h"
 #include "../sds_extras.h"
-#include "../utility.h"
+#include "../api.h"
 #include "../log.h"
 #include "../list.h"
 #include "config_defs.h"
+#include "../utility.h"
 #include "mpd_client_utility.h"
 #include "mpd_client_search.h"
 

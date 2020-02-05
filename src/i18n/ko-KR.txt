@@ -15,6 +15,12 @@ Update database
 Rescan database
 데이터베이스 다시 검색
 
+Update directory
+디렉터리 업데이트
+
+Rescan directory
+디렉터리 다시 검색
+
 Update smart playlists
 스마트 연주목록 업데이트
 
@@ -146,6 +152,9 @@ Label
 
 Grouping
 묶음
+
+Conductor
+지휘자
 
 Pos
 위치
@@ -397,13 +406,10 @@ Must be a number and greater than zero
 0보다 큰 숫자여야 함
 
 Albumart
-음반표지
+음반 표지
 
 Can't access music directory
 음원 디렉터리에 접근할 수 없음
-
-Size
-크기
 
 Invalid size
 잘못된 크기
@@ -468,6 +474,9 @@ Stickers are disabled
 Playback statistics
 연주 통계
 
+Playback statistics are disabled
+연주 통계 사용 안 함
+
 Last played list count
 앞선 연주 목록 개수
 
@@ -519,8 +528,8 @@ Reset
 Reset settings
 다시 설정 하기
 
-Clear cache and reload
-캐시를 지우고 다시 읽기
+Clear app cache and reload
+앱 캐시를 지우고 다시 읽기
 
 Reload
 다시 읽기
@@ -572,6 +581,9 @@ Protocol version
 
 Libmpdclient version
 Libmpdclient 버전
+
+Libmympdclient version
+Libmympdclient 버전
 
 Shortcut
 단축키
@@ -686,6 +698,9 @@ Goto browse playlists
 
 Goto browse filesystem
 파일 시스템 열기로 가기
+
+Goto browse covergrid
+음반 표지 격자 보기로 가기
 
 Goto search
 찾기로 가기
@@ -989,3 +1004,138 @@ Consume must be enabled
 
 Advanced
 고급
+
+Successfully croped covercache
+표지 캐시 잘라내기 완료
+
+Successfully cleared covercache
+표지 캐시 지우기 완료
+
+Clear covercache
+표지 캐시 지우기
+
+Clear
+지우기
+
+Crop
+잘라내기
+
+No albumart found by mpd
+MPD가 음반 표지를 찾을 수 없음
+
+Descending
+내림차순
+
+Covergrid
+음반 표지 격자
+
+Sort by
+정렬
+
+Size normal
+일반 크기
+
+Size small
+작은 크기
+
+Dark
+어둠
+
+Light
+밝음
+
+Default
+기본
+
+Interface
+인터페이스
+
+Unknown artist
+모르는 연주자
+
+Unknown album
+모르는 음반
+
+Show songs
+곡 보기
+
+JavaScript error
+자바스크립트 오류
+
+Definition
+결정
+
+Enable jukebox if playlist is database
+연주목록이 데이터베이스이면 뮤직박스 사용함
+
+Enabled
+사용함
+
+Enforce uniqueness
+유일성 강제
+
+Invalid name
+잘못된 이름
+
+Last played older than (hours)
+이전에 연주됨 (시간)
+
+Minimum one weekday must be selected
+최소 일주일 선택해야 함
+
+Must be a number and equal or greater than zero
+숫자이고 0과 같거나 커야 함
+
+Timer
+시간 조절
+
+New timer
+새로운 시간 조절
+
+On
+켜기
+
+on
+켜기
+
+Oneshot
+1회
+
+Other features
+다른 기능
+
+Start
+시작
+
+Start playback
+연주 시작
+
+Stop playback
+연주 정지
+
+Weekdays
+주일
+
+Mon
+월
+
+Tue
+화
+
+Wed
+수
+
+Thu
+목
+
+Fri
+금
+
+Sat
+토
+
+Sun
+일
+
+System command
+시스템 명령어

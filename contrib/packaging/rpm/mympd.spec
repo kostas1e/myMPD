@@ -1,10 +1,10 @@
 #
 # spec file for package myMPD
 #
-# (c) 2018-2019 Juergen Mang <mail@jcgames.de>
+# (c) 2018-2020 Juergen Mang <mail@jcgames.de>
 
 Name:           mympd
-Version:        5.7.2
+Version:        6.1.0
 Release:        0 
 License:        GPL-2.0-or-later
 Group:          Productivity/Multimedia/Sound/Players
@@ -12,13 +12,12 @@ Summary:        Standalone web mpd client
 Url:            https://github.com/jcorporation/myMPD
 Source:         mympd-%{version}.tar.gz
 BuildRequires:  gcc
-BuildRequires:  gcc-c++
 BuildRequires:  cmake
 BuildRequires:  unzip
-BuildRequires:  libmpdclient-devel
 BuildRequires:  pkgconfig
 BuildRequires:  openssl-devel
-BuildRequires:  libmediainfo-devel
+BuildRequires:  libid3tag-devel
+BuildRequires:	flac-devel
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 %global debug_package %{nil}
@@ -55,10 +54,9 @@ fi
 %defattr(-,root,root,-)
 %doc README.md LICENSE
 /usr/bin/mympd
-/usr/lib/mympd
 /usr/lib/systemd/system/mympd.service
 %config(noreplace) /etc/mympd.conf
 
 %changelog
-* Wed Nov 20 2019 Juergen Mang <mail@jcgames.de> 5.7.2-0
+* Mon Jan 06 2020 Juergen Mang <mail@jcgames.de> 6.1.0-0
 - Version from master

@@ -1,7 +1,7 @@
 "use strict";
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2019 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -55,7 +55,8 @@ app.apps = { "Playback":   { "state": "0/-/-/", "scrollPos": 0 },
                                     "active": "AlbumArtist",
                                     "views": { 
                                      }
-                             }
+                             },
+                             "Covergrid":  { "state": "0/AlbumArtist/AlbumArtist/", "scrollPos": 0 }
                   }
              },
              // radio/mix(/track) view plus back history
@@ -117,6 +118,7 @@ domCache.searchstr = document.getElementById('searchstr');
 domCache.searchCrumb = document.getElementById('searchCrumb');
 domCache.searchtidalstr = document.getElementById('searchtidalstr');
 domCache.searchqobuzstr = document.getElementById('searchqobuzstr');
+domCache.body = document.getElementsByTagName('body')[0];
 
 /* eslint-disable no-unused-vars */
 var modalConnection = new Modal(document.getElementById('modalConnection'));
@@ -133,11 +135,14 @@ var modalUpdateDB = new Modal(document.getElementById('modalUpdateDB'));
 var modalSaveSmartPlaylist = new Modal(document.getElementById('modalSaveSmartPlaylist'));
 var modalDeletePlaylist = new Modal(document.getElementById('modalDeletePlaylist'));
 var modalSaveBookmark = new Modal(document.getElementById('modalSaveBookmark'));
+var modalTimer = new Modal(document.getElementById('modalTimer'));
 
 var dropdownMainMenu; 
 var dropdownVolumeMenu = new Dropdown(document.getElementById('volumeMenu'));
 var dropdownBookmarks = new Dropdown(document.getElementById('BrowseFilesystemBookmark'));
 var dropdownLocalPlayer = new Dropdown(document.getElementById('localPlaybackMenu'));
+var dropdownPlay = new Dropdown(document.getElementById('btnPlayDropdown'));
+var dropdownCovergridSort = new Dropdown(document.getElementById('btnCovergridSortDropdown'));
 
 var collapseDBupdate = new Collapse(document.getElementById('navDBupdate'));
 var collapseSyscmds = new Collapse(document.getElementById('navSyscmds'));
@@ -170,6 +175,7 @@ function appPrepare(scrollPos) {
         document.getElementById('cardSearchDatabase').classList.add('hide');
         document.getElementById('cardSearchTidal').classList.add('hide');
         document.getElementById('cardSearchQobuz').classList.add('hide');
+        document.getElementById('cardBrowseCovergrid').classList.add('hide');
         //show active card + nav
         document.getElementById('card' + app.current.app).classList.remove('hide');
         if (document.getElementById('nav' + app.current.app)) {
@@ -322,6 +328,23 @@ function appRoute() {
         document.getElementById('BrowseBreadcrumb').innerHTML = breadcrumbs;
         doSetFilterLetter('BrowseFilesystemFilter');
     }
+    else if (app.current.app === 'Browse' && app.current.tab === 'Covergrid') {
+        document.getElementById('searchCovergridStr').value = app.current.search;
+        selectTag('searchCovergridTags', 'searchCovergridTagsDesc', app.current.filter);
+        let sort = app.current.sort;
+        let sortdesc = false;
+        if (app.current.sort.charAt(0) === '-') {
+            sortdesc = true;
+            sort = app.current.sort.substr(1);
+            toggleBtnChk('covergridSortDesc', true);
+        }
+        else {
+            toggleBtnChk('covergridSortDesc', false);
+        }
+        selectTag('covergridSortTags', undefined, sort);
+        sendAPI("MPD_API_DATABASE_GET_ALBUMS", {"offset": app.current.page, "searchstr": app.current.search, 
+            "tag": app.current.filter, "sort": sort, "sortdesc": sortdesc}, parseCovergrid);
+    }
     else if (app.current.app === 'Search' && app.current.tab === 'Database') {
         domCache.searchstr.focus();
         if (settings.featAdvsearch) {
@@ -379,10 +402,10 @@ function appRoute() {
                         sort = sort.substring(1);
                     }
                 }
-                sendAPI("MPD_API_DATABASE_SEARCH_ADV", {"plist": "", "offset": app.current.page, "sort": sort, "sortdesc": sortdesc, "expression": app.current.search, "cols": settings.colsSearchDatabase}, parseSearch);
+                sendAPI("MPD_API_DATABASE_SEARCH_ADV", {"plist": "", "offset": app.current.page, "sort": sort, "sortdesc": sortdesc, "expression": app.current.search, "cols": settings.colsSearchDatabase, "replace": false}, parseSearch);
             }
             else {
-                sendAPI("MPD_API_DATABASE_SEARCH", {"plist": "", "offset": app.current.page, "filter": app.current.filter, "searchstr": app.current.search, "cols": settings.colsSearchDatabase}, parseSearch);
+                sendAPI("MPD_API_DATABASE_SEARCH", {"plist": "", "offset": app.current.page, "filter": app.current.filter, "searchstr": app.current.search, "cols": settings.colsSearchDatabase, "replace": false}, parseSearch);
             }
         } else {
             document.getElementById('SearchDatabaseList').getElementsByTagName('tbody')[0].innerHTML = '';
@@ -490,6 +513,9 @@ function appInitStart() {
     
     //register serviceworker
     let script = document.getElementsByTagName("script")[0].src.replace(/^.*[/]/, '');
+    if (script !== 'combined.js') {
+        settings.loglevel = 4;
+    }
     if ('serviceWorker' in navigator && document.URL.substring(0, 5) === 'https' 
         && window.location.hostname !== 'localhost' && script === 'combined.js')
     {
@@ -585,6 +611,26 @@ function appInit() {
         sendAPI("MYMPD_API_BOOKMARK_LIST", {"offset": 0}, parseBookmarks);
     });
     
+    document.getElementById('playDropdown').parentNode.addEventListener('show.bs.dropdown', function () {
+        showPlayDropdown();
+    });
+
+    document.getElementById('playDropdown').addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    });
+    
+    let dropdowns = document.querySelectorAll('.dropdown-toggle');
+    for (let i = 0; i < dropdowns.length; i++) {
+        dropdowns[i].parentNode.addEventListener('show.bs.dropdown', function () {
+            alignDropdown(this);
+        });
+    }
+    
+    document.getElementById('modalTimer').addEventListener('shown.bs.modal', function () {
+        showListTimer();
+    });
+    
     document.getElementById('modalAbout').addEventListener('shown.bs.modal', function () {
         sendAPI("MPD_API_DATABASE_STATS", {}, parseStats);
         let trs = '';
@@ -606,6 +652,31 @@ function appInit() {
             document.getElementById('addToPlaylistPlaylist').focus();
         }
     });
+    
+    document.getElementById('inputTimerVolume').addEventListener('change', function() {
+        document.getElementById('textTimerVolume').innerHTML = this.value + '&nbsp;%';
+    }, false);
+    
+    document.getElementById('selectTimerAction').addEventListener('change', function() {
+        if (this.options[this.selectedIndex].value === 'startplay') {
+            document.getElementById('timerActionPlay').classList.remove('hide');
+        }
+        else {
+            document.getElementById('timerActionPlay').classList.add('hide');
+        }
+    }, false);
+    
+    let selectTimerHour = ''; 
+    for (let i = 0; i < 24; i++) {
+        selectTimerHour += '<option value="' + i + '">' + zeroPad(i, 2) + '</option>';
+    }
+    document.getElementById('selectTimerHour').innerHTML = selectTimerHour;
+    
+    let selectTimerMinute = ''; 
+    for (let i = 0; i < 60; i = i + 5) {
+        selectTimerMinute += '<option value="' + i + '">' + zeroPad(i, 2) + '</option>';
+    }
+    document.getElementById('selectTimerMinute').innerHTML = selectTimerMinute;
     
     document.getElementById('modalAddToQueue').addEventListener('shown.bs.modal', function () {
         document.getElementById('inputAddToQueueQuantity').classList.remove('is-invalid');
@@ -640,29 +711,46 @@ function appInit() {
         document.getElementById('inputMpdPass').classList.remove('is-invalid');
     });
 
-    document.getElementById('selectJukeboxMode').addEventListener('change', function () {
-        let value = this.options[this.selectedIndex].value;
-        if (value === '0') {
-            document.getElementById('inputJukeboxQueueLength').setAttribute('disabled', 'disabled');
-            document.getElementById('selectJukeboxPlaylist').setAttribute('disabled', 'disabled');
-        }
-        else if (value === '2') {
-            document.getElementById('inputJukeboxQueueLength').setAttribute('disabled', 'disabled');
-            document.getElementById('selectJukeboxPlaylist').setAttribute('disabled', 'disabled');
-            document.getElementById('selectJukeboxPlaylist').value = 'Database';
-        }
-        else if (value === '1') {
-            document.getElementById('inputJukeboxQueueLength').removeAttribute('disabled');
-            document.getElementById('selectJukeboxPlaylist').removeAttribute('disabled');
-        }
-        if (value !== '0') {
-            toggleBtnChk('btnConsume', true);            
-        }
-        checkConsume();
+    document.getElementById('btnJukeboxModeGroup').addEventListener('mouseup', function () {
+        setTimeout(function() {
+            let value = document.getElementById('btnJukeboxModeGroup').getElementsByClassName('active')[0].getAttribute('data-value');
+            if (value === '0') {
+                document.getElementById('inputJukeboxQueueLength').setAttribute('disabled', 'disabled');
+                document.getElementById('selectJukeboxPlaylist').setAttribute('disabled', 'disabled');
+            }
+            else if (value === '2') {
+                document.getElementById('inputJukeboxQueueLength').setAttribute('disabled', 'disabled');
+                document.getElementById('selectJukeboxPlaylist').setAttribute('disabled', 'disabled');
+                document.getElementById('selectJukeboxPlaylist').value = 'Database';
+            }
+            else if (value === '1') {
+                document.getElementById('inputJukeboxQueueLength').removeAttribute('disabled');
+                document.getElementById('selectJukeboxPlaylist').removeAttribute('disabled');
+            }
+            if (value !== '0') {
+                toggleBtnChk('btnConsume', true);            
+            }
+            checkConsume();
+        }, 100);
     });
     
     document.getElementById('btnConsume').addEventListener('mouseup', function() {
-        setTimeout(function() { checkConsume(); }, 100);
+        setTimeout(function() { 
+            checkConsume(); 
+        }, 100);
+    });
+    
+    document.getElementById('btnStickers').addEventListener('mouseup', function() {
+        setTimeout(function() {
+            if (document.getElementById('btnStickers').classList.contains('active')) {
+                document.getElementById('warnPlaybackStatistics').classList.add('hide');
+                document.getElementById('inputJukeboxLastPlayed').removeAttribute('disabled');
+            }
+            else {
+                document.getElementById('warnPlaybackStatistics').classList.remove('hide');
+                document.getElementById('inputJukeboxLastPlayed').setAttribute('disabled', 'disabled');
+            }
+        }, 100);
     });
     
     document.getElementById('selectAddToQueueMode').addEventListener('change', function () {
@@ -716,7 +804,9 @@ function appInit() {
     let hrefs = document.querySelectorAll('[data-href]');
     let hrefsLen = hrefs.length;
     for (let i = 0; i < hrefsLen; i++) {
-        hrefs[i].classList.add('clickable');
+        if (hrefs[i].classList.contains('notclickable') === false) {
+            hrefs[i].classList.add('clickable');
+        }
         let parentInit = hrefs[i].parentNode.classList.contains('noInitChilds') ? true : false;
         if (parentInit === true) {
             //handler on parentnode
@@ -782,6 +872,20 @@ function appInit() {
             event.stopPropagation();
             sendAPI("MPD_API_PLAYER_TOGGLE_OUTPUT", {"output": event.target.getAttribute('data-output-id'), "state": (event.target.classList.contains('active') ? 0 : 1)});
             toggleBtn(event.target.id);
+        }
+    }, false);
+    
+    document.getElementById('listTimerList').addEventListener('click', function(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        if (event.target.nodeName === 'TD') {
+            showEditTimer(event.target.parentNode.getAttribute('data-id'));
+        }
+        else if (event.target.nodeName === 'A') {
+            deleteTimer(event.target.parentNode.parentNode.getAttribute('data-id'));
+        }
+        else if (event.target.nodeName === 'BUTTON') {
+            toggleTimer(event.target, event.target.parentNode.parentNode.getAttribute('data-id'));
         }
     }, false);
     
@@ -932,7 +1036,7 @@ function appInit() {
                 addAllFromBrowseFilesystem();
             }
             else if (event.target.getAttribute('data-phrase') === 'Add all to playlist') {
-                showAddToPlaylist(app.current.search);                
+                showAddToPlaylist(app.current.search, '');
             }
         }
     }, false);
@@ -940,10 +1044,10 @@ function appInit() {
     document.getElementById('searchAddAllSongsDropdown').addEventListener('click', function(event) {
         if (event.target.nodeName === 'BUTTON') {
             if (event.target.getAttribute('data-phrase') === 'Add all to queue') {
-                addAllFromSearchPlist('queue');
+                addAllFromSearchPlist('queue', null, false);
             }
             else if (event.target.getAttribute('data-phrase') === 'Add all to playlist') {
-                showAddToPlaylist('SEARCH');                
+                showAddToPlaylist('SEARCH', '');
             }
             else if (event.target.getAttribute('data-phrase') === 'Save as smart playlist') {
                 saveSearchAsSmartPlaylist();
@@ -974,7 +1078,7 @@ function appInit() {
                 addAllFromBrowseDatabasePlist('queue');
             }
             else if (event.target.getAttribute('data-phrase') === 'Add all to playlist') {
-                showAddToPlaylist('DATABASE');
+                showAddToPlaylist('DATABASE', '');
             }
         }
     }, false);
@@ -983,6 +1087,44 @@ function appInit() {
         if (event.target.nodeName === 'BUTTON') {
             app.current.filter = event.target.getAttribute('data-tag');
             search(domCache.searchstr.value);
+        }
+    }, false);
+    
+    document.getElementById('searchCovergridTags').addEventListener('click', function(event) {
+        if (event.target.nodeName === 'BUTTON') {
+            app.current.filter = event.target.getAttribute('data-tag');
+            appGoto(app.current.app, app.current.tab, app.current.view, '0/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
+        }
+    }, false);
+    
+    document.getElementById('covergridSortDesc').addEventListener('click', function(event) {
+        toggleBtnChk(this);
+        event.stopPropagation();
+        event.preventDefault();
+        if (app.current.sort.charAt(0) === '-') {
+            app.current.sort = app.current.sort.substr(1);
+        }
+        else {
+            app.current.sort = '-' + app.current.sort;
+        }
+        appGoto(app.current.app, app.current.tab, app.current.view, '0/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
+    }, false);
+
+    document.getElementById('covergridSortTags').addEventListener('click', function(event) {
+        if (event.target.nodeName === 'BUTTON') {
+            event.preventDefault();
+            event.stopPropagation();
+            app.current.sort = event.target.getAttribute('data-tag');
+            appGoto(app.current.app, app.current.tab, app.current.view, '0/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
+        }
+    }, false);
+    
+    document.getElementById('searchCovergridStr').addEventListener('keyup', function(event) {
+        if (event.key === 'Escape') {
+            this.blur();
+        }
+        else {
+            appGoto(app.current.app, app.current.tab, app.current.view, '0/' + app.current.filter + '/' + app.current.sort + '/' + this.value);
         }
     }, false);
 
@@ -1010,16 +1152,26 @@ function appInit() {
     }, false);
 
     document.getElementById('searchqueuetags').addEventListener('click', function(event) {
-        if (event.target.nodeName === 'BUTTON')
+        if (event.target.nodeName === 'BUTTON') {
             appGoto(app.current.app, app.current.tab, app.current.view, app.current.page + '/' + event.target.getAttribute('data-tag') + '/' + app.current.sort  + '/' + app.current.search);
+        }
     }, false);
 
+    /*
     let dropdowns = ['QueueCurrentColsDropdown', 'BrowseFilesystemColsDropdown', 'SearchDatabaseColsDropdown', 'BrowsePlaylistsDetailColsDropdown', 
         'BrowseDatabaseColsDropdown', 'PlaybackColsDropdown', 'QueueLastPlayedColsDropdown', 'SearchTidalColsDropdown', 'SearchQobuzColsDropdown'];
     for (let i = 0; i < dropdowns.length; i++) {
         document.getElementById(dropdowns[i]).addEventListener('click', function(event) {
             if (event.target.nodeName === 'INPUT')
+    */
+    let colDropdowns = ['BrowseDatabaseColsDropdown', 'PlaybackColsDropdown'];
+    for (let i = 0; i < colDropdowns.length; i++) {
+        document.getElementById(colDropdowns[i]).addEventListener('click', function(event) {
+            if (event.target.nodeName === 'BUTTON' && event.target.classList.contains('material-icons')) {
                 event.stopPropagation();
+                event.preventDefault();
+                toggleBtnChk(event.target);
+            }
         }, false);
     }
     
@@ -1036,6 +1188,10 @@ function appInit() {
     }, false);
 
     document.getElementById('searchqueue').addEventListener('submit', function() {
+        return false;
+    }, false);
+    
+    document.getElementById('searchcovergrid').addEventListener('submit', function() {
         return false;
     }, false);
 
@@ -1107,6 +1263,9 @@ function appInit() {
     document.getElementById('SearchDatabaseList').getElementsByTagName('tr')[0].addEventListener('click', function(event) {
         if (settings.featAdvsearch) {
             if (event.target.nodeName === 'TH') {
+                if (event.target.innerHTML === '') {
+                    return;
+                }
                 let col = event.target.getAttribute('data-col');
                 if (col === 'Duration') {
                     return;
@@ -1198,6 +1357,13 @@ function appInit() {
             navigateTable(this, event.key);
         }, false);
     }
+
+    let selectThemeHtml = '';
+    Object.keys(themes).forEach(function(key, index) {
+        selectThemeHtml += '<option value="' + key + '">' + t(themes[key]) + '</option>';
+    });
+    document.getElementById('selectTheme').innerHTML = selectThemeHtml;
+
     
     window.addEventListener('beforeinstallprompt', function(event) {
         // Prevent Chrome 67 and earlier from automatically showing the prompt
@@ -1257,4 +1423,17 @@ function appInit() {
 }
 
 //Init app
+window.onerror = function(msg, url, line) {
+    logError('JavaScript error: ' + msg + ' (' + url + ': ' + line + ')');
+    if (settings.loglevel >= 4) {
+        if (appInited === true) {
+            showNotification(t('JavaScript error'), msg + ' (' + url + ': ' + line + ')', '', 'danger');
+        }
+        else {
+            showAppInitAlert(t('JavaScript error') + ': ' + msg + ' (' + url + ': ' + line + ')');
+        }
+    }
+    return true;
+};
+
 appInitStart();

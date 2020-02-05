@@ -1,9 +1,32 @@
 "use strict";
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2019 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
+
+function alignDropdown(el) {
+    if (getXpos(el.children[0]) > domCache.body.offsetWidth * 0.66) {
+        el.getElementsByClassName('dropdown-menu')[0].classList.add('dropdown-menu-right');
+    }
+    else {
+        el.getElementsByClassName('dropdown-menu')[0].classList.remove('dropdown-menu-right');
+    }
+}
+
+function getXpos(el) {
+    var xPos = 0;
+    while (el) {
+        xPos += (el.offsetLeft - el.scrollLeft + el.clientLeft);
+        el = el.offsetParent;
+    }
+    return xPos;
+}
+
+function zeroPad(num, places) {
+  var zero = places - num.toString().length + 1;
+  return Array(+(zero > 0 && zero)).join("0") + num;
+}
 
 function dirname(uri) {
     return uri.replace(/\/[^/]*$/, '');
@@ -14,7 +37,7 @@ function basename(uri) {
 }
 
 function filetype(uri) {
-    if (uri == undefined) {
+    if (uri === undefined) {
         return '';
     }
     let ext = uri.split('.').pop().toUpperCase();
@@ -32,6 +55,8 @@ function filetype(uri) {
         case 'MPC':  return ext + ' - Musepack';
         case 'MP4':  return ext + ' - MPEG-4';
         case 'M4A':  return ext + ' - MPEG-4 Audio';
+        case 'APE':  return ext + ' - Monkey Audio ';
+        case 'WMA':  return ext + ' - Windows Media Audio';
         default:     return ext;
     }
 }
@@ -103,7 +128,10 @@ function selectTag(btnsEl, desc, setTo) {
     aBtn = btns.querySelector('[data-tag=' + setTo + ']');
     if (aBtn) {
         aBtn.classList.add('active');
-        document.getElementById(desc).innerText = aBtn.innerText;
+        if (desc !== undefined) {
+            document.getElementById(desc).innerText = aBtn.innerText;
+            document.getElementById(desc).setAttribute('data-phrase', aBtn.innerText);
+        }
     }
 }
 
@@ -120,6 +148,9 @@ function addTagList(el, list) {
     }
     for (let i = 0; i < settings[list].length; i++) {
         tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="' + settings[list][i] + '">' + t(settings[list][i]) + '</button>';
+    }
+    if (el === 'covergridSortTagsList' && settings.tags.includes('Date')) {
+        tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="Date">' + t('Date') + '</button>';
     }
     document.getElementById(el).innerHTML = tagList;
 }
@@ -153,8 +184,39 @@ function focusSearch() {
     }
 }
 
+function toggleBtnGroupValue(btngrp, value) {
+    let btns = btngrp.getElementsByTagName('button');
+    for (let i = 0; i < btns.length; i++) {
+        if (btns[i].getAttribute('data-value') == value) {
+            btns[i].classList.add('active');
+        }
+        else {
+            btns[i].classList.remove('active');
+        }
+    }
+}
+
+function toggleBtnGroup(btn) {
+    let b = btn;
+    if (typeof btn === 'string') {
+        b = document.getElementById(btn);
+    }
+    let btns = b.parentNode.getElementsByTagName('button');
+    for (let i = 0; i < btns.length; i++) {
+        if (btns[i] === b) {
+            btns[i].classList.add('active');
+        }
+        else {
+            btns[i].classList.remove('active');
+        }
+    }
+}
+
 function toggleBtn(btn, state) {
-    let b = document.getElementById(btn);
+    let b = btn;
+    if (typeof btn === 'string') {
+        b = document.getElementById(btn);
+    }
     if (!b) {
         return;
     }
@@ -162,12 +224,8 @@ function toggleBtn(btn, state) {
         //toggle state
         state = b.classList.contains('active') ? false : true;
     }
-    else if (state === 0 || state === 1) {
-        //1 = true, 0 = false
-        state = state === 1 ? true : false;
-    }
 
-    if (state === true) {
+    if (state === true || state === 1) {
         b.classList.add('active');
     }
     else {
@@ -176,7 +234,10 @@ function toggleBtn(btn, state) {
 }
 
 function toggleBtnChk(btn, state) {
-    let b = document.getElementById(btn);
+    let b = btn;
+    if (typeof btn === 'string') {
+        b = document.getElementById(btn);
+    }
     if (!b) {
         return;
     }
@@ -184,12 +245,8 @@ function toggleBtnChk(btn, state) {
         //toggle state
         state = b.classList.contains('active') ? false : true;
     }
-    else if (state === 0 || state === 1) {
-        //1 = true, 0 = false
-        state = state === 1 ? true : false;
-    }
 
-    if (state === true) {
+    if (state === true || state === 1) {
         b.classList.add('active');
         b.innerText = 'check';
     }
@@ -202,48 +259,56 @@ function toggleBtnChk(btn, state) {
 function setPagination(total, returned) {
     let cat = app.current.app + app.current.tab;
     let totalPages = Math.ceil(total / settings.maxElementsPerPage);
-    if (totalPages === 0) 
+    if (totalPages === 0) {
         totalPages = 1;
-    let p = ['PaginationTop', 'PaginationBottom'];
-    for (let i = 0; i < 2; i++) {
-        document.getElementById(cat + p[i] + 'Page').innerText = (app.current.page / settings.maxElementsPerPage + 1) + ' / ' + totalPages;
+    }
+    let p = [ document.getElementById(cat + 'PaginationTop'), document.getElementById(cat + 'PaginationBottom') ];
+    
+    for (let i = 0; i < p.length; i++) {
+        let prev = p[i].children[0];
+        let page = p[i].children[1].children[0];
+        let pages = p[i].children[1].children[1];
+        let next = p[i].children[2];
+    
+        page.innerText = (app.current.page / settings.maxElementsPerPage + 1) + ' / ' + totalPages;
         if (totalPages > 1) {
-            document.getElementById(cat + p[i] + 'Page').removeAttribute('disabled');
+            page.removeAttribute('disabled');
             let pl = '';
             for (let j = 0; j < totalPages; j++) {
                 pl += '<button data-page="' + (j * settings.maxElementsPerPage) + '" type="button" class="mr-1 mb-1 btn-sm btn btn-secondary">' +
-                    ( j + 1) + '</button>';
+                      ( j + 1) + '</button>';
             }
-            document.getElementById(cat + p[i] + 'Pages').innerHTML = pl;
-            document.getElementById(cat + p[i] + 'Page').classList.remove('nodropdown');
+            pages.innerHTML = pl;
+            page.classList.remove('nodropdown');
         }
         else if (total === -1) {
-            document.getElementById(cat + p[i] + 'Page').setAttribute('disabled', 'disabled');
-            document.getElementById(cat + p[i] + 'Page').innerText = (app.current.page / settings.maxElementsPerPage + 1);
-            document.getElementById(cat + p[i] + 'Page').classList.add('nodropdown');
+            page.setAttribute('disabled', 'disabled');
+            page.innerText = (app.current.page / settings.maxElementsPerPage + 1);
+            page.classList.add('nodropdown');
         }
         else {
-            document.getElementById(cat + p[i] + 'Page').setAttribute('disabled', 'disabled');
-            document.getElementById(cat + p[i] + 'Page').classList.add('nodropdown');
+            page.setAttribute('disabled', 'disabled');
+            page.classList.add('nodropdown');
         }
-    
+        
         if (total > app.current.page + settings.maxElementsPerPage || total === -1 && returned >= settings.maxElementsPerPage) {
-            document.getElementById(cat + p[i] + 'Next').removeAttribute('disabled');
-            document.getElementById(cat + p[i]).classList.remove('hide');
+            next.removeAttribute('disabled');
+            p[i].classList.remove('hide');
             document.getElementById(cat + 'ButtonsBottom').classList.remove('hide');
         }
         else {
-            document.getElementById(cat + p[i] + 'Next').setAttribute('disabled', 'disabled');
-            document.getElementById(cat + p[i]).classList.add('hide');
+            next.setAttribute('disabled', 'disabled');
+            p[i].classList.add('hide');
             document.getElementById(cat + 'ButtonsBottom').classList.add('hide');
         }
     
         if (app.current.page > 0) {
-            document.getElementById(cat + p[i] + 'Prev').removeAttribute('disabled');
-            document.getElementById(cat + p[i]).classList.remove('hide');
+            prev.removeAttribute('disabled');
+            p[i].classList.remove('hide');
             document.getElementById(cat + 'ButtonsBottom').classList.remove('hide');
-        } else {
-            document.getElementById(cat + p[i] + 'Prev').setAttribute('disabled', 'disabled');
+        }
+        else {
+            prev.setAttribute('disabled', 'disabled');
         }
     }
 }
@@ -263,6 +328,12 @@ function parseCmd(event, href) {
         switch(cmd.cmd) {
             case 'sendAPI':
                 sendAPI(cmd.options[0].cmd, {}); 
+                break;
+            case 'toggleBtn':
+            case 'toggleBtnChk':
+            case 'toggleBtnGroup':
+            case 'setPlaySettings':
+                window[cmd.cmd](event.target, ... cmd.options);
                 break;
             default:
                 window[cmd.cmd](... cmd.options);
@@ -305,8 +376,9 @@ function gotoPage2(x) { // old one - rm
             break;
         case 'prev':
             app.current.page -= settings.maxElementsPerPage;
-            if (app.current.page < 0)
+            if (app.current.page < 0) {
                 app.current.page = 0;
+            }
             break;
         default:
             app.current.page = x;

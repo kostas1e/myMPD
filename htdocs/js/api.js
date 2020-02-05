@@ -1,7 +1,7 @@
 "use strict";
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2019 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -17,12 +17,6 @@ function sendAPI(method, params, callback, onerror) {
                 if (obj.error) {
                     showNotification(t(obj.error.message, obj.error.data), '', '', 'danger');
                     logError(JSON.stringify(obj.error));
-                    if (onerror === true) {
-                        if (callback !== undefined && typeof(callback) === 'function') {
-                            logDebug('Got API response of type error calling ' + callback.name);
-                            callback(obj);
-                        }
-                    }
                 }
                 else if (obj.result && obj.result.message && obj.result.message !== 'ok') {
                     logDebug('Got API response: ' + JSON.stringify(obj.result));
@@ -41,8 +35,13 @@ function sendAPI(method, params, callback, onerror) {
                     }
                 }
                 if (callback !== undefined && typeof(callback) === 'function') {
-                    logDebug('Calling ' + callback.name);
-                    callback(obj);
+                    if (obj.result !== undefined || onerror === true) {
+                        logDebug('Calling ' + callback.name);
+                        callback(obj);
+                    }
+                    else {
+                        logDebug('Undefined resultset, skip calling ' + callback.name);
+                    }
                 }
             }
             else {
@@ -61,9 +60,18 @@ function sendAPI(method, params, callback, onerror) {
 }
 
 function webSocketConnect() {
-    if (socket !== null) {
+    if (socket !== null && socket.readyState === WebSocket.OPEN) {
         logInfo("Socket already connected");
+        websocketConnected = true;
         return;
+    }
+    else if (socket !== null && socket.readyState === WebSocket.CONNECTING) {
+        logInfo("Socket connection in progress");
+        websocketConnected = false;
+        return;
+    }
+    else {
+        websocketConnected = false;
     }
     let wsUrl = getWsUrl();
     socket = new WebSocket(wsUrl);

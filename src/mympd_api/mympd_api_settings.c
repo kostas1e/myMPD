@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2019 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -18,10 +18,10 @@
 #include "../../dist/src/sds/sds.h"
 #include "../sds_extras.h"
 #include "../dist/src/frozen/frozen.h"
-#include "../utility.h"
 #include "../log.h"
 #include "../list.h"
 #include "config_defs.h"
+#include "../utility.h"
 #include "mympd_api_utility.h"
 #include "mympd_api_settings.h"
 
@@ -32,9 +32,11 @@ void mympd_api_settings_delete(t_config *config) {
     const char* state_files[]={"auto_play", "bg_color", "bg_cover", "bg_css_filter", "browsetaglist", "cols_browse_database",
         "cols_browse_filesystem", "cols_browse_playlists_detail", "cols_playback", "cols_queue_current", "cols_queue_last_played",
         "cols_search", "coverimage", "coverimage_name", "coverimage_size", "jukebox_mode", "jukebox_playlist", "jukebox_queue_length",
+        "jukebox_unique_tag", "jukebox_last_played",
         "last_played", "last_played_count", "locale", "localplayer", "localplayer_autoplay", "love", "love_channel", "love_message",
         "max_elements_per_page",  "mpd_host", "mpd_pass", "mpd_port", "notification_page", "notification_web", "searchtaglist",
-        "smartpls", "stickers", "stream_port", "stream_url", "taglist", "music_directory", "bookmarks",
+        "smartpls", "stickers", "stream_port", "stream_url", "taglist", "music_directory", "bookmarks", "bookmark_list", "covergrid_size", 
+        "theme", "timer",
         "cols_search_tidal", "cols_search_qobuz", "searchtiddaltaglist", "searchqobuztaglist",
         "tidal_username", "tidal_password", "tidal_audioquality", "qobuz_username", "qobuz_password", "qobuz_format_id", 0};
     const char** ptr = state_files;
@@ -177,6 +179,10 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
         mympd_state->coverimage_size = strtoimax(settingvalue, &crap, 10);
         settingname = sdscat(settingname, "coverimage_size");
     }
+    else if (strncmp(key->ptr, "covergridSize", key->len) == 0) {
+        mympd_state->covergrid_size = strtoimax(settingvalue, &crap, 10);
+        settingname = sdscat(settingname, "covergrid_size");
+    }
     else if (strncmp(key->ptr, "featLocalplayer", key->len) == 0) {
         mympd_state->localplayer = val->type == JSON_TYPE_TRUE ? true : false;
         settingname = sdscat(settingname, "localplayer");
@@ -206,8 +212,8 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
         settingname = sdscat(settingname, "bg_css_filter");
     }
     else if (strncmp(key->ptr, "jukeboxMode", key->len) == 0) {
-        int jukebox_mode = strtoimax(settingvalue, &crap, 10);
-        if (jukebox_mode < 0 || jukebox_mode > 2) {
+        unsigned jukebox_mode = strtoumax(settingvalue, &crap, 10);
+        if (jukebox_mode > 2) {
             sdsfree(settingname);
             sdsfree(settingvalue);
             return false;
@@ -228,6 +234,14 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
         }
         mympd_state->jukebox_queue_length = jukebox_queue_length;
         settingname = sdscat(settingname, "jukebox_queue_length");
+    }
+    else if (strncmp(key->ptr, "jukeboxUniqueTag", key->len) == 0) {
+        mympd_state->jukebox_unique_tag = sdsreplacelen(mympd_state->jukebox_unique_tag, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "jukebox_unique_tag");
+    }
+    else if (strncmp(key->ptr, "jukeboxLastPlayed", key->len) == 0) {
+        mympd_state->jukebox_last_played = strtoimax(settingvalue, &crap, 10);
+        settingname = sdscat(settingname, "jukebox_last_played");
     }
     else if (strncmp(key->ptr, "stickers", key->len) == 0) {
         mympd_state->stickers = val->type == JSON_TYPE_TRUE ? true : false;
@@ -303,6 +317,14 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
         }
         settingname = sdscat(settingname, "bookmarks");
     }
+    else if (strncmp(key->ptr, "theme", key->len) == 0) {
+        mympd_state->theme = sdsreplacelen(mympd_state->theme, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "theme");
+    }
+    else if (strncmp(key->ptr, "timer", key->len) == 0) {
+        mympd_state->timer = val->type == JSON_TYPE_TRUE ? true : false;
+        settingname = sdscat(settingname, "timer");
+    }
     else if (strncmp(key->ptr, "tidalUsername", key->len) == 0) {
         mympd_state->tidal_username = sdsreplacelen(mympd_state->tidal_username, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "tidal_username");
@@ -367,6 +389,8 @@ void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state) {
     mympd_state->jukebox_mode = state_file_rw_int(config, "jukebox_mode", config->jukebox_mode, false);
     mympd_state->jukebox_playlist = state_file_rw_string(config, "jukebox_playlist", config->jukebox_playlist, false);
     mympd_state->jukebox_queue_length = state_file_rw_int(config, "jukebox_queue_length", config->jukebox_queue_length, false);
+    mympd_state->jukebox_last_played = state_file_rw_int(config, "jukebox_last_played", config->jukebox_last_played, false);
+    mympd_state->jukebox_unique_tag = state_file_rw_string(config, "jukebox_unique_tag", config->jukebox_unique_tag, false);
     mympd_state->cols_queue_current = state_file_rw_string(config, "cols_queue_current", config->cols_queue_current, false);
     mympd_state->cols_search = state_file_rw_string(config, "cols_search", config->cols_search, false);
     mympd_state->cols_search_tidal = state_file_rw_string(config, "cols_search_tidal", config->cols_search_tidal, false);
@@ -386,9 +410,12 @@ void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state) {
     mympd_state->coverimage = state_file_rw_bool(config, "coverimage", config->coverimage, false);
     mympd_state->coverimage_name = state_file_rw_string(config, "coverimage_name", config->coverimage_name, false);
     mympd_state->coverimage_size = state_file_rw_int(config, "coverimage_size", config->coverimage_size, false);
+    mympd_state->covergrid_size = state_file_rw_int(config, "covergrid_size", config->covergrid_size, false);
     mympd_state->locale = state_file_rw_string(config, "locale", config->locale, false);
     mympd_state->music_directory = state_file_rw_string(config, "music_directory", config->music_directory, false);
     mympd_state->bookmarks = state_file_rw_bool(config, "bookmarks", config->bookmarks, false);
+    mympd_state->theme = state_file_rw_string(config, "theme", config->theme, false);
+    mympd_state->timer = state_file_rw_bool(config, "timer", config->timer, false);
     mympd_state->tidal_username = state_file_rw_string(config, "tidal_username", config->tidal_username, false);
     mympd_state->tidal_password = state_file_rw_string(config, "tidal_password", config->tidal_password, false);
     mympd_state->tidal_audioquality = state_file_rw_string(config, "tidal_audioquality", config->tidal_audioquality, false);
@@ -444,7 +471,7 @@ bool state_file_rw_bool(t_config *config, const char *name, const bool def_value
     bool value = def_value;
     sds line = state_file_rw_string(config, name, def_value == true ? "true" : "false", warn);
     if (sdslen(line) > 0) {
-        value = strcmp(line, "true") == 0 ? true : false;
+        value = strtobool(line);
         sdsfree(line);
     }
     return value;
@@ -498,14 +525,20 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = tojson_char(buffer, "mpdHost", mympd_state->mpd_host, true);
     buffer = tojson_long(buffer, "mpdPort", mympd_state->mpd_port, true);
     buffer = tojson_char(buffer, "mpdPass", "dontsetpassword", true);
+    buffer = tojson_bool(buffer, "featRegex", config->regex, true);
     buffer = tojson_bool(buffer, "featSyscmds", config->syscmds, true);
+#ifdef ENABLE_SSL
     buffer = tojson_bool(buffer, "featCacert", (config->custom_cert == false && config->ssl == true ? true : false), true);
+#else
+    buffer = tojson_bool(buffer, "featCacert", false, true);
+#endif
     buffer = tojson_bool(buffer, "featLocalplayer", mympd_state->localplayer, true);
     buffer = tojson_long(buffer, "streamPort", mympd_state->stream_port, true);
     buffer = tojson_char(buffer, "streamUrl", mympd_state->stream_url, true);
     buffer = tojson_bool(buffer, "coverimage", mympd_state->coverimage, true);
     buffer = tojson_char(buffer, "coverimageName", mympd_state->coverimage_name, true);
     buffer = tojson_long(buffer, "coverimageSize", mympd_state->coverimage_size, true);
+    buffer = tojson_long(buffer, "covergridSize", mympd_state->covergrid_size, true);
     buffer = tojson_bool(buffer, "featMixramp", config->mixramp, true);
     buffer = tojson_long(buffer, "maxElementsPerPage", mympd_state->max_elements_per_page, true);
     buffer = tojson_bool(buffer, "notificationWeb", mympd_state->notification_web, true);
@@ -513,6 +546,8 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = tojson_long(buffer, "jukeboxMode", mympd_state->jukebox_mode, true);
     buffer = tojson_char(buffer, "jukeboxPlaylist", mympd_state->jukebox_playlist, true);
     buffer = tojson_long(buffer, "jukeboxQueueLength", mympd_state->jukebox_queue_length, true);
+    buffer = tojson_char(buffer, "jukeboxUniqueTag", mympd_state->jukebox_unique_tag, true);
+    buffer = tojson_long(buffer, "jukeboxLastPlayed", mympd_state->jukebox_last_played, true);
     buffer = tojson_bool(buffer, "autoPlay", mympd_state->auto_play, true);
     buffer = tojson_char(buffer, "bgColor", mympd_state->bg_color, true);
     buffer = tojson_bool(buffer, "bgCover", mympd_state->bg_cover, true);
@@ -536,6 +571,10 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = tojson_char(buffer, "qobuzUsername", mympd_state->qobuz_username, true);
     buffer = tojson_char(buffer, "qobuzPassword", mympd_state->qobuz_password, true);
     buffer = tojson_long(buffer, "qobuzFormatId", mympd_state->qobuz_format_id, true);
+    buffer = tojson_bool(buffer, "publishLibrary", config->publish_library, true);
+    buffer = tojson_char(buffer, "theme", mympd_state->theme, true);
+    buffer = tojson_bool(buffer, "featTimer", mympd_state->timer, true);
+    buffer = tojson_bool(buffer, "featStickerCache", config->sticker_cache, true);
     buffer = sdscatfmt(buffer, "\"colsQueueCurrent\":%s,", mympd_state->cols_queue_current);
     buffer = sdscatfmt(buffer, "\"colsSearchDatabase\":%s,", mympd_state->cols_search);
     buffer = sdscatfmt(buffer, "\"colsSearchTidal\":%s,", mympd_state->cols_search_tidal);
@@ -549,12 +588,12 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     if (config->syscmds == true) {
         buffer = sdscat(buffer, ",\"syscmdList\":[");
         int nr = 0;
-        struct node *current = config->syscmd_list.list;
+        struct node *current = config->syscmd_list.head;
         while (current != NULL) {
             if (nr++) {
                 buffer = sdscat(buffer, ",");
             }
-            buffer = sdscatjson(buffer, current->data, sdslen(current->data));
+            buffer = sdscatjson(buffer, current->key, sdslen(current->key));
             current = current->next;
         }
         buffer = sdscat(buffer, "]");

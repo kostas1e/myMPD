@@ -1,7 +1,7 @@
 "use strict";
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2019 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -11,7 +11,6 @@ function parsePlaylists(obj) {
         document.getElementById('BrowsePlaylistsDetailList').classList.add('hide');
         document.getElementById('btnBrowsePlaylistsAll').parentNode.classList.add('hide');
         document.getElementById('btnPlaylistClear').parentNode.classList.add('hide');
-        document.getElementById('BrowsePlaylistsDetailColsBtn').parentNode.classList.add('hide');
     } else {
         if (obj.result.uri.indexOf('.') > -1 || obj.result.smartpls === true) {
             document.getElementById('BrowsePlaylistsDetailList').setAttribute('data-ro', 'true')
@@ -27,9 +26,6 @@ function parsePlaylists(obj) {
         document.getElementById('BrowsePlaylistsDetailList').classList.remove('hide');
         document.getElementById('BrowsePlaylistsAllList').classList.add('hide');
         document.getElementById('btnBrowsePlaylistsAll').parentNode.classList.remove('hide');
-        if (settings.featTags) {
-            document.getElementById('BrowsePlaylistsDetailColsBtn').parentNode.classList.remove('hide');
-        }
     }
             
     let nrItems = obj.result.returnedEntities;
@@ -103,7 +99,7 @@ function parsePlaylists(obj) {
     if (nrItems === 0) {
         if (app.current.view === 'All') {
             tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
-                              '<td colspan="3>' + t('No playlists found') + '</td></tr>';
+                              '<td colspan="3">' + t('No playlists found') + '</td></tr>';
         }
         else {
             tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
@@ -134,7 +130,10 @@ function getAllPlaylists(obj) {
         if (playlistEl === 'addToPlaylistPlaylist') {
             playlists = '<option value=""></option><option value="new">' + t('New playlist') + '</option>';
         }
-        else if (playlistEl === 'selectJukeboxPlaylist' || playlistEl === 'selectAddToQueuePlaylist') {
+        else if (playlistEl === 'selectJukeboxPlaylist' || 
+                 playlistEl === 'selectAddToQueuePlaylist' ||
+                 playlistEl === 'selectTimerPlaylist'
+        ) {
             playlists = '<option value="Database">' + t('Database') + '</option>';
         }
     }
@@ -273,8 +272,9 @@ function saveSmartPlaylist() {
     }
 }
 
-function showAddToPlaylist(uri) {
+function showAddToPlaylist(uri, search) {
     document.getElementById('addToPlaylistUri').value = uri;
+    document.getElementById('addToPlaylistSearch').value = search;
     document.getElementById('addToPlaylistPlaylist').innerHTML = '';
     document.getElementById('addToPlaylistNewPlaylist').value = '';
     document.getElementById('addToPlaylistNewPlaylistDiv').classList.add('hide');
@@ -327,7 +327,11 @@ function addToPlaylist() {
     }
     if (plist !== '') {
         if (uri === 'SEARCH') {
-            addAllFromSearchPlist(plist);
+            addAllFromSearchPlist(plist, null, false);
+        }
+        if (uri === 'ALBUM') {
+            let expression = document.getElementById('addToPlaylistSearch').value;
+            addAllFromSearchPlist(plist, expression, false);
         }
         else if (uri === 'SEARCHTIDAL') {
             addAllFromSearchTidalPlist(plist);
@@ -403,6 +407,6 @@ function addSelectedItemToPlaylist() {
         if (item.parentNode.parentNode.id === 'BrowsePlaylistsAllList') {
             return;
         }
-        showAddToPlaylist(item.getAttribute('data-uri'));
+        showAddToPlaylist(item.getAttribute('data-uri'), '');
     }
 }

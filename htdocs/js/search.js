@@ -1,7 +1,7 @@
 "use strict";
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2019 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -48,15 +48,33 @@ function parseSearch(obj) {
 }
 
 function saveSearchAsSmartPlaylist() {
-    parseSmartPlaylist({"type": "smartpls", "result": {"playlist": "", "type": "search", "tag": app.current.filter, "searchstr": app.current.search}});
+    parseSmartPlaylist({"jsonrpc":"2.0","id":0,"result":{"method":"MPD_API_SMARTPLS_GET", 
+        "playlist":"",
+        "type":"search",
+        "tag": app.current.filter,
+        "searchstr": app.current.search}});
 }
 
-function addAllFromSearchPlist(plist) {
+function addAllFromSearchPlist(plist, search, replace) {
+    if (search === null) {
+        search = app.current.search;    
+    }
     if (settings.featAdvsearch) {
-        sendAPI("MPD_API_DATABASE_SEARCH_ADV", {"plist": plist, "sort": "", "sortdesc": false, "expression": app.current.search, "offset": 0, "cols": settings.colsSearchDatabase});
+        sendAPI("MPD_API_DATABASE_SEARCH_ADV", {"plist": plist, 
+            "sort": "", 
+            "sortdesc": false, 
+            "expression": search, 
+            "offset": 0, 
+            "cols": settings.colsSearchDatabase, 
+            "replace": replace});
     }
     else {
-        sendAPI("MPD_API_DATABASE_SEARCH", {"plist": plist, "filter": app.current.filter, "searchstr": app.current.search, "offset": 0, "cols": settings.colsSearchDatabase});
+        sendAPI("MPD_API_DATABASE_SEARCH", {"plist": plist, 
+            "filter": app.current.filter, 
+            "searchstr": search, 
+            "offset": 0, 
+            "cols": settings.colsSearchDatabase, 
+            "replace": replace});
     }
 }
 
