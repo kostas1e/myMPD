@@ -8,6 +8,7 @@
 <head>
   <title>myMPD</title>
   <meta charset="utf-8">
+  <!--<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src https://*; child-src 'none';">-->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="myMPD - fast and lightweight MPD webclient">
   <meta name="author" content="mail@jcgames.de">
@@ -619,10 +620,9 @@
           <li class="nav-item">
             <a data-phrase="Tidal" data-href='{"cmd": "appGoto", "options": ["Search", "Tidal"]}' class="nav-link text-dark" href="#" id="cardSearchNavTidal"></a>
           </li>
-          <!--, "Qobuz"-->
-          <li class="nav-item">
-            <a data-phrase="Qobuz" data-href='{"cmd": "appGoto", "options": ["Search"]}' class="nav-link text-dark" href="#" id="cardSearchNavQobuz"></a>
-          </li>
+          <!-- <li class="nav-item">
+            <a data-phrase="Qobuz" data-href='{"cmd": "appGoto", "options": ["Search", "Qobuz"]}' class="nav-link text-dark" href="#" id="cardSearchNavQobuz"></a>
+          </li> -->
           <!--
           <span id="panel-heading-search" class="text pull-right"></span>
           -->
@@ -672,13 +672,6 @@
               </div>            
             <button data-title-phrase="Next page" data-href='{"cmd": "gotoPage", "options": ["next"]}' type="button" class="btn btn-secondary btn-group-append">&raquo;</button>
           </div>
-          <!--
-            <div class="btn-group featTags">
-            <button id="SearchDatabaseColsBtn" class="btn btn-secondary dropdown-toggle material-icons" type="button" data-toggle="dropdown">settings</button>
-            <div class="dropdown-menu bg-dark px-2 dropdown-menu-right" id="SearchDatabaseColsDropdown"><form></form>
-              <button data-phrase="Apply" data-href='{"cmd": "saveCols", "options": ["SearchDatabase"]}' class="btn btn-success btn-block btn-sm mt-2"></button>
-            </div>
-          -->
         </div>
         <ol class="featAdvsearch breadcrumb" id="searchCrumb"></ol>
 
@@ -756,16 +749,7 @@
               </div>            
             <button data-title-phrase="Next page" data-href='{"cmd": "gotoPage", "options": ["next"]}' id="SearchTidalPaginationTopNext" type="button" class="btn btn-secondary btn-group-append">&raquo;</button>
           </div>
-          <div class="btn-group featTags">
-            <button id="SearchTidalColsBtn" class="btn btn-secondary dropdown-toggle material-icons" type="button" data-toggle="dropdown">settings</button>
-            <div class="dropdown-menu bg-dark px-2 dropdown-menu-right" id="SearchTidalColsDropdown"><form></form>
-              <button data-phrase="Apply" data-href='{"cmd": "saveCols", "options": ["SearchTidal"]}' class="btn btn-success btn-block btn-sm mt-2"></button>
-            </div>          
-          </div>
         </div>
-        <!--
-        <ol class="featAdvsearch breadcrumb" id="searchCrumb"></ol>
-        -->
         <div class="table-responsive-md">
           <table id="SearchTidalList" class="table table-hover table-sm">
             <thead>
@@ -840,16 +824,7 @@
               </div>            
             <button data-title-phrase="Next page" data-href='{"cmd": "gotoPage", "options": ["next"]}' id="SearchQobuzPaginationTopNext" type="button" class="btn btn-secondary btn-group-append">&raquo;</button>
           </div>
-          <div class="btn-group featTags">
-            <button id="SearchQobuzColsBtn" class="btn btn-secondary dropdown-toggle material-icons" type="button" data-toggle="dropdown">settings</button>
-            <div class="dropdown-menu bg-dark px-2 dropdown-menu-right" id="SearchQobuzColsDropdown"><form></form>
-              <button data-phrase="Apply" data-href='{"cmd": "saveCols", "options": ["SearchQobuz"]}' class="btn btn-success btn-block btn-sm mt-2"></button>
-            </div>          
-          </div>
         </div>
-        <!--
-        <ol class="featAdvsearch breadcrumb" id="searchCrumb"></ol>
-        -->
         <div class="table-responsive-md">
           <table id="SearchQobuzList" class="table table-hover table-sm">
             <thead>
@@ -1535,7 +1510,7 @@
                     </select>
                   </div>
                 </div>
-                <hr/>
+                <!-- <hr/>
                 <h4 data-phrase="Qobuz"></h4>
                 <div class="form-group row">
                   <label class="col-sm-4 col-form-label" for="inputQobuzUser" data-phrase="Qobuz username"></label>
@@ -1561,7 +1536,7 @@
                       <option value="27" data-phrase="FLAC Hi-Res 24bit 96-192kHz"></option>
                     </select>
                   </div>
-                </div>
+                </div> -->
               </form>
             </div>
             <!---->

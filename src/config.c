@@ -286,7 +286,7 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
         list_push(&p_config->syscmd_list, name, 0, value, NULL);
     }
     else {
-        LOG_WARN("Unkown config option: %s - %s", section, name);
+        LOG_WARN("Unknown config option: %s - %s", section, name);
         return 0;  
     }
     return 1;

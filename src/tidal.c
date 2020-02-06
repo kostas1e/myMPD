@@ -21,7 +21,7 @@
 //http://resources.wimpmusic.com/images/%s/342x342.jpg moods
 //http://resources.wimpmusic.com/images/%s/460x306.jpg genres
 
-// TODO: fixssl?
+// TODO: fxssl
 
 static int curl_cleanup = 0;
 static const char *tidal_token; // hard code token
@@ -32,10 +32,10 @@ static sds cache_dir;
 static CURL *tidalhandle; // pass handler as param
 struct memory_struct chunk;
 //static struct curl_slist *slist = NULL;
-static unsigned long user_id;
+static char *user_id = NULL;
 static char *session_id = NULL;
 static char *country_code = NULL; // "US"
-static bool is_logged_in;
+static bool is_logged_in = false;
 
 static void unused(void);
 
@@ -58,21 +58,19 @@ size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
     return realsize;
 }
 
-// use statefiles instead of config for user/pass/qual
 bool tidal_init(t_config *config) {
     if (curl_global_init(CURL_GLOBAL_ALL) == 0) {
         curl_cleanup++;
-        // config sid uid cc cuk
         // api_token = "kgsOOmYk3zShYrNP";
         // preview_token = "8C7kRFdkaRp0dLBp";
-        tidal_token = "kgsOOmYk3zShYrNP"; // config or config defaults
+        tidal_token = "kgsOOmYk3zShYrNP";
         tidal_username = sdsempty();
         tidal_password = sdsempty();
         tidal_audioquality = sdsnew("HIGH");
+        //tidal_token = config->tidal_token;
         //tidal_username = config->tidal_username;
         //tidal_password = config->tidal_password;
         //tidal_audioquality = config->tidal_audioquality;
-        // empty vals, upmpdcli opt
         cache_dir = sdscatfmt(sdsempty(), "%s/covercache", config->varlibdir);
         tidalhandle = curl_easy_init();
         if (tidalhandle) {
@@ -112,9 +110,8 @@ void tidal_cleanup(void) {
         curl_global_cleanup();
 }
 
-// private functions
 static void logout(void) {
-    user_id = 0;
+    user_id = NULL; // ""
     session_id = NULL; // ""
     country_code = NULL; // ""
 }
@@ -162,20 +159,121 @@ static bool login(const char *username, const char *password) {
     }
 }
 
-void tidal_session_manager(sds username, sds password, sds audioquality) {
-    if (sdscmp(username, tidal_username) || sdscmp(password, tidal_password)) {
+void tidal_session_init(sds username, sds password, sds audioquality) {
+    tidal_username = sdsreplacelen(tidal_username, username, sdslen(username));
+    tidal_password = sdsreplacelen(tidal_password, password, sdslen(password));
+    tidal_audioquality = sdsreplacelen(tidal_audioquality, audioquality, sdslen(audioquality));
+    is_logged_in = login(username, password);
+}
+
+static bool otherconf_w(const char *filename) {
+    // same locations as mpd.conf
+    //sds other_conf = sdscatfmt(sdsempty(), "%s/%s", ETC_PATH, filename);
+    sds other_conf = sdscatfmt(sdsempty(), "/usr/local/etc/%s", filename);
+    FILE *fp = fopen(other_conf, "w");
+    sdsfree(other_conf);
+    if (fp) { // other.conf soccessfully opened
+        sds buffer = sdscatfmt(sdsempty(), "input {\n\tplugin \"tidal\"\n\ttoken \"%s\"\n\tusername \"%s\"\n\tpassword \"%s\"\n\taudioquality \"%s\"\n}\n",
+            tidal_token, tidal_username, tidal_password, tidal_audioquality);
+        fputs(buffer, fp);
+        sdsfree(buffer);
+        fclose(fp);
+        return true;
+    }
+    return false;
+}
+
+static bool mpdconf_ra(const char *filename) {
+    // add to config/settings with default location /etc/mpd.conf
+    //sds mpd_conf = sdscatfmt(sdsempty(), "%s/mpd.conf", ETC_PATH);
+    sds mpd_conf = sdsnew("/usr/local/etc/mpd.conf");
+    //sds include = sdsnew("include \"tidal_input_plugin.conf\"");
+    sds include = sdscatfmt(sdsempty(), "include \"%s\"", filename);
+    bool found = false;
+    char *line = NULL;
+    size_t n =0;
+    ssize_t read= 0;
+    FILE *fp = fopen(mpd_conf, "r");
+    if (fp) { // mpd.conf successfully opened
+        while ((read = getline(&line, &n, fp)) > 0) {
+            if (strcmp(line, include) == 0) {
+                found = true;
+                break;
+            }
+        }
+        sdsfree(mpd_conf);
+        if (!found) { // append mpd.conf
+            fp = freopen(NULL, "a", fp);
+            if (fp) { // mpd.conf successfully reopend
+                fputs("\n", fp);
+                fputs(include, fp);
+                fputs("\n", fp);
+                sdsfree(include);
+                fclose(fp);
+                return otherconf_w(filename); // proceed with restart if true
+            }
+            else {
+                LOG_ERROR("Can't open %s for write", mpd_conf);
+                sdsfree(include);
+                return false;
+            }
+        }
+        else { // found
+            fputs("\n", fp);
+            fputs(include, fp);
+            fputs("\n", fp);
+            sdsfree(include);
+            fclose(fp);
+            return otherconf_w(filename); // proceed with restart if true
+        }
+    }
+    sdsfree(include);
+    return false;
+}
+
+static bool restart_mpd(void) {
+    sds cmdline = sdsnew("systemctl restart mpd");
+    LOG_DEBUG("Executing syscmd: %s", cmdline);
+    LOG_INFO("Restarting mpd service...");
+    const int rc = system(cmdline);
+    if (rc == 0) {
+        LOG_INFO("Success");
+        return true;
+    }
+    else {
+        LOG_ERROR("Fail");
+        return false;
+    }
+}
+
+void tidal_session_update(sds username, sds password, sds audioquality) {
+    bool user = false;
+    bool qual = false;
+    if (sdscmp(username, tidal_username) || sdscmp(password, tidal_password) || sdscmp(audioquality, tidal_audioquality)) {
         tidal_username = sdsreplacelen(tidal_username, username, sdslen(username));
         tidal_password = sdsreplacelen(tidal_password, password, sdslen(password));
         is_logged_in = login(username, password);
         LOG_DEBUG("username set to %s, password set to %s", username, password);
+        user = true;
     }
     if (sdscmp(audioquality, tidal_audioquality)) {
         tidal_audioquality = sdsreplacelen(tidal_audioquality, audioquality, sdslen(audioquality));
         LOG_DEBUG("audioquality set to %s", audioquality);
+        qual = true;
+    }
+    if (user || qual) {
+        if (mpdconf_ra("tidal_input_plugin.conf")) {
+            LOG_INFO("mpd.conf updated, attempting to restart service");
+            restart_mpd();
+        }
     }
 }
 
 static sds request(sds buffer, const char *method, sds uri) {
+    if (!is_logged_in) {
+        buffer = sdscrop(buffer);
+        return buffer;
+    }
     // add x-tidal-sessionid and x-tidal-token headers
     chunk.memory = malloc(1);
     chunk.size = 0;
@@ -751,7 +849,7 @@ sds tidal_search(sds buffer, sds method, int request_id, const char *query,
     return buffer;
 }
 
-sds tidal_get_cover(const char *uri, sds cover) { // track uri
+sds tidal_get_cover(sds cover, const char *uri) { // track uri
     char *track_id = extract_id(uri);
     sds res = get_track(sdsempty(), track_id);
     // parse track
@@ -865,7 +963,7 @@ sds tidal_queue_add_track(sds buffer, const char *uri) {
     FREE_PTR(track_id);
     return buffer;
 }
-
+/* 
 sds tidal_get_track_url(sds buffer, const char *track_id) {
     // /tracks/track_id/urlpost(pre)paywall?assetpresentation=FULL(PREVIEW)&audioquality=audioquality&urlusagemode=STREAM(?)
     // urls[] trackId assetPresentation audioQuality audioMode streamingSessionId codec securityType securityToken
@@ -878,30 +976,8 @@ sds tidal_get_track_url(sds buffer, const char *track_id) {
     sdsfree(res);
     return buffer;
 }
-
+ */
 // test function
 static void unused(void) {
-    //
-    /*
-    printf("\n\tunsused start\n");
-    char command[50];
-
-    strcpy(command, "ls /root" );
-    const int rc = system(command);
-    printf("\n\t%d\n", rc);
-    FILE *file = fopen("/usr/local/etc/other.txt" ,"w+");
-    //char buffer [100];
-    sds buffer = sdsnew("test");
-
-    if (file == NULL) {
-        perror ("Error opening file");
-    }
-    else {
-        fputs(buffer, file);
-        fclose(file);
-    }
-    
-    sdsfree(buffer);
-    printf("\n\tunsused end\n");
-    */
+    //printf("\n\tunsused start\n");
 }

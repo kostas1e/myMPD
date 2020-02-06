@@ -21,41 +21,7 @@
 #include "../utility.h"
 #include "mpd_client_utility.h"
 #include "mpd_client_cover.h"
-#include "../tidal.h"
-#include "../qobuz.h"
 
-/*
-sds mpd_client_get_cover(t_config *config, t_mpd_state *mpd_state, const char *uri, sds cover) {
-    char *orgpath = strdup(uri);
-    char *path = orgpath;
-
-    if (mpd_state->feat_coverimage == false) {
-        cover = sdsreplace(cover, "/assets/coverimage-notavailable.svg");
-    }
-    else if (strstr(path, "://") != NULL) {
-        if (strstr(path, "tidal")) {
-            cover = tidal_get_cover(uri, cover);
-            //check for null ret
-        }
-        else if (strstr(path, "qobuz")) {
-            cover = qobuz_get_cover(uri, cover);
-        }
-        else { // check end bracket
-        char *name = strstr(path, "://");
-        name += 3;
-        replacechar(name, '/', '_');
-        replacechar(name, '.', '_');
-        replacechar(name, ':', '_');
-        cover = sdscatfmt(cover, "%s/pics/%s.png", config->varlibdir, name);
-        LOG_DEBUG("Check for cover %s", cover);
-        if (access(cover, F_OK ) == -1 ) { // Flawfinder: ignore
-            cover = sdscrop(cover);
-            cover = sdscatfmt(cover, "/assets/coverimage-stream.svg");
-        }
-        else {
-            cover = sdscrop(cover);
-            cover = sdscatfmt(cover, "/pics/%s.png", name);
-*/
 #ifdef EMBEDDED_LIBMPDCLIENT
 sds mpd_client_getcover(t_config *config, t_mpd_state *mpd_state, sds buffer, sds method, int request_id,
                         const char *uri, sds *binary)

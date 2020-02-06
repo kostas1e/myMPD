@@ -575,26 +575,26 @@ installdeps() {
     apt-get update
     apt-get install -y --no-install-recommends \
 	gcc cmake perl libssl-dev libid3tag0-dev libflac-dev \
-	default-jre-headless build-essential
+	default-jre-headless build-essential libcurl4-gnutls-dev
   elif [ -f /etc/arch-release ]
   then
     #arch
-    pacman -S gcc cmake perl openssl libid3tag flac jre-openjdk-headless
+    pacman -S gcc cmake perl openssl libid3tag flac jre-openjdk-headless curl
   elif [ -f /etc/alpine-release ]
   then
     #alpine
     apk add gcc cmake perl openssl-dev libid3tag-dev libflac-dev \
-    	openjdk11-jre-headlesslinux-headers
+    	openjdk11-jre-headlesslinux-headers curl-dev
   elif [ -f /etc/SuSE-release ]
   then
     #suse
     zypper install gcc cmake pkgconfig perl openssl-devel libid3tag-devel flac-devel \
-	java-11-openjdk-headless unzip
+	java-11-openjdk-headless unzip libcurl-devel
   elif [ -f /etc/redhat-release ]
   then  
     #fedora 	
     yum install gcc cmake pkgconfig perl openssl-devel libid3tag-devel flac-devel \
-	java-11-openjdk-headless unzip
+	java-11-openjdk-headless unzip libcurl-devel
   else 
     echo "No supported distribution detected."
   fi

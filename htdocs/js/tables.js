@@ -384,25 +384,21 @@ function setCols(table, className) {
         }
     }
 
-    if (table === 'SearchTidal') {
-        if (app.apps.Search.tabs.Tidal.views.All.state === '0/any/Title/') {
-            if (settings.tags.includes('Title')) {
-                sort = 'Title';
-            }
-            else {
-                sort = '-';
-            }
+    if (table === 'SearchTidal' && app.apps.Search.tabs.Tidal.views.All.state === '0/any/Title/') {
+        if (settings.tags.includes('Title')) {
+            sort = 'Title';
+        }
+        else {
+            sort = '-';
         }
     }
 
-    if (table === 'SearchQobuz') {
-        if (app.apps.Search.tabs.Qobuz.views.All.state === '0/any/Title/') {
-            if (settings.tags.includes('Title')) {
-                sort = 'Title';
-            }
-            else {
-                sort = '-';
-            }
+    if (table === 'SearchQobuz' && app.apps.Search.tabs.Qobuz.views.All.state === '0/any/Title/') {
+        if (settings.tags.includes('Title')) {
+            sort = 'Title';
+        }
+        else {
+            sort = '-';
         }
     }
 

@@ -327,9 +327,9 @@ function parseSettings() {
     document.getElementById('inputTidalUser').value = settings.tidalUsername;
     document.getElementById('inputTidalPass').value = settings.tidalPassword;
     document.getElementById('selectTidalQual').value = settings.tidalAudioquality;
-    document.getElementById('inputQobuzUser').value = settings.qobuzUsername;
-    document.getElementById('inputQobuzPass').value = settings.qobuzPassword;
-    document.getElementById('selectQobuzQual').value = settings.qobuzFormatId;
+    // document.getElementById('inputQobuzUser').value = settings.qobuzUsername;
+    // document.getElementById('inputQobuzPass').value = settings.qobuzPassword;
+    // document.getElementById('selectQobuzQual').value = settings.qobuzFormatId;
 
     if (app.current.app === 'Queue' && app.current.tab === 'Current') {
         getQueue();
@@ -694,7 +694,7 @@ function saveSettings() {
         let selectJukeboxPlaylist = document.getElementById('selectJukeboxPlaylist');
         let selectLocale = document.getElementById('selectLocale');
         let selectTidalQual = document.getElementById('selectTidalQual');
-        let selectQobuzQual = document.getElementById('selectQobuzQual');
+        // let selectQobuzQual = document.getElementById('selectQobuzQual');
         let selectTheme = document.getElementById('selectTheme');
         sendAPI("MYMPD_API_SETTINGS_SET", {
             "consume": (document.getElementById('btnConsume').classList.contains('active') ? 1 : 0),
@@ -743,9 +743,9 @@ function saveSettings() {
             "tidalUsername": document.getElementById('inputTidalUser').value,
             "tidalPassword": document.getElementById('inputTidalPass').value,
             "tidalAudioquality": selectTidalQual.options[selectTidalQual.selectedIndex].value,
-            "qobuzUsername": document.getElementById('inputQobuzUser').value,
-            "qobuzPassword": document.getElementById('inputQobuzPass').value,
-            "qobuzFormatId": parseInt(selectQobuzQual.options[selectQobuzQual.selectedIndex].value)
+            // "qobuzUsername": document.getElementById('inputQobuzUser').value,
+            // "qobuzPassword": document.getElementById('inputQobuzPass').value,
+            // "qobuzFormatId": parseInt(selectQobuzQual.options[selectQobuzQual.selectedIndex].value)
         }, getSettings);
         modalSettings.hide();
     }

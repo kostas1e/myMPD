@@ -419,7 +419,7 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
                     }
                     sdsfreesplitres(tokens, count);
                 }
-                request->data = respond_with_mpd_error_or_ok(mpd_state, request->data, request->method, request->id);
+                response->data = respond_with_mpd_error_or_ok(mpd_state, response->data, request->method, request->id);
             }
             break;
         case MPD_API_PLAYLIST_CLEAR:
@@ -472,7 +472,7 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
             je = json_scanf(request->data, sdslen(request->data), "{params: {uri:%Q}}", &p_charbuf1);
             if (je == 1) {
                 mpd_run_add(mpd_state->conn, p_charbuf1);
-                request->data = respond_with_mpd_error_or_ok(mpd_state, request->data, request->method, request->id);
+                response->data = respond_with_mpd_error_or_ok(mpd_state, response->data, request->method, request->id);
             }
             break;
         case MPD_API_QUEUE_ADD_ALL_TRACKS:
@@ -489,7 +489,7 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
                     }
                     sdsfreesplitres(tokens, count);
                 }
-                request->data = respond_with_mpd_error_or_ok(mpd_state, request->data, request->method, request->id);
+                response->data = respond_with_mpd_error_or_ok(mpd_state, response->data, request->method, request->id);
             }
             break;
         case MPD_API_QUEUE_ADD_PLAY_TRACK:

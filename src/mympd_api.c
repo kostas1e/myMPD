@@ -67,8 +67,7 @@ void *mympd_api_loop(void *arg_config) {
     mympd_api_push_to_mpd_client(mympd_state);
 
     // streaming services
-    tidal_session_manager(mympd_state->tidal_username, mympd_state->tidal_password, mympd_state->tidal_audioquality);
-    //qobuz_session_manager(mympd_state);
+    tidal_session_init(mympd_state->tidal_username, mympd_state->tidal_password, mympd_state->tidal_audioquality);
 
     while (s_signal_received == 0) {
         //poll message queue
@@ -153,7 +152,7 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
                 t_work_request *mpd_client_request = create_request(-1, request->id, request->cmd_id, request->method, request->data);
                 tiny_queue_push(mpd_client_queue, mpd_client_request);
                 // update tidal session
-                tidal_session_manager(mympd_state->tidal_username, mympd_state->tidal_password, mympd_state->tidal_audioquality);
+                tidal_session_update(mympd_state->tidal_username, mympd_state->tidal_password, mympd_state->tidal_audioquality);
                 response->data = jsonrpc_respond_ok(response->data, request->method, request->id);
             }
             else {
@@ -294,49 +293,49 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
             je = json_scanf(request->data, sdslen(request->data), "{params: {searchstr:%Q, filter:%Q, plist:%Q, offset:%u}}", &p_charbuf1, &p_charbuf2, &p_charbuf3, &uint_buf1);
             if (je == 4) {
                 //data = tidal_search(data, request->method, request->id, p_charbuf1, p_charbuf2, p_charbuf3, uint_buf1);
-                request->data = tidal_search(request->data, request->method, request->id, p_charbuf1, p_charbuf2, p_charbuf3, uint_buf1);
+                response->data = tidal_search(response->data, request->method, request->id, p_charbuf1, p_charbuf2, p_charbuf3, uint_buf1);
             }
             break;
         case MYMPD_API_TIDAL_SONGDETAILS:
             je = json_scanf(request->data, sdslen(request->data), "{params:{uri:%Q}}", &p_charbuf1);
             if (je == 1) {
-                request->data = tidal_songdetails(request->data, request->method, request->id, p_charbuf1);
+                response->data = tidal_songdetails(response->data, request->method, request->id, p_charbuf1);
             }
             break;
         case MYMPD_API_TIDAL_ALBUMDETAILS:
             je = json_scanf(request->data, sdslen(request->data), "{params:{uri:%Q}}", &p_charbuf1);
             if (je == 1) {
-                request->data = tidal_albumdetails(request->data, request->method, request->id, p_charbuf1);
+                response->data = tidal_albumdetails(response->data, request->method, request->id, p_charbuf1);
             }
             break;
         case MYMPD_API_TIDAL_ARTISTDETAILS:
             je = json_scanf(request->data, sdslen(request->data), "{params:{uri:%Q}}", &p_charbuf1);
             if (je == 1) {
-                request->data = tidal_artistdetails(request->data, request->method, request->id, p_charbuf1);
+                response->data = tidal_artistdetails(response->data, request->method, request->id, p_charbuf1);
             }
             break;
         case MYMPD_API_QOBUZ_SEARCH:
             je = json_scanf(request->data, sdslen(request->data), "{params:{searchstr:%Q,filter:%Q,plist:%Q,offset:%u}}", &p_charbuf1, &p_charbuf2, &p_charbuf3, &uint_buf1);
             if (je == 4) {
-                request->data = qobuz_catalog_search(request->data, request->method, request->id, p_charbuf1, p_charbuf2, p_charbuf3, uint_buf1);
+                response->data = qobuz_catalog_search(response->data, request->method, request->id, p_charbuf1, p_charbuf2, p_charbuf3, uint_buf1);
             }
             break;
         case MYMPD_API_QOBUZ_SONGDETAILS:
             je = json_scanf(request->data, sdslen(request->data), "{params:{uri:%Q}}", &p_charbuf1);
             if (je == 1) {
-                request->data = qobuz_songdetails(request->data, request->method, request->id, p_charbuf1);
+                response->data = qobuz_songdetails(response->data, request->method, request->id, p_charbuf1);
             }
             break;
         case MYMPD_API_QOBUZ_ALBUMDETAILS:
             je = json_scanf(request->data, sdslen(request->data), "{params:{uri:%Q}}", &p_charbuf1);
             if (je == 1) {
-                request->data = qobuz_albumdetails(request->data, request->method, request->id, p_charbuf1);
+                response->data = qobuz_albumdetails(response->data, request->method, request->id, p_charbuf1);
             }
             break;
         case MYMPD_API_QOBUZ_ARTISTDETAILS:
             je = json_scanf(request->data, sdslen(request->data), "{params:{uri:%Q}}", &p_charbuf1);
             if (je == 1) {
-                request->data = qobuz_artistdetails(request->data, request->method, request->id, p_charbuf1);
+                response->data = qobuz_artistdetails(response->data, request->method, request->id, p_charbuf1);
             }
             break;
         default:

@@ -54,6 +54,11 @@ function showMenu(el, event) {
 
 function showMenuTh(el, event) {
     let table = app.current.app + (app.current.tab !== undefined ? app.current.tab : '') + (app.current.view !== undefined ? app.current.view : '');
+    // tmp fix rm view for tidal
+    if (table === 'SearchTidalAll' || table === 'SearchTidalArtist' || table === 'SearchTidalAlbum') {
+        table = 'SearchTidal';
+    }
+    console.log(table);
     let menu = '<form class="p-2" id="colChecklist' + table + '">';
     menu += setColsChecklist(table);
     menu += '<button class="btn btn-success btn-block btn-sm mt-2">' + t('Apply') + '</button>';
@@ -67,6 +72,11 @@ function showMenuTh(el, event) {
     el.addEventListener('shown.bs.popover', function(event) {
         event.target.setAttribute('data-popover', 'true');
         let table = app.current.app + (app.current.tab !== undefined ? app.current.tab : '') + (app.current.view !== undefined ? app.current.view : '');
+        // tmp fix rm view for tidal
+        if (table === 'SearchTidalAll' || table === 'SearchTidalArtist' || table === 'SearchTidalAlbum') {
+            table = 'SearchTidal';
+        }
+        console.log(table);
         document.getElementById('colChecklist' + table).addEventListener('click', function(event) {
             if (event.target.nodeName === 'BUTTON' && event.target.classList.contains('material-icons')) {
                 toggleBtnChk(event.target);

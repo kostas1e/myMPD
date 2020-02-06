@@ -23,6 +23,7 @@
 #include "../global.h"
 #include "web_server_utility.h"
 #include "web_server_albumart.h"
+#include "../tidal.h"
 
 //optional includes
 #ifdef ENABLE_LIBID3TAG
@@ -86,11 +87,25 @@ bool handle_albumart(struct mg_connection *nc, struct http_message *hm, t_mg_use
             sdsfree(uri_decoded);
             return true;
         }
+        sds coverfile = sdsempty();
+        if (strstr(uri_decoded, "tidal://") != NULL) {
+            sds name2 = sdsempty();
+            name2 = tidal_get_cover(name2, uri_decoded);
+            sdsrange(name2, 7, -5);
+            LOG_DEBUG(name2);
+            uri_to_filename(name2);
+            LOG_DEBUG(name2);
+            coverfile = sdscatfmt(coverfile, "%s/covercache/%s", config->varlibdir, name2);
+            LOG_DEBUG("Tidal cover test... %s", coverfile);
+            coverfile = find_image_file(coverfile);
+        }
+        else {
         name += 3;
         uri_to_filename(name);
-        sds coverfile = sdscatfmt(sdsempty(), "%s/pics/%s", config->varlibdir, name);
+        coverfile = sdscatfmt(coverfile, "%s/pics/%s", config->varlibdir, name);
         LOG_DEBUG("Check for stream cover %s", coverfile);
         coverfile = find_image_file(coverfile);
+        }
         
         if (sdslen(coverfile) > 0) {
             sds mime_type = get_mime_type_by_ext(coverfile);

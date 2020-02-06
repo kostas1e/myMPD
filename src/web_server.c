@@ -306,9 +306,9 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
                     send_error(nc, 404, "Unknown music_directory");
                 }
             }
-            else if (has_prefix(&hm->uri, &image_prefix)) {
+            else if (mg_str_starts_with(hm->uri, image_prefix) == 1) { // wip
                 sds image_file = sdscatlen(sdsempty(), hm->uri.p, (int)hm->uri.len);
-                // remove /image prefix
+                // remove /image/ prefix
                 sdsrange(image_file, 7, -1);
                 replacechar(image_file, '/', '_');
                 sds path = sdscatfmt(sdsempty(), "%s/covercache/%s", config->varlibdir, image_file);

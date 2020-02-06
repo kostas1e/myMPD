@@ -216,7 +216,7 @@ sds mpd_client_put_current_song(t_mpd_state *mpd_state, sds buffer, sds method, 
 
     /*
     sds cover = sdsempty();
-    cover = mpd_client_get_cover(config, mpd_state, mpd_song_get_uri(song), cover); // !!!
+    cover = mpd_client_get_cover(config, mpd_state, mpd_song_get_uri(song), cover);
     buffer = sdscat(buffer, ",");
     buffer = tojson_char(buffer, "cover", cover, false);
     sdsfree(cover);
