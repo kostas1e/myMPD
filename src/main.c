@@ -45,7 +45,7 @@
 #include "handle_options.h"
 #include "maintenance.h"
 #include "tidal.h"
-#include "qobuz.h"
+// #include "qobuz.h"
 
 static void mympd_signal_handler(int sig_num) {
     signal(sig_num, mympd_signal_handler);  // Reinstantiate signal handler

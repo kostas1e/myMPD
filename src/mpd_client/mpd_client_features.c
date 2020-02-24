@@ -174,7 +174,7 @@ static void mpd_client_feature_tags(t_mpd_state *mpd_state) {
     sds taglist = sdsnew(mpd_state->taglist);
     sds searchtaglist = sdsnew(mpd_state->searchtaglist);
     sds searchtidaltaglist = sdsnew(mpd_state->searchtidaltaglist);
-    sds searchqobuztaglist = sdsnew(mpd_state->searchqobuztaglist);
+    // sds searchqobuztaglist = sdsnew(mpd_state->searchqobuztaglist);
     sds browsetaglist = sdsnew(mpd_state->browsetaglist);
     sds *tokens;
     int tokens_count;
@@ -184,7 +184,7 @@ static void mpd_client_feature_tags(t_mpd_state *mpd_state) {
     reset_t_tags(&mpd_state->mympd_tag_types);
     reset_t_tags(&mpd_state->search_tag_types);
     reset_t_tags(&mpd_state->search_tidal_tag_types);
-    reset_t_tags(&mpd_state->search_qobuz_tag_types);
+    // reset_t_tags(&mpd_state->search_qobuz_tag_types);
     reset_t_tags(&mpd_state->browse_tag_types);
     
     sds logline = sdsnew("MPD supported tags: ");
@@ -284,7 +284,7 @@ static void mpd_client_feature_tags(t_mpd_state *mpd_state) {
         }
         sdsfreesplitres(tokens, tokens_count);
         LOG_INFO(logline);
-        
+        /* 
         logline = sdsreplace(logline, "myMPD enabled searchqobuztags: ");
         tokens = sdssplitlen(searchqobuztaglist, sdslen(searchqobuztaglist), ",", 1, &tokens_count);
         for (int i = 0; i < tokens_count; i++) {
@@ -305,7 +305,7 @@ static void mpd_client_feature_tags(t_mpd_state *mpd_state) {
         }
         sdsfreesplitres(tokens, tokens_count);
         LOG_INFO(logline);
-
+         */
         logline = sdsreplace(logline, "myMPD enabled browsetags: ");
         tokens = sdssplitlen(browsetaglist, sdslen(browsetaglist), ",", 1, &tokens_count);
         for (int i = 0; i < tokens_count; i++) {
@@ -331,7 +331,7 @@ static void mpd_client_feature_tags(t_mpd_state *mpd_state) {
     sdsfree(taglist);
     sdsfree(searchtaglist);
     sdsfree(searchtidaltaglist);
-    sdsfree(searchqobuztaglist);
+    // sdsfree(searchqobuztaglist);
     sdsfree(browsetaglist);
 }
 

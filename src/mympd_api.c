@@ -38,7 +38,6 @@
 #include "mympd_api/mympd_api_timer_handlers.h"
 #include "mympd_api.h"
 #include "tidal.h"
-#include "qobuz.h"
 
 //private definitions
 static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_request *request);
@@ -314,7 +313,7 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
                 response->data = tidal_artistdetails(response->data, request->method, request->id, p_charbuf1);
             }
             break;
-        case MYMPD_API_QOBUZ_SEARCH:
+        /* case MYMPD_API_QOBUZ_SEARCH:
             je = json_scanf(request->data, sdslen(request->data), "{params:{searchstr:%Q,filter:%Q,plist:%Q,offset:%u}}", &p_charbuf1, &p_charbuf2, &p_charbuf3, &uint_buf1);
             if (je == 4) {
                 response->data = qobuz_catalog_search(response->data, request->method, request->id, p_charbuf1, p_charbuf2, p_charbuf3, uint_buf1);
@@ -337,7 +336,7 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
             if (je == 1) {
                 response->data = qobuz_artistdetails(response->data, request->method, request->id, p_charbuf1);
             }
-            break;
+            break; */
         default:
             response->data = jsonrpc_respond_message(response->data, request->method, request->id, "Unknown request", true);
             LOG_ERROR("Unknown API request: %.*s", sdslen(request->data), request->data);

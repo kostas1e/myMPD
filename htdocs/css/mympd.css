@@ -7,6 +7,7 @@
 :root {
   --mympd-coverimagesize: 250px;
   --mympd-covergridsize: 200px;
+  --mympd-covergridsize2: 100px;
 }
 
 #splashScreen {
@@ -62,6 +63,10 @@ body {
 .breakAll, td[data-col=Title] {
   word-break: break-all;
   min-width: 6rem;
+}
+
+td[data-col=Add] {
+  text-align: right;
 }
 
 td[data-col=Action] {
@@ -170,6 +175,11 @@ button {
   min-width: -webkit-min-content;
 }
 
+[data-col=Add] {
+  width: 2rem;
+  text-align: right;
+}
+
 [data-col=Action] {
   width: 2rem;
   text-align: right;
@@ -217,6 +227,9 @@ small {
   transition: width 0.5s, height 0.5s;
   max-width: 100%;
 }
+.card-grid-2 {
+  width: var(--mympd-covergridsize2, 100px);
+}
 
 .card-footer-grid {
   white-space: nowrap;
@@ -232,6 +245,11 @@ small {
   height: var(--mympd-covergridsize, 200px);
   max-width: 100%;
   padding: 0 0.5rem;
+}
+
+.album-cover-grid-2 {
+  width: var(--mympd-covergridsize2, 100px);
+  height: var(--mympd-covergridsize2, 100px);
 }
 
 a.card-img-left {
@@ -255,8 +273,11 @@ a.card-img-left {
 
 .album-desc {
   min-width: 240px;
-  float: left;
+  /* float: left; */
   padding-bottom: 1.25rem;
+  /* extra */
+  height: var(--mympd-coverimagesize, 250px);
+  overflow-y: auto;
 }
 
 .hide {
@@ -383,7 +404,6 @@ a.card-img-left {
 .col-md {
   max-width: 250px;
   min-width: 250px;
-  
 }
 
 button.active {
@@ -402,14 +422,14 @@ button.active-fg-red {
 
 div#alertBox {
   position:fixed;
-  top: 4rem; 
+  top: 4rem;
   right: 1rem;
-  width: 80%; 
+  width: 80%;
   max-width: 400px;
   z-index: 1000;
   opacity: 0;
   visibility: visible;
-  transition: opacity 0.5s ease-in; 
+  transition: opacity 0.5s ease-in;
 }
 
 div.alertBoxActive {
@@ -631,12 +651,49 @@ div#playDropdown .row {
   padding-left: 0;
 }
 
-.dropdown-item:hover, 
+.dropdown-item:hover,
 .dropdown-item:focus {
   background-color: #3c4248;
 }
 
-.popover-content .dropdown-item:hover, 
+.popover-content .dropdown-item:hover,
 .popover-content .dropdown-item:focus {
   background-color: #e9ecef;
 }
+
+#scrollToTopBtn {
+  display: none;
+  position: fixed;
+  bottom: 4rem;
+  right: 1rem;
+  z-index: 99;
+  border: none;
+  outline: none;
+  /* background-color: rgba(108, 117, 125, 0.5); */
+  background-color: rgba(255, 0, 0, 0.5);
+}
+
+#scrollToTopBtn:hover {
+  /* background-color: rgba(90, 98, 104, 0.5); */
+  background-color: rgba(85, 85, 85, 0.5);
+}
+
+#cardPlayback > div.card-header {
+  height: 54px !important;
+}
+ 
+#cardQueueMini {
+  height: 377px;
+}
+
+#browseHeight {
+  overflow-y: auto;
+}
+
+/* 
+#QueueMiniList {
+  overflow-y: auto;
+  white-space: nowrap;
+
+}
+ */

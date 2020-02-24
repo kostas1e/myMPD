@@ -30,7 +30,7 @@ function validateFilename(el) {
 
 function validateFilenameList(el) {
     el.classList.remove('is-invalid');
-    
+
     let filenames = el.value.split(',');
     for (let i = 0; i < filenames.length; i++) {
         if (validateFilenameString(filenames[i].trim()) === false) {

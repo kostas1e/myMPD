@@ -63,6 +63,7 @@ function setCounter(currentSongId, totalTime, elapsedTime) {
                     posTd.innerText = tr.getAttribute('data-songpos');
                 }
                 tr.classList.remove('font-weight-bold');
+                tr.classList.remove('playing');
             }
         }
     }
@@ -80,6 +81,43 @@ function setCounter(currentSongId, totalTime, elapsedTime) {
             }
         }
         tr.classList.add('font-weight-bold');
+        tr.classList.add('playing');
+    }
+    
+    // Set playing track in playback view (queue mini)
+    if (lastState) {
+        if (lastState.currentSongId !== currentSongId) {
+            let tr = document.getElementById('queueMiniTrackId' + lastState.currentSongId);
+            if (tr) {
+                let durationTd = tr.querySelector('[data-col=Duration]');
+                if (durationTd) {
+                    durationTd.innerText = tr.getAttribute('data-duration');
+                }
+                let posTd = tr.querySelector('[data-col=Pos]');
+                if (posTd) {
+                    posTd.classList.remove('material-icons');
+                    posTd.innerText = tr.getAttribute('data-songpos');
+                }
+                tr.classList.remove('font-weight-bold');
+                tr.classList.remove('playing');
+            }
+        }
+    }
+    tr = document.getElementById('queueMiniTrackId' + currentSongId);
+    if (tr) {
+        let durationTd = tr.querySelector('[data-col=Duration]');
+        if (durationTd) {
+            durationTd.innerHTML = counterText;
+        }
+        let posTd = tr.querySelector('[data-col=Pos]');
+        if (posTd) {
+            if (!posTd.classList.contains('material-icons')) {
+                posTd.classList.add('material-icons');
+                posTd.innerText = 'play_arrow';
+            }
+        }
+        tr.classList.add('font-weight-bold');
+        tr.classList.add('playing');
     }
     
     if (progressTimer) {
@@ -101,22 +139,22 @@ function parseState(obj) {
         return;
     }
 
-    //Set play and queue state
+    // Set play and queue state
     parseUpdateQueue(obj);
     
-    //Set volume
+    // Set volume
     parseVolume(obj);
 
-    //Set play counters
+    // Set play counters
     setCounter(obj.result.currentSongId, obj.result.totalTime, obj.result.elapsedTime);
     
-    //Get current song
+    // Get current song
     if (!lastState || lastState.currentSongId !== obj.result.currentSongId ||
         lastState.queueVersion !== obj.result.queueVersion)
     {
         sendAPI("MPD_API_PLAYER_CURRENT_SONG", {}, songChange);
     }
-    //clear playback card if not playing
+    // clear playback card if not playing
     if (obj.result.songPos === '-1') {
         domCache.currentTitle.innerText = 'Not playing';
         document.title = 'myMPD';
@@ -128,7 +166,8 @@ function parseState(obj) {
         if (settings.bgCover === true) {
             clearBackgroundImage();
         }
-        let pb = document.getElementById('cardPlaybackTags').getElementsByTagName('p');
+        // let pb = document.getElementById('cardPlaybackTags').getElementsByTagName('p');
+        let pb = document.getElementById('cardPlaybackTags').getElementsByTagName('span');
         for (let i = 0; i < pb.length; i++) {
             pb[i].innerText = '';
         }
@@ -136,10 +175,10 @@ function parseState(obj) {
     else {
         let cff = document.getElementById('currentFileformat');
         if (cff) {
-            cff.getElementsByTagName('p')[0].innerText = fileformat(obj.result.audioFormat);
+            // cff.getElementsByTagName('p')[0].innerText = fileformat(obj.result.audioFormat);
+            cff.getElementsByTagName('span')[0].innerText = fileformat(obj.result.audioFormat);
         }
     }
-
 
     lastState = obj.result;                    
     
@@ -253,6 +292,7 @@ function clearCurrentCover() {
 }
 
 function songChange(obj) {
+    getQueueMini(obj.result.pos);
     let curSong = obj.result.Title + ':' + obj.result.Artist + ':' + obj.result.Album + ':' + obj.result.uri + ':' + obj.result.currentSongId;
     if (lastSong === curSong) {
         return;
@@ -291,7 +331,7 @@ function songChange(obj) {
     headerTitle.innerText = pageTitle;
     headerTitle.title = pageTitle;
     
-    if (obj.result.uri !== undefined && obj.result.uri !== '' && obj.result.uri.indexOf('://') === -1) {
+    if (obj.result.uri !== undefined && obj.result.uri !== '' && (obj.result.uri.indexOf('://') === -1 || obj.result.uri.startsWith('tidal://'))) {
         headerTitle.classList.add('clickable');
     }
     else {
@@ -325,12 +365,13 @@ function songChange(obj) {
             if (settings.colsPlayback[i] == 'Duration') {
                 value = beautifySongDuration(value);
             }
-            c.getElementsByTagName('p')[0].innerText = value;
+            // c.getElementsByTagName('p')[0].innerText = value;
+            c.getElementsByTagName('span')[0].innerText = value;
             c.setAttribute('data-name', encodeURI(value));
         }
     }
     
-    //Update Artist in queue view for http streams
+    // Update Artist in queue view for http streams
     let playingTr = document.getElementById('queueTrackId' + obj.result.currentSongId);
     if (playingTr) {
         playingTr.getElementsByTagName('td')[1].innerText = obj.result.Title;
@@ -369,7 +410,7 @@ function chVolume(increment) {
 //eslint-disable-next-line no-unused-vars
 function clickTitle() {
     let uri = decodeURI(domCache.currentTitle.getAttribute('data-uri'));
-    if (uri !== '' && uri.indexOf('://') === -1) {
+    if (uri !== '' && (uri.indexOf('://') === -1 || uri.startsWith('tidal://'))) {
         songDetails(uri);
     }
 }

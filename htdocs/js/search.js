@@ -30,12 +30,12 @@ function search(x) {
 function parseSearch(obj) {
     //document.getElementById('panel-heading-search').innerText = gtPage('Num songs', obj.result.returnedEntities, obj.result.totalEntities);
     document.getElementById('cardFooterSearch').innerText = gtPage('Num songs', obj.result.returnedEntities, obj.result.totalEntities);
-    
+
     let tab = app.current.tab === 'Database' ? '' : app.current.tab;
     if (obj.result.returnedEntities > 0 || obj.result.sumReturnedItems > 0) {
         document.getElementById('search' + tab + 'AddAllSongs').removeAttribute('disabled');
         document.getElementById('search' + tab + 'AddAllSongsBtn').removeAttribute('disabled');
-    } 
+    }
     else {
         document.getElementById('search' + tab + 'AddAllSongs').setAttribute('disabled', 'disabled');
         document.getElementById('search' + tab + 'AddAllSongsBtn').setAttribute('disabled', 'disabled');
@@ -48,32 +48,34 @@ function parseSearch(obj) {
 }
 
 function saveSearchAsSmartPlaylist() {
-    parseSmartPlaylist({"jsonrpc":"2.0","id":0,"result":{"method":"MPD_API_SMARTPLS_GET", 
+    parseSmartPlaylist({"jsonrpc":"2.0","id":0,"result":{"method":"MPD_API_SMARTPLS_GET",
         "playlist":"",
         "type":"search",
         "tag": app.current.filter,
         "searchstr": app.current.search}});
 }
 
-function addAllFromSearchPlist(plist, search, replace) {
+function addAllFromSearchPlist(plist, search, replace, play = false) {
     if (search === null) {
-        search = app.current.search;    
+        search = app.current.search;
     }
     if (settings.featAdvsearch) {
-        sendAPI("MPD_API_DATABASE_SEARCH_ADV", {"plist": plist, 
-            "sort": "", 
-            "sortdesc": false, 
-            "expression": search, 
-            "offset": 0, 
-            "cols": settings.colsSearchDatabase, 
+        sendAPI("MPD_API_DATABASE_SEARCH_ADV", {"plist": plist,
+            "sort": "",
+            "sortdesc": false,
+            "expression": search,
+            "offset": 0,
+            "cols": settings.colsSearchDatabase,
+            "play": play,
             "replace": replace});
     }
     else {
-        sendAPI("MPD_API_DATABASE_SEARCH", {"plist": plist, 
-            "filter": app.current.filter, 
-            "searchstr": search, 
-            "offset": 0, 
-            "cols": settings.colsSearchDatabase, 
+        sendAPI("MPD_API_DATABASE_SEARCH", {"plist": plist,
+            "filter": app.current.filter,
+            "searchstr": search,
+            "offset": 0,
+            "cols": settings.colsSearchDatabase,
+            "play": play,
             "replace": replace});
     }
 }
@@ -139,6 +141,7 @@ function parseTidal(obj) {
             }
             tds += '</td>';
         }
+        // tds += '<td data-col="Add" title="Append to queue">' + (type === 'song' ? '<a href="#" class="material-icons color-darkgrey">add</a>' : '') + '</td>';
         tds += '<td data-col="Action"><a href="#" class="material-icons color-darkgrey">' + ligatureMore + '</a></td>';
         row.innerHTML = tds;
 
@@ -151,8 +154,9 @@ function parseTidal(obj) {
     for (let i = trLen; i >= nrItems; i --)
         tr[i].remove();
 
-    if (navigate === true)
+    if (navigate === true) {
         focusTable(0);
+    }
 
     setTidalPagination(obj.result.maxTotalItems, obj.result.maxReturnedItems, obj.result.limit);
 
@@ -160,7 +164,7 @@ function parseTidal(obj) {
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
                           '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
     document.getElementById(list + 'List').classList.remove('opacity05');
-    document.getElementById('cardFooterSearch').innerText = gtTidalPage('Num entries', obj.result.maxReturnedItems, obj.result.sumTotalItems, obj.result.limit);
+    document.getElementById('cardFooterSearch').innerText = gtPage('Num entries', obj.result.maxReturnedItems, obj.result.sumTotalItems, obj.result.limit);
 
     if (app.current.view === 'All') {
         document.getElementById('btnSearch' + app.current.tab + 'All').parentNode.classList.add('hide');
@@ -174,14 +178,14 @@ function parseTidal(obj) {
 function addAllFromSearchTidalPlist(plist) {
     let table = document.getElementById('SearchTidalList');
     let tbody = table.getElementsByTagName('tbody')[0];
-    let trs = tbody.getElementsByTagName('tr');
+    let rows = tbody.getElementsByTagName('tr');
     let uris = '';
     let i;
-    for (i = 0; i < trs.length; i++) { // ++i
-        if (trs[i].getAttribute('data-type') === 'song') {
-            uris += trs[i].getAttribute("data-uri") + " ";
+    for (i = 0; i < rows.length; i++) { // ++i
+        if (rows[i].getAttribute('data-type') === 'song') {
+            uris += rows[i].getAttribute("data-uri") + " ";
         }
-        if (i % 30 == 0 || i == trs.length - 1) {
+        if (i % 50 == 0 || i == rows.length - 1) {
             uris = uris.slice(0, -1);
             if (plist === 'queue') {
                 sendAPI("MPD_API_QUEUE_ADD_ALL_TRACKS", {"uris": uris});
@@ -228,7 +232,7 @@ function goBack() { // wip
         appGoto('Search', 'Qobuz', 'All', app.last.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.last.search);
     }
     */
-    
+
     // temp
     appGoto('Search', 'Qobuz', 'All');
 }

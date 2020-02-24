@@ -43,13 +43,13 @@ function t(phrase, number, data) {
         }
         result = result.replace('%{smart_count}', number);
     }
-    
+
     if (data != null) {
         result = result.replace(/%\{(\w+)\}/g, function(m0, m1) {
             return data[m1];
         });
     }
-    
+
     return e(result);
 }
 
@@ -71,8 +71,8 @@ function beautifyDuration(x) {
     let seconds = x - days * 86400 - hours * 3600 - minutes * 60;
 
     return (days > 0 ? days + '\u2009'+ t('Days') + ' ' : '') +
-        (hours > 0 ? hours + '\u2009' + t('Hours') + ' ' + 
-        (minutes < 10 ? '0' : '') : '') + minutes + '\u2009' + t('Minutes') + ' ' + 
+        (hours > 0 ? hours + '\u2009' + t('Hours') + ' ' +
+        (minutes < 10 ? '0' : '') : '') + minutes + '\u2009' + t('Minutes') + ' ' +
         (seconds < 10 ? '0' : '') + seconds + '\u2009' + t('Seconds');
 }
 
@@ -81,19 +81,19 @@ function beautifySongDuration(x) {
     let minutes = Math.floor(x / 60) - hours * 60;
     let seconds = x - hours * 3600 - minutes * 60;
 
-    return (hours > 0 ? hours + ':' + (minutes < 10 ? '0' : '') : '') + 
+    return (hours > 0 ? hours + ':' + (minutes < 10 ? '0' : '') : '') +
         minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
 }
 
-function gtPage(phrase, returnedEntities, totalEntities) {
+function gtPage(phrase, returnedEntities, totalEntities, limit = settings.maxElementsPerPage) {
     if (totalEntities > -1) {
         return t(phrase, totalEntities);
     }
-    else if (returnedEntities + app.current.page < settings.maxElementsPerPage) {
+    else if (returnedEntities + app.current.page < limit) {
         return t(phrase, returnedEntities);
     }
     else {
-        return '> ' + t(phrase, settings.maxElementsPerPage);
+        return '> ' + t(phrase, limit);
     }
 }
 

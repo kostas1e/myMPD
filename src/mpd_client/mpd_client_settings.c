@@ -26,7 +26,7 @@
 static sds print_tags_array(sds buffer, const char *tagsname, t_tags tags);
 
 //public functions
-bool mpd_api_settings_set(t_config *config, t_mpd_state *mpd_state, struct json_token *key, 
+bool mpd_api_settings_set(t_config *config, t_mpd_state *mpd_state, struct json_token *key,
                           struct json_token *val, bool *mpd_host_changed, bool *jukebox_changed)
 {
     bool rc = true;
@@ -134,9 +134,9 @@ bool mpd_api_settings_set(t_config *config, t_mpd_state *mpd_state, struct json_
     else if (strncmp(key->ptr, "searchtidaltaglist", key->len) == 0) {
         mpd_state->searchtidaltaglist = sdsreplacelen(mpd_state->searchtidaltaglist, settingvalue, sdslen(settingvalue));
     }
-    else if (strncmp(key->ptr, "searchqobuztaglist", key->len) == 0) {
+    /* else if (strncmp(key->ptr, "searchqobuztaglist", key->len) == 0) {
         mpd_state->searchqobuztaglist = sdsreplacelen(mpd_state->searchqobuztaglist, settingvalue, sdslen(settingvalue));
-    }
+    } */
     else if (strncmp(key->ptr, "browsetaglist", key->len) == 0) {
         mpd_state->browsetaglist = sdsreplacelen(mpd_state->browsetaglist, settingvalue, sdslen(settingvalue));
     }
@@ -209,7 +209,7 @@ bool mpd_api_settings_set(t_config *config, t_mpd_state *mpd_state, struct json_
     else if (strncmp(key->ptr, "replaygain", key->len) == 0) {
         rc = mpd_send_command(mpd_state->conn, "replay_gain_mode", settingvalue, NULL);
         mpd_response_finish(mpd_state->conn);
-    }    
+    }
 
     sdsfree(settingvalue);
     return rc;
@@ -234,7 +234,7 @@ sds mpd_client_put_settings(t_mpd_state *mpd_state, sds buffer, sds method, int 
     char *replaygain = strdup(pair->value);
     mpd_return_pair(mpd_state->conn, pair);
     mpd_response_finish(mpd_state->conn);
-    
+
     buffer = jsonrpc_start_result(buffer, method, request_id);
     buffer = sdscat(buffer, ",");
     buffer = tojson_long(buffer, "repeat", mpd_status_get_repeat(status), true);
@@ -273,14 +273,14 @@ sds mpd_client_put_settings(t_mpd_state *mpd_state, sds buffer, sds method, int 
     buffer = sdscat(buffer, ",");
     buffer = print_tags_array(buffer, "searchtidaltags", mpd_state->search_tidal_tag_types);
     buffer = sdscat(buffer, ",");
-    buffer = print_tags_array(buffer, "searchqobuztags", mpd_state->search_qobuz_tag_types);
-    buffer = sdscat(buffer, ",");
+    /* buffer = print_tags_array(buffer, "searchqobuztags", mpd_state->search_qobuz_tag_types);
+    buffer = sdscat(buffer, ","); */
     buffer = print_tags_array(buffer, "browsetags", mpd_state->browse_tag_types);
     buffer = sdscat(buffer, ",");
     buffer = print_tags_array(buffer, "allmpdtags", mpd_state->mpd_tag_types);
 
     buffer = jsonrpc_end_result(buffer);
-    
+
     return buffer;
 }
 

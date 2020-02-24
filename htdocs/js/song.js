@@ -6,10 +6,10 @@
 */
 
 function songDetails(uri) {
-    if (uri.includes("tidal")) {
+    if (uri.startsWith("tidal://")) {
         sendAPI("MYMPD_API_TIDAL_SONGDETAILS", {"uri": uri}, parseTidalSongDetails);
     }
-    else if (uri.includes("qobuz")) {
+    else if (uri.startsWith("qobuz://")) {
         sendAPI("MYMPD_API_QOBUZ_SONGDETAILS", {"uri": uri}, parseQobuzSongDetails);
     }
     else {
@@ -31,7 +31,7 @@ function parseSongDetails(obj) {
     let modal = document.getElementById('modalSongDetails');
     modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + subdir + '/albumart/' + obj.result.uri + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
     modal.getElementsByTagName('h1')[0].innerText = obj.result.Title;
-    
+
     let songDetails = '';
     for (let i = 0; i < settings.tags.length; i++) {
         if (settings.tags[i] === 'Title') {
@@ -48,17 +48,17 @@ function parseSongDetails(obj) {
     }
     songDetails += '<tr><th>' + t('Duration') + '</th><td>' + beautifyDuration(obj.result.Duration) + '</td></tr>';
     if (settings.featLibrary === true && settings.publishLibrary === true) {
-        songDetails += '<tr><th>' + t('Filename') + '</th><td><a class="breakAll text-success" href="/library/' + 
-            encodeURI(obj.result.uri) + '" download title="' + e(obj.result.uri) + '">' + 
+        songDetails += '<tr><th>' + t('Filename') + '</th><td><a class="breakAll text-success" href="/library/' +
+            encodeURI(obj.result.uri) + '" download title="' + e(obj.result.uri) + '">' +
             e(basename(obj.result.uri)) + '</a></td></tr>';
     }
     else {
-        songDetails += '<tr><th>' + t('Filename') + '</th><td class="breakAll"><span title="' + e(obj.result.uri) + '">' + 
+        songDetails += '<tr><th>' + t('Filename') + '</th><td class="breakAll"><span title="' + e(obj.result.uri) + '">' +
             e(basename(obj.result.uri)) + '</span></td></tr>';
     }
     songDetails += '<tr><th>' + t('Filetype') + '</th><td>' + filetype(obj.result.uri) + '</td></tr>';
     if (settings.featFingerprint === true) {
-        songDetails += '<tr><th>' + t('Fingerprint') + '</th><td class="breakAll" id="fingerprint"><a class="text-success" data-uri="' + 
+        songDetails += '<tr><th>' + t('Fingerprint') + '</th><td class="breakAll" id="fingerprint"><a class="text-success" data-uri="' +
             encodeURI(obj.result.uri) + '" id="calcFingerprint" href="#">' + t('Calculate') + '</a></td></tr>';
     }
     if (settings.featStickers === true) {
@@ -74,62 +74,9 @@ function parseSongDetails(obj) {
               '</div>' +
             '</td></tr>';
     }
-    
+
     modal.getElementsByTagName('tbody')[0].innerHTML = songDetails;
     setVoteSongBtns(obj.result.like, obj.result.uri);
-}
-
-function parseTidalSongDetails(obj) {
-    let modal = document.getElementById('modalSongDetails');
-    let cover = obj.result.album.cover;
-    if (cover) {
-        cover = subdir + '/image/' + obj.result.album.cover.replace(/-/g, '/') + '/320x320.jpg';
-    }
-    else {
-        cover = subdir + '/assets/coverimage-notavailable.svg';
-    }
-    modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + cover + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
-    modal.getElementsByTagName('h1')[0].innerText = obj.result.title;
-    
-    let songDetails = '';
-    songDetails += '<tr><th>' + t('Album') + '</th><td>' + obj.result.album.title + '</td></tr>';
-    songDetails += '<tr><th>' + t('AlbumArtist') + '</th><td>' + obj.result.album.artist + '</td></tr>';
-    songDetails += '<tr><th>' + t('Artist') + '</th><td>' + obj.result.artist.name + '</td></tr>';
-    songDetails += '<tr><th>' + t('Date') + '</th><td>' + obj.result.album.releaseDate + '</td></tr>';
-    songDetails += '<tr><th>' + t('Track') + '</th><td>' + obj.result.trackNumber + '</td></tr>';
-    songDetails += '<tr><th>' + t('Duration') + '</th><td>' + beautifyDuration(obj.result.duration) + '</td></tr>';
-    
-    modal.getElementsByTagName('tbody')[0].innerHTML = songDetails;
-    //setVoteSongBtns(obj.result.like, obj.result.uri); // replace w/ tidal fav
-}
-
-function parseQobuzSongDetails(obj) {
-    let modal = document.getElementById('modalSongDetails');
-    let cover = obj.result.cover;
-    if (cover) {
-        cover = subdir + '/image/' + obj.result.cover.split('/').pop();
-    }
-    else {
-        cover = subdir + '/assets/coverimage-notavailable.svg';
-    }
-    modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + cover + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
-    modal.getElementsByTagName('h1')[0].innerText = obj.result.Title;
-    
-    let songDetails = '';
-    obj.result.Date = new Date(obj.result.Date).toLocaleDateString();
-    for (let i = 0; i < settings.tags.length; i++) {
-        if (settings.tags[i] === 'Title')
-            continue;
-        songDetails += '<tr><th>' + t(settings.tags[i]) + '</th><td>' + obj.result[settings.tags[i]] + '</td></tr>';
-    }
-    songDetails += '<tr><th>' + t('Duration') + '</th><td>' + beautifyDuration(obj.result.Duration) + '</td></tr>';
-
-    modal.getElementsByTagName('tbody')[0].innerHTML = songDetails;
-}
-
-function songRadio(uri) { // for tidal track
-    uri = uri.split('://').pop() + '/mix';
-    searchTidal(uri);
 }
 
 //eslint-disable-next-line no-unused-vars
@@ -143,7 +90,7 @@ function voteSong(vote) {
     if (uri === '') {
         return;
     }
-        
+
     if (vote === 2 && domCache.btnVoteUp.classList.contains('active-fg-green')) {
         vote = 1;
     }
@@ -173,7 +120,7 @@ function setVoteSongBtns(vote, uri) {
             domCache.btnVoteDown2.removeAttribute('disabled');
         }
     }
-    
+
     if (vote === 0) {
         domCache.btnVoteUp.classList.remove('active-fg-green');
         domCache.btnVoteDown.classList.add('active-fg-red');
@@ -196,4 +143,58 @@ function setVoteSongBtns(vote, uri) {
             domCache.btnVoteDown2.classList.remove('active-fg-red');
         }
     }
+}
+
+function parseTidalSongDetails(obj) {
+    let modal = document.getElementById('modalSongDetails');
+    let cover = obj.result.album.cover;
+    if (cover) {
+        cover = subdir + '/image/' + obj.result.album.cover.replace(/-/g, '/') + '/320x320.jpg';
+    }
+    else {
+        cover = subdir + '/assets/coverimage-notavailable.svg';
+    }
+    modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + cover + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
+    modal.getElementsByTagName('h1')[0].innerText = obj.result.title;
+
+    let songDetails = '';
+    // use settings (tidal) tags
+    songDetails += '<tr><th>' + t('Album') + '</th><td>' + obj.result.album.title + '</td></tr>';
+    songDetails += '<tr><th>' + t('AlbumArtist') + '</th><td>' + obj.result.album.artist + '</td></tr>';
+    songDetails += '<tr><th>' + t('Artist') + '</th><td>' + obj.result.artist.name + '</td></tr>';
+    songDetails += '<tr><th>' + t('Date') + '</th><td>' + obj.result.album.releaseDate + '</td></tr>';
+    songDetails += '<tr><th>' + t('Track') + '</th><td>' + obj.result.trackNumber + '</td></tr>';
+    songDetails += '<tr><th>' + t('Duration') + '</th><td>' + beautifyDuration(obj.result.duration) + '</td></tr>';
+
+    modal.getElementsByTagName('tbody')[0].innerHTML = songDetails;
+}
+
+function parseQobuzSongDetails(obj) {
+    let modal = document.getElementById('modalSongDetails');
+    let cover = obj.result.cover;
+    if (cover) {
+        cover = subdir + '/image/' + obj.result.cover.split('/').pop();
+    }
+    else {
+        cover = subdir + '/assets/coverimage-notavailable.svg';
+    }
+    modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + cover + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
+    modal.getElementsByTagName('h1')[0].innerText = obj.result.Title;
+
+    let songDetails = '';
+    obj.result.Date = new Date(obj.result.Date).toLocaleDateString();
+    for (let i = 0; i < settings.tags.length; i++) {
+        if (settings.tags[i] === 'Title') {
+            continue;
+        }
+        songDetails += '<tr><th>' + t(settings.tags[i]) + '</th><td>' + obj.result[settings.tags[i]] + '</td></tr>';
+    }
+    songDetails += '<tr><th>' + t('Duration') + '</th><td>' + beautifyDuration(obj.result.Duration) + '</td></tr>';
+
+    modal.getElementsByTagName('tbody')[0].innerHTML = songDetails;
+}
+
+function songRadio(uri) { // tidal track radio
+    uri = uri.split('://').pop() + '/mix';
+    searchTidal(uri);
 }

@@ -78,7 +78,7 @@ typedef struct t_mpd_state {
     sds taglist;
     sds searchtaglist;
     sds searchtidaltaglist;
-    sds searchqobuztaglist;
+    // sds searchqobuztaglist;
     sds browsetaglist;
     bool stickers;
     bool smartpls;
@@ -94,7 +94,7 @@ typedef struct t_mpd_state {
     t_tags mympd_tag_types;
     t_tags search_tag_types;
     t_tags search_tidal_tag_types;
-    t_tags search_qobuz_tag_types;
+    // t_tags search_qobuz_tag_types;
     t_tags browse_tag_types;
     //last played list
     struct list last_played;

@@ -29,6 +29,7 @@ static sds tidal_username;
 static sds tidal_password;
 static sds tidal_audioquality;
 static sds cache_dir;
+static sds mpd_conf;
 static CURL *tidalhandle; // pass handler as param
 struct memory_struct chunk;
 //static struct curl_slist *slist = NULL;
@@ -72,6 +73,7 @@ bool tidal_init(t_config *config) {
         //tidal_password = config->tidal_password;
         //tidal_audioquality = config->tidal_audioquality;
         cache_dir = sdscatfmt(sdsempty(), "%s/covercache", config->varlibdir);
+        mpd_conf = sdscpy(sdsempty(), config->mpd_conf);
         tidalhandle = curl_easy_init();
         if (tidalhandle) {
             curl_cleanup++;
@@ -102,6 +104,7 @@ void tidal_cleanup(void) {
     //curl_slist_free_all(slist);
     if (curl_cleanup--)
         curl_easy_cleanup(tidalhandle);
+    sdsfree(mpd_conf);
     sdsfree(cache_dir);
     sdsfree(tidal_audioquality);
     sdsfree(tidal_password);
@@ -167,12 +170,12 @@ void tidal_session_init(sds username, sds password, sds audioquality) {
 }
 
 static bool otherconf_w(const char *filename) {
-    // same locations as mpd.conf
-    //sds other_conf = sdscatfmt(sdsempty(), "%s/%s", ETC_PATH, filename);
-    sds other_conf = sdscatfmt(sdsempty(), "/usr/local/etc/%s", filename);
+    sds other_conf = sdscpylen(sdsempty(), mpd_conf, sdslen(mpd_conf));
+    sdsrange(other_conf, 0, -9);
+    other_conf = sdscat(other_conf, filename);
     FILE *fp = fopen(other_conf, "w");
     sdsfree(other_conf);
-    if (fp) { // other.conf soccessfully opened
+    if (fp) { // other.conf successfully opened
         sds buffer = sdscatfmt(sdsempty(), "input {\n\tplugin \"tidal\"\n\ttoken \"%s\"\n\tusername \"%s\"\n\tpassword \"%s\"\n\taudioquality \"%s\"\n}\n",
             tidal_token, tidal_username, tidal_password, tidal_audioquality);
         fputs(buffer, fp);
@@ -184,16 +187,12 @@ static bool otherconf_w(const char *filename) {
 }
 
 static bool mpdconf_ra(const char *filename) {
-    // add to config/settings with default location /etc/mpd.conf
-    //sds mpd_conf = sdscatfmt(sdsempty(), "%s/mpd.conf", ETC_PATH);
-    sds mpd_conf = sdsnew("/usr/local/etc/mpd.conf");
-    //sds include = sdsnew("include \"tidal_input_plugin.conf\"");
-    sds include = sdscatfmt(sdsempty(), "include \"%s\"", filename);
+    sds include = sdscatfmt(sdsempty(), "include \"%s\"\n", filename);
     bool found = false;
     char *line = NULL;
     size_t n =0;
     ssize_t read= 0;
-    FILE *fp = fopen(mpd_conf, "r");
+    FILE *fp = fopen(mpd_conf, "r"); // read
     if (fp) { // mpd.conf successfully opened
         while ((read = getline(&line, &n, fp)) > 0) {
             if (strcmp(line, include) == 0) {
@@ -201,9 +200,13 @@ static bool mpdconf_ra(const char *filename) {
                 break;
             }
         }
-        sdsfree(mpd_conf);
-        if (!found) { // append mpd.conf
-            fp = freopen(NULL, "a", fp);
+        if (found) {
+            sdsfree(include);
+            fclose(fp);
+            return otherconf_w(filename); // proceed with restart if true
+        }
+        else {
+            fp = freopen(NULL, "a", fp); // append
             if (fp) { // mpd.conf successfully reopend
                 fputs("\n", fp);
                 fputs(include, fp);
@@ -218,14 +221,6 @@ static bool mpdconf_ra(const char *filename) {
                 return false;
             }
         }
-        else { // found
-            fputs("\n", fp);
-            fputs(include, fp);
-            fputs("\n", fp);
-            sdsfree(include);
-            fclose(fp);
-            return otherconf_w(filename); // proceed with restart if true
-        }
     }
     sdsfree(include);
     return false;
@@ -233,9 +228,8 @@ static bool mpdconf_ra(const char *filename) {
 
 static bool restart_mpd(void) {
     sds cmdline = sdsnew("systemctl restart mpd");
-    LOG_DEBUG("Executing syscmd: %s", cmdline);
-    LOG_INFO("Restarting mpd service...");
     const int rc = system(cmdline);
+    LOG_INFO("Restarting mpd service...");
     if (rc == 0) {
         LOG_INFO("Success");
         return true;
@@ -458,17 +452,17 @@ static sds get_track_radio(sds buffer, const char *track_id) {
     sdsfree(url);
     return buffer;
 }
-
-static sds get_track_url(sds buffer, const char *track_id) {
+/* 
+static sds get_track_url(sds buffer, const char *track_id, const char *audioquality) {
     // /tracks/track_id/urlpost(pre)paywall?assetpresentation=FULL(PREVIEW)&audioquality=audioquality&urlusagemode=STREAM(?)
     // urls[] trackId assetPresentation audioQuality audioMode streamingSessionId codec securityType securityToken
-    sds url = sdscatfmt(sdsempty(), "/tracks/%s/streamUrl?soundQuality=%s", track_id, tidal_audioquality);
+    sds url = sdscatfmt(sdsempty(), "/tracks/%s/streamUrl?soundQuality=%s", track_id, audioquality);
     // url trackId playTimeLeftInMinutes soundQuality encryptionKey codec
     buffer = request(buffer, "GET", url);
     sdsfree(url);
     return buffer;
 }
-
+ */
 // featured featured_items moods mood_playlists genres genre_items
 
 static sds parse_artist(sds buffer, sds res) {
@@ -478,8 +472,6 @@ static sds parse_artist(sds buffer, sds res) {
     buffer = sdscat(buffer, "{");
     buffer = tojson_char(buffer, "Type", "artist", true);
     buffer = tojson_char(buffer, "id", id, true);
-    //sds uri = sdscatfmt(sdsempty(), "tidal://artist/%s", id);
-    //buffer = tojson_char_len(buffer, "uri", uri, sdslen(uri), true);
     buffer = tojson_char(buffer, "Artist", name, true);
     buffer = tojson_char(buffer, "Title", NULL, true);
     buffer = tojson_char(buffer, "Duration", NULL, true);
@@ -491,7 +483,6 @@ static sds parse_artist(sds buffer, sds res) {
     //buffer = tojson_char(buffer, "Performer", NULL, true);
     buffer = tojson_char(buffer, "Date", NULL, false);
     buffer = sdscat(buffer, "}");
-    //sdsfree(uri);
     FREE_PTR(id);
     FREE_PTR(name);
     return buffer;
@@ -779,7 +770,7 @@ sds tidal_search(sds buffer, sds method, int request_id, const char *query,
     else {
         char *query_encoded = curl_easy_escape(tidalhandle, query, strlen(query));
         if (query_encoded) {
-            limit = 30;
+            limit = 10;
             sds url = sdscatfmt(sdsempty(), "/search?query=%s&limit=%u&offset=%u", query_encoded, limit, offset);
             if (strcmp(type, "Artist") == 0)
                 url = sdscat(url, "&types=ARTISTS");
@@ -947,37 +938,7 @@ sds tidal_artistdetails(sds buffer, sds method, int request_id, const char *uri)
     return buffer;
 }
 
-// returns parsed track data plus streamUrl
-sds tidal_queue_add_track(sds buffer, const char *uri) {
-    char *track_id = extract_id(uri);
-    sds res = get_track(sdsempty(), track_id); // raw track
-    buffer = parse_track(buffer, res);
-    res = sdscrop(res);
-    res = get_track_url(res, track_id);
-    char *url = NULL;
-    json_scanf(res ,sdslen(res), "{url:%Q}", &url);
-    sdsrange(buffer, 0, -2); // rm trailing bracket
-    buffer = tojson_char(buffer, "url", url, false);
-    buffer = sdscat(buffer, "}"); // add trailing bracket
-    sdsfree(res);
-    FREE_PTR(track_id);
-    return buffer;
-}
-/* 
-sds tidal_get_track_url(sds buffer, const char *track_id) {
-    // /tracks/track_id/urlpost(pre)paywall?assetpresentation=FULL(PREVIEW)&audioquality=audioquality&urlusagemode=STREAM(?)
-    // urls[] trackId assetPresentation audioQuality audioMode streamingSessionId codec securityType securityToken
-    sds url = sdscatfmt(sdsempty(), "/tracks/%s/streamUrl?soundQuality=%s", track_id, tidal_audioquality);
-    // url trackId playTimeLeftInMinutes soundQuality encryptionKey codec
-    sds res = request(sdsempty(), "GET", url);
-    //char *track_url = NULL;
-    json_scanf(res, sdslen(res), "{url:%Q}", &buffer);
-    sdsfree(url);
-    sdsfree(res);
-    return buffer;
-}
- */
 // test function
 static void unused(void) {
-    //printf("\n\tunsused start\n");
+    //printf("\n\tunsused\n");
 }

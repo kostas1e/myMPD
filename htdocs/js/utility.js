@@ -256,8 +256,12 @@ function toggleBtnChk(btn, state) {
     }
 }
 
-function setPagination(total, returned) {
+function setPagination(total, returned, at) {
     let cat = app.current.app + app.current.tab;
+    if (at !== undefined) {
+        // call with AppTab param
+        cat = at;
+    }
     let totalPages = Math.ceil(total / settings.maxElementsPerPage);
     if (totalPages === 0) {
         totalPages = 1;
@@ -345,10 +349,15 @@ function parseCmd(event, href) {
 }
 
 function gotoPage(x) {
+    // rm - scroll top nav 58
+    // check for playback
+    // document.getElementById(app.current.app + app.current.tab + 'PaginationTop').scrollIntoView();
+    document.getElementById('card' + app.current.app).scrollIntoView(); // cardHeader
+    
     let offset = settings.maxElementsPerPage;
     if (app.current.tab === 'Tidal') {
         if (app.current.view === 'All') {
-            offset = 30;
+            offset = 10;
         }
         else if (app.current.view === 'Artist') {
             offset = 50;
@@ -366,6 +375,7 @@ function gotoPage(x) {
         default:
             app.current.page = x;
     }
+    // console.log(app.current.app, app.current.tab, app.current.view, app.current.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
     appGoto(app.current.app, app.current.tab, app.current.view, app.current.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
 }
 

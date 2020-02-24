@@ -1,18 +1,5 @@
 "use strict";
 
-// mw/ locale/gtPage
-function gtTidalPage(phrase, returned, total, limit = settings.maxElementsPerPage) {
-    if (total > -1) {
-        return t(phrase, total);
-    }
-    else if (returned + app.current.page < limit) {
-        return t(phrase, returned);
-    }
-    else {
-        return '> ' + t(phrase, limit);
-    }
-}
-
 // mw/ utility/setPagination
 function setTidalPagination(total, returned, limit = settings.maxElementsPerPage) {
     let cat = app.current.app + app.current.tab;

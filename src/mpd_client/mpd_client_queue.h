@@ -14,4 +14,6 @@ sds mpd_client_crop_queue(t_mpd_state *mpd_state, sds buffer, sds method, int re
 sds mpd_client_search_queue(t_mpd_state *mpd_state, sds buffer, sds method, int request_id,
                             const char *mpdtagtype, const unsigned int offset, 
                             const char *searchstr, const t_tags *tagcols);
+sds mpd_client_put_queue_mini(t_mpd_state *mpd_state, sds buffer, sds method,
+    int request_id, const unsigned int pos, const t_tags *tagcols);
 #endif

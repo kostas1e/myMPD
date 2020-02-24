@@ -28,6 +28,7 @@ var keymap = {
     "5": {"cmd": "appGoto", "options": ["Browse", "Filesystem"], "desc": "Goto browse filesystem"},
     "6": {"cmd": "appGoto", "options": ["Browse", "Covergrid"], "desc": "Goto browse covergrid", "req": "featTags"},
     "7": {"cmd": "appGoto", "options": ["Search","Database"], "desc": "Goto search"},
+    "8": {"cmd": "appGoto", "options": ["Search","Tidal"], "desc": "Goto search tidal"},
     "m": {"cmd": "openDropdown", "options": ["dropdownMainMenu"], "desc": "Open main menu"},
     "v": {"cmd": "openDropdown", "options": ["dropdownVolumeMenu"], "desc": "Open volume menu"},
     "S": {"cmd": "sendAPI", "options": [{"cmd": "MPD_API_QUEUE_SHUFFLE"}], "desc": "Shuffle queue"},
@@ -35,8 +36,10 @@ var keymap = {
     "?": {"cmd": "openModal", "options": ["modalAbout"], "desc": "Open about"},
     "/": {"cmd": "focusSearch", "options": [], "desc": "Focus search"},
     "n": {"cmd": "focusTable", "options": [], "desc": "Focus table"},
-    "q": {"cmd": "queueSelectedItem", "options": [true], "desc": "Append item to queue"},
+    // "q": {"cmd": "queueSelectedItem", "options": [true], "desc": "Append item to queue"},
+    "q": {"cmd": "queueSelectedItem", "options": [true], "desc": "Add item to queue"},
     "Q": {"cmd": "queueSelectedItem", "options": [false], "desc": "Replace queue with item"},
     "d": {"cmd": "dequeueSelectedItem", "options": [], "desc": "Remove item from queue"},
-    "x": {"cmd": "addSelectedItemToPlaylist", "options": [], "desc": "Append item to playlist"}
+    // "x": {"cmd": "addSelectedItemToPlaylist", "options": [], "desc": "Append item to playlist"}
+    "x": {"cmd": "addSelectedItemToPlaylist", "options": [], "desc": "Add item to playlist"}
 };

@@ -13,7 +13,7 @@ function focusTable(rownr, table) {
             table = document.getElementById(app.current.app + app.current.tab + 'TagList');
         }
         //support for BrowseDatabaseAlbum cards
-        if (app.current.app === 'Browse' && app.current.tab === 'Database' && 
+        if (app.current.app === 'Browse' && app.current.tab === 'Database' &&
             !document.getElementById('BrowseDatabaseAlbumList').classList.contains('hide'))
         {
             table = document.getElementById('BrowseDatabaseAlbumList').getElementsByTagName('table')[0];
@@ -21,10 +21,10 @@ function focusTable(rownr, table) {
     }
 
     if (app.current.app === 'Browse' && app.current.tab === 'Covergrid' &&
-            table.getElementsByTagName('tbody').length === 0) 
+            table.getElementsByTagName('tbody').length === 0)
     {
         table = document.getElementsByClassName('card-grid')[0];
-        table.focus();        
+        table.focus();
         return;
     }
 
@@ -75,7 +75,7 @@ function scrollFocusIntoView() {
     let el = document.activeElement;
     let posY = el.getBoundingClientRect().top;
     let height = el.offsetHeight;
-    
+
     if (posY < 74) {
         window.scrollBy(0, - 74);
     }
@@ -114,7 +114,7 @@ function navigateTable(table, keyCode) {
             handled = true;
         }
         //only for BrowseDatabaseAlbum cards
-        else if (app.current.app === 'Browse' && app.current.tab === 'Database' && 
+        else if (app.current.app === 'Browse' && app.current.tab === 'Database' &&
                  !document.getElementById('BrowseDatabaseAlbumList').classList.contains('hide') &&
                  (keyCode === 'n' || keyCode === 'p')) {
             let tablesHtml = document.getElementById('BrowseDatabaseAlbumList').getElementsByTagName('table');
@@ -125,7 +125,7 @@ function navigateTable(table, keyCode) {
                                    : event.key === 'n' ? ( idx < tables.length - 1 ? ( document.activeElement.nodeName === 'TR' ? idx + 1 : idx )
                                                                                   : idx)
                                                       : idx;
-            
+
             if (tables[idx].getElementsByTagName('tbody')[0].rows.length > 0) {
                 next = tables[idx].getElementsByTagName('tbody')[0].rows[0];
             }
@@ -150,7 +150,7 @@ function navigateTable(table, keyCode) {
 }
 
 function dragAndDropTable(table) {
-    let tableBody=document.getElementById(table).getElementsByTagName('tbody')[0];
+    let tableBody = document.getElementById(table).getElementsByTagName('tbody')[0];
     tableBody.addEventListener('dragstart', function(event) {
         if (event.target.nodeName === 'TR') {
             event.target.classList.add('opacity05');
@@ -227,7 +227,8 @@ function dragAndDropTable(table) {
             tr[i].classList.remove('dragover');
         }
         document.getElementById(table).classList.add('opacity05');
-        if (app.current.app === 'Queue' && app.current.tab === 'Current') {
+        if ((app.current.app === 'Queue' && app.current.tab === 'Current') ||
+             app.current.app === 'Playlist') {
             sendAPI("MPD_API_QUEUE_MOVE_TRACK", {"from": oldSongpos, "to": newSongpos});
         }
         else if (app.current.app === 'Browse' && app.current.tab === 'Playlists' && app.current.view === 'Detail') {
@@ -342,7 +343,7 @@ function setColTags(table) {
         tags.push('Duration');
         tags.push('Track');
     }
-    
+
     tags.sort();
     return tags;
 }
@@ -350,7 +351,7 @@ function setColTags(table) {
 function setColsChecklist(table) {
     let tagChks = '';
     let tags = setColTags(table);
-    
+
     for (let i = 0; i < tags.length; i++) {
         if (table === 'Playback' && tags[i] === 'Title') {
             continue;
@@ -371,7 +372,7 @@ function setCols(table, className) {
         colsChkList.firstChild.innerHTML = setColsChecklist(table);
     }
     let sort = app.current.sort;
-    
+
     if (table === 'SearchDatabase' && app.apps.Search.tabs.Database.state === '0/any/Title/') {
         if (settings.tags.includes('Title')) {
             sort = 'Title';
@@ -412,7 +413,7 @@ function setCols(table, className) {
             }
             heading += t(h);
 
-            if ((table === 'SearchDatabase' || table === 'SearchTidal' || table === 'SearchQobuz') && (h === sort || '-' + h === sort) ) {
+            if ((table === 'SearchDatabase') && (h === sort || '-' + h === sort) ) {
                 let sortdesc = false;
                 if (app.current.sort.indexOf('-') === 0) {
                     sortdesc = true;
@@ -422,6 +423,8 @@ function setCols(table, className) {
             heading += '</th>';
         }
         if (settings.featTags === true && table !== 'BrowseDatabase') {
+            /* if (table === 'BrowseFilesystem' || table === 'SearchDatabase' || table === 'SearchTidal')
+                heading += '<th data-col="Add"></th>'; */
             heading += '<th data-col="Action"><a href="#" class="text-secondary align-middle material-icons material-icons-small">settings</a></th>';
         }
         else {
@@ -463,7 +466,7 @@ function saveCols(table, tableEl) {
                 if (th) {
                     th.remove();
                 }
-            } 
+            }
             else if (!th) {
                 th = document.createElement('th');
                 th.innerText = colInputs[i].name;
@@ -472,12 +475,12 @@ function saveCols(table, tableEl) {
             }
         }
     }
-    
+
     let params = {"table": "cols" + table, "cols": []};
     let ths = header.getElementsByTagName('th');
     for (let i = 0; i < ths.length; i++) {
         let name = ths[i].getAttribute('data-col');
-        if (name !== 'Action' && name !== null) {
+        if (name !== 'Action' && name !== null && name !== 'Add') {
             params.cols.push(name);
         }
     }
@@ -489,22 +492,23 @@ function saveColsPlayback(table) {
     let colInputs = document.getElementById(table + 'ColsDropdown').firstChild.getElementsByTagName('button');
     let header = document.getElementById('cardPlaybackTags');
 
-    for (let i = 0; i < colInputs.length -1; i++) {
+    for (let i = 0; i < colInputs.length - 1; i++) {
         let th = document.getElementById('current' + colInputs[i].name);
         if (colInputs[i].classList.contains('active') === false) {
             if (th) {
                 th.remove();
             }
-        } 
+        }
         else if (!th) {
             th = document.createElement('div');
-            th.innerHTML = '<small>' + t(colInputs[i].name) + '</small><p></p>';
+            // th.innerHTML = '<small>' + t(colInputs[i].name) + '</small><p></p>';
+            th.innerHTML = '<small>' + t(colInputs[i].name) + ': </small><span></span>';
             th.setAttribute('id', 'current' + colInputs[i].name);
             th.setAttribute('data-tag', colInputs[i].name);
             header.appendChild(th);
         }
     }
-    
+
     let params = {"table": "cols" + table, "cols": []};
     let ths = header.getElementsByTagName('div');
     for (let i = 0; i < ths.length; i++) {

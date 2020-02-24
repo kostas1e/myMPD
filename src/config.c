@@ -108,9 +108,6 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     else if (MATCH("mympd", "searchtidaltaglist")) {
         p_config->searchtidaltaglist = sdsreplace(p_config->searchtidaltaglist, value);
     }
-    else if (MATCH("mympd", "searchtqobuztaglist")) {
-        p_config->searchqobuztaglist = sdsreplace(p_config->searchqobuztaglist, value);
-    }
     else if (MATCH("mympd", "browsetaglist")) {
         p_config->browsetaglist = sdsreplace(p_config->browsetaglist, value);
     }
@@ -188,9 +185,6 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     else if (MATCH("mympd", "colssearchtidal")) {
         p_config->cols_search_tidal = sdsreplace(p_config->cols_search_tidal, value);
     }
-    else if (MATCH("mympd", "colssearchqobuz")) {
-        p_config->cols_search_qobuz = sdsreplace(p_config->cols_search_qobuz, value);
-    }
     else if (MATCH("mympd", "colsbrowsedatabase")) {
         p_config->cols_browse_database = sdsreplace(p_config->cols_browse_database, value);
     }
@@ -263,6 +257,12 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     else if (MATCH("tidal", "audioquality")) {
         p_config->tidal_audioquality = sdsreplace(p_config->tidal_audioquality, value);
     }
+    /* else if (MATCH("mympd", "searchtqobuztaglist")) {
+        p_config->searchqobuztaglist = sdsreplace(p_config->searchqobuztaglist, value);
+    }
+    else if (MATCH("mympd", "colssearchqobuz")) {
+        p_config->cols_search_qobuz = sdsreplace(p_config->cols_search_qobuz, value);
+    }
     else if (MATCH("qobuz", "appid")) {
         p_config->qobuz_app_id = strtoimax(value, &crap, 10);
     }
@@ -277,6 +277,9 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     }
     else if (MATCH("qobuz", "formatid")) {
         p_config->qobuz_format_id = strtoimax(value, &crap, 10);
+    } */
+    else if (MATCH("mpd", "conf")) {
+        p_config->mpd_conf = sdsreplace(p_config->mpd_conf, value);
     }
     else if (MATCH("theme", "custom_placeholder_images")) {
         p_config->custom_placeholder_images = strtobool(value);
@@ -331,9 +334,8 @@ static void mympd_get_env(struct t_config *config) {
         "THEME_BGCOVER", "THEME_BGCOLOR", "THEME_BGCSSFILTER", "THEME_COVERGRIDSIZE",
         "THEME_COVERIMAGE", "THEME_COVERIMAGENAME", "THEME_COVERIMAGESIZE",
         "THEME_LOCALE",
-        "TIDAL_TOKEN", "TIDAL_USERNAME", "TIDAL_PASSWORD", "TIDAL_AUDIOQUALITY",
-        "QOBUZ_APPID", "QOBUZ_APPSECRET", "QOBUZ_USERNAME", "QOBUZ_PASSWORD", "QOBUZ_FORMATID",
-        "MYMPD_COLSSEARCHTIDAL", "MYMPD_COLSSEARCHQOBUZ", "MYMPD_SEARCHTIDALTAGLIST", "MYMPD_SEARCHQOBUZTAGLIST", 0};
+        // "QOBUZ_APPID", "QOBUZ_APPSECRET", "QOBUZ_USERNAME", "QOBUZ_PASSWORD", "QOBUZ_FORMATID", "MYMPD_COLSSEARCHQOBUZ", "MYMPD_SEARCHQOBUZTAGLIST",
+        "TIDAL_TOKEN", "TIDAL_USERNAME", "TIDAL_PASSWORD", "TIDAL_AUDIOQUALITY", "MYMPD_COLSSEARCHTIDAL", "MYMPD_SEARCHTIDALTAGLIST", 0};
     const char** ptr = env_vars;
     while (*ptr != 0) {
         mympd_parse_env(config, *ptr);
@@ -356,7 +358,7 @@ void mympd_free_config(t_config *config) {
     sdsfree(config->taglist);
     sdsfree(config->searchtaglist);
     sdsfree(config->searchtidaltaglist);
-    sdsfree(config->searchqobuztaglist);
+    // sdsfree(config->searchqobuztaglist);
     sdsfree(config->browsetaglist);
     sdsfree(config->varlibdir);
     sdsfree(config->love_channel);
@@ -368,7 +370,7 @@ void mympd_free_config(t_config *config) {
     sdsfree(config->cols_queue_last_played);
     sdsfree(config->cols_search);
     sdsfree(config->cols_search_tidal);
-    sdsfree(config->cols_search_qobuz);
+    // sdsfree(config->cols_search_qobuz);
     sdsfree(config->cols_browse_database);
     sdsfree(config->cols_browse_playlists_detail);
     sdsfree(config->cols_browse_filesystem);
@@ -382,9 +384,10 @@ void mympd_free_config(t_config *config) {
     sdsfree(config->tidal_username);
     sdsfree(config->tidal_password);
     sdsfree(config->tidal_audioquality);
-    sdsfree(config->qobuz_app_secret);
-    sdsfree(config->qobuz_username);
-    sdsfree(config->qobuz_password);
+    // sdsfree(config->qobuz_app_secret);
+    // sdsfree(config->qobuz_username);
+    // sdsfree(config->qobuz_password);
+    sdsfree(config->mpd_conf);
     sdsfree(config->theme);
     list_free(&config->syscmd_list);
     FREE_PTR(config);
@@ -411,7 +414,7 @@ void mympd_config_defaults(t_config *config) {
     config->taglist = sdsnew("Artist,Album,AlbumArtist,Title,Track,Genre,Date,Composer,Performer");
     config->searchtaglist = sdsnew("Artist,Album,AlbumArtist,Title,Genre,Composer,Performer");
     config->searchtidaltaglist = sdsnew("Artist,Album,Title");
-    config->searchqobuztaglist = sdsnew("Artist,Album,Title");
+    // config->searchqobuztaglist = sdsnew("Artist,Album,Title");
     config->browsetaglist = sdsnew("Artist,Album,AlbumArtist,Genre,Composer,Performer");
     config->smartpls = true;
     config->max_elements_per_page = 100;
@@ -434,7 +437,7 @@ void mympd_config_defaults(t_config *config) {
     config->cols_queue_last_played = sdsnew("[\"Pos\",\"Title\",\"Artist\",\"Album\",\"LastPlayed\"]");
     config->cols_search = sdsnew("[\"Title\",\"Artist\",\"Album\",\"Duration\"]");
     config->cols_search_tidal = sdsnew("[\"Type\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
-    config->cols_search_qobuz = sdsnew("[\"Type\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
+    // config->cols_search_qobuz = sdsnew("[\"Type\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
     config->cols_browse_database = sdsnew("[\"Track\",\"Title\",\"Duration\"]");
     config->cols_browse_playlists_detail = sdsnew("[\"Pos\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
     config->cols_browse_filesystem = sdsnew("[\"Type\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
@@ -459,11 +462,12 @@ void mympd_config_defaults(t_config *config) {
     config->tidal_username = sdsempty();
     config->tidal_password = sdsempty();
     config->tidal_audioquality = sdsnew("HIGH");
-    config->qobuz_app_id = 100000000;
-    config->qobuz_app_secret = sdsempty();
-    config->qobuz_username = sdsempty();
-    config->qobuz_password = sdsempty();
-    config->qobuz_format_id = 5;
+    // config->qobuz_app_id = 100000000;
+    // config->qobuz_app_secret = sdsempty();
+    // config->qobuz_username = sdsempty();
+    // config->qobuz_password = sdsempty();
+    // config->qobuz_format_id = 5;
+    config->mpd_conf = sdscat(sdsnew(ETC_PATH), "/mpd.conf");
     config->publish_library = true;
     config->covercache_keep_days = 7;
     config->covercache = true;

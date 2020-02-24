@@ -1,10 +1,10 @@
 "use strict";
 
 function artistDetails(uri) {
-    if (uri.includes("tidal")) {
+    if (uri.startsWith("tidal://")) {
         sendAPI("MYMPD_API_TIDAL_ARTISTDETAILS", {"uri": uri}, parseTidalArtistDetails);
     }
-    else if (uri.includes("qobuz")) {
+    else if (uri.startsWith("qobuz://")) {
         sendAPI("MYMPD_API_QOBUZ_ARTISTDETAILS", {"uri": uri}, parseQobuzArtistDetails);
     }
     modalArtistDetails.show();
@@ -21,19 +21,17 @@ function parseTidalArtistDetails(obj) {
     }
     modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + picture + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
     modal.getElementsByTagName('h1')[0].innerText = obj.result.name;
-    
+
     let artistDetails = '';
     artistDetails += '<tr><th>' + t('Biography') + '</th></tr>';
-    // id name artistTypes url picture popularity
-    // source lastUpdated text summary
     let bio = obj.result.bio;
-    // let text = obj.result.bio.text; // cmp null
     if (bio.hasOwnProperty('text')) {
         bio.text = bio.text.replace(/\[.*?\]/g, '');
         bio.text = bio.text.replace(/<br\s*[\/]?>/gi, '\n');
         artistDetails += '<tr><td>' + bio.text + '</td></tr>';
         artistDetails += '<tr><th>' + t('Artist bio from ') + bio.source + '.</th></tr>';
     }
+
     modal.getElementsByTagName('tbody')[0].innerHTML = artistDetails;
 }
 
@@ -48,8 +46,6 @@ function parseQobuzArtistDetails(obj) {
     }
     modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + image + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
     modal.getElementsByTagName('h1')[0].innerText = obj.result.name;
-    
-    // summury plus read link
 
     let artistDetails = '';
     artistDetails += '<tr><th>' + t('Portrait') + '</th></tr>';
@@ -58,7 +54,7 @@ function parseQobuzArtistDetails(obj) {
     modal.getElementsByTagName('tbody')[0].innerHTML = artistDetails;
 }
 
-function artistRadio(uri) { // for tidal artist
+function artistRadio(uri) { // tidal artist radio
     uri = uri.split('://').pop() + '/mix';
     searchTidal(uri);
 }

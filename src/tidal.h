@@ -16,7 +16,5 @@ sds tidal_get_cover(sds cover, const char *uri);
 sds tidal_songdetails(sds buffer, sds method, int request_id, const char *uri);
 sds tidal_albumdetails(sds buffer, sds method, int request_id, const char *uri);
 sds tidal_artistdetails(sds buffer, sds method, int request_id, const char *uri);
-sds tidal_queue_add_track(sds buffer, const char *uri);
-// sds tidal_get_track_url(sds buffer, const char *track_id);
 
 #endif

@@ -6,7 +6,7 @@
 */
 
 function parseUpdateQueue(obj) {
-    //Set playstate
+    // Set playstate
     if (obj.result.state === 1) {
         for (let i = 0; i < domCache.btnsPlayLen; i++) {
             domCache.btnsPlay[i].innerText = 'play_arrow';
@@ -38,14 +38,14 @@ function parseUpdateQueue(obj) {
     }
 
     domCache.badgeQueueItems.innerText = obj.result.queueLength;
-    
+
     if (obj.result.nextSongPos === -1 && settings.jukeboxMode === false) {
         domCache.btnNext.setAttribute('disabled', 'disabled');
     }
     else {
         domCache.btnNext.removeAttribute('disabled');
     }
-    
+
     if (obj.result.songPos <= 0) {
         domCache.btnPrev.setAttribute('disabled', 'disabled');
     }
@@ -125,7 +125,7 @@ function parseQueue(obj) {
     if (navigate === true) {
         focusTable(activeRow);
     }
-    
+
     setPagination(obj.result.totalEntities, obj.result.returnedEntities);
     document.getElementById('QueueCurrentList').classList.remove('opacity05');
 }
@@ -166,11 +166,11 @@ function parseLastPlayed(obj) {
     let trLen = tr.length - 1;
     for (let i = trLen; i >= nrItems; i --) {
         tr[i].remove();
-    }                    
+    }
 
     let colspan = settings['colsQueueLastPlayed'].length;
     colspan--;
-    
+
     if (nrItems === 0) {
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
             '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
@@ -211,16 +211,28 @@ function dequeueSelectedItem() {
     }
 }
 
+function appendPlayQueue(type, uri, name) {
+    switch(type) {
+        case 'song':
+            sendAPI("MPD_API_QUEUE_ADD_PLAY_TRACK", {"uri": uri});
+            showNotification(t('%{name} added to queue', {"name": name}), '', '', 'success');
+            break;
+        case 'dir':
+            sendAPI("MPD_API_QUEUE_ADD_PLAY_DIR", {"uri": uri});
+            showNotification(t('%{name} added to queue', {"name": name}), '', '', 'success');
+            break;
+        case 'plist':
+            sendAPI("MPD_API_QUEUE_ADD_PLAY_PLAYLIST", {"plist": uri});
+            showNotification(t('%{name} added to queue', {"name": name}), '', '', 'success');
+            break;
+    }
+}
+
 function appendQueue(type, uri, name) {
     switch(type) {
         case 'song':
         case 'dir':
-            //if (uri.includes('tidal')) {
-            //    sendAPI("MPD_API_QUEUE_ADD_TIDAL_TRACK", {"uri": uri}); // streamUrl
-            //}
-            //else {
-                sendAPI("MPD_API_QUEUE_ADD_TRACK", {"uri": uri});
-            //}
+            sendAPI("MPD_API_QUEUE_ADD_TRACK", {"uri": uri});
             showNotification(t('%{name} added to queue', {"name": name}), '', '', 'success');
             break;
         case 'plist':
@@ -262,7 +274,7 @@ function addToQueue() {
     if (!validateInt(inputAddToQueueQuantityEl)) {
         formOK = false;
     }
-    
+
     if (formOK === true) {
         let selectAddToQueueMode = document.getElementById('selectAddToQueueMode');
         let selectAddToQueuePlaylist = document.getElementById('selectAddToQueuePlaylist');
@@ -292,6 +304,6 @@ function delQueueSong(mode, start, end) {
         sendAPI("MPD_API_QUEUE_RM_RANGE", {"start": start, "end": end});
     }
     else if (mode === 'single') {
-        sendAPI("MPD_API_QUEUE_RM_TRACK", { "track": start});
+        sendAPI("MPD_API_QUEUE_RM_TRACK", {"track": start});
     }
 }

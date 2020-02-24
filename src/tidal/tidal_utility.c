@@ -11,31 +11,28 @@
 #include "tidal_utility.h"
 
 char *escape(const char *string) {
+    char *encoded_string = NULL;
     CURL *curl = curl_easy_init();
     if (curl) {
-        char *encoded_string = NULL;
         char *output = curl_easy_escape(curl, string, strlen(string));
         if (output) {
-            LOG_DEBUG("Encoded: %s\n", output);
             encoded_string = strdup(output);
+            LOG_DEBUG("Encoded: %s\n", output);
             curl_free(output);
         }
         else { // NULL
             LOG_ERROR("curl_easy_escape");
         }
         curl_easy_cleanup(curl);
-        return encoded_string;
     }
     else { // NULL
         LOG_ERROR("curl_easy_init");
-        return NULL;
     }
+    return encoded_string;
 }
 
-// mv extract_id
-// free id returned after use
-// support for album/id, artist/id, artist/id/mix, track/id/mix
-// tidal://type/id, ...www.tidal.com/type/id, streamurl
+// supported schemes album/id, artist/id, artist/id/mix, track/id/mix,
+// tidal://type/id, www.tidal.com/type/id, streamurl
 char *extract_id(const char *uri) {
     char *id;
     int count;
@@ -76,21 +73,13 @@ unsigned max_of_four(unsigned a, unsigned b, unsigned c, unsigned d) {
     else return d;
 }
 
-// returned_items
 unsigned number_of_items(unsigned limit, unsigned offset, unsigned total) {
     if (total > offset) {
-        //return
-    //unsigned tmp = limit < (total - offset) ? limit : (total - offset);
-    //printf("\n\tl%u o%u t%u\n", limit, offset, total);
-    //printf("\n\t%u\n\n", tmp);
         return limit < (total - offset) ? limit : (total - offset);
     }
     else {
-        //printf("\n\tl%u o%u t%u\n\n", limit, offset, total);
         return 0;
     }
-    //return (limit < (total - offset) ? limit : (total - offset));
-    
 }
 
 void free_tidal_state(t_tidal_state *tidal_state) {
@@ -98,15 +87,16 @@ void free_tidal_state(t_tidal_state *tidal_state) {
     sdsfree(tidal_state->username);
     sdsfree(tidal_state->password);
     sdsfree(tidal_state->audioquality);
-    sdsfree(tidal_state->searchtaglist);
-    sdsfree(tidal_state->cols_search);
+    //sdsfree(tidal_state->searchtaglist);
+    //sdsfree(tidal_state->cols_search);
     FREE_PTR(tidal_state);
 }
 
 void default_tidal_state(t_tidal_state *tidal_state) {
+    //tidal_state->tidal_token = sdsnew("");
     tidal_state->username = sdsempty();
     tidal_state->password = sdsempty();
     tidal_state->audioquality = sdsnew("HIGH");
-    tidal_state->searchtaglist = sdsempty();
+    //searchtags
     //cols
 }

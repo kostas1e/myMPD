@@ -23,7 +23,7 @@ function showNotification(notificationTitle, notificationText, notificationHtml,
         setTimeout(function(notification) {
             notification.close();
         }, 3000, notification);
-    } 
+    }
     if (settings.notificationPage === true) {
         let alertBox;
         if (!document.getElementById('alertBox')) {

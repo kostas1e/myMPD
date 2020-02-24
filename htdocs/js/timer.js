@@ -68,7 +68,7 @@ function saveTimer() {
             "startMinute": parseInt(selectTimerMinute.options[selectTimerMinute.selectedIndex].value),
             "weekdays": weekdays,
             "action": selectTimerAction.options[selectTimerAction.selectedIndex].value,
-            "volume": parseInt(document.getElementById('inputTimerVolume').value), 
+            "volume": parseInt(document.getElementById('inputTimerVolume').value),
             "playlist": selectTimerPlaylist.options[selectTimerPlaylist.selectedIndex].value,
             "jukeboxMode": parseInt(jukeboxMode),
             }, showListTimer);
@@ -142,7 +142,7 @@ function showListTimer() {
 function parseListTimer(obj) {
     let tbody = document.getElementById('listTimer').getElementsByTagName('tbody')[0];
     let tr = tbody.getElementsByTagName('tr');
-    
+
     let activeRow = 0;
     let weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     for (let i = 0; i < obj.result.returnedEntities; i++) {
@@ -177,5 +177,5 @@ function parseListTimer(obj) {
     if (obj.result.returnedEntities === 0) {
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
                           '<td colspan="4">' + t('Empty list') + '</td></tr>';
-    }     
+    }
 }

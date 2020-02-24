@@ -121,6 +121,13 @@ function webSocketConnect() {
                     if (app.current.app === 'Queue') {
                         getQueue();
                     }
+                    else if (app.current.app === 'Playback') {
+                        // console.log('updq', obj.params.songPos);
+                        // mk colsqm
+                        /* sendAPI("MPD_API_QUEUE_LIST", {"offset": 0, "cols": []}, parseQueue);
+                        if (obj.params.songPos !== -1) */
+                        getQueueMini(obj.params.songPos, true);
+                    }
                     obj.result = obj.params;
                     parseUpdateQueue(obj);
                     break;
@@ -137,6 +144,7 @@ function webSocketConnect() {
                     //fall through
                 case 'update_finished':
                     updateDBfinished(obj.method);
+                    updateDBstats();
                     break;
                 case 'update_volume':
                     obj.result = obj.params;
@@ -199,7 +207,7 @@ function getWsUrl() {
     let hostname = window.location.hostname;
     let protocol = window.location.protocol;
     let port = window.location.port;
-    
+
     if (protocol === 'https:') {
         protocol = 'wss://';
     }

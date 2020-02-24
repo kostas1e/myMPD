@@ -258,7 +258,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
             struct http_message *hm = (struct http_message *) ev_data;
             static const struct mg_str library_prefix = MG_MK_STR("/library");
             static const struct mg_str albumart_prefix = MG_MK_STR("/albumart");
-            static const struct mg_str image_prefix = MG_MK_STR("/image"); // tidal qobuz
+            static const struct mg_str image_prefix = MG_MK_STR("/image"); // tidal
             LOG_VERBOSE("HTTP request (%d): %.*s", (intptr_t)nc->user_data, (int)hm->uri.len, hm->uri.p);
             if (mg_vcmp(&hm->uri, "/api") == 0) {
                 //api request

@@ -50,6 +50,56 @@ sds mpd_client_put_queue_state(struct mpd_status *status, sds buffer) {
     return buffer;
 }
 
+sds mpd_client_put_queue_mini(t_mpd_state *mpd_state, sds buffer, sds method,
+    int request_id, const unsigned int pos, const t_tags *tagcols)
+{
+    struct mpd_status *status = mpd_run_status(mpd_state->conn);
+    if (status == NULL) {
+        buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
+    }
+    // int song_pos = mpd_status_get_song_pos(status);
+    // todo vchecks (-1 v 0 v 1)
+    if (!mpd_send_list_queue_range_meta(mpd_state->conn, pos, pos + 5)) {
+        buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
+        return buffer;
+    }
+    buffer = jsonrpc_start_result(buffer, method, request_id);
+    buffer = sdscat(buffer, ",\"data\":[");
+    unsigned entity_count = 0;
+    unsigned entities_returned = 0;
+    struct mpd_entity *entity;
+    while ((entity = mpd_recv_entity(mpd_state->conn)) != NULL) {
+        if (mpd_entity_get_type(entity) == MPD_ENTITY_TYPE_SONG) {
+            const struct mpd_song *song = mpd_entity_get_song(entity);
+            // totalTime += mpd_song_get_duration(song);
+            entity_count++;
+            if (entities_returned++) {
+                buffer = sdscat(buffer, ",");
+            }
+            buffer = sdscat(buffer, "{");
+            buffer = tojson_long(buffer, "id", mpd_song_get_id(song), true);
+            buffer = tojson_long(buffer, "Pos", mpd_song_get_pos(song), true);
+            buffer = put_song_tags(buffer, mpd_state, tagcols, song);
+            buffer = sdscat(buffer, "}");
+        }
+        mpd_entity_free(entity);
+    }
+
+    buffer = sdscat(buffer, "],");
+    // buffer = tojson_long(buffer, "totalTime", totalTime, true);
+    buffer = tojson_long(buffer, "totalEntities", mpd_status_get_queue_length(status), true);
+    buffer = tojson_long(buffer, "pos", pos, true);
+    buffer = tojson_long(buffer, "returnedEntities", entities_returned, true);
+    buffer = tojson_long(buffer, "queueVersion", mpd_status_get_queue_version(status), false);
+    buffer = jsonrpc_end_result(buffer);
+
+    // mpd_state->queue_version = mpd_status_get_queue_version(status);
+    // mpd_state->queue_length = mpd_status_get_queue_length(status);
+    mpd_status_free(status);
+
+    return buffer;
+}
+
 sds mpd_client_put_queue(t_mpd_state *mpd_state, sds buffer, sds method, int request_id,
                          const unsigned int offset, const t_tags *tagcols)
 {
@@ -57,12 +107,12 @@ sds mpd_client_put_queue(t_mpd_state *mpd_state, sds buffer, sds method, int req
     if (status == NULL) {
         buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
     }
-        
+
     if (!mpd_send_list_queue_range_meta(mpd_state->conn, offset, offset + mpd_state->max_elements_per_page)) {
         buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
         return buffer;
     }
-        
+
     buffer = jsonrpc_start_result(buffer, method, request_id);
     buffer = sdscat(buffer, ",\"data\":[");
     int totalTime = 0;
@@ -93,11 +143,11 @@ sds mpd_client_put_queue(t_mpd_state *mpd_state, sds buffer, sds method, int req
     buffer = tojson_long(buffer, "returnedEntities", entities_returned, true);
     buffer = tojson_long(buffer, "queueVersion", mpd_status_get_queue_version(status), false);
     buffer = jsonrpc_end_result(buffer);
-    
+
     mpd_state->queue_version = mpd_status_get_queue_version(status);
     mpd_state->queue_length = mpd_status_get_queue_length(status);
     mpd_status_free(status);
-    
+
     return buffer;
 }
 
@@ -124,9 +174,9 @@ sds mpd_client_crop_queue(t_mpd_state *mpd_state, sds buffer, sds method, int re
         buffer = jsonrpc_respond_message(buffer, method, request_id, "You need to be playing to crop the playlist", true);
         LOG_ERROR("You need to be playing to crop the playlist");
     }
-    
+
     mpd_status_free(status);
-    
+
     return buffer;
 }
 
@@ -137,7 +187,7 @@ sds mpd_client_search_queue(t_mpd_state *mpd_state, sds buffer, sds method, int 
         buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
         return buffer;
     }
-    
+
     if (mpd_tag_name_parse(mpdtagtype) != MPD_TAG_UNKNOWN) {
         if (mpd_search_add_tag_constraint(mpd_state->conn, MPD_OPERATOR_DEFAULT, mpd_tag_name_parse(mpdtagtype), searchstr) == false) {
             buffer = check_error_and_recover(mpd_state, buffer, method, request_id);

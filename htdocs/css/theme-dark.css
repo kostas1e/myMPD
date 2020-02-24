@@ -171,3 +171,17 @@ body.theme-dark .text-secondary {
 body.theme-dark .bg-white {
   background-color: #2f353a !important;
 }
+
+body.theme-dark #BrowsePlaylistsDetailList > caption {
+  background-color: #2f353a;
+  padding-left: 1.25rem;
+}
+
+body.theme-dark #BrowseCovergridTitleList > caption {
+  background-color: #2f353a;
+  padding-left: 1.25rem;
+}
+
+body.theme-dark .playing {
+  background-color: #1d2124 !important;
+}

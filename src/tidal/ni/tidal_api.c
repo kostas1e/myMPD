@@ -41,7 +41,7 @@
 #include "../global.h"
 #include "config_defs.h"
 #include "tidal_utility.h"
-#include "tidal_api.h"
+//#include "tidal_api.h"
 
 #include "../tidal.h" // replace w/ tidal dir hs
 
@@ -49,7 +49,7 @@ void *tidal_api_loop(void *arg_config) {
     t_config *config = (t_config *) arg_config;
     
     t_tidal_state *tidal_state = (t_tidal_state *)malloc(sizeof(t_tidal_state));
-    default_mpd_state(tidal_state);
+    default_tidal_state(tidal_state);
 
     //mympd_api_read_statefiles(config, mympd_state);
 
@@ -61,7 +61,7 @@ void *tidal_api_loop(void *arg_config) {
     //qobuz_session_manager(mympd_state);
 
     while (s_signal_received == 0) {
-        struct t_work_request *request = tiny_queue_shift(tidal_api_queue, 0);
+        struct t_work_request *request = tiny_queue_shift(tidal_queue, 0);
         if (request != NULL) {
             tidal_api(config, tidal_state, request);
         }
