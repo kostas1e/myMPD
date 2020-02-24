@@ -79,11 +79,12 @@ function joinSettings(obj) {
     settingsLock = false;
     parseSettings();
     toggleUI();
+    btnWaiting(document.getElementById('btnApplySettings'), false);
 }
 
 function checkConsume() {
     let stateConsume = document.getElementById('btnConsume').classList.contains('active') ? true : false;
-    let stateJukeboxMode = document.getElementById('btnJukeboxModeGroup').getElementsByClassName('active')[0].getAttribute('data-value');
+    let stateJukeboxMode = getBtnGroupValue('btnJukeboxModeGroup');
     if (stateJukeboxMode > 0 && stateConsume === false) {
         document.getElementById('warnConsume').classList.remove('hide');
     }
@@ -105,7 +106,7 @@ function parseSettings() {
         setTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
     }
 
-    Object.keys(themes).forEach(function(key, index) {
+    Object.keys(themes).forEach(function(key) {
         if (key === setTheme) {
             domCache.body.classList.add(key);
         }
@@ -132,25 +133,19 @@ function parseSettings() {
     document.getElementById('inputMpdPass').value = settings.mpdPass;
 
     let btnNotifyWeb = document.getElementById('btnNotifyWeb');
+    document.getElementById('warnNotifyWeb').classList.add('hide');
     if (notificationsSupported()) {
-        if (settings.notificationWeb) {
-            toggleBtnChk('btnNotifyWeb', settings.notificationWeb);
-            Notification.requestPermission(function (permission) {
-                if (!('permission' in Notification)) {
-                    Notification.permission = permission;
-                }
-                if (permission === 'granted') {
-                    toggleBtnChk('btnNotifyWeb', true);
-                }
-                else {
-                    toggleBtnChk('btnNotifyWeb', false);
-                    settings.notificationWeb = true;
-                }
-            });
+        if (Notification.permission !== 'granted') {
+            if (settings.notificationWeb === true) {
+                document.getElementById('warnNotifyWeb').classList.remove('hide');
+            }
+            settings.notificationWeb = false;
         }
-        else {
-            toggleBtnChk('btnNotifyWeb', false);
+        if (Notification.permission === 'denied') {
+            document.getElementById('warnNotifyWeb').classList.remove('hide');
         }
+        toggleBtnChk('btnNotifyWeb', settings.notificationWeb);
+        btnNotifyWeb.removeAttribute('disabled');
     }
     else {
         btnNotifyWeb.setAttribute('disabled', 'disabled');
@@ -158,8 +153,8 @@ function parseSettings() {
     }
 
     toggleBtnChk('btnNotifyPage', settings.notificationPage);
-    toggleBtnChk('btnBgCover', settings.bgCover);
-    toggleBtnChk('btnFeatLocalplayer', settings.featLocalplayer);
+    toggleBtnChk('btnMediaSession', settings.mediaSession);
+    toggleBtnChkCollapse('btnFeatLocalplayer', 'collapseLocalplayer', settings.featLocalplayer);
     toggleBtnChk('btnLocalplayerAutoplay', settings.localplayerAutoplay);
     toggleBtnChk('btnFeatTimer', settings.featTimer);
     toggleBtnChk('btnBookmarks', settings.featBookmarks);
@@ -171,7 +166,10 @@ function parseSettings() {
         document.getElementById('selectStreamMode').value = 'url';
         document.getElementById('inputStreamUrl').value = settings.streamUrl;
     }
-    toggleBtnChk('btnCoverimage', settings.coverimage);
+    toggleBtnChkCollapse('btnCoverimage', 'collapseAlbumart', settings.coverimage);
+
+    document.getElementById('inputBookletName').value = settings.bookletName;
+    
     document.getElementById('selectLocale').value = settings.locale;
     document.getElementById('inputCoverimageName').value = settings.coverimageName;
 
@@ -180,28 +178,35 @@ function parseSettings() {
 
     document.documentElement.style.setProperty('--mympd-coverimagesize', settings.coverimageSize + "px");
     document.documentElement.style.setProperty('--mympd-covergridsize', settings.covergridSize + "px");
-covergridSize2 = settings.covergridSize / 2;
-computeBrowseHeight();
-document.documentElement.style.setProperty('--mympd-covergridsize2', settings.covergridSize / 2 + "px");
+    computeBrowseHeight();
+    document.documentElement.style.setProperty('--mympd-covergridsize2', settings.covergridSize / 2 + "px");
+    document.documentElement.style.setProperty('--mympd-highlightcolor', settings.highlightColor);
+    
+    document.getElementById('inputHighlightColor').value = settings.highlightColor;
     document.getElementById('inputBgColor').value = settings.bgColor;
     document.getElementsByTagName('body')[0].style.backgroundColor = settings.bgColor;
+    
+    document.getElementById('highlightColorPreview').style.backgroundColor = settings.highlightColor;
+    document.getElementById('bgColorPreview').style.backgroundColor = settings.bgColor;
 
-    document.getElementById('inputBgCssFilter').value = settings.bgCssFilter;
+    toggleBtnChkCollapse('btnBgCover', 'collapseBackground', settings.bgCover);
+    document.getElementById('inputBgCssFilter').value = settings.bgCssFilter;    
 
     let albumartbg = document.querySelectorAll('.albumartbg');
     for (let i = 0; i < albumartbg.length; i++) {
 	albumartbg[i].style.filter = settings.bgCssFilter;
     }
 
-    toggleBtnChk('btnLoveEnable', settings.love);
+    toggleBtnChkCollapse('btnLoveEnable', 'collapseLove', settings.love);
     document.getElementById('inputLoveChannel').value = settings.loveChannel;
     document.getElementById('inputLoveMessage').value = settings.loveMessage;
 
     document.getElementById('inputMaxElementsPerPage').value = settings.maxElementsPerPage;
     toggleBtnChk('btnStickers', settings.stickers);
     document.getElementById('inputLastPlayedCount').value = settings.lastPlayedCount;
-    toggleBtnChk('btnSmartpls', settings.smartpls);
-
+    
+    toggleBtnChkCollapse('btnSmartpls', 'collapseSmartpls', settings.smartpls);
+    
     let features = ["featLocalplayer", "featSyscmds", "featMixramp", "featCacert", "featBookmarks", "featRegex", "featTimer"];
     for (let j = 0; j < features.length; j++) {
         let Els = document.getElementsByClassName(features[j]);
@@ -231,14 +236,14 @@ document.documentElement.style.setProperty('--mympd-covergridsize2', settings.co
     }
 
     let timerActions = '<option value="startplay">' + t('Start playback') + '</option>' +
-        '<option value="stopplay">' + t('Stop playback') + '</option>' +
-        '<optgroup label="' + t('System command') + '">';
+        '<option value="stopplay">' + t('Stop playback') + '</option>';
 
     if (settings.featSyscmds) {
         let syscmdsMaxListLen = 4;
         let syscmdsList = '';
         let syscmdsListLen = settings.syscmdList.length;
         if (syscmdsListLen > 0) {
+            timerActions += '<optgroup label="' + t('System command') + '">';
             syscmdsList = syscmdsListLen > syscmdsMaxListLen ? '' : '<div class="dropdown-divider"></div>';
             for (let i = 0; i < syscmdsListLen; i++) {
                 if (settings.syscmdList[i] === 'HR') {
@@ -253,7 +258,7 @@ document.documentElement.style.setProperty('--mympd-covergridsize2', settings.co
         }
         document.getElementById('syscmds').innerHTML = syscmdsList;
         timerActions += '</optgroup>';
-        document.getElementById('selectTimerAction').innerHTML = timerActions;
+        
         if (syscmdsListLen > syscmdsMaxListLen) {
             document.getElementById('navSyscmds').classList.remove('hide');
             document.getElementById('syscmds').classList.add('collapse', 'menu-indent');
@@ -266,10 +271,13 @@ document.documentElement.style.setProperty('--mympd-covergridsize2', settings.co
     else {
         document.getElementById('syscmds').innerHTML = '';
     }
+    
+    document.getElementById('selectTimerAction').innerHTML = timerActions;
+    
 
     dropdownMainMenu = new Dropdown(document.getElementById('mainMenu'));
-
-    toggleBtnGroupValue(document.getElementById('btnJukeboxModeGroup'), settings.jukeboxMode);
+    
+    toggleBtnGroupValueCollapse(document.getElementById('btnJukeboxModeGroup'), 'collapseJukeboxMode', settings.jukeboxMode);
     document.getElementById('selectJukeboxUniqueTag').value = settings.jukeboxUniqueTag;
     document.getElementById('inputJukeboxQueueLength').value = settings.jukeboxQueueLength;
     document.getElementById('inputJukeboxLastPlayed').value = settings.jukeboxLastPlayed;
@@ -287,6 +295,10 @@ document.documentElement.style.setProperty('--mympd-covergridsize2', settings.co
         document.getElementById('inputJukeboxQueueLength').removeAttribute('disabled');
         document.getElementById('selectJukeboxPlaylist').removeAttribute('disabled');
     }
+
+    document.getElementById('inputSmartplsPrefix').value = settings.smartplsPrefix;
+    document.getElementById('inputSmartplsInterval').value = settings.smartplsInterval / 60 / 60;
+    document.getElementById('selectSmartplsSort').value = settings.smartplsSort;
 
     if (settings.featLocalplayer === true) {
         if (settings.streamUrl === '') {
@@ -313,7 +325,7 @@ document.documentElement.style.setProperty('--mympd-covergridsize2', settings.co
 
     if (settings.musicDirectory === 'auto') {
         document.getElementById('selectMusicDirectory').value = settings.musicDirectory;
-        document.getElementById('inputMusicDirectory').value = settings.musicDirectoryValue;
+        document.getElementById('inputMusicDirectory').value = settings.musicDirectoryValue !== undefined ? settings.musicDirectoryValue : '';
         document.getElementById('inputMusicDirectory').setAttribute('readonly', 'readonly');
     }
     else if (settings.musicDirectory === 'none') {
@@ -360,6 +372,23 @@ document.documentElement.style.setProperty('--mympd-covergridsize2', settings.co
 
     checkConsume();
 
+    if (settings.mediaSession === true && 'mediaSession' in navigator) {
+        navigator.mediaSession.setActionHandler('play', clickPlay);
+        navigator.mediaSession.setActionHandler('pause', clickPlay);
+        navigator.mediaSession.setActionHandler('stop', clickStop);
+        navigator.mediaSession.setActionHandler('seekbackward', seekRelativeBackward);
+        navigator.mediaSession.setActionHandler('seekforward', seekRelativeForward);
+        navigator.mediaSession.setActionHandler('previoustrack', clickPrev);
+        navigator.mediaSession.setActionHandler('nexttrack', clickNext);
+        
+        if (!navigator.mediaSession.setPositionState) {
+            logDebug('mediaSession.setPositionState not supported by browser');
+        }
+    }
+    else {
+        logDebug('mediaSession not supported by browser');
+    }
+
     settingsParsed = 'true';
 }
 
@@ -371,30 +400,12 @@ function parseMPDSettings() {
 
     toggleBtnGroupValue(document.getElementById('btnSingleGroup'), settings.single);
     toggleBtnGroupValue(document.getElementById('btnReplaygainGroup'), settings.replaygain);
-
-    if (settings.crossfade !== undefined) {
-        document.getElementById('inputCrossfade').removeAttribute('disabled');
-        document.getElementById('inputCrossfade').value = settings.crossfade;
-    }
-    else {
-        document.getElementById('inputCrossfade').setAttribute('disabled', 'disabled');
-    }
-    if (settings.mixrampdb !== undefined) {
-        document.getElementById('inputMixrampdb').removeAttribute('disabled');
-        document.getElementById('inputMixrampdb').value = settings.mixrampdb;
-    }
-    else {
-        document.getElementById('inputMixrampdb').setAttribute('disabled', 'disabled');
-    }
-    if (settings.mixrampdelay !== undefined) {
-        document.getElementById('inputMixrampdelay').removeAttribute('disabled');
-        document.getElementById('inputMixrampdelay').value = settings.mixrampdelay;
-    }
-    else {
-        document.getElementById('inputMixrampdelay').setAttribute('disabled', 'disabled');
-    }
-
-    if (settings.coverimage === false || settings.featTags === false ||
+    
+    document.getElementById('inputCrossfade').value = settings.crossfade;
+    document.getElementById('inputMixrampdb').value = settings.mixrampdb;
+    document.getElementById('inputMixrampdelay').value = settings.mixrampdelay;
+    
+    if (settings.coverimage === false || settings.featTags === false || 
         settings.tags.includes('AlbumArtist') === false || settings.tags.includes('Album') === false
         || settings.tags.includes('Track') === false || settings.featAdvsearch === false)
     {
@@ -438,8 +449,8 @@ function parseMPDSettings() {
     else {
         document.getElementById('warnStickers').classList.add('hide');
     }
-
-    if (settings.featStickers === false || settings.stickers === false || settings.featStickerCache == false) {
+    
+    if (settings.featStickers === false || settings.stickers === false || settings.featStickerCache === false) {
         document.getElementById('warnPlaybackStatistics').classList.remove('hide');
         document.getElementById('inputJukeboxLastPlayed').setAttribute('disabled', 'disabled');
     }
@@ -502,6 +513,9 @@ function parseMPDSettings() {
             pbtl += '>';
             if (settings.colsPlayback[i] === 'Duration') {
                 pbtl += (lastSongObj[settings.colsPlayback[i]] ? beautifySongDuration(lastSongObj[settings.colsPlayback[i]]) : '');
+            }
+            else if (settings.colsPlayback[i] === 'LastModified') {
+                pbtl += (lastSongObj[settings.colsPlayback[i]] ? localeDate(lastSongObj[settings.colsPlayback[i]]) : '');
             }
             else if (settings.colsPlayback[i] === 'Fileformat') {
                 pbtl += (lastState ? fileformat(lastState.audioFormat) : '');
@@ -570,7 +584,7 @@ function parseMPDSettings() {
     // addTagList('searchqobuztags', 'searchqobuztags');
     addTagList('searchCovergridTags', 'browsetags');
     addTagList('covergridSortTagsList', 'browsetags');
-
+/* 
     let list = '';
     if (settings.browsetags.includes('Title') === false) {
         list = '<option value="Title">' + t('Song') + '</option>';
@@ -579,7 +593,14 @@ function parseMPDSettings() {
         list += '<option value="' + settings.browsetags[i] + '">' + t(settings.browsetags[i]) + '</option>';
     }
     document.getElementById('selectJukeboxUniqueTag').innerHTML = list;
-
+ */
+    addTagList('dropdownSortPlaylistTags', 'tags');
+    addTagList('saveSmartPlaylistSort', 'tags');
+    
+    addTagListSelect('selectSmartplsSort', 'tags');
+    addTagListSelect('saveSmartPlaylistSort', 'tags');
+    addTagListSelect('selectJukeboxUniqueTag', 'browsetags');
+    
     for (let i = 0; i < settings.tags.length; i++) {
         app.apps.Browse.tabs.Database.views[settings.tags[i]] = { "state": "0/-/-/", "scrollPos": 0 };
     }
@@ -589,6 +610,7 @@ function parseMPDSettings() {
     //initTagMultiSelect('inputSearchTidalTags', 'listSearchTidalTags', settings.tags, settings.searchtidaltags);
     //initTagMultiSelect('inputSearchQobuzTags', 'listSearchQobuzTags', settings.tags, settings.searchqobuztags);
     initTagMultiSelect('inputBrowseTags', 'listBrowseTags', settings.tags, settings.browsetags);
+    initTagMultiSelect('inputGeneratePlsTags', 'listGeneratePlsTags', settings.browsetags, settings.generatePlsTags);
 }
 
 //eslint-disable-next-line no-unused-vars
@@ -597,7 +619,7 @@ function resetSettings() {
 }
 
 //eslint-disable-next-line no-unused-vars
-function saveSettings() {
+function saveSettings(closeModal) {
     let formOK = true;
 
     let inputCrossfade = document.getElementById('inputCrossfade');
@@ -648,7 +670,12 @@ function saveSettings() {
     if (!validateFilenameList(inputCoverimageName)) {
         formOK = false;
     }
-
+    
+    let inputBookletName = document.getElementById('inputBookletName');
+    if (!validateFilename(inputBookletName)) {
+        formOK = false;
+    }
+    
     let inputMaxElementsPerPage = document.getElementById('inputMaxElementsPerPage');
     if (!validateInt(inputMaxElementsPerPage)) {
         formOK = false;
@@ -687,10 +714,16 @@ function saveSettings() {
             }
         }
     }
+    
+    let inputSmartplsInterval = document.getElementById('inputSmartplsInterval');
+    if (!validateInt(inputSmartplsInterval)) {
+        formOK = false;
+    }
+    let smartplsInterval = document.getElementById('inputSmartplsInterval').value * 60 * 60;
 
-    let singleState = document.getElementById('btnSingleGroup').getElementsByClassName('active')[0].getAttribute('data-value');
-    let jukeboxMode = document.getElementById('btnJukeboxModeGroup').getElementsByClassName('active')[0].getAttribute('data-value');
-    let replaygain = document.getElementById('btnReplaygainGroup').getElementsByClassName('active')[0].getAttribute('data-value');
+    let singleState = getBtnGroupValue('btnSingleGroup');
+    let jukeboxMode = getBtnGroupValue('btnJukeboxModeGroup');
+    let replaygain = getBtnGroupValue('btnReplaygainGroup');
     let jukeboxUniqueTag = document.getElementById('selectJukeboxUniqueTag');
     let jukeboxUniqueTagValue = jukeboxUniqueTag.options[jukeboxUniqueTag.selectedIndex].value;
 
@@ -715,6 +748,7 @@ function saveSettings() {
             "mixrampdelay": (settings.featMixramp === true ? document.getElementById('inputMixrampdelay').value : settings.mixrampdelay),
             "notificationWeb": (document.getElementById('btnNotifyWeb').classList.contains('active') ? true : false),
             "notificationPage": (document.getElementById('btnNotifyPage').classList.contains('active') ? true : false),
+            "mediaSession": (document.getElementById('btnMediaSession').classList.contains('active') ? true : false),
             "jukeboxMode": parseInt(jukeboxMode),
             "jukeboxPlaylist": selectJukeboxPlaylist.options[selectJukeboxPlaylist.selectedIndex].value,
             "jukeboxQueueLength": parseInt(document.getElementById('inputJukeboxQueueLength').value),
@@ -741,11 +775,14 @@ function saveSettings() {
             "stickers": (document.getElementById('btnStickers').classList.contains('active') ? true : false),
             "lastPlayedCount": document.getElementById('inputLastPlayedCount').value,
             "smartpls": (document.getElementById('btnSmartpls').classList.contains('active') ? true : false),
+            "smartplsPrefix": document.getElementById('inputSmartplsPrefix').value,
+            "smartplsInterval": smartplsInterval,
+            "smartplsSort": document.getElementById('selectSmartplsSort').value,
             "taglist": getTagMultiSelectValues(document.getElementById('listEnabledTags'), false),
             "searchtaglist": getTagMultiSelectValues(document.getElementById('listSearchTags'), false),
             "browsetaglist": getTagMultiSelectValues(document.getElementById('listBrowseTags'), false),
+            "generatePlsTags": getTagMultiSelectValues(document.getElementById('listGeneratePlsTags'), false),
             "theme": selectTheme.options[selectTheme.selectedIndex].value,
-            "timer": (document.getElementById('btnFeatTimer').classList.contains('active') ? true : false),
             //"searchtidaltaglist": getTagMultiSelectValues('listSearchTidalTags'),
             //"searchqobuztaglist": getTagMultiSelectValues('listSearchQobuzTags'),
             "tidalUsername": document.getElementById('inputTidalUser').value,
@@ -754,8 +791,16 @@ function saveSettings() {
             // "qobuzUsername": document.getElementById('inputQobuzUser').value,
             // "qobuzPassword": document.getElementById('inputQobuzPass').value,
             // "qobuzFormatId": parseInt(selectQobuzQual.options[selectQobuzQual.selectedIndex].value)
+            "highlightColor": document.getElementById('inputHighlightColor').value,
+            "timer": (document.getElementById('btnFeatTimer').classList.contains('active') ? true : false),
+            "bookletName": document.getElementById('inputBookletName').value
         }, getSettings);
-        modalSettings.hide();
+        if (closeModal === true) {
+            modalSettings.hide();
+        }
+        else {
+            btnWaiting(document.getElementById('btnApplySettings'), true);
+        }
     }
 }
 
@@ -828,6 +873,7 @@ function filterCols(x) {
     if (x === 'colsPlayback') {
         tags.push('Filetype');
         tags.push('Fileformat');
+        tags.push('LastModified');
     }
     let cols = [];
     for (let i = 0; i < settings[x].length; i++) {
@@ -838,6 +884,41 @@ function filterCols(x) {
     settings[x] = cols;
 }
 
+//eslint-disable-next-line no-unused-vars
+function toggleBtnNotifyWeb() {
+    let btnNotifyWeb = document.getElementById('btnNotifyWeb');
+    let notifyWebState = btnNotifyWeb.classList.contains('active') ? true : false;
+    if (notificationsSupported()) {
+        if (notifyWebState === false) {
+            Notification.requestPermission(function (permission) {
+                if (!('permission' in Notification)) {
+                    Notification.permission = permission;
+                }
+                if (permission === 'granted') {
+                    toggleBtnChk('btnNotifyWeb', true);
+                    settings.notificationWeb = true;
+                    document.getElementById('warnNotifyWeb').classList.add('hide');
+                } 
+                else {
+                    toggleBtnChk('btnNotifyWeb', false);
+                    settings.notificationWeb = false;
+                    document.getElementById('warnNotifyWeb').classList.remove('hide');
+                }
+            });
+        }
+        else {
+            toggleBtnChk('btnNotifyWeb', false);
+            settings.notificationWeb = false;
+            document.getElementById('warnNotifyWeb').classList.add('hide');
+        }
+    }
+    else {
+        toggleBtnChk('btnNotifyWeb', false);
+        settings.notificationWeb = false;
+    }
+}
+
+//eslint-disable-next-line no-unused-vars
 function setPlaySettings(el) {
     if (el.parentNode.classList.contains('btn-group')) {
         toggleBtnGroup(el);
@@ -851,7 +932,7 @@ function setPlaySettings(el) {
         }
     }
     else if (el.id === 'playDropdownBtnConsume') {
-        if (el.classList.contains('active') == false) {
+        if (el.classList.contains('active') === false) {
             toggleBtnGroupValue(document.getElementById('playDropdownBtnJukeboxModeGroup'), 0);
         }
     }

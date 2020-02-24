@@ -46,14 +46,14 @@ function showMenu(el, event) {
         return;
     }
     if (el.parentNode.nodeName === 'TH') {
-        showMenuTh(el, event);
+        showMenuTh(el);
     }
     else {
-        showMenuTd(el, event);
+        showMenuTd(el);
     }
 }
 
-function showMenuTh(el, event) {
+function showMenuTh(el) {
     let table = app.current.app + (app.current.tab !== undefined ? app.current.tab : '') + (app.current.view !== undefined ? app.current.view : '');
     // tmp fix rm view for tidal
     if (table === 'SearchTidalAll' || table === 'SearchTidalArtist' || table === 'SearchTidalAlbum') {
@@ -88,14 +88,14 @@ function showMenuTh(el, event) {
         else if (table === 'Playback' && getTableId(el) !== 'QueueCurrentList') {
             table = 'BrowseCovergrid'
         }
-        document.getElementById('colChecklist' + table).addEventListener('click', function(event) {
-            if (event.target.nodeName === 'BUTTON' && event.target.classList.contains('material-icons')) {
-                toggleBtnChk(event.target);
-                event.preventDefault();
-                event.stopPropagation();
+        document.getElementById('colChecklist' + table).addEventListener('click', function(eventClick) {
+            if (eventClick.target.nodeName === 'BUTTON' && eventClick.target.classList.contains('material-icons')) {
+                toggleBtnChk(eventClick.target);
+                eventClick.preventDefault();
+                eventClick.stopPropagation();
             }
             else if (event.target.nodeName === 'BUTTON') {
-                event.preventDefault();
+                eventClick.preventDefault();
                 saveCols(table);
             }
         }, false);
@@ -103,7 +103,7 @@ function showMenuTh(el, event) {
     popoverInit.show();
 }
 
-function showMenuTd(el, event) {
+function showMenuTd(el) {
     let type = el.getAttribute('data-type');
     let uri = decodeURI(el.getAttribute('data-uri'));
     let name = decodeURI(el.getAttribute('data-name'));
@@ -187,8 +187,8 @@ function showMenuTd(el, event) {
         menu += addMenuItem({"cmd": "appendPlayQueue", "options": [type, uri, name]}, t('Play')) +
             addMenuItem({"cmd": "appendQueue", "options": [type, uri, name]}, t('Add to queue')) +
             addMenuItem({"cmd": "replaceQueue", "options": [type, uri, name]}, t('Replace queue')) +
-            (type === 'smartpls' ? addMenuItem({"cmd": "playlistDetails", "options": [uri]}, t('View/Edit playlist')) : addMenuItem({"cmd": "playlistDetails", "options": [uri]}, t('View/Edit playlist')))+
-            (type === 'smartpls' ? addMenuItem({"cmd": "showSmartPlaylist", "options": [uri]}, t('View/Edit smart playlist')) : '') +
+            (settings.smartpls === true && type === 'smartpls' ? addMenuItem({"cmd": "playlistDetails", "options": [uri]}, t('View playlist')) : addMenuItem({"cmd": "playlistDetails", "options": [uri]}, t('Edit playlist')))+
+            (settings.smartpls === true && type === 'smartpls' ? addMenuItem({"cmd": "showSmartPlaylist", "options": [uri]}, t('Edit smart playlist')) : '') +
             (settings.smartpls === true && type === 'smartpls' ? addMenuItem({"cmd": "updateSmartPlaylist", "options": [uri]}, t('Update smart playlist')) : '') +
             addMenuItem({"cmd": "showRenamePlaylist", "options": [uri]}, t('Rename playlist')) + 
             addMenuItem({"cmd": "showDelPlaylist", "options": [uri]}, t('Delete playlist'));
@@ -262,11 +262,11 @@ function showMenuTd(el, event) {
     el.setAttribute('data-init', 'true');
     el.addEventListener('shown.bs.popover', function(event) {
         event.target.setAttribute('data-popover', 'true');
-        document.getElementsByClassName('popover-content')[0].addEventListener('click', function(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            if (event.target.nodeName === 'A') {
-                let dh = event.target.getAttribute('data-href');
+        document.getElementsByClassName('popover-content')[0].addEventListener('click', function(eventClick) {
+            eventClick.preventDefault();
+            eventClick.stopPropagation();
+            if (eventClick.target.nodeName === 'A') {
+                let dh = eventClick.target.getAttribute('data-href');
                 if (dh) {
                     let cmd = JSON.parse(b64DecodeUnicode(dh));
                     parseCmd(event, cmd);
@@ -274,16 +274,16 @@ function showMenuTd(el, event) {
                 }
             }
         }, false);
-        document.getElementsByClassName('popover-content')[0].addEventListener('keydown', function(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        document.getElementsByClassName('popover-content')[0].addEventListener('keydown', function(eventKey) {
+            eventKey.preventDefault();
+            eventKey.stopPropagation();
+            if (eventKey.key === 'ArrowDown' || eventKey.key === 'ArrowUp') {
                 let menuItemsHtml = this.getElementsByTagName('a');
                 let menuItems = Array.prototype.slice.call(menuItemsHtml);
                 let idx = menuItems.indexOf(document.activeElement);
                 do {
-                    idx = event.key === 'ArrowUp' ? (idx > 1 ? idx - 1 : 0)
-                                                 : event.key === 'ArrowDown' ? ( idx < menuItems.length - 1 ? idx + 1 : idx)
+                    idx = eventKey.key === 'ArrowUp' ? (idx > 1 ? idx - 1 : 0)
+                                                 : eventKey.key === 'ArrowDown' ? ( idx < menuItems.length - 1 ? idx + 1 : idx)
                                                                             : idx;
                     if ( idx === 0 || idx === menuItems.length -1 ) {
                         break;
@@ -291,10 +291,10 @@ function showMenuTd(el, event) {
                 } while ( !menuItems[idx].offsetHeight )
                 menuItems[idx] && menuItems[idx].focus();
             }
-            else if (event.key === 'Enter') {
-                event.target.click();
+            else if (eventKey.key === 'Enter') {
+                eventKey.target.click();
             }
-            else if (event.key === 'Escape') {
+            else if (eventKey.key === 'Escape') {
                 hideMenu();
             }
         }, false);

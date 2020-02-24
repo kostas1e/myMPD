@@ -55,27 +55,25 @@ function saveSearchAsSmartPlaylist() {
         "searchstr": app.current.search}});
 }
 
-function addAllFromSearchPlist(plist, search, replace, play = false) {
-    if (search === null) {
-        search = app.current.search;
+function addAllFromSearchPlist(plist, searchstr, replace) {
+    if (searchstr === null) {
+        searchstr = app.current.search;    
     }
     if (settings.featAdvsearch) {
-        sendAPI("MPD_API_DATABASE_SEARCH_ADV", {"plist": plist,
-            "sort": "",
-            "sortdesc": false,
-            "expression": search,
-            "offset": 0,
-            "cols": settings.colsSearchDatabase,
-            "play": play,
+        sendAPI("MPD_API_DATABASE_SEARCH_ADV", {"plist": plist, 
+            "sort": "", 
+            "sortdesc": false, 
+            "expression": searchstr,
+            "offset": 0, 
+            "cols": settings.colsSearchDatabase, // colsSearch
             "replace": replace});
     }
     else {
-        sendAPI("MPD_API_DATABASE_SEARCH", {"plist": plist,
-            "filter": app.current.filter,
-            "searchstr": search,
-            "offset": 0,
-            "cols": settings.colsSearchDatabase,
-            "play": play,
+        sendAPI("MPD_API_DATABASE_SEARCH", {"plist": plist, 
+            "filter": app.current.filter, 
+            "searchstr": searchstr,
+            "offset": 0, 
+            "cols": settings.colsSearchDatabase, // colsSearch 
             "replace": replace});
     }
 }

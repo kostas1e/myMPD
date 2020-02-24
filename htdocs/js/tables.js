@@ -336,6 +336,7 @@ function setColTags(table) {
     if (table === 'Playback') {
         tags.push('Filetype');
         tags.push('Fileformat');
+        tags.push('LastModified');
     }
     if (table == 'SearchTidal') { // wip - add more cols
         tags = settings.searchtidaltags.slice();
@@ -458,7 +459,7 @@ function saveCols(table, tableEl) {
     if (colsDropdown) {
         let colInputs = colsDropdown.firstChild.getElementsByTagName('button');
         for (let i = 0; i < colInputs.length; i++) {
-            if (colInputs[i].getAttribute('name') == undefined) {
+            if (colInputs[i].getAttribute('name') === null) {
                 continue;
             }
             let th = header.querySelector('[data-col=' + colInputs[i].name + ']');

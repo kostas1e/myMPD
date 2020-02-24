@@ -80,8 +80,12 @@ typedef struct t_mpd_state {
     sds searchtidaltaglist;
     // sds searchqobuztaglist;
     sds browsetaglist;
+    sds generate_pls_tags;
     bool stickers;
     bool smartpls;
+    sds smartpls_sort;
+    sds smartpls_prefix;
+    time_t smartpls_interval;
     sds mpd_host;
     int mpd_port;
     sds mpd_pass;
@@ -96,10 +100,12 @@ typedef struct t_mpd_state {
     t_tags search_tidal_tag_types;
     // t_tags search_qobuz_tag_types;
     t_tags browse_tag_types;
+    t_tags generate_pls_tag_types;
     //last played list
     struct list last_played;
     //sticker cache
     rax *sticker_cache;
+    sds booklet_name;
 } t_mpd_state;
 
 typedef struct t_sticker {
@@ -110,6 +116,8 @@ typedef struct t_sticker {
     int like;
 } t_sticker;
 
+void disable_all_mpd_tags(t_mpd_state *mpd_state);
+void enable_all_mpd_tags(t_mpd_state *mpd_state);
 void enable_mpd_tags(t_mpd_state *mpd_state, t_tags enable_tags);
 sds put_song_tags(sds buffer, t_mpd_state *mpd_state, const t_tags *tagcols, const struct mpd_song *song);
 sds put_empty_song_tags(sds buffer, t_mpd_state *mpd_state, const t_tags *tagcols, const char *uri);
@@ -125,4 +133,6 @@ void free_mpd_state(t_mpd_state *mpd_state);
 void default_mpd_state(t_mpd_state *mpd_state);
 void mpd_client_notify(sds message);
 bool is_smartpls(t_config *config, t_mpd_state *mpd_state, const char *plpath);
+void detect_extra_files(t_mpd_state *mpd_state, const char *uri, bool *booklet, bool *lyrics, struct list *images);
+sds put_extra_files(t_mpd_state *mpd_state, sds buffer, const char *uri);
 #endif

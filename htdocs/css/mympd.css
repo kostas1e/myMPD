@@ -8,6 +8,15 @@
   --mympd-coverimagesize: 250px;
   --mympd-covergridsize: 200px;
   --mympd-covergridsize2: 100px;
+  --mympd-highlightcolor: #28a745;
+}
+
+.highlight {
+  color: var(--mympd-highlightcolor, #28a745) !important;
+}
+
+#highlightColorPreview, #bgColorPreview {
+  cursor: default;
 }
 
 #splashScreen {
@@ -55,6 +64,7 @@ html {
 }
 
 body {
+  min-height: 100vH;
   padding-top: 4rem;
   padding-bottom: 4rem;
   background-color: #888;
@@ -261,6 +271,7 @@ a.card-img-left {
   cursor: pointer;
   width: var(--mympd-coverimagesize, 250px);
   height: var(--mympd-coverimagesize, 250px);
+  max-width: 100%;
 }
 
 .album-cover-loading {
@@ -318,7 +329,6 @@ a.card-img-left {
   font-weight: normal;
   font-style: normal;
   font-size: 1.4rem;  /* Preferred icon size */
-  display:inline-block;
   line-height: 1;
   text-transform: none;
   letter-spacing: normal;
@@ -353,6 +363,11 @@ a.card-img-left {
 .material-icons-small-left {
   font-size: 1rem;
   margin-left: -1em;
+}
+
+.btn-sm-big-icon {
+  font-size: 1.4rem !important;
+  padding: 0.05rem 0.25rem !important;
 }
 
 .color-darkgrey, .color-darkgrey:hover {
@@ -408,12 +423,12 @@ a.card-img-left {
 
 button.active {
   color: #fff;
-  background-color: #28a745 !important;
-  border-color: #28a745 !important;
+  background-color: var(--mympd-highlightcolor, #28a745) !important;
+  border-color: var(--mympd-highlightcolor, #28a745) !important;
 }
 
 button.active-fg-green {
-  color: #28a745 !important;
+  color: var(--mympd-highlightcolor, #28a745) !important;
 }
 
 button.active-fg-red {
@@ -455,11 +470,11 @@ caption {
 }
 
 .dragover > td {
-  border-top:2px solid #28a745;
+  border-top:2px solid var(--mympd-highlightcolor, #28a745);
 }
 
 .dragover-th {
-  border-left:2px solid #28a745;
+  border-left:2px solid var(--mympd-highlightcolor, #28a745);
 }
 
 [draggable] {
@@ -555,7 +570,7 @@ textarea.small {
 }
 
 .form-control:focus {
-  border-color: #28A745 !important;
+  border-color: var(--mympd-highlightcolor, #28a745) !important;
   outline: 0;
   box-shadow: none !important;
 }
@@ -565,8 +580,8 @@ textarea.small {
 .btn-secondary:not(:disabled):not(.disabled):active, .btn-secondary:not(:disabled):not(.disabled).active,
 .show > .btn-secondary.dropdown-toggle {
   color: #fff;
-  background-color: #28a745 !important;
-  border-color: #28a745 !important;
+  background-color: var(--mympd-highlightcolor, #28a745) !important;
+  border-color: var(--mympd-highlightcolor, #28a745) !important;
 }
 
 .btn-light:focus, .btn-light.focus,
@@ -634,9 +649,8 @@ div.covergrid-header {
 }
 
 div#playDropdown .row {
-  word-wrap: normal;
   flex-wrap: nowrap;
-  margin-right: 10px;
+  white-space: nowrap;
 }
 
 .bg-lite-dark {
@@ -661,6 +675,60 @@ div#playDropdown .row {
   background-color: #e9ecef;
 }
 
+.btn-success {
+  background-color: var(--mympd-highlightcolor, #28a745) !important;
+  border-color: var(--mympd-highlightcolor, #28a745) !important;
+}
+
+.text-success, a.text-success:hover, a.text-success:focus {
+  color: var(--mympd-highlightcolor, #28a745) !important;
+}
+
+#dropdownAddSmartpls {
+  white-space: nowrap;
+}
+
+.playback-toolbar {
+  margin-top: -0.25rem;
+}
+
+#navState > a::after {
+  display: none;
+}
+
+#stateDropup {
+  min-width: 20rem;
+}
+
+#logOverview {
+  max-height: 70vH;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#logOverview > div {
+  font-size: 0.8rem;
+}
+
+.top-alert {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  padding-top: 0;
+  padding-bottom: 0.1rem;
+  margin-top: -0.3rem;
+}
+
+#lyricsText {
+  padding-bottom: 1rem;
+  padding-left: 0.2rem;
+}
+
+.carousel-item > div {
+  background-position: center center;
+  background-size: cover;
+  padding-top: 100%;
+}
 #scrollToTopBtn {
   display: none;
   position: fixed;
