@@ -69,7 +69,7 @@ int tiny_queue_push(tiny_queue_t *queue, void *data) {
 }
 
 int tiny_queue_length(tiny_queue_t *queue, int timeout) {
-    timeout = timeout * 1000;  
+    timeout = timeout * 1000;
     int rc = pthread_mutex_lock(&queue->mutex);
     if (rc != 0) {
         printf("Error in pthread_mutex_lock: %d\n", rc);

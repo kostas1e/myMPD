@@ -24,8 +24,8 @@ function getXpos(el) {
 }
 
 function zeroPad(num, places) {
-  var zero = places - num.toString().length + 1;
-  return Array(+(zero > 0 && zero)).join("0") + num;
+    var zero = places - num.toString().length + 1;
+    return Array(+(zero > 0 && zero)).join("0") + num;
 }
 
 function dirname(uri) {
@@ -33,7 +33,7 @@ function dirname(uri) {
 }
 
 function basename(uri) {
-   return uri.split('/').reverse()[0];
+    return uri.split('/').reverse()[0];
 }
 
 function filetype(uri) {
@@ -42,22 +42,23 @@ function filetype(uri) {
     }
     let ext = uri.split('.').pop().toUpperCase();
     if (uri.includes('tidal')) {
-        ext = ext.slice(0, ext.indexOf('?')); // remove token from tidal streamUrl
+        // Remove token from tidal streamUrl
+        ext = ext.slice(0, ext.indexOf('?'));
     }
     switch (ext) {
-        case 'MP3':  return ext + ' - MPEG-1 Audio Layer III';
+        case 'MP3': return ext + ' - MPEG-1 Audio Layer III';
         case 'FLAC': return ext + ' - Free Lossless Audio Codec';
-        case 'OGG':  return ext + ' - Ogg Vorbis';
+        case 'OGG': return ext + ' - Ogg Vorbis';
         case 'OPUS': return ext + ' - Opus Audio';
-        case 'WAV':  return ext + ' - WAVE Audio File';
-        case 'WV':   return ext + ' - WavPack';
-        case 'AAC':  return ext + ' - Advancded Audio Coding';
-        case 'MPC':  return ext + ' - Musepack';
-        case 'MP4':  return ext + ' - MPEG-4';
-        case 'M4A':  return ext + ' - MPEG-4 Audio';
-        case 'APE':  return ext + ' - Monkey Audio ';
-        case 'WMA':  return ext + ' - Windows Media Audio';
-        default:     return ext;
+        case 'WAV': return ext + ' - WAVE Audio File';
+        case 'WV': return ext + ' - WavPack';
+        case 'AAC': return ext + ' - Advancded Audio Coding';
+        case 'MPC': return ext + ' - Musepack';
+        case 'MP4': return ext + ' - MPEG-4';
+        case 'M4A': return ext + ' - MPEG-4 Audio';
+        case 'APE': return ext + ' - Monkey Audio ';
+        case 'WMA': return ext + ' - Windows Media Audio';
+        default: return ext;
     }
 }
 
@@ -79,9 +80,9 @@ function doSetFilterLetter(x) {
     if (filter === '0') {
         filter = '#';
     }
-    
+
     document.getElementById(x).innerHTML = '<span class="material-icons">filter_list</span>' + (filter !== '-' ? ' ' + filter : '');
-    
+
     if (filter !== '-') {
         let btns = document.getElementById(x + 'Letters').getElementsByTagName('button');
         let btnsLen = btns.length;
@@ -103,8 +104,8 @@ function addFilterLetter(x) {
 
     let letters = document.getElementById(x);
     letters.innerHTML = filter;
-    
-    letters.addEventListener('click', function(event) {
+
+    letters.addEventListener('click', function (event) {
         switch (event.target.innerText) {
             case 'delete':
                 filter = '-';
@@ -143,7 +144,7 @@ function addTagList(el, list) {
         }
         tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="filename">' + t('Filename') + '</button>';
     }
-    else if (list === 'searchtidaltags' || list === 'searchqobuztags') {
+    else if (list === 'searchtidaltags') {
         tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="any">' + t('Any Tag') + '</button>';
     }
     for (let i = 0; i < settings[list].length; i++) {
@@ -164,7 +165,7 @@ function addTagListSelect(el, list) {
         tagList += '<option value="filename">' + t('Filename') + '</option>';
     }
     else if (el === 'selectJukeboxUniqueTag' && settings.browsetags.includes('Title') === false) {
-        //Title tag should be always in the list
+        // Title tag should be always in the list
         tagList = '<option value="Title">' + t('Song') + '</option>';
     }
     for (let i = 0; i < settings[list].length; i++) {
@@ -196,9 +197,6 @@ function focusSearch() {
     }
     else if (app.current.app === 'Search' && app.current.tab === 'Tidal') {
         domCache.searchtidalstr.focus();
-    }
-    else if (app.current.app === 'Search' && app.current.tab === 'Qobuz') {
-        domCache.searchqobuzstr.focus();
     }
     else {
         appGoto('Search');
@@ -269,7 +267,7 @@ function toggleBtnGroup(btn) {
 function getBtnGroupValue(btnGroup) {
     let activeBtn = document.getElementById(btnGroup).getElementsByClassName('active');
     if (activeBtn.length === 0) {
-        activeBtn = document.getElementById(btnGroup).getElementsByTagName('button');    
+        activeBtn = document.getElementById(btnGroup).getElementsByTagName('button');
     }
     return activeBtn[0].getAttribute('data-value');
 }
@@ -338,7 +336,7 @@ function toggleBtnChkCollapse(btn, collapse, state) {
     if (checked === true) {
         document.getElementById(collapse).classList.add('show');
     }
-    else{
+    else {
         document.getElementById(collapse).classList.remove('show');
     }
 }
@@ -346,28 +344,27 @@ function toggleBtnChkCollapse(btn, collapse, state) {
 function setPagination(total, returned, at) {
     let cat = app.current.app + app.current.tab;
     if (at !== undefined) {
-        // call with AppTab param
         cat = at;
     }
     let totalPages = Math.ceil(total / settings.maxElementsPerPage);
     if (totalPages === 0) {
         totalPages = 1;
     }
-    let p = [ document.getElementById(cat + 'PaginationTop'), document.getElementById(cat + 'PaginationBottom') ];
-    
+    let p = [document.getElementById(cat + 'PaginationTop'), document.getElementById(cat + 'PaginationBottom')];
+
     for (let i = 0; i < p.length; i++) {
         let prev = p[i].children[0];
         let page = p[i].children[1].children[0];
         let pages = p[i].children[1].children[1];
         let next = p[i].children[2];
-    
+
         page.innerText = (app.current.page / settings.maxElementsPerPage + 1) + ' / ' + totalPages;
         if (totalPages > 1) {
             page.removeAttribute('disabled');
             let pl = '';
             for (let j = 0; j < totalPages; j++) {
                 pl += '<button data-page="' + (j * settings.maxElementsPerPage) + '" type="button" class="mr-1 mb-1 btn-sm btn btn-secondary">' +
-                      ( j + 1) + '</button>';
+                    (j + 1) + '</button>';
             }
             pages.innerHTML = pl;
             page.classList.remove('nodropdown');
@@ -381,7 +378,7 @@ function setPagination(total, returned, at) {
             page.setAttribute('disabled', 'disabled');
             page.classList.add('nodropdown');
         }
-        
+
         if (total > app.current.page + settings.maxElementsPerPage || total === -1 && returned >= settings.maxElementsPerPage) {
             next.removeAttribute('disabled');
             p[i].classList.remove('hide');
@@ -392,7 +389,7 @@ function setPagination(total, returned, at) {
             p[i].classList.add('hide');
             document.getElementById(cat + 'ButtonsBottom').classList.add('hide');
         }
-    
+
         if (app.current.page > 0) {
             prev.removeAttribute('disabled');
             p[i].classList.remove('hide');
@@ -411,27 +408,27 @@ function genId(x) {
 function parseCmd(event, href) {
     event.preventDefault();
     let cmd = href;
-    if (typeof(href) === 'string') {
+    if (typeof (href) === 'string') {
         cmd = JSON.parse(href);
     }
 
     if (typeof window[cmd.cmd] === 'function') {
-        switch(cmd.cmd) {
+        switch (cmd.cmd) {
             case 'sendAPI':
-                sendAPI(cmd.options[0].cmd, {}); 
+                sendAPI(cmd.options[0].cmd, {});
                 break;
             case 'toggleBtn':
             case 'toggleBtnChk':
             case 'toggleBtnGroup':
             case 'toggleBtnGroupCollapse':
             case 'setPlaySettings':
-                window[cmd.cmd](event.target, ... cmd.options);
+                window[cmd.cmd](event.target, ...cmd.options);
                 break;
             case 'toggleBtnChkCollapse':
-                window[cmd.cmd](event.target, undefined, ... cmd.options);
+                window[cmd.cmd](event.target, undefined, ...cmd.options);
                 break;
             default:
-                window[cmd.cmd](... cmd.options);
+                window[cmd.cmd](...cmd.options);
         }
     }
     else {
@@ -444,7 +441,7 @@ function gotoPage(x) {
     // check for playback
     // document.getElementById(app.current.app + app.current.tab + 'PaginationTop').scrollIntoView();
     document.getElementById('card' + app.current.app).scrollIntoView(); // cardHeader
-    
+
     let offset = settings.maxElementsPerPage;
     if (app.current.tab === 'Tidal') {
         if (app.current.view === 'All') {
@@ -462,24 +459,6 @@ function gotoPage(x) {
             app.current.page -= offset;
             if (app.current.page < 0)
                 app.current.page = 0;
-            break;
-        default:
-            app.current.page = x;
-    }
-    // console.log(app.current.app, app.current.tab, app.current.view, app.current.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
-    appGoto(app.current.app, app.current.tab, app.current.view, app.current.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
-}
-
-function gotoPage2(x) { // old one - rm
-    switch (x) {
-        case 'next':
-            app.current.page += settings.maxElementsPerPage;
-            break;
-        case 'prev':
-            app.current.page -= settings.maxElementsPerPage;
-            if (app.current.page < 0) {
-                app.current.page = 0;
-            }
             break;
         default:
             app.current.page = x;

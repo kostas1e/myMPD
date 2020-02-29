@@ -7,18 +7,18 @@
 
 //eslint-disable-next-line no-unused-vars
 function deleteTimer(timerid) {
-    sendAPI("MYMPD_API_TIMER_RM", {"timerid": timerid}, showListTimer);
+    sendAPI("MYMPD_API_TIMER_RM", { "timerid": timerid }, showListTimer);
 }
 
 //eslint-disable-next-line no-unused-vars
 function toggleTimer(target, timerid) {
     if (target.classList.contains('active')) {
         target.classList.remove('active');
-        sendAPI("MYMPD_API_TIMER_TOGGLE", {"timerid": timerid, "enabled": false}, showListTimer);
+        sendAPI("MYMPD_API_TIMER_TOGGLE", { "timerid": timerid, "enabled": false }, showListTimer);
     }
     else {
         target.classList.add('active');
-        sendAPI("MYMPD_API_TIMER_TOGGLE", {"timerid": timerid, "enabled": true}, showListTimer);
+        sendAPI("MYMPD_API_TIMER_TOGGLE", { "timerid": timerid, "enabled": true }, showListTimer);
     }
 }
 
@@ -53,9 +53,8 @@ function saveTimer() {
     let jukeboxMode = document.getElementById('btnTimerJukeboxModeGroup').getElementsByClassName('active')[0].getAttribute('data-value');
 
     if (jukeboxMode === '0' &&
-        selectTimerPlaylist.options[selectTimerPlaylist.selectedIndex].value === 'Database'&&
-        selectTimerAction.options[selectTimerAction.selectedIndex].value === 'startplay')
-    {
+        selectTimerPlaylist.options[selectTimerPlaylist.selectedIndex].value === 'Database' &&
+        selectTimerAction.options[selectTimerAction.selectedIndex].value === 'startplay') {
         formOK = false;
         document.getElementById('btnTimerJukeboxModeGroup').classList.add('is-invalid');
     }
@@ -71,7 +70,7 @@ function saveTimer() {
             "volume": parseInt(document.getElementById('inputTimerVolume').value),
             "playlist": selectTimerPlaylist.options[selectTimerPlaylist.selectedIndex].value,
             "jukeboxMode": parseInt(jukeboxMode),
-            }, showListTimer);
+        }, showListTimer);
     }
 }
 
@@ -83,9 +82,9 @@ function showEditTimer(timerid) {
     document.getElementById('listTimerFooter').classList.add('hide');
     document.getElementById('editTimerFooter').classList.remove('hide');
     playlistEl = 'selectTimerPlaylist';
-    sendAPI("MPD_API_PLAYLIST_LIST", {"offset": 0, "filter": "-"}, getAllPlaylists);
+    sendAPI("MPD_API_PLAYLIST_LIST", { "offset": 0, "filter": "-" }, getAllPlaylists);
     if (timerid !== 0) {
-        sendAPI("MYMPD_API_TIMER_GET", {"timerid": timerid}, parseEditTimer);
+        sendAPI("MYMPD_API_TIMER_GET", { "timerid": timerid }, parseEditTimer);
     }
     else {
         document.getElementById('inputTimerId').value = '0';
@@ -149,18 +148,18 @@ function parseListTimer(obj) {
         let row = document.createElement('tr');
         row.setAttribute('data-id', obj.result.data[i].timerid);
         let tds = '<td>' + obj.result.data[i].name + '</td>' +
-                  '<td><button name="enabled" class="btn btn-secondary btn-xs clickable material-icons material-icons-small' +
-                  (obj.result.data[i].enabled === true ? ' active' : '') + '">' +
-                  (obj.result.data[i].enabled === true ? 'check' : 'radio_button_unchecked') + '</button></td>' +
-                  '<td>' + zeroPad(obj.result.data[i].startHour, 2) + ':' + zeroPad(obj.result.data[i].startMinute,2) + ' ' + t('on') + ' ';
+            '<td><button name="enabled" class="btn btn-secondary btn-xs clickable material-icons material-icons-small' +
+            (obj.result.data[i].enabled === true ? ' active' : '') + '">' +
+            (obj.result.data[i].enabled === true ? 'check' : 'radio_button_unchecked') + '</button></td>' +
+            '<td>' + zeroPad(obj.result.data[i].startHour, 2) + ':' + zeroPad(obj.result.data[i].startMinute, 2) + ' ' + t('on') + ' ';
         let days = [];
         for (let j = 0; j < 7; j++) {
             if (obj.result.data[i].weekdays[j] === true) {
                 days.push(t(weekdays[j]))
             }
         }
-        tds += days.join(', ')  + '</td><td>' + t(obj.result.data[i].action) + '</td>' +
-               '<td data-col="Action"><a href="#" class="material-icons color-darkgrey">delete</a></td>';
+        tds += days.join(', ') + '</td><td>' + t(obj.result.data[i].action) + '</td>' +
+            '<td data-col="Action"><a href="#" class="material-icons color-darkgrey">delete</a></td>';
         row.innerHTML = tds;
         if (i < tr.length) {
             activeRow = replaceTblRow(tr[i], row) === true ? i : activeRow;
@@ -170,12 +169,12 @@ function parseListTimer(obj) {
         }
     }
     let trLen = tr.length - 1;
-    for (let i = trLen; i >= obj.result.returnedEntities; i --) {
+    for (let i = trLen; i >= obj.result.returnedEntities; i--) {
         tr[i].remove();
     }
 
     if (obj.result.returnedEntities === 0) {
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
-                          '<td colspan="4">' + t('Empty list') + '</td></tr>';
+            '<td colspan="4">' + t('Empty list') + '</td></tr>';
     }
 }

@@ -10,11 +10,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <unistd.h>
-#include <netdb.h> 
-#include <sys/types.h> 
-#include <sys/socket.h> 
-#include <netinet/in.h> 
-#include <arpa/inet.h> 
+#include <netdb.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include <openssl/err.h>
 #include <openssl/conf.h>
@@ -49,11 +49,11 @@ static bool load_certificate(sds key_file, EVP_PKEY **key, sds cert_file, X509 *
 bool create_certificates(sds dir, sds custom_san) {
     bool rc_ca = false;
     bool rc_cert = false;
-    
+
     //read ca certificate / private key or create it
     sds cacert_file = sdscatfmt(sdsempty(), "%s/ca.pem", dir);
     sds cakey_file = sdscatfmt(sdsempty(), "%s/ca.key", dir);
-    
+
     EVP_PKEY *ca_key = NULL;
     X509 *ca_cert = NULL;
 
@@ -65,7 +65,7 @@ bool create_certificates(sds dir, sds custom_san) {
             sdsfree(cakey_file);
             return false;
         }
-    
+
         ca_cert = generate_selfsigned_cert(ca_key);
         if (!ca_cert) {
             EVP_PKEY_free(ca_key);
@@ -85,7 +85,7 @@ bool create_certificates(sds dir, sds custom_san) {
     //read server certificate / privat key or create it
     sds servercert_file = sdscatfmt(sdsempty(), "%s/server.pem", dir);
     sds serverkey_file = sdscatfmt(sdsempty(), "%s/server.key", dir);
-    
+
     EVP_PKEY *server_key = NULL;
     X509 *server_cert = NULL;
 
@@ -159,7 +159,7 @@ bool cleanup_certificates(sds dir, const char *name) {
         LOG_ERROR("Error removing file %s", key_file);
     }
     sdsfree(key_file);
-    
+
     return true;
 }
 
@@ -196,7 +196,7 @@ static bool load_certificate(sds key_file, EVP_PKEY **key, sds cert_file, X509 *
 	    EVP_PKEY_free(*key);
 	    return false;
 	}
-	
+
 	return true;
 }
 
@@ -204,9 +204,9 @@ static bool load_certificate(sds key_file, EVP_PKEY **key, sds cert_file, X509 *
 static sds get_san(sds buffer) {
     buffer = sdscatfmt(buffer, "DNS:localhost, IP:127.0.0.1, IP:::1");
 
-    //Retrieve short hostname 
+    //Retrieve short hostname
     char hostbuffer[256]; /* Flawfinder: ignore */
-    int hostname = gethostname(hostbuffer, sizeof(hostbuffer)); 
+    int hostname = gethostname(hostbuffer, sizeof(hostbuffer));
     if (hostname == -1) {
         return buffer;
     }
@@ -225,7 +225,7 @@ static sds get_san(sds buffer) {
         char addrstr[100];
         sds old_addrstr = sdsempty();
         void *ptr = NULL;
-        
+
         for (rp = res; rp != NULL; rp = rp->ai_next) {
             inet_ntop(res->ai_family, res->ai_addr->sa_data, addrstr, 100);
 
@@ -287,9 +287,9 @@ static X509_REQ *generate_request(EVP_PKEY *pkey) {
     X509_NAME_add_entry_by_txt(name, "C",  MBSTRING_ASC, (unsigned char *)"DE", -1, -1, 0);
     X509_NAME_add_entry_by_txt(name, "O",  MBSTRING_ASC, (unsigned char *)"myMPD", -1, -1, 0);
     X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (unsigned char *)cn, -1, -1, 0);
-    
+
     sdsfree(cn);
-    
+
     if (!X509_REQ_sign(req, pkey, EVP_sha256())) {
         LOG_ERROR("Error signing request");
         X509_REQ_free(req);
@@ -310,27 +310,27 @@ static X509 *sign_certificate_request(EVP_PKEY *ca_key, X509 *ca_cert, X509_REQ 
         LOG_ERROR("Unable to create X509 structure");
         return NULL;
     }
-        
+
     /* Set version to X509v3 */
     X509_set_version(cert, 2);
 
     /* Set the serial number. */
     generate_set_random_serial(cert);
-    
+
     /* Set issuer to CA's subject. */
     X509_set_issuer_name(cert, X509_get_subject_name(ca_cert));
-    
+
     /* This certificate is valid from now until exactly ten years from now. */
     X509_gmtime_adj(X509_get_notBefore(cert), 0);
     X509_gmtime_adj(X509_get_notAfter(cert), 315360000);
-    
+
     /* Get the request's subject and just use it (we don't bother checking it since we generated
      * it ourself). Also take the request's public key. */
     X509_set_subject_name(cert, X509_REQ_get_subject_name(req));
     EVP_PKEY *req_pubkey = X509_REQ_get_pubkey(req);
     X509_set_pubkey(cert, req_pubkey);
     EVP_PKEY_free(req_pubkey);
-    
+
     /* Set extensions. */
     X509V3_CTX ctx;
     X509V3_set_ctx_nodb(&ctx);
@@ -355,14 +355,14 @@ static EVP_PKEY *generate_keypair(void) {
         LOG_ERROR("Unable to create RSA structure");
         return NULL;
     }
-    
+
     /* Allocate memory for the EVP_PKEY structure. */
     EVP_PKEY *pkey = EVP_PKEY_new();
     if (!pkey) {
         LOG_ERROR("Unable to create EVP_PKEY structure");
         return NULL;
     }
-    
+
     /* Generate the RSA key and assign it to pkey. */
     BIGNUM *e = BN_new();
     if (!e) {
@@ -378,7 +378,7 @@ static EVP_PKEY *generate_keypair(void) {
         EVP_PKEY_free(pkey);
         return NULL;
     }
-    
+
     BN_free(e);
     return pkey;
 }
@@ -391,34 +391,34 @@ static X509 *generate_selfsigned_cert(EVP_PKEY *pkey) {
         LOG_ERROR("Unable to create X509 structure");
         return NULL;
     }
-    
+
     /* Set version to X509v3 */
     X509_set_version(cert, 2);
-    
+
     /* Set the serial number. */
     generate_set_random_serial(cert);
-    
+
     /* This certificate is valid from now until exactly ten years from now. */
     X509_gmtime_adj(X509_get_notBefore(cert), 0);
     X509_gmtime_adj(X509_get_notAfter(cert), 315360000);
-    
+
     /* Set the public key for our certificate. */
     X509_set_pubkey(cert, pkey);
-    
+
     /* We want to copy the subject name to the issuer name. */
     X509_NAME *name = X509_get_subject_name(cert);
-    
+
     /* Set the DN */
     time_t now = time(NULL);
     sds cn = sdscatprintf(sdsempty(), "myMPD CA %ld", now);
-    
+
     X509_NAME_add_entry_by_txt(name, "C",  MBSTRING_ASC, (unsigned char *)"DE", -1, -1, 0);
     X509_NAME_add_entry_by_txt(name, "O",  MBSTRING_ASC, (unsigned char *)"myMPD", -1, -1, 0);
     X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (unsigned char *)cn, -1, -1, 0);
-    
+
     /* Now set the issuer name. */
     X509_set_issuer_name(cert, name);
-    
+
     /* Set ca extension. */
     X509V3_CTX ctx;
     X509V3_set_ctx_nodb(&ctx);
@@ -426,21 +426,21 @@ static X509 *generate_selfsigned_cert(EVP_PKEY *pkey) {
     X509_EXTENSION *ex = X509V3_EXT_conf_nid(NULL, &ctx, NID_basic_constraints, "CA:true");
     X509_add_ext(cert, ex, -1);
     X509_EXTENSION_free(ex);
-    
+
     sdsfree(cn);
-    
+
     /* Self sign the certificate with our key. */
     if (!X509_sign(cert, pkey, EVP_sha256())) {
         LOG_ERROR("Error signing certificate");
         X509_free(cert);
         return NULL;
     }
-    
+
     return cert;
 }
 
 static bool write_to_disk(sds key_file, EVP_PKEY *pkey, sds cert_file, X509 *cert) {
-    /* Write the key to disk. */    
+    /* Write the key to disk. */
     sds key_file_tmp = sdscatfmt(sdsempty(), "%s.XXXXXX", key_file);
     int fd = mkstemp(key_file_tmp);
     if (fd < 0) {
@@ -462,7 +462,7 @@ static bool write_to_disk(sds key_file, EVP_PKEY *pkey, sds cert_file, X509 *cer
         return false;
     }
     sdsfree(key_file_tmp);
-    
+
     /* Write the certificate to disk. */
     sds cert_file_tmp = sdscatfmt(sdsempty(), "%s.XXXXXX", cert_file);
     if ((fd = mkstemp(cert_file_tmp)) < 0 ) {
@@ -484,6 +484,6 @@ static bool write_to_disk(sds key_file, EVP_PKEY *pkey, sds cert_file, X509 *cer
         return false;
     }
     sdsfree(cert_file_tmp);
-    
+
     return true;
 }

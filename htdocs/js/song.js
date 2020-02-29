@@ -7,13 +7,10 @@
 
 function songDetails(uri) {
     if (uri.startsWith("tidal://")) {
-        sendAPI("MYMPD_API_TIDAL_SONGDETAILS", {"uri": uri}, parseTidalSongDetails);
-    }
-    else if (uri.startsWith("qobuz://")) {
-        sendAPI("MYMPD_API_QOBUZ_SONGDETAILS", {"uri": uri}, parseQobuzSongDetails);
+        sendAPI("MYMPD_API_TIDAL_SONGDETAILS", { "uri": uri }, parseTidalSongDetails);
     }
     else {
-        sendAPI("MPD_API_DATABASE_SONGDETAILS", {"uri": uri}, parseSongDetails);
+        sendAPI("MPD_API_DATABASE_SONGDETAILS", { "uri": uri }, parseSongDetails);
     }
     modalSongDetails.show();
 }
@@ -30,12 +27,12 @@ function parseFingerprint(obj) {
 function parseSongDetails(obj) {
     let modal = document.getElementById('modalSongDetails');
     modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + subdir + '/albumart/' + obj.result.uri + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
-    
+
     let elH1s = modal.getElementsByTagName('h1');
     for (let i = 0; i < elH1s.length; i++) {
         elH1s[i].innerText = obj.result.Title;
     }
-    
+
     let songDetailsHTML = '';
     for (let i = 0; i < settings.tags.length; i++) {
         if (settings.tags[i] === 'Title' || obj.result[settings.tags[i]] === '-') {
@@ -52,18 +49,18 @@ function parseSongDetails(obj) {
     }
     songDetailsHTML += '<tr><th>' + t('Duration') + '</th><td>' + beautifyDuration(obj.result.Duration) + '</td></tr>';
     if (settings.featLibrary === true && settings.publish === true) {
-        songDetailsHTML += '<tr><th>' + t('Filename') + '</th><td><a class="breakAll text-success" href="/browse/music/' + 
-            encodeURI(obj.result.uri) + '" target="_blank" title="' + e(obj.result.uri) + '">' + 
+        songDetailsHTML += '<tr><th>' + t('Filename') + '</th><td><a class="breakAll text-success" href="/browse/music/' +
+            encodeURI(obj.result.uri) + '" target="_blank" title="' + e(obj.result.uri) + '">' +
             e(basename(obj.result.uri)) + '</a></td></tr>';
     }
     else {
-        songDetailsHTML += '<tr><th>' + t('Filename') + '</th><td class="breakAll"><span title="' + e(obj.result.uri) + '">' + 
+        songDetailsHTML += '<tr><th>' + t('Filename') + '</th><td class="breakAll"><span title="' + e(obj.result.uri) + '">' +
             e(basename(obj.result.uri)) + '</span></td></tr>';
     }
     songDetailsHTML += '<tr><th>' + t('Filetype') + '</th><td>' + filetype(obj.result.uri) + '</td></tr>';
     songDetailsHTML += '<tr><th>' + t('LastModified') + '</th><td>' + localeDate(obj.result.LastModified) + '</td></tr>';
     if (settings.featFingerprint === true) {
-        songDetailsHTML += '<tr><th>' + t('Fingerprint') + '</th><td class="breakAll" id="fingerprint"><a class="text-success" data-uri="' + 
+        songDetailsHTML += '<tr><th>' + t('Fingerprint') + '</th><td class="breakAll" id="fingerprint"><a class="text-success" data-uri="' +
             encodeURI(obj.result.uri) + '" id="calcFingerprint" href="#">' + t('Calculate') + '</a></td></tr>';
     }
     if (obj.result.booklet === true && settings.publish === true) {
@@ -76,16 +73,16 @@ function parseSongDetails(obj) {
             '<tr><th>' + t('Last played') + '</th><td>' + (obj.result.lastPlayed === 0 ? t('never') : localeDate(obj.result.lastPlayed)) + '</td></tr>' +
             '<tr><th>' + t('Last skipped') + '</th><td>' + (obj.result.lastSkipped === 0 ? t('never') : localeDate(obj.result.lastSkipped)) + '</td></tr>' +
             '<tr><th>' + t('Like') + '</th><td>' +
-              '<div class="btn-group btn-group-sm">' +
-                '<button title="' + t('Dislike song') + '" id="btnVoteDown2" data-href=\'{"cmd": "voteSong", "options": [0]}\' class="btn btn-sm btn-light material-icons">thumb_down</button>' +
-                '<button title="' + t('Like song') + '" id="btnVoteUp2" data-href=\'{"cmd": "voteSong", "options": [2]}\' class="btn btn-sm btn-light material-icons">thumb_up</button>' +
-              '</div>' +
+            '<div class="btn-group btn-group-sm">' +
+            '<button title="' + t('Dislike song') + '" id="btnVoteDown2" data-href=\'{"cmd": "voteSong", "options": [0]}\' class="btn btn-sm btn-light material-icons">thumb_down</button>' +
+            '<button title="' + t('Like song') + '" id="btnVoteUp2" data-href=\'{"cmd": "voteSong", "options": [2]}\' class="btn btn-sm btn-light material-icons">thumb_up</button>' +
+            '</div>' +
             '</td></tr>';
     }
-    
+
     document.getElementById('tbodySongDetails').innerHTML = songDetailsHTML;
     setVoteSongBtns(obj.result.like, obj.result.uri);
-    
+
     let lyricsEls = document.getElementsByClassName('featLyrics');
     for (let i = 0; i < lyricsEls.length; i++) {
         if (obj.result.lyricsfile === true && settings.featLibrary === true && settings.publish === true) {
@@ -95,14 +92,14 @@ function parseSongDetails(obj) {
             lyricsEls[i].classList.add('hide');
         }
     }
-    
+
     if (obj.result.lyricsfile === true && settings.publish === true) {
         getLyrics(obj.result.uri);
     }
     else {
         document.getElementById('lyricsText').innerText = '';
     }
-    
+
     let pictureEls = document.getElementsByClassName('featPictures');
     for (let i = 0; i < lyricsEls.length; i++) {
         if (obj.result.images.length > 0 && settings.featLibrary === true && settings.publish === true) {
@@ -112,27 +109,27 @@ function parseSongDetails(obj) {
             pictureEls[i].classList.add('hide');
         }
     }
-    
+
     let carousel = '<div id="songPicsCarousel" class="carousel slide" data-ride="carousel">' +
         '<ol class="carousel-indicators">';
     for (let i = 0; i < obj.result.images.length; i++) {
         carousel += '<li data-target="#songPicsCarousel" data-slide-to="' + i + '"' +
             (i === 0 ? ' class="active"' : '') + '></li>';
-    }    
+    }
     carousel += '</ol>' +
         '<div class="carousel-inner" role="listbox">';
     for (let i = 0; i < obj.result.images.length; i++) {
         carousel += '<div class="carousel-item' + (i === 0 ? ' active' : '') + '"><div></div></div>';
     }
     carousel += '</div>' +
-            '<a class="carousel-control-prev" href="#songPicsCarousel" data-slide="prev">' +
-                '<span class="carousel-control-prev-icon"></span>' +
-            '</a>' +
-            '<a class="carousel-control-next" href="#songPicsCarousel" data-slide="next">' +
-                '<span class="carousel-control-next-icon"></span>' +
-            '</a>' +
-            '</div>';
-    
+        '<a class="carousel-control-prev" href="#songPicsCarousel" data-slide="prev">' +
+        '<span class="carousel-control-prev-icon"></span>' +
+        '</a>' +
+        '<a class="carousel-control-next" href="#songPicsCarousel" data-slide="next">' +
+        '<span class="carousel-control-next-icon"></span>' +
+        '</a>' +
+        '</div>';
+
     document.getElementById('tabSongPics').innerHTML = carousel;
     let carouselItems = document.getElementById('tabSongPics').getElementsByClassName('carousel-item');
     for (let i = 0; i < carouselItems.length; i++) {
@@ -148,11 +145,11 @@ function parseSongDetails(obj) {
 
 function getLyrics(uri) {
     document.getElementById('lyricsText').classList.add('opacity05');
-    let ajaxRequest=new XMLHttpRequest();
-    
+    let ajaxRequest = new XMLHttpRequest();
+
     let lyricsfile = uri.replace(/\.\w+$/, ".txt");
     ajaxRequest.open('GET', subdir + '/browse/music/' + lyricsfile, true);
-    ajaxRequest.onreadystatechange = function() {
+    ajaxRequest.onreadystatechange = function () {
         if (ajaxRequest.readyState === 4) {
             let elLyricsText = document.getElementById('lyricsText');
             elLyricsText.innerText = ajaxRequest.responseText;
@@ -173,14 +170,14 @@ function voteSong(vote) {
     if (uri === '') {
         return;
     }
-        
+
     if (vote === 2 && domCache.btnVoteUp.classList.contains('highlight')) {
         vote = 1;
     }
     else if (vote === 0 && domCache.btnVoteDown.classList.contains('highlight')) {
         vote = 1;
     }
-    sendAPI("MPD_API_LIKE", {"uri": uri, "like": vote});
+    sendAPI("MPD_API_LIKE", { "uri": uri, "like": vote });
     setVoteSongBtns(vote, uri);
 }
 
@@ -241,7 +238,6 @@ function parseTidalSongDetails(obj) {
     modal.getElementsByTagName('h1')[0].innerText = obj.result.title;
 
     let songDetails = '';
-    // use settings (tidal) tags
     songDetails += '<tr><th>' + t('Album') + '</th><td>' + obj.result.album.title + '</td></tr>';
     songDetails += '<tr><th>' + t('AlbumArtist') + '</th><td>' + obj.result.album.artist + '</td></tr>';
     songDetails += '<tr><th>' + t('Artist') + '</th><td>' + obj.result.artist.name + '</td></tr>';
@@ -250,34 +246,4 @@ function parseTidalSongDetails(obj) {
     songDetails += '<tr><th>' + t('Duration') + '</th><td>' + beautifyDuration(obj.result.duration) + '</td></tr>';
 
     modal.getElementsByTagName('tbody')[0].innerHTML = songDetails;
-}
-
-function parseQobuzSongDetails(obj) {
-    let modal = document.getElementById('modalSongDetails');
-    let cover = obj.result.cover;
-    if (cover) {
-        cover = subdir + '/image/' + obj.result.cover.split('/').pop();
-    }
-    else {
-        cover = subdir + '/assets/coverimage-notavailable.svg';
-    }
-    modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + cover + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
-    modal.getElementsByTagName('h1')[0].innerText = obj.result.Title;
-
-    let songDetails = '';
-    obj.result.Date = new Date(obj.result.Date).toLocaleDateString();
-    for (let i = 0; i < settings.tags.length; i++) {
-        if (settings.tags[i] === 'Title') {
-            continue;
-        }
-        songDetails += '<tr><th>' + t(settings.tags[i]) + '</th><td>' + obj.result[settings.tags[i]] + '</td></tr>';
-    }
-    songDetails += '<tr><th>' + t('Duration') + '</th><td>' + beautifyDuration(obj.result.Duration) + '</td></tr>';
-
-    modal.getElementsByTagName('tbody')[0].innerHTML = songDetails;
-}
-
-function songRadio(uri) { // tidal track radio
-    uri = uri.split('://').pop() + '/mix';
-    searchTidal(uri);
 }

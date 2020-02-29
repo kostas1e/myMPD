@@ -28,7 +28,7 @@
 </head>
 <body class="overflow-hidden">
   <!-- rm -->
-  <button id= "btnS" type="button" class="btn" data-toggle="modal" data-target="#modalSetup">S</button>
+  <!-- <button id= "btnS" type="button" class="btn" data-toggle="modal" data-target="#modalSetup">S</button> -->
   <button type="button" id="btnR" class="btn btn-danger" data-href='{"cmd": "clearAndReload", "options": []}'>R</button>
   <!-- Splash screen -->
   <div id="splashScreen">
@@ -54,6 +54,7 @@
             <a data-phrase="Update smart playlists" class="dropdown-item text-light bg-lite-dark featSmartpls" href="#" data-href='{"cmd": "updateSmartPlaylists", "options": []}'></a>
           </div>
           <a data-phrase="Settings" class="dropdown-item text-light" href="#" data-toggle="modal" data-target="#modalSettings"></a>
+          <a data-phrase="Ideon" class="dropdown-item text-light" href="#" data-toggle="modal" data-target="#modalIdeon"></a>
           <a data-phrase="Timer" class="dropdown-item text-light featTimer" href="#" data-toggle="modal" data-target="#modalTimer"></a>
           <a data-phrase="About" class="dropdown-item text-light " href="#" data-toggle="modal" data-target="#modalAbout"></a>
           <a data-phrase="Add to home screen" id="nav-add2homescreen" class="dropdown-item text-light bg-lite-dark hide" href="#"></a>
@@ -117,16 +118,11 @@
     <div class="card" id="cardPlayback">
       <div class="card-header"><span data-phrase="Playback"></span>
         <div class="btn-toolbar pull-right playback-toolbar">
-  <!-- <main class="container">
-    <div class="card" id="cardPlayback">
-      <div class="card-header"><span data-phrase="Playback"></span>
-        <div class="btn-toolbar pull-right playback-toolbar"> -->
           <div class="btn-group btn-group-sm featStickers">
             <button data-title-phrase="Dislike song" id="btnVoteDown" data-href='{"cmd": "voteSong", "options": [0]}' class="btn btn-sm btn-light material-icons">thumb_down</button>
             <button data-title-phrase="Like song" id="btnVoteUp" data-href='{"cmd": "voteSong", "options": [2]}' class="btn btn-sm btn-light material-icons">thumb_up</button>
           </div>
           <div class="btn-group btn-group-sm ml-2 featLove">
-            <!-- <button data-title-phrase="Love song" id="btnLove" data-href='{"cmd": "loveSong", "options": []}' class="btn btn-sm btn-light material-icons">favorite</button> -->
             <button data-title-phrase="Love song" data-href='{"cmd": "loveSong", "options": []}' class="btn btn-sm btn-light material-icons">favorite</button>
           </div>
           <div class="btn-group btn-group-sm ml-2 featPlaylists">
@@ -163,7 +159,7 @@
                 <div class="form-group row">
                   <label class="col-sm-4 col-form-label" for="playDropdownBtnConsume" data-phrase="Consume"></label>
                   <!-- <div class="col-sm-9"> -->
-                  <div class="col-sm-8">          
+                  <div class="col-sm-8">
                     <button data-href='{"cmd": "setPlaySettings", "options": []}' id="playDropdownBtnConsume" type="button" class="btn btn-secondary btn-sm material-icons"></button>
                   </div>
                 </div>
@@ -201,9 +197,6 @@
         </div>
       </div>
     </div>
-
-    <!-- <div id="row1a" class="row"> -->
-      <!-- <div id="col1a" class="col-md-12"> -->
 
     <div class="card hide" id="cardQueue">
       <div class="card-header" id="cardHeaderQueue">
@@ -252,7 +245,7 @@
           </form>
           <div id="QueueCurrentPaginationTop" class="btn-group mr-2 hide">
             <button data-title-phrase="Previous page" data-href='{"cmd": "gotoPage", "options": ["prev"]}' type="button" class="btn btn-group-prepend btn-secondary">&laquo;</button>
-              <div class="button-group">
+              <div class="btn-group">
                 <button class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown"></button>
                 <div class="dropdown-menu bg-lite-dark px-2 pages">
                 </div>
@@ -342,18 +335,9 @@
       </div>
     </div>
 
-<!-- mini queue start -->
-
 <div id="cardQueueMini" class="card">
   <div id="cardHeaderQueueMini" class="card-header">
     <span class="navbar-text p-0" data-phrase="Next in queue"></span>
-    <!-- <span class="font-weight-light float-right" data-phrase="View/Edit queue"></span> -->
-    <a class="nav-link p-0 font-weight-light float-right" data-phrase="Virew/Edit queue" data-href='{"cmd": "appGoto", "options": ["Queue", "Current"]}' href="#"></a>
-    <!-- <ul class="nav nav-tabs card-header-tabs">
-      <li class="nav-item">
-        <a data-phrase="Queue" data-href='{"cmd": "appGoto", "options": ["Queue", "Current"]}' class="nav-link text-dark" href="#" id="cardMiniQueueNav"></a>
-      </li>
-    </ul> -->
   </div>
 
   <div class="card-body">
@@ -366,7 +350,6 @@
             <th data-phrase="Artist"></th>
             <th data-phrase="Album"></th>
             <th data-phrase="Duration"></th>
-            <!-- <th></th> -->
           </tr>
         </thead>
         <tbody class="clickable">
@@ -374,37 +357,13 @@
       </table>
     </div>
   </div>
-  
+
   <div id="cardFooterQueueMini" class="card-footer">
   </div>
 </div>
 
-<!-- mini queue end -->
-
-      <!-- </div> col1a -->
-    <!-- </div> row1a -->
   </div> <!-- col1 -->
   <div id="col2" class="col-md-6 d-none d-md-block">
-<!-- 
-    <div class="card h-100" id="cardBrowse">
-      <div class="card-header" id="cardHeaderBrowse">
-        <ul class="nav nav-tabs card-header-tabs mr-auto">
-          <li class="nav-item featTags">
-            <a data-phrase="Database" data-href='{"cmd": "appGoto", "options": ["Browse", "Database"]}' class="nav-link text-dark" href="#" id="cardBrowseNavDatabase"></a>
-          </li>
-          <li class="nav-item featPlaylists">
-            <a data-phrase="Playlists" data-href='{"cmd": "appGoto", "options": ["Browse", "Playlists"]}' class="nav-link text-dark" href="#" id="cardBrowseNavPlaylists"></a>
-          </li>
-          <li class="nav-item">
-            <a data-phrase="Filesystem" data-href='{"cmd": "appGoto", "options": ["Browse", "Filesystem"]}' class="nav-link text-dark" href="#" id="cardBrowseNavFilesystem"></a>
-          </li>
-          <li class="nav-item featCovergrid">
-            <a data-phrase="Covergrid" data-href='{"cmd": "appGoto", "options": ["Browse", "Covergrid"]}' class="nav-link text-dark" href="#" id="cardBrowseNavCovergrid"></a>
-          </li>
-        </ul>
-        <span id="cardBrowseNavText" class="navbar-text float-right"></span>
-      </div>
- -->
 
     <div class="card" id="cardBrowse">
       <div class="card-header hide" id="cardHeaderBrowse">
@@ -432,10 +391,6 @@
           <div class="btn-group mr-2 hide">
             <button data-href='{"cmd": "appGoto", "options": ["Browse", "Playlists", "All"]}' id="btnBrowsePlaylistsAll" type="button" class="btn btn-secondary">&laquo; <span data-phrase="Playlists"></span></button>
           </div>
-          <!-- <div class="btn-group mr-2 hide">
-            <button data-title-phrase="Clear playlist" id="btnPlaylistClear" type="button" class="btn btn-secondary material-icons" data-href='{"cmd": "playlistClear", "options": []}'>clear_all</button>
-          </div> -->
-          <!-- rm above -->
           <div class="btn-group mr-2">
             <button id="BrowsePlaylistsFilter" class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown"><span class="material-icons">filter_list</span></button>
             <div class="dropdown-menu bg-lite-dark px-2 letters" id="BrowsePlaylistsFilterLetters">
@@ -671,7 +626,7 @@
           <div class="btn-group mr-2 hide">
             <button id="btnBrowseCovergridAlbum" data-href='{"cmd": "gotoAlbumList", "options": []}' type="button" class="btn btn-secondary">
               &laquo;
-              <span id="btnBrowseCovergridAlbumText" class="btnText d-none" data-phrase="Album"></span>
+              <span id="btnBrowseCovergridAlbumText" class="btnText" data-phrase="Album"></span>
             </button>
           </div>
           <form id="searchcovergrid" class="flex-grow-1">
@@ -679,7 +634,7 @@
               <div class="input-group-prepend">
                 <button data-title-phrase="Select tag to search" class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown">
                   <span class="material-icons">search</span>
-                  <span data-phrase="AlbumArtist" id="searchCovergridTagsDesc"></span>
+                  <span class="btnText" data-phrase="AlbumArtist" id="searchCovergridTagsDesc"></span>
                 </button>
                 <div class="dropdown-menu bg-lite-dark px-2" id="searchCovergridTags">
                 </div>
@@ -691,7 +646,7 @@
             <!-- <button  id="btnCovergridSortDropdown" data-title-phrase="Sort by" class="btn btn-secondary dropdown-toggle material-icons" type="button" data-toggle="dropdown">sort</button> -->
             <button  id="btnCovergridSortDropdown" data-title-phrase="Sort by" class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown">
               <span class="material-icons">sort</span>
-              <span id="sortText" class="btnText d-none" data-phrase="Sort"></span>
+              <span id="sortText" class="btnText" data-phrase="Sort"></span>
             </button>
             <div class="dropdown-menu bg-lite-dark px-2" id="covergridSortTags">
                 <div id="covergridSortTagsList">
@@ -712,19 +667,16 @@
               </div>
             <button data-title-phrase="Next page" data-href='{"cmd": "gotoPage", "options": ["next"]}' type="button" class="btn btn-secondary btn-group-append">&raquo;</button>
           </div>
-          <!-- swap -->
-          <div class="button-group mr-2">
+          <div class="btn-group mr-2">
             <button data-title-phrase="Swap view" type="button" class="btn btn-secondary material-icons clickable" data-href='{"cmd": "swapView", "options": []}'>swap_horiz</button>
           </div>
         </div>
-        <!-- <div id="oya" style="overflow-y: auto;"> -->
-        <div id="browseHeight">
+        <div id="BrowseCovergridBox">
         <div class="container-fluid justify-content-between">
           <div id="BrowseCovergridList" class="row justify-content-between">
           </div>
         </div>
-        <!-- </div> -->
-        
+
         <div class="table-responsive-md">
           <table id="BrowseCovergridAlbumList" class="table table-hover table-sm hide">
             <thead>
@@ -739,7 +691,7 @@
             </tbody>
           </table>
         </div>
-        
+
         <div class="table-responsive-md">
           <table id="BrowseCovergridTitleList" class="table table-hover table-sm hide">
             <caption>AlbumArtist - Album</caption>
@@ -756,9 +708,6 @@
           </table>
         </div>
         </div>
-        <!-- <div id="BrowseCovergridAlbumList" class="row hide">
-          <div id="BrowseCovergridAlbumListCaption"></div>
-        </div> -->
 
         <div class="btn-toolbar hide" id="BrowseCovergridButtonsBottom">
           <div class="btn-group mr-2">
@@ -792,12 +741,7 @@
           <li class="nav-item">
             <a data-phrase="Tidal" data-href='{"cmd": "appGoto", "options": ["Search", "Tidal"]}' class="nav-link text-dark" href="#" id="cardSearchNavTidal"></a>
           </li>
-          <!-- <li class="nav-item">
-            <a data-phrase="Qobuz" data-href='{"cmd": "appGoto", "options": ["Search", "Qobuz"]}' class="nav-link text-dark" href="#" id="cardSearchNavQobuz"></a>
-          </li> -->
-          <!--
-          <span id="panel-heading-search" class="text pull-right"></span>
-          -->
+          <!-- <span id="panel-heading-search" class="text pull-right"></span> -->
         </ul>
       </div>
       <div class="card-body hide" id="cardSearchDatabase">
@@ -953,12 +897,13 @@
           </div>
         </div>
       </div>
+
       <div class="card-body hide" id="cardSearchQobuz">
         <div class="btn-toolbar card-toolbar" id="SearchQobuzButtons">
           <div class="btn-group mr-2 hide">
-            <!--
+
             <button data-href='{"cmd": "goBack", "options": []}' id="btnSearchQobuzAll" type="button" class="btn btn-secondary">&laquo; <span data-phrase="Back"></span></button>
-            -->
+
             <button data-href='{"cmd": "appGoto", "options": ["Search", "Qobuz", "All"]}' id="btnSearchQobuzAll" type="button" class="btn btn-secondary">&laquo; <span data-phrase="Back"></span></button>
           </div>
           <form id="searchqobuz" class="flex-grow-1">
@@ -981,9 +926,9 @@
               <div class="dropdown-menu bg-dark dropdown-menu-right px-2" id="searchQobuzAddAllSongsDropdown">
                   <button data-phrase="Add all to queue" type="button" class="btn btn-secondary btn-sm btn-block"></button>
                   <button data-phrase="Add all to playlist" type="button" class="btn btn-secondary btn-sm btn-block featPlaylists"></button>
-                  <!--
+
                   <button data-phrase="Save as smart playlist" type="button" class="btn btn-secondary btn-sm btn-block featSmartpls"></button>
-                  -->
+
               </div>
             </div>
           </div>
@@ -1028,6 +973,7 @@
           </div>
         </div>
       </div>
+
       <div class="card-footer" id="cardFooterSearch">
       </div>
     </div>
@@ -1216,21 +1162,13 @@
         </div>
         <div class="modal-body">
           <form id="saveSmartPlaylistFrm">
-            <!-- <div class="row">
-              <div class="form-group col-md-6">
-                <label for="saveSmartPlaylistName" data-phrase="Name"></label>
-                <input type="text" class="form-control" id="saveSmartPlaylistName"/>
-                <div class="invalid-feedback" data-phrase="Invalid filename"></div>
-              </div>
-              <div class="form-group col-md-6">
-                <label for="saveSmartPlaylistType">Type</label> -->
             <div class="form-group row">
               <label class="col-sm-4 col-form-label" for="saveSmartPlaylistName" data-phrase="Name"></label>
               <div class="col-sm-8">
                 <input type="text" class="form-control" id="saveSmartPlaylistName"/>
                 <div class="invalid-feedback" data-phrase="Invalid filename"></div>
               </div>
-            </div>            
+            </div>
             <div class="form-group row">
               <label class="col-sm-4 col-form-label" for="saveSmartPlaylistType" data-phrase="Type"></label>
               <div class="col-sm-8">
@@ -1245,44 +1183,13 @@
               </div>
             </div>
             <hr/>
-            <!-- <div class="row hide" id="saveSmartPlaylistSearch">
-              <div class="form-group col-md-6">
-                <label for="selectSaveSmartPlaylistTag" data-phrase="Tag"></label>
-                <select id="selectSaveSmartPlaylistTag" class="form-control custom-select border-secondary"></select>
-              </div>
-              <div class="form-group col-md-6">
-                <label for="inputSaveSmartPlaylistSearchstr" data-phrase="Search"></label>
-                <input type="text" class="form-control" id="inputSaveSmartPlaylistSearchstr"/>
-              </div>
-            </div>
-            <div class="row hide" id="saveSmartPlaylistSticker">
-              <div class="form-group col-md-6">
-                <label for="selectSaveSmartPlaylistSticker" data-phrase="Sticker"></label>
-                <select id="selectSaveSmartPlaylistSticker" class="form-control custom-select border-secondary">
-                  <option value="like" data-phrase="Like"></option>
-                  <option value="playCount" data-phrase="Play count"></option>
-                </select>
-              </div>
-              <div class="form-group col-md-6">
-                <label for="inputSaveSmartPlaylistStickerMaxentries" data-phrase="Max. songs"></label>
-                <input type="text" class="form-control" id="inputSaveSmartPlaylistStickerMaxentries"/>
-                <div class="invalid-feedback" data-phrase="Must be a number"></div>
-              </div>
-            </div>
-            <div class="row hide" id="saveSmartPlaylistNewest">
-              <div class="form-group col-md-6">
-                <label for="inputSaveSmartPlaylistNewestTimerange" data-phrase="Timerange (days)"></label>
-                <input type="text" class="form-control" id="inputSaveSmartPlaylistNewestTimerange"/>
-                <div class="invalid-feedback" data-phrase="Must be a number"></div>
-              </div>
-            </div> -->
             <div class="hide" id="saveSmartPlaylistSearch">
               <div class="form-group row">
                 <label class="col-sm-4 col-form-label" for="selectSaveSmartPlaylistTag" data-phrase="Tag"></label>
                 <div class="col-sm-8">
                   <select id="selectSaveSmartPlaylistTag" class="form-control custom-select border-secondary"></select>
                 </div>
-              </div>            
+              </div>
               <div class="form-group row">
                 <label class="col-sm-4 col-form-label" for="inputSaveSmartPlaylistSearchstr" data-phrase="Search"></label>
                 <div class="col-sm-8">
@@ -1299,14 +1206,14 @@
                     <option value="playCount" data-phrase="Play count"></option>
                   </select>
                 </div>
-              </div> 
+              </div>
               <div class="form-group row">
                 <label class="col-sm-4 col-form-label" for="inputSaveSmartPlaylistStickerMinvalue" data-phrase="Min. value"></label>
                 <div class="col-sm-8">
                   <input type="text" class="form-control" id="inputSaveSmartPlaylistStickerMinvalue"/>
                   <div class="invalid-feedback" data-phrase="Must be a number"></div>
                 </div>
-              </div>           
+              </div>
               <div class="form-group row">
                 <label class="col-sm-4 col-form-label" for="inputSaveSmartPlaylistStickerMaxentries" data-phrase="Max. songs"></label>
                 <div class="col-sm-8">
@@ -1322,8 +1229,8 @@
                   <input type="text" class="form-control" id="inputSaveSmartPlaylistNewestTimerange"/>
                   <div class="invalid-feedback" data-phrase="Must be a number"></div>
                 </div>
-              </div>            
-            </div>            
+              </div>
+            </div>
           </form>
         </div>
         <div class="modal-footer">
@@ -1350,9 +1257,6 @@
             </li>
             <li class="nav-item">
               <a class="nav-link text-dark" href="#tabAdvancedSettings" data-toggle="tab" data-height="true" data-phrase="Advanced"></a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link text-dark" href="#tabIDEONSettings" data-toggle="tab" data-height="true" data-phrase="IDEON"></a>
             </li>
           </ul>
           <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -1483,10 +1387,7 @@
                     <select id="selectTheme" class="form-control custom-select border-secondary">
                     </select>
                   </div>
-                <!-- </div>
-                <h4 data-phrase="Albumart"></h4>
-                <div id="warnAlbumart" class="alert alert-warning hide" data-phrase="Can't access music directory"></div> -->
-                </div>                
+                </div>
                 <div class="form-group row">
                   <label class="col-sm-4 col-form-label" for="inputBgColor" data-phrase="Background color"></label>
                   <div class="col-sm-4">
@@ -1555,7 +1456,7 @@
                       <div class="invalid-feedback" data-phrase="Invalid CSS filter"></div>
                     </div>
                   </div>
-                </div>  
+                </div>
                 <hr/>
                 <h4 data-phrase="Locale"></h4>
                 <div class="form-group row">
@@ -1622,28 +1523,6 @@
                       </div>
                     </div>
                   </div>
-                  <!--
-                  <div class="form-group row">
-                    <label class="col-sm-4 col-form-label" for="btnSearchTidalTags" data-phrase="Tags to search"></label>
-                    <div class="col-sm-8 input-group">
-                      <input type="text" class="form-control border-secondary" id="inputSearchTidalTags" readonly/>
-                      <div class="input-group-append">
-                        <button id="btnSearchTidalTags" type="button" data-toggle="dropdown" class="text-left btn btn-secondary dropdown-toggle"></button>
-                        <div id="listSearchTidalTags" class="dropdown-menu dropdown-menu-right px-2 mr-3"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="form-group row">
-                    <label class="col-sm-4 col-form-label" for="btnSearchQobuzTags" data-phrase="Tags to search"></label>
-                    <div class="col-sm-8 input-group">
-                      <input type="text" class="form-control border-secondary" id="inputSearchQobuzTags" readonly/>
-                      <div class="input-group-append">
-                        <button id="btnSearchQobuzTags" type="button" data-toggle="dropdown" class="text-left btn btn-secondary dropdown-toggle"></button>
-                        <div id="listSearchQobuzTags" class="dropdown-menu dropdown-menu-right px-2 mr-3"></div>
-                      </div>
-                    </div>
-                  </div>
-                  -->
                   <div class="form-group row">
                     <label class="col-sm-4 col-form-label" for="btnBrowseTags" data-phrase="Tags to browse"></label>
                     <div class="col-sm-8 input-group">
@@ -1665,12 +1544,6 @@
                   </div>
                 </div>
                 <div class="form-group row">
-                  <!-- <div class="col-sm-4">
-                    <select id="selectStreamMode" class="form-control custom-select border-secondary">
-                      <option value="port" data-phrase="Port"></option>
-                      <option value="url" data-phrase="URI"></option>
-                    </select>
-                  </div> -->
                   <label class="col-sm-4 col-form-label" for="inputLastPlayedCount" data-phrase="Last played list count"></label>
                   <div class="col-sm-8">
                     <input id="inputLastPlayedCount" type="text" class="form-control border-secondary" value="">
@@ -1734,7 +1607,7 @@
                         <option value="port" data-phrase="Port"></option>
                         <option value="url" data-phrase="URI"></option>
                       </select>
-                    </div>                  
+                    </div>
                     <div class="col-sm-8">
                       <input id="inputStreamUrl" type="text" class="form-control border-secondary" value="">
                       <div class="invalid-feedback" data-phrase="Invalid URI"></div>
@@ -1797,64 +1670,6 @@
               </form>
             </div>
 
-            <div class="tab-pane" id="tabIDEONSettings">
-              <form id="IDEONSettingsFrm">
-                <h4 data-phrase="Tidal"></h4>
-                <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="inputTidalUser" data-phrase="Tidal username"></label>
-                  <div class="col-sm-8">
-                    <input id="inputTidalUser" type="text" class="form-control border-secondary"/>
-
-                  </div>
-                </div>
-                <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="inputTidalPass" data-phrase="Tidal password"></label>
-                  <div class="col-sm-8">
-                    <input id="inputTidalPass" type="password" autocomplete="off" class="form-control border-secondary"/>
-
-                  </div>
-                </div>
-                <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="selectTidalQual" data-phrase="Tidal quality"></label>
-                  <div class="col-sm-8">
-                    <select id="selectTidalQual" class="form-control custom-select border-secondary">
-                      <option value="LOW" data-phrase="LOW"></option>
-                      <option value="HIGH" data-phrase="HIGH"></option>
-                      <option value="LOSSLESS" data-phrase="LOSSLESS"></option>
-                      <option value="HI_RES" data-phrase="HI_RES"></option>
-                    </select>
-                  </div>
-                </div>
-                <!-- <hr/>
-                <h4 data-phrase="Qobuz"></h4>
-                <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="inputQobuzUser" data-phrase="Qobuz username"></label>
-                  <div class="col-sm-8">
-                    <input id="inputQobuzUser" type="text" class="form-control border-secondary"/>
-
-                  </div>
-                </div>
-                <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="inputQobuzPass" data-phrase="Qobuz password"></label>
-                  <div class="col-sm-8">
-                    <input id="inputQobuzPass" type="password" autocomplete="off" class="form-control border-secondary"/>
-
-                  </div>
-                </div>
-                <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="selectQobuzQual" data-phrase="Qobuz quality"></label>
-                  <div class="col-sm-8">
-                    <select id="selectQobuzQual" class="form-control custom-select border-secondary">
-                      <option value="5" data-phrase="MP3 320"></option>
-                      <option value="6" data-phrase="FLAC Lossless"></option>
-                      <option value="7" data-phrase="FLAC Hi-Res 24bit up to 96kHz"></option>
-                      <option value="27" data-phrase="FLAC Hi-Res 24bit 96-192kHz"></option>
-                    </select>
-                  </div>
-                </div> -->
-              </form>
-            </div>
-
             <div class="tab-pane" id="tabAdvancedSettings">
               <form id="AdvancedSettingsFrm">
                 <h4 data-phrase="Advanced"></h4>
@@ -1906,6 +1721,134 @@
     </div>
   </div>
 
+  <div id="modalIdeon" class="modal fade" data-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header pb-0">
+          <ul class="nav nav-tabs border-bottom-0">
+            <li class="nav-item">
+              <a class="nav-link active text-dark" href="#tabNetworkSettings" data-toggle="tab" data-height="true" data-phrase="Network"></a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-dark" href="#tabStreamingServices" data-toggle="tab" data-height="true" data-phrase="Streaming"></a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-dark" href="#tabUpdate" data-toggle="tab" data-height="true" data-phrase="Update"></a>
+            </li>
+          </ul>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="tab-content">
+            <div id="tabNetworkSettings" class="tab-pane active">
+              <form id="NetworkSettingsFrm">
+                <h4 data-phrase="NAS"></h4>
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="selectNasType" data-phrase="Type"></label>
+                  <div class="col-sm-8">
+                    <select id="selectNasType" class="form-control custom-select border-secondary">
+                      <option value="0" data-phrase="None"></option>
+                      <option value="1" data-phrase="Samba"></option>
+                      <option value="2" data-phrase="Samba (Username/Password)"></option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="inputNasHost" data-phrase="Host"></label>
+                  <div class="col-sm-4">
+                    <input id="inputNasHost" class="form-control border-secondary mt-2" type="text" data-placeholder-phrase="Host ip or name">
+                    <div class="invalid-feedback" data-phrase="Invalid host"></div>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="inputNasDirectory" data-phrase="Directory"></label>
+                  <div class="col-sm-4">
+                    <input id="inputNasDirectory" class="form-control border-secondary mt-2" type="text">
+                    <div class="invalid-feedback" data-phrase="Invalid directory"></div>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="inputNasUsername" data-phrase="Username"></label>
+                  <div class="col-sm-8">
+                    <input id="inputNasUsername" class="form-control border-secondary" type="text">
+                    <div class="invalid-feedback" data-phrase="Invalid username"></div>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="inputNasPassword" data-phrase="Password"></label>
+                  <div class="col-sm-8">
+                    <input id="inputNasPassword" class="form-control border-secondary" type="password">
+                    <div class="invalid-feedback" data-phrase="Invalid password"></div>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div id="tabStreamingServices" class="tab-pane">
+              <form id="StreamingServicesFrm">
+                <h4 data-phrase="Streaming Services"></h4>
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="btnTidal" data-phrase="Tidal"></label>
+                  <div class="col-sm-8 ">
+                    <button data-toggle="collapse" data-target="#collapseTidal" data-href='{"cmd": "toggleBtnChk", "options": []}' type="button" id="btnTidal" class="btn btn-sm btn-secondary material-icons"></button>
+                  </div>
+                </div>
+                <div class="collapse" id="collapseTidal">
+                  <div class="form-group row">
+                    <label class="col-sm-4 col-form-label" for="inputTidalUsername" data-phrase="Username"></label>
+                    <div class="col-sm-8 ">
+                      <input id="inputTidalUsername" type="text" class="form-control border-secondary">
+                      <!-- <div class="invalid-feedback" data-phrase="Invalid (empty chk)"></div> -->
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <label class="col-sm-4 col-form-label" for="inputTidalPassword" data-phrase="Password"></label>
+                    <div class="col-sm-8 ">
+                      <input id="inputTidalPassword" type="password" class="form-control border-secondary">
+                      <!-- <div class="invalid-feedback" data-phrase="Invalid (empty chk)"></div> -->
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <label class="col-sm-4 col-form-label" for="selectTidalAudioquality" data-phrase="Audioquality"></label>
+                    <div class="col-sm-8 ">
+                      <select id="selectTidalAudioquality" class="form-control custom-select border-secondary">
+                        <option value="LOW" data-phrase="LOW"></option>
+                        <option value="HIGH" data-phrase="HIGH"></option>
+                        <option value="LOSSLESS" data-phrase="LOSSLESS"></option>
+                        <option value="HI_RES" data-phrase="HI_RES"></option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div id="tabUpdate" class="tab-pane">
+              <form id="UpdateFrm">
+              <h4 class="text-success">Ideon OS</h4>
+              <ul>
+                <li><span data-phrase="Ideon OS Version"></span>: <span id="ideonVersion"></span></li>
+              </ul>
+                <h4 data-phrase="Update Ideon OS"></h4>
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="btnUpdate" data-phrase="Check for new version"></label>
+                  <div class="col-sm-8">
+		                <fieldset id="updateFieldset">
+                      <button type="button" id="btnUpdate" class="btn btn-raised btn-secondary" data-href='{"cmd": "inplaceUpdate", "options": ["btnUpdate"]}' data-phrase="Update">
+		                  </button>
+		                </fieldset>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" data-phrase="Cancel"></button>
+          <button type="button" class="btn btn-success" data-href='{"cmd": "saveIdeonSettings", "options": []}' data-phrase="Save"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="modal fade" id="modalAbout" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -1923,11 +1866,11 @@
         <div class="modal-body">
           <div class="tab-content">
             <div class="tab-pane active" id="tabAbout">
-              <h4 class="text-success">myMPD</h4>
+              <h4 class="text-success">Ideon OS</h4>
               <ul>
                 <li><span data-phrase="Version"></span>: <span id="mympdVersion"></span></li>
-                <li><span data-phrase="Homepage"></span>: <a class="text-success" target="_blank" rel="noreferrer" href="https://github.com/jcorporation/mympd">https://github.com/jcorporation/mympd</a></li>
-                <li><span data-phrase="Author"></span>: Jürgen Mang &lt;<a class="text-success" href="mailto:mail@jcgames.de">mail@jcgames.de</a>&gt;</li>
+                <li><span data-phrase="Homepage"></span>: <a class="text-success" target="_blank" rel="noreferrer" href="https://ideonaudio.com">https://ideonaudio.com</a></li>
+                <li><span data-phrase="Contact"></span>: Info &lt;<a class="text-success" href="mailto:info@ideonaudio.com">info@ideonaudio.com</a>&gt;</li>
               </ul>
               <table class="table table-sm">
                 <tbody>
@@ -1941,15 +1884,15 @@
                   <tr><th data-phrase="myMPD uptime"></th><td id="mpdstats_mympd_uptime"></td></tr>
                   <tr><th data-phrase="MPD uptime"></th><td id="mpdstats_uptime"></td></tr>
                   <tr><th data-phrase="Play time"></th><td id="mpdstats_playtime"></td></tr>
-                  <tr><td colspan="2" class="pt-3"><h5>MPD</h5></td></tr>
-                  <tr><th data-phrase="Connection"></th><td id="mpdInfo_host"></td></tr>
-                  <tr><th data-phrase="Protocol version"></th><td id="mpdInfo_version"></td></tr>
-                  <tr><th data-phrase="Libmpdclient version"></th><td id="mpdInfo_libmpdclientVersion"></td></tr>
-                  <tr><th data-phrase="Libmympdclient version"></th><td id="mpdInfo_libmympdclientVersion"></td></tr>
+                  <!-- <tr><td colspan="2" class="pt-3"><h5>MPD</h5></td></tr> -->
+                  <tr class="hide"><th data-phrase="Connection"></th><td id="mpdInfo_host"></td></tr>
+                  <tr class="hide"><th data-phrase="Protocol version"></th><td id="mpdInfo_version"></td></tr>
+                  <tr class="hide"><th data-phrase="Libmpdclient version"></th><td id="mpdInfo_libmpdclientVersion"></td></tr>
+                  <tr class="hide"><th data-phrase="Libmympdclient version"></th><td id="mpdInfo_libmympdclientVersion"></td></tr>
                   <tr><td colspan="2" class="pt-3"><h5 data-phrase="Webserver"></h5></td></tr>
                   <tr><th data-phrase="Mongoose version"></th><td id="wsMongooseVersion"></td></tr>
                   <tr><th data-phrase="IP-Address"></th><td id="wsIP"></td></tr>
-                  <tr class="featCacert"><th data-phrase="myMPD CA"></th><td><a class="text-success" href="/ca.crt" data-phrase="Download" target="_blank"></a></td></tr>
+                  <!-- <tr class="featCacert"><th data-phrase="myMPD CA"></th><td><a class="text-success" href="/ca.crt" data-phrase="Download" target="_blank"></a></td></tr> -->
                 </tbody>
               </table>
             </div>
@@ -1978,7 +1921,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title"><span class="material-icons title-icon">play_circle_outline</span> <span data-phrase="MPD connection"></span></h5>
-          <button type="button" class="close alwaysEnabled" data-dismiss="modal">&times;</button>          
+          <button type="button" class="close alwaysEnabled" data-dismiss="modal">&times;</button>
         </div>
         <div class="modal-body">
           <form id="connectionFrm">
@@ -2367,6 +2310,7 @@
     </div>
   </div>
 
+  <!-- wip -->
   <div class="modal fade" id="modalSetup" data-backdrop="static" data-keyboard="false" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -2429,12 +2373,13 @@
 <!--debug-->  <script src="js/browse.js"></script>
 <!--debug-->  <script src="js/state.js"></script>
 <!--debug-->  <script src="js/song.js"></script>
+<!--debug-->  <script src="js/misc.js"></script>
+<!--debug-->  <script src="js/popover.js"></script>
 <!--debug-->  <script src="js/album.js"></script>
 <!--debug-->  <script src="js/artist.js"></script>
 <!--debug-->  <script src="js/tidal.js"></script>
 <!--debug-->  <script src="js/playback.js"></script>
-<!--debug-->  <script src="js/misc.js"></script>
-<!--debug-->  <script src="js/popover.js"></script>
+<!--debug-->  <script src="js/ideon.js"></script>
 <!--debug-->  <script src="js/mympd.js"></script>
 <!--release   <script src="js/combined.js"></script>-->
 </body>

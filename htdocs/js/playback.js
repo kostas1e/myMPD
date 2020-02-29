@@ -1,16 +1,15 @@
 "use strict";
 
-var covergridSize2 = '100px';
-var browseHeight = '';
+var boxHeight = ''; // rm use only w/ calc
 
 var scrollToTopBtn = document.getElementById('scrollToTopBtn');
 
-window.onscroll = function() {
+window.onscroll = function () {
     scrollFunction();
 };
 
-window.onresize = function() {
-    computeBrowseHeight();
+window.onresize = function () {
+    calculateBoxHeight();
 };
 
 function scrollFunction() {
@@ -22,11 +21,8 @@ function scrollFunction() {
 }
 
 function setGridPlayback() {
-    document.getElementById('cardQueueMini').classList.add('hide');
-    // domCache.cardHeaderQueue[i].classList.remove('active');
-    // console.log('setgridplayback');
     closeCover();
-    
+    let bts = document.getElementsByClassName('btnText');
     let list = ['col-md-6', 'd-none', 'd-md-block']; // col2
     if (app.current.app === 'Playback') {
         document.getElementById('row1').classList.add('row');
@@ -34,39 +30,36 @@ function setGridPlayback() {
         document.getElementById('col2').classList.add(...list);
         document.getElementById('cardQueueMini').classList.remove('hide');
         document.getElementById('cardBrowse').classList.remove('hide');
-        document.getElementById('cardBrowseCovergrid').classList.remove('hide');
-        document.getElementById('cardBrowseNavCovergrid').classList.add('active');
-        //document.documentElement.style.setProperty('--mympd-coverimagesize', settings.coverimageSize + "px");
-        // document.documentElement.style.setProperty('--mympd-covergridsize', settings.covergridSize * 0.5 + "px");
         document.getElementById('cardHeaderBrowse').classList.add('hide');
-        // add txt as class hide always for sm
-        // document.getElementById('sortText').style.display = 'none';
-        document.getElementById('sortText').classList.add('d-none');
-        document.getElementById('browseHeight').style.height = browseHeight;
+        document.getElementById('cardBrowseCovergrid').classList.remove('hide');
+        /* for (let i = 0; i < bts.length; i++) {
+            bts[i].style.display = 'none';
+        }
+        document.getElementById('BrowseCovergridBox').style.height = boxHeight + 'px'; */
     }
     else {
         document.getElementById('row1').classList.remove('row');
         document.getElementById('col1').classList.remove('col-md-6');
         document.getElementById('col2').classList.remove(...list);
-        // document.documentElement.style.setProperty('--mympd-covergridsize', settings.covergridSize + "px");
-        // document.getElementById('cardHeaderQueue').classList.remove('hide');
+        document.getElementById('cardQueueMini').classList.add('hide');
         document.getElementById('cardHeaderBrowse').classList.remove('hide');
         document.getElementById('sortText').classList.remove('d-none');
-        // document.getElementById('sortText').style.display = 'inline';
-        document.getElementById('browseHeight').style.height = '';
+        for (let i = 0; i < bts.length; i++) {
+            bts[i].style.display = 'inline';
+        }
+        document.getElementById('BrowseCovergridBox').style.height = '';
     }
-    // console.log('setgridplaybackret');
     //lists
 }
 
 function getQueueMini(pos, updFooter = false) {
     let colsQueueMini = ["Pos", "Title", "Artist", "Album", "Duration"];
     // footer
-    sendAPI("MPD_API_QUEUE_LIST", {"offset": 0, "cols": []}, parseQueueList);
+    sendAPI("MPD_API_QUEUE_LIST", { "offset": 0, "cols": [] }, parseQueueList);
     // list
     if (pos !== undefined && pos !== -1) {
         // console.log('api call mini', pos);
-        sendAPI("MPD_API_QUEUE_MINI", {"pos": pos, "cols": colsQueueMini}, parseQueueMini);
+        sendAPI("MPD_API_QUEUE_MINI", { "pos": pos, "cols": colsQueueMini }, parseQueueMini);
     }
     else if (pos === undefined) {
         let table = document.getElementById('QueueMiniList');
@@ -79,7 +72,7 @@ function getQueueMini(pos, updFooter = false) {
 }
 
 function parseQueueList(obj) {
-    if (obj.result.totalTime && obj.result.totalTime > 0 && obj.result.totalEntities <= settings.maxElementsPerPage ) {
+    if (obj.result.totalTime && obj.result.totalTime > 0 && obj.result.totalEntities <= settings.maxElementsPerPage) {
         document.getElementById('cardFooterQueueMini').innerText = t('Num songs', obj.result.totalEntities) + ' – ' + beautifyDuration(obj.result.totalTime);
     }
     else if (obj.result.totalEntities > 0) {
@@ -105,7 +98,7 @@ function parseQueueMini(obj) {
         let row = document.createElement('tr');
         // row.setAttribute('draggable', 'true');
         row.setAttribute('data-trackid', obj.result.data[i].id);
-        row.setAttribute('id','queueMiniTrackId' + obj.result.data[i].id);
+        row.setAttribute('id', 'queueMiniTrackId' + obj.result.data[i].id);
         row.setAttribute('data-songpos', obj.result.data[i].Pos);
         row.setAttribute('data-duration', obj.result.data[i].Duration);
         row.setAttribute('data-uri', obj.result.data[i].uri);
@@ -124,14 +117,14 @@ function parseQueueMini(obj) {
         }
     }
     let trLen = tr.length - 1;
-    for (let i = trLen; i >= nrItems; i --) {
+    for (let i = trLen; i >= nrItems; i--) {
         tr[i].remove();
     }
     document.getElementById('QueueMiniList').classList.remove('opacity05');
 }
 
 function setCovergridList() {
-    if (document.getElementById('BrowseCovergridList').classList.contains('hide')) { // view2list
+    if (document.getElementById('BrowseCovergridList').classList.contains('hide')) {
         document.getElementById('btnBrowseCovergridAlbum').parentNode.classList.add('hide');
         document.getElementById('BrowseCovergridTitleList').classList.add('hide');
         document.getElementById('BrowseCovergridAlbumList').classList.remove('hide');
@@ -139,7 +132,13 @@ function setCovergridList() {
 }
 
 function getBrowseCovergrid() {
+    let bts = document.getElementsByClassName('btnText');
+    for (let i = 0; i < bts.length; i++) {
+        bts[i].style.display = 'none';
+    }
+    // document.getElementById('BrowseCovergridBox').style.height = boxHeight + 'px';
     setCovergridList();
+
     document.getElementById('searchCovergridStr').value = app.current.search;
     selectTag('searchCovergridTags', 'searchCovergridTagsDesc', app.current.filter);
     let sort = app.current.sort;
@@ -153,27 +152,26 @@ function getBrowseCovergrid() {
         toggleBtnChk('covergridSortDesc', false);
     }
     selectTag('covergridSortTags', undefined, sort);
-    sendAPI("MPD_API_DATABASE_GET_ALBUMS", {"offset": app.current.page, "searchstr": app.current.search,
-        "tag": app.current.filter, "sort": sort, "sortdesc": sortdesc}, parseCovergrid);
+    sendAPI("MPD_API_DATABASE_GET_ALBUMS", {
+        "offset": app.current.page, "searchstr": app.current.search,
+        "tag": app.current.filter, "sort": sort, "sortdesc": sortdesc
+    }, parseCovergrid);
 }
 
-function computeBrowseHeight() {
-    // console.log('cbh');
-    //test
+function calculateBoxHeight() {
     let p = document.getElementById('cardPlayback').offsetHeight;
-    let q = document.getElementById('cardQueueMini').offsetHeight;
-    let b = document.getElementById('BrowseCovergridButtons').offsetHeight;
-    let f = document.getElementById('cardFooterBrowse').offsetHeight;
-    // let h = document.getElementById('cardHeaderQueueMini').offsetHeight;
-    let c = p + q - b - f - 54 -1; // 
-    browseHeight = c + 'px';
+    let qm = document.getElementById('cardQueueMini').offsetHeight;
+    let bcb = document.getElementById('BrowseCovergridButtons').offsetHeight;
+    let bcbb = document.getElementById('BrowseCovergridButtonsBottom').offsetHeight;
+    let fb = document.getElementById('cardFooterBrowse').offsetHeight;
+    boxHeight = p + qm - bcb - bcbb - fb - 54 - 1;
     if (app.current.app === 'Playback') {
-        document.getElementById('browseHeight').style.height = browseHeight;
+        document.getElementById('BrowseCovergridBox').style.height = boxHeight + 'px';
     }
 }
 
 function swapView() {
-    document.getElementById('btnBrowseCovergridAlbum').classList.add('hide');
+    document.getElementById('btnBrowseCovergridAlbum').parentNode.classList.add('hide');
     if (document.getElementById('BrowseCovergridList').classList.contains('hide')) {
         document.getElementById('BrowseCovergridAlbumList').classList.add('hide');
         document.getElementById('BrowseCovergridTitleList').classList.add('hide');
@@ -188,13 +186,12 @@ function swapView() {
 
 function gotoAlbumList() {
     // console.log('gotoalbumlist');
-    // maxof document.body.scrollTop document.documentElement.scrollTop
+    // maxof document.body.scrollTop document.documentElement.scrollTop // second one
     document.getElementById('btnBrowseCovergridAlbum').parentNode.classList.add('hide');
     getBrowseCovergrid();
 }
 
 function parseCovergridAlbum(obj) {
-    // console.log('parsecovergridalbum');
     let colspan = 3;
     let nrItems = obj.result.returnedEntities;
     let table = document.getElementById('BrowseCovergridAlbumList');
@@ -228,7 +225,7 @@ function parseCovergridAlbum(obj) {
         }
     }
     let trLen = tr.length - 1;
-    for (let i = trLen; i >= nrItems; i --) {
+    for (let i = trLen; i >= nrItems; i--) {
         tr[i].remove();
     }
 
@@ -238,15 +235,16 @@ function parseCovergridAlbum(obj) {
 
     if (nrItems === 0)
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
-                          '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
+            '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
     document.getElementById('BrowseCovergridAlbumList').classList.remove('opacity05');
 }
 
 function getCovergridTitle(tr) {
-    // console.log('getcovergridtitle', tr);
-    sendAPI("MPD_API_DATABASE_TAG_ALBUM_TITLE_LIST", {"album": decodeURI(tr.getAttribute('data-album')),
+    sendAPI("MPD_API_DATABASE_TAG_ALBUM_TITLE_LIST", {
+        "album": decodeURI(tr.getAttribute('data-album')),
         "search": decodeURI(tr.getAttribute('data-albumartist')),
-        "tag": "AlbumArtist", "cols": settings.colsBrowseDatabase}, parseCovergridTitle);
+        "tag": "AlbumArtist", "cols": settings.colsBrowseDatabase
+    }, parseCovergridTitle);
 }
 
 function parseCovergridTitle(obj) {
@@ -254,7 +252,7 @@ function parseCovergridTitle(obj) {
     document.getElementById('BrowseCovergridAlbumList').classList.add('hide');
     document.getElementById('BrowseCovergridTitleList').classList.remove('hide');
     document.getElementById('BrowseCovergridTitleList').getElementsByTagName('caption')[0].innerHTML =
-        t(obj.result.AlbumArtist)  + ' - ' + t(obj.result.Album);
+        t(obj.result.AlbumArtist) + ' - ' + t(obj.result.Album);
     document.getElementById('btnBrowseCovergridAlbum').parentNode.classList.remove('hide');
     let colspan = 3;
     let nrItems = obj.result.returnedEntities;
@@ -289,7 +287,7 @@ function parseCovergridTitle(obj) {
         tds += '<td data-col="Duration">' + e(obj.result.data[i].Duration) + '</td>';
         tds += '<td data-col="Action"><a href="#" class="material-icons color-darkgrey">' + ligatureMore + '</a></td>';
         row.innerHTML = tds;
-        
+
         if (i < tr.length) {
             activeRow = replaceTblRow(tr[i], row) === true ? i : activeRow;
         }
@@ -298,7 +296,7 @@ function parseCovergridTitle(obj) {
         }
     }
     let trLen = tr.length - 1;
-    for (let i = trLen; i >= nrItems; i --) {
+    for (let i = trLen; i >= nrItems; i--) {
         tr[i].remove();
     }
 
@@ -308,26 +306,25 @@ function parseCovergridTitle(obj) {
 
     if (nrItems === 0)
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
-                          '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
+            '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
 
     document.getElementById('cardFooterBrowse').innerHTML = t('Num songs', obj.result.totalEntities) + ' &ndash; ' + beautifyDuration(obj.result.totalTime);
     document.getElementById('BrowseCovergridTitleList').classList.remove('opacity05');
 }
 
 function updateDBstats() {
-    // console.log('updatedbstats');
+    console.log('update db stats');
     sendAPI("MPD_API_DATABASE_STATS", {}, parseDBstats);
 }
 
 function parseDBstats(obj) {
-    // console.log('parsedbstats');
     document.getElementById('cardBrowseDBStats').firstChild.innerHTML = 'Songs: ' + obj.result.songs + ' &bull; DB play time: ' + beautifyDuration(obj.result.dbPlaytime);
 }
 
 function getTableId(node) {
     let element = node;
     if (element.nodeName !== 'A')
-        return ''; 
+        return '';
     while (element.tagName.toLowerCase() !== 'table') {
         element = element.parentNode;
     }

@@ -42,7 +42,6 @@ void mympd_api_push_to_mpd_client(t_mympd_state *mympd_state) {
     request->data = tojson_char(request->data, "taglist", mympd_state->taglist, true);
     request->data = tojson_char(request->data, "searchtaglist", mympd_state->searchtaglist, true);
     request->data = tojson_char(request->data, "searchtidaltaglist", mympd_state->searchtidaltaglist, true);
-    // request->data = tojson_char(request->data, "searchqobuztaglist", mympd_state->searchqobuztaglist, true);
     request->data = tojson_char(request->data, "browsetaglist", mympd_state->browsetaglist, true);
     request->data = tojson_bool(request->data, "stickers", mympd_state->stickers, true);
     request->data = tojson_bool(request->data, "smartpls", mympd_state->smartpls, true);
@@ -66,8 +65,6 @@ void free_mympd_state(t_mympd_state *mympd_state) {
     sdsfree(mympd_state->mpd_pass);
     sdsfree(mympd_state->taglist);
     sdsfree(mympd_state->searchtaglist);
-    sdsfree(mympd_state->searchtidaltaglist);
-    // sdsfree(mympd_state->searchqobuztaglist);
     sdsfree(mympd_state->browsetaglist);
     sdsfree(mympd_state->generate_pls_tags);
     sdsfree(mympd_state->love_channel);
@@ -76,8 +73,6 @@ void free_mympd_state(t_mympd_state *mympd_state) {
     sdsfree(mympd_state->jukebox_unique_tag);
     sdsfree(mympd_state->cols_queue_current);
     sdsfree(mympd_state->cols_search);
-    sdsfree(mympd_state->cols_search_tidal);
-    // sdsfree(mympd_state->cols_search_qobuz);
     sdsfree(mympd_state->cols_browse_database);
     sdsfree(mympd_state->cols_browse_playlists_detail);
     sdsfree(mympd_state->cols_browse_filesystem);
@@ -95,11 +90,16 @@ void free_mympd_state(t_mympd_state *mympd_state) {
     sdsfree(mympd_state->smartpls_prefix);
     sdsfree(mympd_state->booklet_name);
     truncate_timerlist(&mympd_state->timer_list);
+    sdsfree(mympd_state->nas_host);
+    sdsfree(mympd_state->nas_directory);
+    sdsfree(mympd_state->nas_username);
+    sdsfree(mympd_state->nas_password);
+    sdsfree(mympd_state->searchtidaltaglist);
+    sdsfree(mympd_state->cols_search_tidal);
     sdsfree(mympd_state->tidal_username);
     sdsfree(mympd_state->tidal_password);
     sdsfree(mympd_state->tidal_audioquality);
-    // sdsfree(mympd_state->qobuz_username);
-    // sdsfree(mympd_state->qobuz_password);
+    sdsfree(mympd_state->ideon_version);
     FREE_PTR(mympd_state);
 }
 

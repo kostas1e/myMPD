@@ -313,7 +313,7 @@ bool write_mympd_conf(struct t_config *pconfig) {
     if (sdslen(pconfig->pass) > 0) {
         fprintf(fp, "pass = %s\n", pconfig->pass);
     }
-    fprintf(fp, "\n#absolut path of music_directory of mpd\n"
+    fprintf(fp, "\n#absolute path of music_directory of mpd\n"
         "#none = no local music_directory\n"
         "#auto = get music_directory from mpd (only supported, if connected to mpd socket)\n");
     if (strncmp(pconfig->host, "/", 1) == 0) {

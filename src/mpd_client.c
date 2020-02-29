@@ -124,10 +124,10 @@ static void mpd_client_parse_idle(t_config *config, t_mpd_state *mpd_state, int 
                     }
                     break;
                 case MPD_IDLE_PLAYER:
-                    //get and put mpd state                
+                    //get and put mpd state
                     buffer = mpd_client_put_state(config, mpd_state, buffer, NULL, 0);
                     //song has changed
-                    if (mpd_state->song_id != mpd_state->last_song_id && mpd_state->last_skipped_id != mpd_state->last_song_id 
+                    if (mpd_state->song_id != mpd_state->last_song_id && mpd_state->last_skipped_id != mpd_state->last_song_id
                         && mpd_state->last_song_uri != NULL)
                     {
                         time_t now = time(NULL);
@@ -185,7 +185,7 @@ static void mpd_client_idle(t_config *config, t_mpd_state *mpd_state) {
     unsigned mpd_client_queue_length = 0;
     enum mpd_idle set_idle_mask = MPD_IDLE_DATABASE | MPD_IDLE_STORED_PLAYLIST | MPD_IDLE_QUEUE | MPD_IDLE_PLAYER | MPD_IDLE_MIXER | \
         MPD_IDLE_OUTPUT | MPD_IDLE_OPTIONS | MPD_IDLE_UPDATE | MPD_IDLE_SUBSCRIPTION;
-    
+
     switch (mpd_state->conn_state) {
         case MPD_WAIT: {
             time_t now = time(NULL);
@@ -208,7 +208,7 @@ static void mpd_client_idle(t_config *config, t_mpd_state *mpd_state) {
                     }
                     free_request(request);
                 }
-            }            
+            }
             break;
         }
         case MPD_DISCONNECTED:
@@ -331,11 +331,11 @@ static void mpd_client_idle(t_config *config, t_mpd_state *mpd_state) {
                     LOG_DEBUG("Checking for idle events");
                     enum mpd_idle idle_bitmask = mpd_recv_idle(mpd_state->conn, false);
                     mpd_client_parse_idle(config, mpd_state, idle_bitmask);
-                } 
+                }
                 else {
                     mpd_response_finish(mpd_state->conn);
                 }
-                
+
                 if (set_played == true) {
                     if (mpd_state->last_played.length > 0) {
                         mpd_client_last_played_list(config, mpd_state, mpd_state->song_id);
@@ -345,11 +345,11 @@ static void mpd_client_idle(t_config *config, t_mpd_state *mpd_state) {
                         mpd_client_last_played_song_uri(mpd_state, mpd_state->song_uri);
                     }
                 }
-                
+
                 if (jukebox_add_song == true) {
                     mpd_client_jukebox(config, mpd_state);
                 }
-                
+
                 if (mpd_client_queue_length > 0) {
                     //Handle request
                     LOG_DEBUG("Handle request");

@@ -7,7 +7,7 @@
 
 function e(x) {
     if (isNaN(x)) {
-        return x.replace(/([<>"])/g, function(m0, m1) {
+        return x.replace(/([<>"])/g, function (m0, m1) {
             if (m1 === '<') return '&lt;';
             else if (m1 === '>') return '&gt;';
             else if (m1 === '"') return '&quot;';
@@ -44,9 +44,9 @@ function t(phrase, number, data) {
         }
         result = result.replace('%{smart_count}', number);
     }
-    
+
     if (data !== null) {
-        result = result.replace(/%\{(\w+)\}/g, function(m0, m1) {
+        result = result.replace(/%\{(\w+)\}/g, function (m0, m1) {
             return data[m1];
         });
     }
@@ -63,7 +63,7 @@ function smartCount(number) {
 function localeDate(secs) {
     let d;
     if (secs === undefined) {
-       d  = new Date();
+        d = new Date();
     }
     else {
         d = new Date(secs * 1000);
@@ -77,9 +77,9 @@ function beautifyDuration(x) {
     let minutes = Math.floor(x / 60) - hours * 60 - days * 1440;
     let seconds = x - days * 86400 - hours * 3600 - minutes * 60;
 
-    return (days > 0 ? days + '\u2009'+ t('Days') + ' ' : '') +
+    return (days > 0 ? days + '\u2009' + t('Days') + ' ' : '') +
         (hours > 0 ? hours + '\u2009' + t('Hours') + ' ' +
-        (minutes < 10 ? '0' : '') : '') + minutes + '\u2009' + t('Minutes') + ' ' +
+            (minutes < 10 ? '0' : '') : '') + minutes + '\u2009' + t('Minutes') + ' ' +
         (seconds < 10 ? '0' : '') + seconds + '\u2009' + t('Seconds');
 }
 

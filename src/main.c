@@ -61,7 +61,7 @@ static bool do_chown(const char *file_path, const char *user_name) {
         LOG_ERROR("Can't get passwd entry for user %s", user_name);
         return false;
     }
-  
+
     int rc = chown(file_path, pwd->pw_uid, pwd->pw_gid); /* Flawfinder: ignore */
     //Originaly owned by root
     if (rc == -1) {
@@ -126,7 +126,7 @@ static bool drop_privileges(t_config *config, uid_t startup_uid) {
                 LOG_ERROR("getpwnam() failed, unknown user");
                 return false;
             }
-            else if (setgroups(0, NULL) != 0) { 
+            else if (setgroups(0, NULL) != 0) {
                 LOG_ERROR("setgroups() failed");
                 return false;
             }
@@ -146,14 +146,14 @@ static bool drop_privileges(t_config *config, uid_t startup_uid) {
                 return false;
             }
         }
-        
+
     }
-/*     //check if not root
+    /* //check if not root
     if (getuid() == 0) {
         LOG_ERROR("myMPD should not be run with root privileges");
         return false;
-    }
- */    return true;
+    } */
+    return true;
 }
 
 #ifdef ENABLE_SSL
@@ -223,7 +223,7 @@ static bool check_dirs(t_config *config) {
         sdsfree(testdirname);
         return false;
     }
-    
+
     //for stream images
     testdirname = sdscrop(testdirname);
     testdirname = sdscatfmt(testdirname, "%s/pics", config->varlibdir);
@@ -232,7 +232,7 @@ static bool check_dirs(t_config *config) {
         sdsfree(testdirname);
         return false;
     }
-    
+
     //create empty document_root
     testdirname = sdscrop(testdirname);
     testdirname = sdscatfmt(testdirname, "%s/empty", config->varlibdir);
@@ -252,7 +252,7 @@ static bool check_dirs(t_config *config) {
             return false;
         }
     }
-    
+
     //mpd playlist directory
     if (sdslen(config->playlist_directory) > 0) {
         testdir_rc = testdir("MPD playlists dir", config->playlist_directory, false);
@@ -286,7 +286,7 @@ int main(int argc, char **argv) {
 
     //get startup uid
     uid_t startup_uid = getuid();
-    
+
     mpd_client_queue = tiny_queue_create();
     mympd_api_queue = tiny_queue_create();
     web_server_queue = tiny_queue_create();
@@ -297,7 +297,7 @@ int main(int argc, char **argv) {
 
     //initialize random number generator
     srand((unsigned int)time(NULL)); /* Flawfinder: ignore */
-    
+
     //mympd config defaults
     t_config *config = (t_config *)malloc(sizeof(t_config));
     assert(config);
@@ -305,10 +305,10 @@ int main(int argc, char **argv) {
 
     //get configuration file
     sds configfile = sdscatfmt(sdsempty(), "%s/mympd.conf", ETC_PATH);
-    
+
     //command line option
     sds option = sdsempty();
-    
+
     if (argc >= 2) {
         if (strncmp(argv[1], "/", 1) == 0) {
             configfile = sdsreplace(configfile, argv[1]);
@@ -324,14 +324,14 @@ int main(int argc, char **argv) {
     LOG_INFO("Starting myMPD %s", MYMPD_VERSION);
     #ifdef EMBEDDED_LIBMPDCLIENT
         LOG_INFO("Compiled with embedded libmpdclient");
-        LOG_INFO("Libmympdclient %i.%i.%i based on libmpdclient %i.%i.%i", 
+        LOG_INFO("Libmympdclient %i.%i.%i based on libmpdclient %i.%i.%i",
             LIBMYMPDCLIENT_MAJOR_VERSION, LIBMYMPDCLIENT_MINOR_VERSION, LIBMYMPDCLIENT_PATCH_VERSION,
             LIBMPDCLIENT_MAJOR_VERSION, LIBMPDCLIENT_MINOR_VERSION, LIBMPDCLIENT_PATCH_VERSION);
     #else
     LOG_INFO("Libmpdclient %i.%i.%i", LIBMPDCLIENT_MAJOR_VERSION, LIBMPDCLIENT_MINOR_VERSION, LIBMPDCLIENT_PATCH_VERSION);
     #endif
     LOG_INFO("Mongoose %s", MG_VERSION);
-    
+
     if (mympd_read_config(config, configfile) == false) {
         goto cleanup;
     }
@@ -374,7 +374,7 @@ int main(int argc, char **argv) {
         }
         goto cleanup;
     }
-    
+
     //set signal handler
     signal(SIGTERM, mympd_signal_handler);
     signal(SIGINT, mympd_signal_handler);
@@ -390,7 +390,7 @@ int main(int argc, char **argv) {
     }
     #endif
 
-    //init webserver    
+    //init webserver
     struct mg_mgr mgr;
     init_mg_user_data = true;
     if (!web_server_init(&mgr, config, mg_user_data)) {
@@ -417,7 +417,7 @@ int main(int argc, char **argv) {
         LOG_INFO("tidal init failed");
         goto cleanup;
     }
-    /* 
+    /*
     //init qobuz
     if (qobuz_init(config) == false) {
         LOG_INFO("qobuz init failed");

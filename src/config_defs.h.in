@@ -46,6 +46,12 @@
 #define MYMPD_VERSION_PATCH ${CPACK_PACKAGE_VERSION_PATCH}
 #define MYMPD_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}"
 
+//ideonOS version
+#define IDEON_VERSION_MAJOR ${CPACK_PACKAGE_IDEONVERSION_MAJOR}
+#define IDEON_VERSION_MINOR ${CPACK_PACKAGE_IDEONVERSION_MINOR}
+#define IDEON_VERSION_PATCH ${CPACK_PACKAGE_IDEONVERSION_PATCH}
+#define IDEON_VERSION "${CPACK_PACKAGE_IDEONVERSION_MAJOR}.${CPACK_PACKAGE_IDEONVERSION_MINOR}.${CPACK_PACKAGE_IDEONVERSION_PATCH}"
+
 //default paths
 #define DOC_ROOT "${ASSETS_PATH}"
 #define ETC_PATH "${ETC_PATH}"
@@ -77,8 +83,6 @@ typedef struct t_config {
     bool mixramp;
     sds taglist;
     sds searchtaglist;
-    sds searchtidaltaglist;
-    // sds searchqobuztaglist;
     sds browsetaglist;
     bool smartpls;
     sds smartpls_sort;
@@ -106,8 +110,6 @@ typedef struct t_config {
     sds jukebox_unique_tag;
     sds cols_queue_current;
     sds cols_search;
-    sds cols_search_tidal;
-    // sds cols_search_qobuz;
     sds cols_browse_database;
     sds cols_browse_playlists_detail;
     sds cols_browse_filesystem;
@@ -142,7 +144,18 @@ typedef struct t_config {
     sds generate_pls_tags;
     int covergridminsongs;
     sds booklet_name;
+    //ideon
+    int nas_type;
+    sds nas_host;
+    sds nas_directory;
+    sds nas_username; // mv
+    sds nas_password; // mv
+    bool tidal;
+    sds ideon_version;
+    bool ideon_update;
     //tidal
+    sds searchtidaltaglist;
+    sds cols_search_tidal;
     sds tidal_token;
     sds tidal_username;
     sds tidal_password;

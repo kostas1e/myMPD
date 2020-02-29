@@ -2,10 +2,7 @@
 
 function artistDetails(uri) {
     if (uri.startsWith("tidal://")) {
-        sendAPI("MYMPD_API_TIDAL_ARTISTDETAILS", {"uri": uri}, parseTidalArtistDetails);
-    }
-    else if (uri.startsWith("qobuz://")) {
-        sendAPI("MYMPD_API_QOBUZ_ARTISTDETAILS", {"uri": uri}, parseQobuzArtistDetails);
+        sendAPI("MYMPD_API_TIDAL_ARTISTDETAILS", { "uri": uri }, parseTidalArtistDetails);
     }
     modalArtistDetails.show();
 }
@@ -31,25 +28,6 @@ function parseTidalArtistDetails(obj) {
         artistDetails += '<tr><td>' + bio.text + '</td></tr>';
         artistDetails += '<tr><th>' + t('Artist bio from ') + bio.source + '.</th></tr>';
     }
-
-    modal.getElementsByTagName('tbody')[0].innerHTML = artistDetails;
-}
-
-function parseQobuzArtistDetails(obj) {
-    let modal = document.getElementById('modalArtistDetails');
-    let image = obj.result.image.large;
-    if (image) {
-        image = subdir + '/image/' + image.split('/').pop();
-    }
-    else {
-        image = subdir + '/assets/coverimage-notavailable.svg';
-    }
-    modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + image + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
-    modal.getElementsByTagName('h1')[0].innerText = obj.result.name;
-
-    let artistDetails = '';
-    artistDetails += '<tr><th>' + t('Portrait') + '</th></tr>';
-    artistDetails += '<tr><td>' + obj.result.biography.content + '</td></tr>';
 
     modal.getElementsByTagName('tbody')[0].innerHTML = artistDetails;
 }

@@ -15,7 +15,7 @@ function search(x) {
         }
         if (x !== '') {
             let match = document.getElementById('searchMatch');
-            expression += '(' + app.current.filter + ' ' + match.options[match.selectedIndex].value + ' \'' + x +'\'))';
+            expression += '(' + app.current.filter + ' ' + match.options[match.selectedIndex].value + ' \'' + x + '\'))';
         }
         else
             expression += ')';
@@ -48,33 +48,43 @@ function parseSearch(obj) {
 }
 
 function saveSearchAsSmartPlaylist() {
-    parseSmartPlaylist({"jsonrpc":"2.0","id":0,"result":{"method":"MPD_API_SMARTPLS_GET",
-        "playlist":"",
-        "type":"search",
-        "tag": app.current.filter,
-        "searchstr": app.current.search}});
+    parseSmartPlaylist({
+        "jsonrpc": "2.0", "id": 0, "result": {
+            "method": "MPD_API_SMARTPLS_GET",
+            "playlist": "",
+            "type": "search",
+            "tag": app.current.filter,
+            "searchstr": app.current.search
+        }
+    });
 }
 
-function addAllFromSearchPlist(plist, searchstr, replace) {
+function addAllFromSearchPlist(plist, searchstr, replace, play = false) {
     if (searchstr === null) {
-        searchstr = app.current.search;    
+        searchstr = app.current.search;
     }
     if (settings.featAdvsearch) {
-        sendAPI("MPD_API_DATABASE_SEARCH_ADV", {"plist": plist, 
-            "sort": "", 
-            "sortdesc": false, 
+        sendAPI("MPD_API_DATABASE_SEARCH_ADV", {
+            "plist": plist,
+            "sort": "",
+            "sortdesc": false,
             "expression": searchstr,
-            "offset": 0, 
-            "cols": settings.colsSearchDatabase, // colsSearch
-            "replace": replace});
+            "offset": 0,
+            "cols": settings.colsSearchDatabase,
+            "replace": replace,
+            "play": play
+        });
     }
     else {
-        sendAPI("MPD_API_DATABASE_SEARCH", {"plist": plist, 
-            "filter": app.current.filter, 
+        sendAPI("MPD_API_DATABASE_SEARCH", {
+            "plist": plist,
+            "filter": app.current.filter,
             "searchstr": searchstr,
-            "offset": 0, 
-            "cols": settings.colsSearchDatabase, // colsSearch 
-            "replace": replace});
+            "offset": 0,
+            "cols": settings.colsSearchDatabase,
+            "replace": replace,
+            "play": play
+        });
     }
 }
 
@@ -149,7 +159,7 @@ function parseTidal(obj) {
             tbody.append(row);
     }
     let trLen = tr.length - 1;
-    for (let i = trLen; i >= nrItems; i --)
+    for (let i = trLen; i >= nrItems; i--)
         tr[i].remove();
 
     if (navigate === true) {
@@ -160,7 +170,7 @@ function parseTidal(obj) {
 
     if (nrItems === 0)
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
-                          '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
+            '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
     document.getElementById(list + 'List').classList.remove('opacity05');
     document.getElementById('cardFooterSearch').innerText = gtPage('Num entries', obj.result.maxReturnedItems, obj.result.sumTotalItems, obj.result.limit);
 
@@ -186,10 +196,10 @@ function addAllFromSearchTidalPlist(plist) {
         if (i % 50 == 0 || i == rows.length - 1) {
             uris = uris.slice(0, -1);
             if (plist === 'queue') {
-                sendAPI("MPD_API_QUEUE_ADD_ALL_TRACKS", {"uris": uris});
+                sendAPI("MPD_API_QUEUE_ADD_ALL_TRACKS", { "uris": uris });
             }
             else {
-                sendAPI("MPD_API_PLAYLIST_ADD_ALL_TRACKS", {"uris": uris, "plist": plist});
+                sendAPI("MPD_API_PLAYLIST_ADD_ALL_TRACKS", { "uris": uris, "plist": plist });
             }
             uris = '';
         }
@@ -201,7 +211,7 @@ function addAllFromSearchTidalPlist(plist) {
     }
     else {
         //sendAPI("MPD_API_PLAYLIST_ADD_ALL_TRACKS", {"uri": uris, "plist": plist});
-        showNotification(t('Added songs to %{playlist}', {"playlist": plist}), '', '', 'success');
+        showNotification(t('Added songs to %{playlist}', { "playlist": plist }), '', '', 'success');
     }
 }
 

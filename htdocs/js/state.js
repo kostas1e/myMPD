@@ -6,7 +6,7 @@
 */
 
 function parseStats(obj) {
-    document.getElementById('mpdstats_artists').innerText =  obj.result.artists;
+    document.getElementById('mpdstats_artists').innerText = obj.result.artists;
     document.getElementById('mpdstats_albums').innerText = obj.result.albums;
     document.getElementById('mpdstats_songs').innerText = obj.result.songs;
     document.getElementById('mpdstats_dbPlaytime').innerText = beautifyDuration(obj.result.dbPlaytime);
@@ -15,6 +15,7 @@ function parseStats(obj) {
     document.getElementById('mpdstats_mympd_uptime').innerText = beautifyDuration(obj.result.myMPDuptime);
     document.getElementById('mpdstats_dbUpdated').innerText = localeDate(obj.result.dbUpdated);
     document.getElementById('mympdVersion').innerText = obj.result.mympdVersion;
+    // document.getElementById('ideonVersion').innerText = obj.result.ideonVersion;
     document.getElementById('mpdInfo_version').innerText = obj.result.mpdVersion;
     document.getElementById('mpdInfo_libmpdclientVersion').innerText = obj.result.libmpdclientVersion;
     if (obj.result.libmympdclientVersion !== undefined) {
@@ -22,14 +23,15 @@ function parseStats(obj) {
         document.getElementById('mpdInfo_libmympdclientVersion').parentNode.classList.remove('hide');
     }
     else {
-        document.getElementById('mpdInfo_libmympdclientVersion').parentNode.classList.add('hide');    
+        document.getElementById('mpdInfo_libmympdclientVersion').parentNode.classList.add('hide');
     }
+    // parseDBstats(obj);
 }
 
 function getServerinfo() {
-    let ajaxRequest=new XMLHttpRequest();
+    let ajaxRequest = new XMLHttpRequest();
     ajaxRequest.open('GET', subdir + '/api/serverinfo', true);
-    ajaxRequest.onreadystatechange = function() {
+    ajaxRequest.onreadystatechange = function () {
         if (ajaxRequest.readyState === 4) {
             let obj = JSON.parse(ajaxRequest.responseText);
             document.getElementById('wsIP').innerText = obj.result.ip;
@@ -42,7 +44,7 @@ function getServerinfo() {
 function parseOutputs(obj) {
     let btns = '';
     for (let i = 0; i < obj.result.numOutputs; i++) {
-        btns += '<button id="btnOutput' + obj.result.data[i].id +'" data-output-id="' + obj.result.data[i].id + '" class="btn btn-secondary btn-block';
+        btns += '<button id="btnOutput' + obj.result.data[i].id + '" data-output-id="' + obj.result.data[i].id + '" class="btn btn-secondary btn-block';
         if (obj.result.data[i].state === 1) {
             btns += ' active';
         }
@@ -60,7 +62,7 @@ function setCounter(currentSongId, totalTime, elapsedTime) {
 
     let counterText = beautifySongDuration(elapsedTime) + "&nbsp;/&nbsp;" + beautifySongDuration(totalTime);
     domCache.counter.innerHTML = counterText;
-    
+
     //Set playing track in queue view
     if (lastState) {
         if (lastState.currentSongId !== currentSongId) {
@@ -96,8 +98,8 @@ function setCounter(currentSongId, totalTime, elapsedTime) {
         tr.classList.add('font-weight-bold');
         tr.classList.add('playing');
     }
-    
-    // Set playing track in playback view (queue mini)
+
+    // Set playing track in playback view
     if (lastState) {
         if (lastState.currentSongId !== currentSongId) {
             let tr = document.getElementById('queueMiniTrackId' + lastState.currentSongId);
@@ -132,14 +134,14 @@ function setCounter(currentSongId, totalTime, elapsedTime) {
         tr.classList.add('font-weight-bold');
         tr.classList.add('playing');
     }
-    
+
     if (progressTimer) {
         clearTimeout(progressTimer);
     }
     if (playstate === 'play') {
-        progressTimer = setTimeout(function() {
-            currentSong.elapsedTime ++;
-            requestAnimationFrame(function() {
+        progressTimer = setTimeout(function () {
+            currentSong.elapsedTime++;
+            requestAnimationFrame(function () {
                 setCounter(currentSong.currentSongId, currentSong.totalTime, currentSong.elapsedTime);
             });
         }, 1000);
@@ -154,20 +156,19 @@ function parseState(obj) {
 
     // Set play and queue state
     parseUpdateQueue(obj);
-    
+
     // Set volume
     parseVolume(obj);
 
     // Set play counters
     setCounter(obj.result.currentSongId, obj.result.totalTime, obj.result.elapsedTime);
-    
+
     // Get current song
     if (!lastState || lastState.currentSongId !== obj.result.currentSongId ||
-        lastState.queueVersion !== obj.result.queueVersion)
-    {
+        lastState.queueVersion !== obj.result.queueVersion) {
         sendAPI("MPD_API_PLAYER_CURRENT_SONG", {}, songChange);
     }
-    //clear playback card if no current song
+    // Clear playback card if no current song
     if (obj.result.songPos === '-1') {
         domCache.currentTitle.innerText = 'Not playing';
         document.title = 'myMPD';
@@ -179,7 +180,6 @@ function parseState(obj) {
         if (settings.bgCover === true) {
             clearBackgroundImage();
         }
-        // let pb = document.getElementById('cardPlaybackTags').getElementsByTagName('p');
         let pb = document.getElementById('cardPlaybackTags').getElementsByTagName('span');
         for (let i = 0; i < pb.length; i++) {
             pb[i].innerText = '';
@@ -188,13 +188,12 @@ function parseState(obj) {
     else {
         let cff = document.getElementById('currentFileformat');
         if (cff) {
-            // cff.getElementsByTagName('p')[0].innerText = fileformat(obj.result.audioFormat);
             cff.getElementsByTagName('span')[0].innerText = fileformat(obj.result.audioFormat);
         }
     }
 
-    lastState = obj.result;                    
-    
+    lastState = obj.result;
+
     if (settings.mpdConnected === false || uiEnabled === false) {
         getSettings(true);
     }
@@ -204,7 +203,7 @@ function parseVolume(obj) {
     if (obj.result.volume === -1) {
         domCache.volumePrct.innerText = t('Volumecontrol disabled');
         domCache.volumeControl.classList.add('hide');
-    } 
+    }
     else {
         domCache.volumeControl.classList.remove('hide');
         domCache.volumePrct.innerText = obj.result.volume + ' %';
@@ -244,7 +243,7 @@ function setBackgroundImage(url) {
     body.insertBefore(div, body.firstChild);
 
     let img = new Image();
-    img.onload = function() {
+    img.onload = function () {
         document.querySelector('.albumartbg').style.opacity = 1;
     };
     img.src = subdir + '/albumart/' + url;
@@ -254,7 +253,7 @@ function clearBackgroundImage() {
     let old = document.querySelectorAll('.albumartbg');
     for (let i = 0; i < old.length; i++) {
         if (old[i].style.zIndex === '-10') {
-            old[i].remove();        
+            old[i].remove();
         }
         else {
             old[i].style.zIndex = '-10';
@@ -271,7 +270,7 @@ function setCurrentCover(url) {
     let old = domCache.currentCover.querySelectorAll('.coverbg');
     for (let i = 0; i < old.length; i++) {
         if (old[i].style.zIndex === '2') {
-            old[i].remove();        
+            old[i].remove();
         }
         else {
             old[i].style.zIndex = '2';
@@ -285,7 +284,7 @@ function setCurrentCover(url) {
     domCache.currentCover.insertBefore(div, domCache.currentCover.firstChild);
 
     let img = new Image();
-    img.onload = function() {
+    img.onload = function () {
         domCache.currentCover.querySelector('.coverbg').style.opacity = 1;
     };
     img.src = subdir + '/albumart/' + url;
@@ -295,7 +294,7 @@ function clearCurrentCover() {
     let old = domCache.currentCover.querySelectorAll('.coverbg');
     for (let i = 0; i < old.length; i++) {
         if (old[i].style.zIndex === '2') {
-            old[i].remove();        
+            old[i].remove();
         }
         else {
             old[i].style.zIndex = '2';
@@ -315,7 +314,7 @@ function songChange(obj) {
     let pageTitle = '';
 
     mediaSessionSetMetadata(obj.result.Title, obj.result.Artist, obj.result.Album, obj.result.uri);
-    
+
     setCurrentCover(obj.result.uri);
     if (settings.bgCover === true && settings.featCoverimage === true) {
         setBackgroundImage(obj.result.uri);
@@ -325,7 +324,7 @@ function songChange(obj) {
         textNotification += obj.result.Artist;
         htmlNotification += obj.result.Artist;
         pageTitle += obj.result.Artist + ' - ';
-    } 
+    }
 
     if (obj.result.Album !== undefined && obj.result.Album.length > 0 && obj.result.Album !== '-') {
         textNotification += ' - ' + obj.result.Album;
@@ -345,7 +344,7 @@ function songChange(obj) {
     let headerTitle = document.getElementById('headerTitle');
     headerTitle.innerText = pageTitle;
     headerTitle.title = pageTitle;
-    
+
     if (obj.result.uri !== undefined && obj.result.uri !== '' && (obj.result.uri.indexOf('://') === -1 || obj.result.uri.startsWith('tidal://'))) {
         headerTitle.classList.add('clickable');
     }
@@ -362,7 +361,7 @@ function songChange(obj) {
     else {
         obj.result['Filetype'] = '';
     }
-    
+
     if (lastState) {
         obj.result['Fileformat'] = fileformat(lastState.audioFormat);
     }
@@ -383,12 +382,11 @@ function songChange(obj) {
             else if (settings.colsPlayback[i] === 'LastModified') {
                 value = localeDate(value);
             }
-            // c.getElementsByTagName('p')[0].innerText = value;
             c.getElementsByTagName('span')[0].innerText = value;
             c.setAttribute('data-name', encodeURI(value));
         }
     }
-    
+
     // Update Artist in queue view for http streams
     let playingTr = document.getElementById('queueTrackId' + obj.result.currentSongId);
     if (playingTr) {
@@ -398,7 +396,7 @@ function songChange(obj) {
     if (playstate === 'play') {
         showNotification(obj.result.Title, textNotification, htmlNotification, 'success');
     }
-    
+
     lastSong = curSong;
     lastSongObj = obj.result;
 }
@@ -416,14 +414,14 @@ function volumeStep(dir) {
 
 function chVolume(increment) {
     let newValue = parseInt(domCache.volumeBar.value) + increment;
-    if (newValue < 0)  {
+    if (newValue < 0) {
         newValue = 0;
     }
     else if (newValue > 100) {
         newValue = 100;
     }
     domCache.volumeBar.value = newValue;
-    sendAPI("MPD_API_PLAYER_VOLUME_SET", {"volume": newValue});
+    sendAPI("MPD_API_PLAYER_VOLUME_SET", { "volume": newValue });
 }
 
 //eslint-disable-next-line no-unused-vars
@@ -467,7 +465,7 @@ function mediaSessionSetMetadata(title, artist, album, url) {
                 title: title,
                 artist: artist,
                 album: album,
-                artwork: [{src: artwork}]
+                artwork: [{ src: artwork }]
             });
         }
         else {

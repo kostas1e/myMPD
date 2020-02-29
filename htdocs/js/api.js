@@ -6,11 +6,11 @@
 */
 
 function sendAPI(method, params, callback, onerror) {
-    let request = {"jsonrpc": "2.0", "id": 0, "method": method, "params": params};
-    let ajaxRequest=new XMLHttpRequest();
+    let request = { "jsonrpc": "2.0", "id": 0, "method": method, "params": params };
+    let ajaxRequest = new XMLHttpRequest();
     ajaxRequest.open('POST', subdir + '/api', true);
     ajaxRequest.setRequestHeader('Content-type', 'application/json');
-    ajaxRequest.onreadystatechange = function() {
+    ajaxRequest.onreadystatechange = function () {
         if (ajaxRequest.readyState === 4) {
             if (ajaxRequest.responseText !== '') {
                 let obj = JSON.parse(ajaxRequest.responseText);
@@ -34,7 +34,7 @@ function sendAPI(method, params, callback, onerror) {
                         return;
                     }
                 }
-                if (callback !== undefined && typeof(callback) === 'function') {
+                if (callback !== undefined && typeof (callback) === 'function') {
                     if (obj.result !== undefined || onerror === true) {
                         logDebug('Calling ' + callback.name);
                         callback(obj);
@@ -47,7 +47,7 @@ function sendAPI(method, params, callback, onerror) {
             else {
                 logError('Empty response for request: ' + JSON.stringify(request));
                 if (onerror === true) {
-                    if (callback !== undefined && typeof(callback) === 'function') {
+                    if (callback !== undefined && typeof (callback) === 'function') {
                         logDebug('Got empty API response calling ' + callback.name);
                         callback('');
                     }
@@ -78,7 +78,7 @@ function webSocketConnect() {
     logInfo('Connecting to ' + wsUrl);
 
     try {
-        socket.onopen = function() {
+        socket.onopen = function () {
             logInfo('Websocket is connected');
             websocketConnected = true;
             if (websocketTimer !== null) {
@@ -93,7 +93,7 @@ function webSocketConnect() {
                 obj = JSON.parse(msg.data);
                 logDebug('Websocket notification: ' + JSON.stringify(obj));
             }
-            catch(error) {
+            catch (error) {
                 logError('Invalid JSON data received: ' + msg.data);
                 return;
             }
@@ -125,10 +125,6 @@ function webSocketConnect() {
                         getQueue();
                     }
                     else if (app.current.app === 'Playback') {
-                        // console.log('updq', obj.params.songPos);
-                        // mk colsqm
-                        /* sendAPI("MPD_API_QUEUE_LIST", {"offset": 0, "cols": []}, parseQueue);
-                        if (obj.params.songPos !== -1) */
                         getQueueMini(obj.params.songPos, true);
                     }
                     obj.result = obj.params;
@@ -144,7 +140,7 @@ function webSocketConnect() {
                     updateDBstarted(false);
                     break;
                 case 'update_database':
-                    //fall through
+                //fall through
                 case 'update_finished':
                     updateDBfinished(obj.method);
                     updateDBstats();
@@ -155,15 +151,15 @@ function webSocketConnect() {
                     break;
                 case 'update_stored_playlist':
                     if (app.current.app === 'Browse' && app.current.tab === 'Playlists' && app.current.view === 'All') {
-                        sendAPI("MPD_API_PLAYLIST_LIST", {"offset": app.current.page, "filter": app.current.filter}, parsePlaylists);
+                        sendAPI("MPD_API_PLAYLIST_LIST", { "offset": app.current.page, "filter": app.current.filter }, parsePlaylists);
                     }
                     else if (app.current.app === 'Browse' && app.current.tab === 'Playlists' && app.current.view === 'Detail') {
-                        sendAPI("MPD_API_PLAYLIST_CONTENT_LIST", {"offset": app.current.page, "filter": app.current.filter, "uri": app.current.search, "cols": settings.colsBrowsePlaylistsDetail}, parsePlaylists);
+                        sendAPI("MPD_API_PLAYLIST_CONTENT_LIST", { "offset": app.current.page, "filter": app.current.filter, "uri": app.current.search, "cols": settings.colsBrowsePlaylistsDetail }, parsePlaylists);
                     }
                     break;
                 case 'update_lastplayed':
                     if (app.current.app === 'Queue' && app.current.tab === 'LastPlayed') {
-                        sendAPI("MPD_API_QUEUE_LAST_PLAYED", {"offset": app.current.page, "cols": settings.colsQueueLastPlayed}, parseLastPlayed);
+                        sendAPI("MPD_API_QUEUE_LAST_PLAYED", { "offset": app.current.page, "cols": settings.colsQueueLastPlayed }, parseLastPlayed);
                     }
                     break;
                 case 'error':
@@ -176,7 +172,7 @@ function webSocketConnect() {
             }
         }
 
-        socket.onclose = function(){
+        socket.onclose = function () {
             logError('Websocket is disconnected');
             websocketConnected = false;
             if (appInited === true) {
@@ -193,7 +189,7 @@ function webSocketConnect() {
                 clearTimeout(websocketTimer);
                 websocketTimer = null;
             }
-            websocketTimer = setTimeout(function() {
+            websocketTimer = setTimeout(function () {
                 logInfo('Reconnecting websocket');
                 toggleAlert('alertMympdState', true, t('Websocket connection failed, trying to reconnect') + '&nbsp;&nbsp;<div class="spinner-border spinner-border-sm"></div>');
                 webSocketConnect();
@@ -201,7 +197,7 @@ function webSocketConnect() {
             socket = null;
         }
 
-    } catch(error) {
+    } catch (error) {
         logError(error);
     }
 }

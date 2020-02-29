@@ -23,7 +23,7 @@ function parseUpdateQueue(obj) {
         for (let i = 0; i < domCache.btnsPlayLen; i++) {
             domCache.btnsPlay[i].innerText = 'play_arrow';
         }
-	playstate = 'pause';
+        playstate = 'pause';
     }
 
     if (obj.result.queueLength === 0) {
@@ -59,15 +59,16 @@ function parseUpdateQueue(obj) {
 
 function getQueue() {
     if (app.current.search.length >= 2) {
-        sendAPI("MPD_API_QUEUE_SEARCH", {"filter": app.current.filter, "offset": app.current.page, "searchstr": app.current.search, "cols": settings.colsQueueCurrent}, parseQueue);
+        sendAPI("MPD_API_QUEUE_SEARCH", { "filter": app.current.filter, "offset": app.current.page, "searchstr": app.current.search, "cols": settings.colsQueueCurrent }, parseQueue);
     }
     else {
-        sendAPI("MPD_API_QUEUE_LIST", {"offset": app.current.page, "cols": settings.colsQueueCurrent}, parseQueue);
+        sendAPI("MPD_API_QUEUE_LIST", { "offset": app.current.page, "cols": settings.colsQueueCurrent }, parseQueue);
     }
 }
 
 function parseQueue(obj) {
-    if (obj.result.totalTime && obj.result.totalTime > 0 && obj.result.totalEntities <= settings.maxElementsPerPage ) {
+    console.log('qichk');
+    if (obj.result.totalTime && obj.result.totalTime > 0 && obj.result.totalEntities <= settings.maxElementsPerPage) {
         document.getElementById('cardFooterQueue').innerText = t('Num songs', obj.result.totalEntities) + ' – ' + beautifyDuration(obj.result.totalTime);
     }
     else if (obj.result.totalEntities > 0) {
@@ -90,12 +91,14 @@ function parseQueue(obj) {
         let row = document.createElement('tr');
         row.setAttribute('draggable', 'true');
         row.setAttribute('data-trackid', obj.result.data[i].id);
-        row.setAttribute('id','queueTrackId' + obj.result.data[i].id);
+        row.setAttribute('id', 'queueTrackId' + obj.result.data[i].id);
         row.setAttribute('data-songpos', obj.result.data[i].Pos);
         row.setAttribute('data-duration', obj.result.data[i].Duration);
         row.setAttribute('data-uri', obj.result.data[i].uri);
         row.setAttribute('tabindex', 0);
         let tds = '';
+        // tmp cover td
+        tds += '<td data-col="Img"><img class="covergrid-header mr-0" src="' + subdir + '/albumart/' + obj.result.data[i].uri + '"/></td>';
         for (let c = 0; c < settings.colsQueueCurrent.length; c++) {
             tds += '<td data-col="' + settings.colsQueueCurrent[c] + '">' + e(obj.result.data[i][settings.colsQueueCurrent[c]]) + '</td>';
         }
@@ -109,7 +112,7 @@ function parseQueue(obj) {
         }
     }
     let trLen = tr.length - 1;
-    for (let i = trLen; i >= nrItems; i --) {
+    for (let i = trLen; i >= nrItems; i--) {
         tr[i].remove();
     }
 
@@ -118,11 +121,11 @@ function parseQueue(obj) {
 
     if (obj.result.method === 'MPD_API_QUEUE_SEARCH' && nrItems === 0) {
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
-                          '<td colspan="' + colspan + '">' + t('No results, please refine your search') + '</td></tr>';
+            '<td colspan="' + colspan + '">' + t('No results, please refine your search') + '</td></tr>';
     }
     else if (obj.result.method === 'MPD_API_QUEUE_ADD_TRACK' && nrItems === 0) {
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
-                          '<td colspan="' + colspan + '">' + t('Empty queue') + '</td></tr>';
+            '<td colspan="' + colspan + '">' + t('Empty queue') + '</td></tr>';
     }
 
     if (navigate === true) {
@@ -167,7 +170,7 @@ function parseLastPlayed(obj) {
         }
     }
     let trLen = tr.length - 1;
-    for (let i = trLen; i >= nrItems; i --) {
+    for (let i = trLen; i >= nrItems; i--) {
         tr[i].remove();
     }
 
@@ -215,57 +218,57 @@ function dequeueSelectedItem() {
 }
 
 function appendPlayQueue(type, uri, name) {
-    switch(type) {
+    switch (type) {
         case 'song':
-            sendAPI("MPD_API_QUEUE_ADD_PLAY_TRACK", {"uri": uri});
-            showNotification(t('%{name} added to queue', {"name": name}), '', '', 'success');
+            sendAPI("MPD_API_QUEUE_ADD_PLAY_TRACK", { "uri": uri });
+            showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
             break;
         case 'dir':
-            sendAPI("MPD_API_QUEUE_ADD_PLAY_DIR", {"uri": uri});
-            showNotification(t('%{name} added to queue', {"name": name}), '', '', 'success');
+            sendAPI("MPD_API_QUEUE_ADD_PLAY_DIR", { "uri": uri });
+            showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
             break;
         case 'plist':
-            sendAPI("MPD_API_QUEUE_ADD_PLAY_PLAYLIST", {"plist": uri});
-            showNotification(t('%{name} added to queue', {"name": name}), '', '', 'success');
+            sendAPI("MPD_API_QUEUE_ADD_PLAY_PLAYLIST", { "plist": uri });
+            showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
             break;
     }
 }
 
 function appendQueue(type, uri, name) {
-    switch(type) {
+    switch (type) {
         case 'song':
         case 'dir':
-            sendAPI("MPD_API_QUEUE_ADD_TRACK", {"uri": uri});
-            showNotification(t('%{name} added to queue', {"name": name}), '', '', 'success');
+            sendAPI("MPD_API_QUEUE_ADD_TRACK", { "uri": uri });
+            showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
             break;
         case 'plist':
-            sendAPI("MPD_API_QUEUE_ADD_PLAYLIST", {"plist": uri});
-            showNotification(t('%{name} added to queue', {"name": name}), '', '', 'success');
+            sendAPI("MPD_API_QUEUE_ADD_PLAYLIST", { "plist": uri });
+            showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
             break;
     }
 }
 
 //eslint-disable-next-line no-unused-vars
 function appendAfterQueue(type, uri, to, name) {
-    switch(type) {
+    switch (type) {
         case 'song':
-            sendAPI("MPD_API_QUEUE_ADD_TRACK_AFTER", {"uri": uri, "to": to});
+            sendAPI("MPD_API_QUEUE_ADD_TRACK_AFTER", { "uri": uri, "to": to });
             to++;
-            showNotification(t('%{name} added to queue position %{to}', {"name": name, "to": to}), '', '', 'success');
+            showNotification(t('%{name} added to queue position %{to}', { "name": name, "to": to }), '', '', 'success');
             break;
     }
 }
 
 function replaceQueue(type, uri, name) {
-    switch(type) {
+    switch (type) {
         case 'song':
         case 'dir':
-            sendAPI("MPD_API_QUEUE_REPLACE_TRACK", {"uri": uri});
-            showNotification(t('Queue replaced with %{name}', {"name": name}), '', '', 'success');
+            sendAPI("MPD_API_QUEUE_REPLACE_TRACK", { "uri": uri });
+            showNotification(t('Queue replaced with %{name}', { "name": name }), '', '', 'success');
             break;
         case 'plist':
-            sendAPI("MPD_API_QUEUE_REPLACE_PLAYLIST", {"plist": uri});
-            showNotification(t('Queue replaced with %{name}', {"name": name}), '', '', 'success');
+            sendAPI("MPD_API_QUEUE_REPLACE_PLAYLIST", { "plist": uri });
+            showNotification(t('Queue replaced with %{name}', { "name": name }), '', '', 'success');
             break;
     }
 }
@@ -294,7 +297,7 @@ function addToQueue() {
 function saveQueue() {
     let plName = document.getElementById('saveQueueName').value;
     if (validatePlname(plName) === true) {
-        sendAPI("MPD_API_QUEUE_SAVE", {"plist": plName});
+        sendAPI("MPD_API_QUEUE_SAVE", { "plist": plName });
         modalSaveQueue.hide();
     }
     else {
@@ -304,9 +307,9 @@ function saveQueue() {
 
 function delQueueSong(mode, start, end) {
     if (mode === 'range') {
-        sendAPI("MPD_API_QUEUE_RM_RANGE", {"start": start, "end": end});
+        sendAPI("MPD_API_QUEUE_RM_RANGE", { "start": start, "end": end });
     }
     else if (mode === 'single') {
-        sendAPI("MPD_API_QUEUE_RM_TRACK", {"track": start});
+        sendAPI("MPD_API_QUEUE_RM_TRACK", { "track": start });
     }
 }

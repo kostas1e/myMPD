@@ -32,6 +32,8 @@ umask 0022
 
 #get myMPD version
 VERSION=$(grep CPACK_PACKAGE_VERSION_ CMakeLists.txt | cut -d\" -f2 | tr '\n' '.' | sed 's/\.$//')
+#get Ideon OS version
+VERSION=$(grep CPACK_PACKAGE_IDEONVERSION_ CMakeLists.txt | cut -d\" -f2 | tr '\n' '.' | sed 's/\.$//')
 
 #gzip is needed to compress assets for release
 GZIPBIN=$(command -v gzip)
@@ -93,7 +95,7 @@ older_s() {
 setversion() {
   echo "Setting version to ${VERSION}"
   export LC_TIME="en_GB.UTF-8"
-  
+
   sed -e "s/__VERSION__/${VERSION}/g" htdocs/sw.js.in > htdocs/sw.js
   sed -e "s/__VERSION__/${VERSION}/g" contrib/packaging/alpine/APKBUILD.in > contrib/packaging/alpine/APKBUILD
   sed -e "s/__VERSION__/${VERSION}/g" contrib/packaging/arch/PKGBUILD.in > contrib/packaging/arch/PKGBUILD
@@ -110,7 +112,7 @@ minify() {
   SRC="$2"
   DST="$3"
   ERROR="1"
-  
+
   if newer "$DST" "$SRC"
   then
     #File already minified"
@@ -177,7 +179,7 @@ buildrelease() {
   ASSETSCHANGED=0
 
   createi18n ../../dist/htdocs/js/i18n.min.js
-  
+
   echo "Minifying javascript"
   JSSRCFILES=""
   for F in htdocs/js/*.js
@@ -203,7 +205,7 @@ buildrelease() {
   minify js htdocs/js/keymap.js dist/htdocs/js/keymap.min.js
   minify js dist/htdocs/js/bootstrap-native-v4.js dist/htdocs/js/bootstrap-native-v4.min.js
   minify js dist/htdocs/js/mympd.js dist/htdocs/js/mympd.min.js
-  
+
   echo "Combining and compressing javascript"
   JSFILES="dist/htdocs/js/*.min.js"
   for F in $JSFILES
@@ -233,14 +235,14 @@ buildrelease() {
   else
     echo "Skip dist/htdocs/sw.js.gz"
   fi
- 
+
   echo "Minifying stylesheets"
   for F in htdocs/css/*.css
   do
     DST=$(basename "$F" .css)
     [ -L "$F" ] || minify css "$F" "dist/htdocs/css/${DST}.min.css"
   done
-  
+
   echo "Combining and compressing stylesheets"
   CSSFILES="dist/htdocs/css/*.min.css"
   # shellcheck disable=SC2086
@@ -253,7 +255,7 @@ buildrelease() {
   else
     echo "Skip creating dist/htdocs/css/combined.css.gz"
   fi
-  
+
   echo "Minifying and compressing html"
   if minify html htdocs/index.html dist/htdocs/index.html
   then
@@ -302,7 +304,7 @@ addmympduser() {
 
 installrelease() {
   echo "Installing myMPD"
-  cd release || exit 1  
+  cd release || exit 1
   make install DESTDIR="$DESTDIR"
   addmympduser
 }
@@ -315,7 +317,7 @@ builddebug() {
   [ -e "$PWD/htdocs/js/bootstrap-native-v4.js" ] || ln -s "$PWD/dist/htdocs/js/bootstrap-native-v4.js" "$PWD/htdocs/js/bootstrap-native-v4.js"
 
   createi18n ../../htdocs/js/i18n.js pretty
-  
+
   echo "Compiling myMPD"
   install -d debug
   cd debug || exit 1
@@ -346,7 +348,7 @@ cleanup() {
   rm -rf release
   rm -rf debug
   rm -rf package
-  
+
   #htdocs
   rm -f htdocs/js/bootstrap-native-v4.js
   rm -f htdocs/js/i18n.js
@@ -362,8 +364,8 @@ cleanuposc() {
 
 cleanupdist() {
   rm -f dist/htdocs/js/i18n.min.js
-  rm -f dist/htdocs/js/keymap.min.js 
-  rm -f dist/htdocs/js/bootstrap-native-v4.min.js 
+  rm -f dist/htdocs/js/keymap.min.js
+  rm -f dist/htdocs/js/bootstrap-native-v4.min.js
   rm -f dist/htdocs/js/mympd.js
   rm -f dist/htdocs/js/mympd.min.js
   rm -f dist/htdocs/js/combined.js.gz
@@ -392,7 +394,7 @@ check () {
   else
     echo "cppcheck not found"
   fi
-  
+
   FLAWFINDERBIN=$(command -v flawfinder)
   [ "$FLAWFINDEROPTS" = "" ] && FLAWFINDEROPTS="-m3"
   if [ "$FLAWFINDERBIN" != "" ]
@@ -402,7 +404,7 @@ check () {
     $FLAWFINDERBIN $FLAWFINDEROPTS cli_tools
   else
     echo "flawfinder not found"
-  fi  
+  fi
 }
 
 prepare() {
@@ -433,7 +435,7 @@ pkgdebian() {
   fi
 
   if [ "$SIGN" = "TRUE" ]
-  then  
+  then
     DPKGSIG=$(command -v dpkg-sig)
     if [ "$DPKGSIG" != "" ]
     then
@@ -448,7 +450,7 @@ pkgdebian() {
       echo "WARNING: dpkg-sig not found, can't sign package"
     fi
   fi
-  
+
   LINTIAN=$(command -v lintian)
   if [ "$LINTIAN" != "" ]
   then
@@ -528,22 +530,22 @@ pkgosc() {
     echo "ERROR: osc not found"
     exit 1
   fi
-  
+
   cleanup
   cleanuposc
   [ "$OSC_REPO" = "" ] && OSC_REPO="home:jcorporation/myMPD"
-  
+
   mkdir osc
-  cd osc || exit 1  
+  cd osc || exit 1
   osc checkout "$OSC_REPO"
   rm -f "$OSC_REPO"/*
-  
+
   cd "$STARTPATH" || exit 1
   pkgrpm taronly
 
   cd "$STARTPATH" || exit 1
   cp "package/build/mympd-${VERSION}.tar.gz" "osc/$OSC_REPO/"
-  
+
   if [ -f /etc/debian_version ]
   then
     pkgdebian
@@ -593,11 +595,11 @@ installdeps() {
     zypper install gcc cmake pkgconfig perl openssl-devel libid3tag-devel flac-devel \
 	java-11-openjdk-headless unzip libcurl-devel
   elif [ -f /etc/redhat-release ]
-  then  
-    #fedora 	
+  then
+    #fedora
     yum install gcc cmake pkgconfig perl openssl-devel libid3tag-devel flac-devel \
 	java-11-openjdk-headless unzip libcurl-devel
-  else 
+  else
     echo "No supported distribution detected."
   fi
 }

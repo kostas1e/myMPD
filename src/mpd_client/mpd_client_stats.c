@@ -203,6 +203,7 @@ sds mpd_client_put_stats(t_config *config, t_mpd_state *mpd_state, sds buffer, s
     buffer = tojson_long(buffer, "dbUpdated", mpd_stats_get_db_update_time(stats), true);
     buffer = tojson_long(buffer, "dbPlaytime", mpd_stats_get_db_play_time(stats), true);
     buffer = tojson_char(buffer, "mympdVersion", MYMPD_VERSION, true);
+    buffer = tojson_char(buffer, "ideonVersion", IDEON_VERSION, true);
     buffer = tojson_char(buffer, "mpdVersion", mpd_version, true);
     #ifdef EMBEDDED_LIBMPDCLIENT
         sds libmympdclient_version = sdscatfmt(sdsempty(), "%i.%i.%i", LIBMYMPDCLIENT_MAJOR_VERSION, LIBMYMPDCLIENT_MINOR_VERSION, LIBMYMPDCLIENT_PATCH_VERSION);

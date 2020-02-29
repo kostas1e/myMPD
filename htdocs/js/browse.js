@@ -39,7 +39,7 @@ function parseFilesystem(obj) {
             row.setAttribute('data-name', obj.result.data[i].name);
         }
 
-        switch(obj.result.data[i].Type) {
+        switch (obj.result.data[i].Type) {
             case 'dir':
             case 'smartpls':
             case 'plist':
@@ -87,7 +87,7 @@ function parseFilesystem(obj) {
         }
     }
     let trLen = tr.length - 1;
-    for (let i = trLen; i >= nrItems; i --) {
+    for (let i = trLen; i >= nrItems; i--) {
         tr[i].remove();
     }
 
@@ -99,7 +99,7 @@ function parseFilesystem(obj) {
 
     if (nrItems === 0)
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
-                          '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
+            '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
     //document.getElementById(app.current.app + (app.current.tab === undefined ? '' : app.current.tab) + 'List').classList.remove('opacity05');
     document.getElementById(list + 'List').classList.remove('opacity05');
     document.getElementById('cardFooterBrowse').innerText = t('Num entries', obj.result.totalEntities);
@@ -127,14 +127,14 @@ function parseListDBtags(obj) {
             card.setAttribute('id', 'card' + id);
             card.setAttribute('data-album', encodeURI(obj.result.data[i].value));
             let html = '<div class="card-header"><span id="albumartist' + id + '"></span> &ndash; ' + e(obj.result.data[i].value) + '</div>' +
-                       '<div class="card-body"><div class="row">';
+                '<div class="card-body"><div class="row">';
             if (settings.featCoverimage === true && settings.coverimage === true) {
                 html += '<div class="col-md-auto"><a class="card-img-left album-cover-loading"></a></div>';
             }
             html += '<div class="col table-responsive-md"><table class="tblAlbumTitles table table-sm table-hover" tabindex="0" id="tbl' + id + '"><thead><tr></tr></thead><tbody class="clickable"></tbody>' +
-                    '<tfoot class="bg-light border-bottom"></tfoot></table></div>' + 
-                    '</div></div>' +
-                    '</div><div class="card-footer"></div>';
+                '<tfoot class="bg-light border-bottom"></tfoot></table></div>' +
+                '</div></div>' +
+                '</div><div class="card-footer"></div>';
 
             card.innerHTML = html;
             if (i < cards.length) {
@@ -148,7 +148,7 @@ function parseListDBtags(obj) {
                 createListTitleObserver(document.getElementById('card' + id));
             }
             else {
-                sendAPI("MPD_API_DATABASE_TAG_ALBUM_TITLE_LIST", {"album": obj.result.data[i].value, "search": app.current.search, "tag": app.current.view, "cols": settings.colsBrowseDatabase}, parseListTitles);
+                sendAPI("MPD_API_DATABASE_TAG_ALBUM_TITLE_LIST", { "album": obj.result.data[i].value, "search": app.current.search, "tag": app.current.view, "cols": settings.colsBrowseDatabase }, parseListTitles);
             }
         }
         let cardsLen = cards.length - 1;
@@ -183,8 +183,8 @@ function parseListDBtags(obj) {
             let row = document.createElement('tr');
             row.setAttribute('data-uri', uri);
             row.setAttribute('tabindex', 0);
-            row.innerHTML='<td data-col="Type"><span class="material-icons">album</span></td>' +
-                          '<td>' + e(obj.result.data[i].value) + '</td>';
+            row.innerHTML = '<td data-col="Type"><span class="material-icons">album</span></td>' +
+                '<td>' + e(obj.result.data[i].value) + '</td>';
             if (i < tr.length) {
                 activeRow = replaceTblRow(tr[i], row) === true ? i : activeRow;
             }
@@ -193,7 +193,7 @@ function parseListDBtags(obj) {
             }
         }
         let trLen = tr.length - 1;
-        for (let i = trLen; i >= nrItems; i --) {
+        for (let i = trLen; i >= nrItems; i--) {
             tr[i].remove();
         }
 
@@ -205,20 +205,20 @@ function parseListDBtags(obj) {
 
         if (nrItems === 0) {
             tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
-                              '<td>No entries found.</td></tr>';
+                '<td>No entries found.</td></tr>';
         }
         document.getElementById('BrowseDatabaseTagList').classList.remove('opacity05');
     }
 }
 
 function createListTitleObserver(ele) {
-  let options = {
-    root: null,
-    rootMargin: '0px',
-  };
+    let options = {
+        root: null,
+        rootMargin: '0px',
+    };
 
-  let observer = new IntersectionObserver(getListTitles, options);
-  observer.observe(ele);
+    let observer = new IntersectionObserver(getListTitles, options);
+    observer.observe(ele);
 }
 
 function getListTitles(changes, observer) {
@@ -226,7 +226,7 @@ function getListTitles(changes, observer) {
         if (change.intersectionRatio > 0) {
             observer.unobserve(change.target);
             let album = decodeURI(change.target.getAttribute('data-album'));
-            sendAPI("MPD_API_DATABASE_TAG_ALBUM_TITLE_LIST", {"album": album, "search": app.current.search, "tag": app.current.view, "cols": settings.colsBrowseDatabase}, parseListTitles);
+            sendAPI("MPD_API_DATABASE_TAG_ALBUM_TITLE_LIST", { "album": album, "search": app.current.search, "tag": app.current.view, "cols": settings.colsBrowseDatabase }, parseListTitles);
         }
     });
 }
@@ -241,11 +241,11 @@ function parseListTitles(obj) {
     cardHeader.setAttribute('data-uri', encodeURI(obj.result.data[0].uri.replace(/\/[^/]+$/, '')));
     cardHeader.setAttribute('data-name', obj.result.Album);
     cardHeader.setAttribute('data-type', 'dir');
-    cardHeader.addEventListener('click', function(event) {
+    cardHeader.addEventListener('click', function (event) {
         showMenu(this, event);
     }, false);
     cardHeader.classList.add('clickable');
-    table.addEventListener('keydown', function(event) {
+    table.addEventListener('keydown', function (event) {
         navigateTable(this, event.key);
     }, false);
     let img = card.getElementsByTagName('a')[0];
@@ -254,7 +254,7 @@ function parseListTitles(obj) {
         img.setAttribute('data-uri', encodeURI(obj.result.data[0].uri.replace(/\/[^/]+$/, '')));
         img.setAttribute('data-name', obj.result.Album);
         img.setAttribute('data-type', 'dir');
-        img.addEventListener('click', function(event) {
+        img.addEventListener('click', function (event) {
             showMenu(this, event);
         }, false);
     }
@@ -277,7 +277,7 @@ function parseListTitles(obj) {
     tbody.innerHTML = titleList;
     cardFooter.innerHTML = t('Num songs', obj.result.totalEntities) + ' &ndash; ' + beautifyDuration(obj.result.totalTime);
 
-    tbody.parentNode.addEventListener('click', function(event) {
+    tbody.parentNode.addEventListener('click', function (event) {
         if (event.target.nodeName === 'TD') {
             // appendQueue('song', decodeURI(event.target.parentNode.getAttribute('data-uri')), event.target.parentNode.getAttribute('data-name'));
             appendPlayQueue('song', decodeURI(event.target.parentNode.getAttribute('data-uri')), event.target.parentNode.getAttribute('data-name'));
@@ -292,20 +292,20 @@ function parseListTitles(obj) {
                 appendQueue(type, uri, name);
             }
             else { */ // Action
-                showMenu(event.target, event);
+            showMenu(event.target, event);
             // }
         }
     }, false);
 }
 
 function addAllFromBrowseFilesystem() {
-    sendAPI("MPD_API_QUEUE_ADD_TRACK", {"uri": app.current.search});
+    sendAPI("MPD_API_QUEUE_ADD_TRACK", { "uri": app.current.search });
     showNotification(t('Added all songs'), '', '', 'success');
 }
 
 function addAllFromBrowseDatabasePlist(plist) {
     if (app.current.search.length >= 2) {
-        sendAPI("MPD_API_DATABASE_SEARCH", {"plist": plist, "filter": app.current.view, "searchstr": app.current.search, "offset": 0, "cols": settings.colsSearchDatabase});
+        sendAPI("MPD_API_DATABASE_SEARCH", { "plist": plist, "filter": app.current.view, "searchstr": app.current.search, "offset": 0, "cols": settings.colsSearchDatabase, "replace": false });
     }
 }
 
@@ -313,10 +313,10 @@ function parseBookmarks(obj) {
     let list = '<table class="table table-sm table-dark table-borderless mb-0">';
     for (let i = 0; i < obj.result.returnedEntities; i++) {
         list += '<tr data-id="' + obj.result.data[i].id + '" data-type="' + obj.result.data[i].type + '" ' +
-                'data-uri="' + encodeURI(obj.result.data[i].uri) + '">' +
-                '<td class="nowrap"><a class="text-light" href="#" data-href="goto">' + e(obj.result.data[i].name) + '</a></td>' +
-                '<td><a class="text-light material-icons material-icons-small" href="#" data-href="edit">edit</a></td><td>' +
-                '<a class="text-light material-icons material-icons-small" href="#" data-href="delete">delete</a></td></tr>';
+            'data-uri="' + encodeURI(obj.result.data[i].uri) + '">' +
+            '<td class="nowrap"><a class="text-light" href="#" data-href="goto">' + e(obj.result.data[i].name) + '</a></td>' +
+            '<td><a class="text-light material-icons material-icons-small" href="#" data-href="edit">edit</a></td><td>' +
+            '<a class="text-light material-icons material-icons-small" href="#" data-href="delete">delete</a></td></tr>';
     }
     if (obj.result.returnedEntities === 0) {
         list += '<tr><td class="text-light nowrap">' + t('No bookmarks found') + '</td></tr>';
@@ -341,7 +341,7 @@ function saveBookmark() {
     let uri = document.getElementById('saveBookmarkUri').value;
     let type = document.getElementById('saveBookmarkType').value;
     if (name !== '') {
-        sendAPI("MYMPD_API_BOOKMARK_SAVE", {"id": id, "name": name, "uri": uri, "type": type});
+        sendAPI("MYMPD_API_BOOKMARK_SAVE", { "id": id, "name": name, "uri": uri, "type": type });
         modalSaveBookmark.hide();
     }
     else {
@@ -366,16 +366,16 @@ function parseCovergrid(obj) {
             obj.result.data[i].Album = t('Unknown album');
         }
         let id = genId('covergrid' + obj.result.data[i].Album + obj.result.data[i].AlbumArtist);
-        let t = app.current.app === 'Playback' ? 'card-grid-2' : '';
-        let t2 = app.current.app === 'Playback' ? 'album-cover-grid-2' : '';
-        let html = '<div class="card card-grid '+t+' clickable" data-uri="' + encodeURI(obj.result.data[i].FirstSongUri) + '" ' +
-                       'data-album="' + encodeURI(obj.result.data[i].Album) + '" ' +
-                       'data-albumartist="' + encodeURI(obj.result.data[i].AlbumArtist) + '" tabindex="0">' +
-                   '<div class="card-header covergrid-header hide unvisible"></div>' +
-                   '<div class="card-body album-cover-loading album-cover-grid '+t2+' bg-white" id="' + id + '"></div>' +
-                   '<div class="card-footer card-footer-grid p-2" title="' + obj.result.data[i].AlbumArtist + ': ' + obj.result.data[i].Album + '">' +
-                   obj.result.data[i].Album + '<br/><small>' + obj.result.data[i].AlbumArtist + '</small>' +
-                   '</div></div>';
+        let t = app.current.app === 'Playback' ? 'card-grid-half' : '';
+        let t2 = app.current.app === 'Playback' ? 'album-cover-grid-half' : '';
+        let html = '<div class="card card-grid ' + t + ' clickable" data-uri="' + encodeURI(obj.result.data[i].FirstSongUri) + '" ' +
+            'data-album="' + encodeURI(obj.result.data[i].Album) + '" ' +
+            'data-albumartist="' + encodeURI(obj.result.data[i].AlbumArtist) + '" tabindex="0">' +
+            '<div class="card-header covergrid-header hide unvisible"></div>' +
+            '<div class="card-body album-cover-loading album-cover-grid ' + t2 + ' bg-white" id="' + id + '"></div>' +
+            '<div class="card-footer card-footer-grid p-2" title="' + obj.result.data[i].AlbumArtist + ': ' + obj.result.data[i].Album + '">' +
+            obj.result.data[i].Album + '<br/><small>' + obj.result.data[i].AlbumArtist + '</small>' +
+            '</div></div>';
         col.innerHTML = html;
         let replaced = false;
         if (i < cols.length) {
@@ -384,22 +384,22 @@ function parseCovergrid(obj) {
                 replaced = true;
                 // console.log('rplc');
             }
-            else {
+            else { // wip - rwn
                 // console.log('else');
                 document.getElementById(id).style.width = '';
                 document.getElementById(id).style.height = '';
                 cols[i].firstChild.style.width = '';
                 if (app.current.app === 'Playback') {
-                    if (!cols[i].firstChild.classList.contains('card-grid-2'))
-                        cols[i].firstChild.classList.add('card-grid-2');
-                    if (!document.getElementById(id).classList.contains('album-cover-grid-2'))
-                        document.getElementById(id).classList.add('album-cover-grid-2');
+                    if (!cols[i].firstChild.classList.contains('card-grid-half'))
+                        cols[i].firstChild.classList.add('card-grid-half');
+                    if (!document.getElementById(id).classList.contains('album-cover-grid-half'))
+                        document.getElementById(id).classList.add('album-cover-grid-half');
                 }
                 if (app.current.app === 'Browse') {
-                    if (cols[i].firstChild.classList.contains('card-grid-2'))
-                        cols[i].firstChild.classList.remove('card-grid-2');
-                    if (document.getElementById(id).classList.contains('album-cover-grid-2'))
-                        document.getElementById(id).classList.remove('album-cover-grid-2');
+                    if (cols[i].firstChild.classList.contains('card-grid-half'))
+                        cols[i].firstChild.classList.remove('card-grid-half');
+                    if (document.getElementById(id).classList.contains('album-cover-grid-half'))
+                        document.getElementById(id).classList.remove('album-cover-grid-half');
                 }
             }
         }
@@ -419,16 +419,16 @@ function parseCovergrid(obj) {
             col.firstChild.firstChild.style.backgroundImage = 'url("' + subdir + '/albumart/' + obj.result.data[i].uri + '")';
         }
         if (replaced === true) {
-            col.firstChild.addEventListener('click', function(event) {
+            col.firstChild.addEventListener('click', function (event) {
                 if (event.target.classList.contains('card-body')) {
                     getCovergridTitleList(id);
                 }
                 else if (event.target.classList.contains('card-footer') ||
-                         event.target.classList.contains('card-header')) {
+                    event.target.classList.contains('card-header')) {
                     showMenu(event.target, event);
                 }
             }, false);
-            col.firstChild.addEventListener('transitionend', function(event) {
+            col.firstChild.addEventListener('transitionend', function (event) {
                 if (event.target.getElementsByClassName('card-body')[0].style.backgroundImage !== '' ||
                     openCoverId === undefined) {
                     return;
@@ -436,7 +436,7 @@ function parseCovergrid(obj) {
                 event.target.getElementsByTagName('table')[0].classList.remove('unvisible');
                 event.target.getElementsByClassName('card-header')[0].classList.remove('unvisible');
             }, false);
-            col.firstChild.addEventListener('keydown', function(event) {
+            col.firstChild.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape') {
                     let cardBody = event.target.getElementsByClassName('card-body')[0];
                     let uri = decodeURI(cardBody.parentNode.getAttribute('data-uri'));
@@ -457,7 +457,7 @@ function parseCovergrid(obj) {
         }
     }
     let colsLen = cols.length - 1;
-    for (let i = colsLen; i >= nrItems; i --) {
+    for (let i = colsLen; i >= nrItems; i--) {
         cols[i].remove();
     }
 
@@ -475,6 +475,7 @@ function parseCovergrid(obj) {
 
     parseCovergridAlbum(obj);
     closeCover();
+    calculateBoxHeight();
     // console.log('parsecovergridret');
 }
 
@@ -494,9 +495,11 @@ function getCovergridTitleList(id) {
     }
     cardBody.style.width = width + 'px';
     cardBody.parentNode.style.width = width + 'px';
-    sendAPI("MPD_API_DATABASE_TAG_ALBUM_TITLE_LIST", {"album": decodeURI(card.getAttribute('data-album')),
+    sendAPI("MPD_API_DATABASE_TAG_ALBUM_TITLE_LIST", {
+        "album": decodeURI(card.getAttribute('data-album')),
         "search": decodeURI(card.getAttribute('data-albumartist')),
-        "tag": "AlbumArtist", "cols": settings.colsBrowseDatabase}, parseCovergridTitleList);
+        "tag": "AlbumArtist", "cols": settings.colsBrowseDatabase
+    }, parseCovergridTitleList);
 }
 
 function parseCovergridTitleList(obj) {
@@ -539,23 +542,23 @@ function parseCovergridTitleList(obj) {
 
     cardBody.innerHTML = titleList;
     cardBody.parentNode.classList.remove('opacity05');
-    cardHeader.getElementsByClassName('close')[0].addEventListener('click', function(event) {
+    cardHeader.getElementsByClassName('close')[0].addEventListener('click', function (event) {
         event.stopPropagation();
         showGridImage(cardBody, uri);
         openCoverId = undefined;
     }, false);
 
     let table = cardBody.getElementsByTagName('table')[0];
-    table.addEventListener('click', function(event) {
+    table.addEventListener('click', function (event) {
         if (event.target.nodeName === 'TD') {
             // appendQueue('song', decodeURI(event.target.parentNode.getAttribute('data-uri')), event.target.parentNode.getAttribute('data-name'));
-            appendPlayQueue('song', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
+            appendPlayQueue('song', decodeURI(event.target.parentNode.getAttribute('data-uri')), event.target.parentNode.getAttribute('data-name'));
         }
         else if (event.target.nodeName === 'A') {
             showMenu(event.target, event);
         }
     }, false);
-    table.addEventListener('keydown', function(event) {
+    table.addEventListener('keydown', function (event) {
         navigateTable(this, event.key);
         if (event.key === 'Escape') {
             event.target.parentNode.parentNode.parentNode.parentNode.focus();
@@ -563,7 +566,7 @@ function parseCovergridTitleList(obj) {
     }, false);
 
     //fallback if transitionEnd is not fired
-    setTimeout(function() {
+    setTimeout(function () {
         cardBody.getElementsByTagName('table')[0].classList.remove('unvisible');
         cardBody.parentNode.getElementsByClassName('card-header')[0].classList.remove('unvisible');
         scrollFocusIntoView();
@@ -573,15 +576,14 @@ function parseCovergridTitleList(obj) {
 function showGridImage(cardBody, uri) {
     cardBody.innerHTML = '';
     cardBody.style.backgroundImage = 'url("' + subdir + '/albumart/' + uri + '")';
-    cardBody.style.width = 'var(--mympd-covergridsize, 200px)';
-    cardBody.style.height = 'var(--mympd-covergridsize, 200px)';
-    cardBody.parentNode.style.width = 'var(--mympd-covergridsize, 200px)';
-    if (app.current.app === 'Playback') {
-        // console.log(1);
-        cardBody.style.width = 'var(--mympd-covergridsize2, 100px)';
-        cardBody.style.height = 'var(--mympd-covergridsize2, 100px)';
-        cardBody.parentNode.style.width = 'var(--mympd-covergridsize2, 100px)';
-    }
+    /*     cardBody.style.width = 'var(--mympd-covergridsize, 200px)';
+        cardBody.style.height = 'var(--mympd-covergridsize, 200px)';
+        cardBody.parentNode.style.width = 'var(--mympd-covergridsize, 200px)';
+     */    // if (app.current.app === 'Playback') {
+    cardBody.style.width = (app.current.app === 'Playback' ? 'var(--mympd-covergridsizehalf, 100px)' : 'var(--mympd-covergridsize, 200px)');
+    cardBody.style.height = (app.current.app === 'Playback' ? 'var(--mympd-covergridsizehalf, 100px)' : 'var(--mympd-covergridsize, 200px)');
+    cardBody.parentNode.style.width = (app.current.app === 'Playback' ? 'var(--mympd-covergridsizehalf, 100px)' : 'var(--mympd-covergridsize, 200px)');
+    // }
     cardBody.parentNode.getElementsByClassName('card-footer')[0].classList.remove('hide');
     cardBody.parentNode.getElementsByClassName('card-header')[0].classList.add('hide', 'unvisible');
 }
@@ -604,5 +606,4 @@ function closeCover(id = undefined) {
         showGridImage(cardBody, uri);
     }
     openCoverId = id;
-    // console.log('closecoverret');
 }

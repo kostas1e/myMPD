@@ -79,12 +79,12 @@ struct list_node *list_get_node(const struct list *l, const char *key) {
 
 struct list_node *list_node_at(const struct list *l, unsigned index) {
     /* if there's no data in the list, fail */
-    if (l->head == NULL) { 
-        return NULL; 
+    if (l->head == NULL) {
+        return NULL;
     }
     struct list_node * current = l->head;
     for (; index > 0; index--) {
-        if (current->next == NULL) { 
+        if (current->next == NULL) {
             return NULL;
         }
         current = current->next;
@@ -96,26 +96,26 @@ bool list_swap_item(struct list_node *n1, struct list_node *n2) {
     if (n1 == n2) {
         return false;
     }
-        
+
     if (n1 == NULL || n2 == NULL) {
         return false;
     }
-        
+
     sds key = n2->key;
     long value_i = n2->value_i;
     sds value_p = n2->value_p;
     void *user_data = n2->user_data;
-    
+
     n2->key = n1->key;
     n2->value_i = n1->value_i;
     n2->value_p = n1->value_p;
     n2->user_data = n1->user_data;
-    
+
     n1->key = key;
     n1->value_i = value_i;
     n1->value_p = value_p;
     n1->user_data = user_data;
-    
+
     return true;
 }
 
@@ -138,88 +138,88 @@ bool list_shuffle(struct list *l) {
 }
 
 bool list_sort_by_value_i(struct list *l, bool order) {
-    int swapped; 
-    struct list_node *ptr1; 
-    struct list_node *lptr = NULL; 
-  
-    if (l->head == NULL) 
+    int swapped;
+    struct list_node *ptr1;
+    struct list_node *lptr = NULL;
+
+    if (l->head == NULL)
         return false;
-  
-    do { 
-        swapped = 0; 
+
+    do {
+        swapped = 0;
         ptr1 = l->head;
-  
-        while (ptr1->next != lptr)  { 
-            if (order == true && ptr1->value_i > ptr1->next->value_i) {  
-                list_swap_item(ptr1, ptr1->next); 
-                swapped = 1; 
-            } 
-            else if (order == false && ptr1->value_i < ptr1->next->value_i) {  
-                list_swap_item(ptr1, ptr1->next); 
-                swapped = 1; 
-            } 
-            ptr1 = ptr1->next; 
-        } 
-        lptr = ptr1; 
-    } 
+
+        while (ptr1->next != lptr)  {
+            if (order == true && ptr1->value_i > ptr1->next->value_i) {
+                list_swap_item(ptr1, ptr1->next);
+                swapped = 1;
+            }
+            else if (order == false && ptr1->value_i < ptr1->next->value_i) {
+                list_swap_item(ptr1, ptr1->next);
+                swapped = 1;
+            }
+            ptr1 = ptr1->next;
+        }
+        lptr = ptr1;
+    }
     while (swapped);
     return true;
 }
 
 bool list_sort_by_value_p(struct list *l, bool order) {
-    int swapped; 
-    struct list_node *ptr1; 
-    struct list_node *lptr = NULL; 
-  
-    if (l->head == NULL) 
+    int swapped;
+    struct list_node *ptr1;
+    struct list_node *lptr = NULL;
+
+    if (l->head == NULL)
         return false;
-  
-    do { 
-        swapped = 0; 
+
+    do {
+        swapped = 0;
         ptr1 = l->head;
-  
-        while (ptr1->next != lptr)  { 
-            if (order == true && strcmp(ptr1->value_p, ptr1->next->value_p) > 0) {  
-                list_swap_item(ptr1, ptr1->next); 
-                swapped = 1; 
-            } 
-            else if (order == false && strcmp(ptr1->value_p, ptr1->next->value_p) < 0) {  
-                list_swap_item(ptr1, ptr1->next); 
-                swapped = 1; 
-            } 
-            ptr1 = ptr1->next; 
-        } 
-        lptr = ptr1; 
-    } 
+
+        while (ptr1->next != lptr)  {
+            if (order == true && strcmp(ptr1->value_p, ptr1->next->value_p) > 0) {
+                list_swap_item(ptr1, ptr1->next);
+                swapped = 1;
+            }
+            else if (order == false && strcmp(ptr1->value_p, ptr1->next->value_p) < 0) {
+                list_swap_item(ptr1, ptr1->next);
+                swapped = 1;
+            }
+            ptr1 = ptr1->next;
+        }
+        lptr = ptr1;
+    }
     while (swapped);
     return true;
 }
 
 bool list_sort_by_key(struct list *l, bool order) {
-    int swapped; 
-    struct list_node *ptr1; 
-    struct list_node *lptr = NULL; 
-  
-    if (l->head == NULL) 
+    int swapped;
+    struct list_node *ptr1;
+    struct list_node *lptr = NULL;
+
+    if (l->head == NULL)
         return false;
-  
-    do { 
-        swapped = 0; 
+
+    do {
+        swapped = 0;
         ptr1 = l->head;
-  
-        while (ptr1->next != lptr)  { 
-            if (order == true && strcmp(ptr1->key, ptr1->next->key) > 0) {  
-                list_swap_item(ptr1, ptr1->next); 
-                swapped = 1; 
-            } 
-            else if (order == false && strcmp(ptr1->key, ptr1->next->key) < 0) {  
-                list_swap_item(ptr1, ptr1->next); 
-                swapped = 1; 
-            } 
-            ptr1 = ptr1->next; 
-        } 
-        lptr = ptr1; 
-    } 
+
+        while (ptr1->next != lptr)  {
+            if (order == true && strcmp(ptr1->key, ptr1->next->key) > 0) {
+                list_swap_item(ptr1, ptr1->next);
+                swapped = 1;
+            }
+            else if (order == false && strcmp(ptr1->key, ptr1->next->key) < 0) {
+                list_swap_item(ptr1, ptr1->next);
+                swapped = 1;
+            }
+            ptr1 = ptr1->next;
+        }
+        lptr = ptr1;
+    }
     while (swapped);
     return true;
 }
@@ -237,7 +237,7 @@ bool list_replace(struct list *l, int pos, const char *key, long value_i, const 
         current = current->next;
         i++;
     }
-    
+
     current->key = sdsreplace(current->key, key);
     current->value_i = value_i;
     current->value_p = sdsreplace(current->value_p, value_p);
@@ -299,7 +299,7 @@ bool list_insert(struct list *l, const char *key, long value_i, const char *valu
     }
     n->user_data = user_data;
     n->next = l->head;
-    
+
     l->head = n;
     l->length++;
     return true;
@@ -314,7 +314,7 @@ bool list_shift(struct list *l, unsigned idx) {
     sdsfree(extracted->value_p);
     if (extracted->user_data != NULL) {
         free(extracted->user_data);
-    }    
+    }
     free(extracted);
     return 0;
 }
@@ -339,8 +339,8 @@ bool list_free(struct list *l) {
 //private functions
 
 static struct list_node *list_node_extract(struct list *l, unsigned idx) {
-    if (l->head == NULL) { 
-        return NULL; 
+    if (l->head == NULL) {
+        return NULL;
     }
     struct list_node *current = l->head, **previous = &l->head;
     for (; idx > 0; idx--) {

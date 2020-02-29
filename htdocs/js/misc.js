@@ -11,7 +11,7 @@ async function localplayerPlay() {
         try {
             await localPlayer.play();
         }
-        catch(err) {
+        catch (err) {
             showNotification(t('Local playback'), t('Can not start playing'), '', 'danger');
         }
     }
@@ -21,9 +21,9 @@ async function localplayerPlay() {
 function addStream() {
     let streamUriEl = document.getElementById('streamUrl');
     if (validateStream(streamUriEl) === true) {
-        sendAPI("MPD_API_QUEUE_ADD_TRACK", {"uri": streamUriEl.value});
+        sendAPI("MPD_API_QUEUE_ADD_TRACK", { "uri": streamUriEl.value });
         modalAddToPlaylist.hide();
-        showNotification(t('Added stream %{streamUri} to queue', {"streamUri": streamUriEl.value}), '', '', 'success');
+        showNotification(t('Added stream %{streamUri} to queue', { "streamUri": streamUriEl.value }), '', '', 'success');
     }
 }
 
@@ -36,7 +36,7 @@ function seekRelativeBackward() {
 }
 
 function seekRelative(offset) {
-    sendAPI("MPD_API_SEEK_CURRENT", {"seek": offset, "relative": true});
+    sendAPI("MPD_API_SEEK_CURRENT", { "seek": offset, "relative": true });
 }
 
 //eslint-disable-next-line no-unused-vars
@@ -66,7 +66,7 @@ function clickNext() {
 
 //eslint-disable-next-line no-unused-vars
 function execSyscmd(cmd) {
-    sendAPI("MYMPD_API_SYSCMD", {"cmd": cmd});
+    sendAPI("MYMPD_API_SYSCMD", { "cmd": cmd });
 }
 
 //eslint-disable-next-line no-unused-vars
@@ -81,13 +81,13 @@ function cropCovercache() {
 
 //eslint-disable-next-line no-unused-vars
 function updateDB(uri) {
-    sendAPI("MPD_API_DATABASE_UPDATE", {"uri": uri});
+    sendAPI("MPD_API_DATABASE_UPDATE", { "uri": uri });
     updateDBstarted(true);
 }
 
 //eslint-disable-next-line no-unused-vars
 function rescanDB(uri) {
-    sendAPI("MPD_API_DATABASE_RESCAN", {"uri": uri});
+    sendAPI("MPD_API_DATABASE_RESCAN", { "uri": uri });
     updateDBstarted(true);
 }
 

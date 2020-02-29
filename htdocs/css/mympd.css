@@ -7,7 +7,7 @@
 :root {
   --mympd-coverimagesize: 250px;
   --mympd-covergridsize: 200px;
-  --mympd-covergridsize2: 100px;
+  --mympd-covergridsizehalf: 100px; /* ideon */
   --mympd-highlightcolor: #28a745;
 }
 
@@ -73,10 +73,6 @@ body {
 .breakAll, td[data-col=Title] {
   word-break: break-all;
   min-width: 6rem;
-}
-
-td[data-col=Add] {
-  text-align: right;
 }
 
 td[data-col=Action] {
@@ -185,11 +181,6 @@ button {
   min-width: -webkit-min-content;
 }
 
-[data-col=Add] {
-  width: 2rem;
-  text-align: right;
-}
-
 [data-col=Action] {
   width: 2rem;
   text-align: right;
@@ -237,9 +228,6 @@ small {
   transition: width 0.5s, height 0.5s;
   max-width: 100%;
 }
-.card-grid-2 {
-  width: var(--mympd-covergridsize2, 100px);
-}
 
 .card-footer-grid {
   white-space: nowrap;
@@ -255,11 +243,6 @@ small {
   height: var(--mympd-covergridsize, 200px);
   max-width: 100%;
   padding: 0 0.5rem;
-}
-
-.album-cover-grid-2 {
-  width: var(--mympd-covergridsize2, 100px);
-  height: var(--mympd-covergridsize2, 100px);
 }
 
 a.card-img-left {
@@ -284,11 +267,10 @@ a.card-img-left {
 
 .album-desc {
   min-width: 240px;
-  /* float: left; */
+  /* float: left; /* ideon */
   padding-bottom: 1.25rem;
-  /* extra */
-  height: var(--mympd-coverimagesize, 250px);
-  overflow-y: auto;
+  height: var(--mympd-coverimagesize, 250px); /* ideon */
+  overflow-y: auto; /* ideon */
 }
 
 .hide {
@@ -729,6 +711,9 @@ div#playDropdown .row {
   background-size: cover;
   padding-top: 100%;
 }
+
+/* ideon */
+
 #scrollToTopBtn {
   display: none;
   position: fixed;
@@ -749,19 +734,48 @@ div#playDropdown .row {
 #cardPlayback > div.card-header {
   height: 54px !important;
 }
- 
+
 #cardQueueMini {
   height: 377px;
 }
 
-#browseHeight {
+#BrowseCovergridBox {
   overflow-y: auto;
 }
 
-/* 
+/*
 #QueueMiniList {
   overflow-y: auto;
   white-space: nowrap;
 
 }
  */
+
+[data-col=Add] {
+  width: 2rem;
+  text-align: right;
+}
+
+[data-col=Img] {
+  width: 50px;
+  /* text-align: right; */
+}
+
+td[data-col=Add] {
+  text-align: right;
+}
+
+.card-grid-half {
+  width: var(--mympd-covergridsizehalf, 100px);
+}
+
+.album-cover-grid-half {
+  width: var(--mympd-covergridsizehalf, 100px);
+  height: var(--mympd-covergridsizehalf, 100px);
+}
+
+@media only screen and (max-width: 576px) {
+  .btnText {
+    display: none !important;
+  }
+}

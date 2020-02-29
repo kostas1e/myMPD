@@ -275,6 +275,28 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     else if (MATCH("theme", "locale")) {
         p_config->locale = sdsreplace(p_config->locale, value);
     }
+    else if (MATCH("ideon", "nastype")) {
+        p_config->nas_type = strtoimax(value, &crap, 10);
+        if (p_config->nas_type < 0 || p_config->nas_type > 2) {
+            LOG_WARN("Invalid NAS type %d", p_config->nas_type);
+            p_config->nas_type = 0;
+        }
+    }
+    else if (MATCH("ideon", "nashost")) {
+        p_config->nas_host = sdsreplace(p_config->nas_host, value);
+    }
+    else if (MATCH("ideon", "nasdirectory")) {
+        p_config->nas_directory = sdsreplace(p_config->nas_directory, value);
+    }
+    else if (MATCH("ideon", "nasusername")) {
+        p_config->nas_username = sdsreplace(p_config->nas_username, value);
+    }
+    else if (MATCH("ideon", "naspassword")) {
+        p_config->nas_password = sdsreplace(p_config->nas_password, value);
+    }
+    else if (MATCH("ideon", "tidal")) {
+        p_config->tidal = strcmp(value, "true") == 0 ? true : false;
+    }
     else if (MATCH("tidal", "token")) {
         p_config->tidal_token = sdsreplace(p_config->tidal_token, value);
     }
@@ -287,31 +309,15 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     else if (MATCH("tidal", "audioquality")) {
         p_config->tidal_audioquality = sdsreplace(p_config->tidal_audioquality, value);
     }
-    /* else if (MATCH("mympd", "searchtqobuztaglist")) {
-        p_config->searchqobuztaglist = sdsreplace(p_config->searchqobuztaglist, value);
+    else if (MATCH("ideon", "version")) {
+        p_config->ideon_version = sdsreplace(p_config->ideon_version, value);
     }
-    else if (MATCH("mympd", "colssearchqobuz")) {
-        p_config->cols_search_qobuz = sdsreplace(p_config->cols_search_qobuz, value);
+    else if (MATCH("ideon", "update")) {
+        p_config->ideon_update = strcmp(value, "true") == 0 ? true : false;
     }
-    else if (MATCH("qobuz", "appid")) {
-        p_config->qobuz_app_id = strtoimax(value, &crap, 10);
-    }
-    else if (MATCH("qobuz", "appsecret")) {
-        p_config->qobuz_app_secret = sdsreplace(p_config->qobuz_app_secret, value);
-    }
-    else if (MATCH("qobuz", "username")) {
-        p_config->qobuz_username = sdsreplace(p_config->qobuz_username, value);
-    }
-    else if (MATCH("qobuz", "password")) {
-        p_config->qobuz_password = sdsreplace(p_config->qobuz_password, value);
-    }
-    else if (MATCH("qobuz", "formatid")) {
-        p_config->qobuz_format_id = strtoimax(value, &crap, 10);
-    } */
     else if (MATCH("mpd", "conf")) {
         p_config->mpd_conf = sdsreplace(p_config->mpd_conf, value);
     }
-    // else if (MATCH("theme", "custom_placeholder_images")) {
     else if (MATCH("theme", "customplaceholderimages")) {
         p_config->custom_placeholder_images = strtobool(value);
     }
@@ -321,7 +327,7 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     }
     else {
         LOG_WARN("Unknown config option: %s - %s", section, name);
-        return 0;  
+        return 0;
     }
     return 1;
 }
@@ -348,18 +354,18 @@ static void mympd_get_env(struct t_config *config) {
         "WEBSERVER_WEBDAV",
       #ifdef ENABLE_SSL
         "WEBSERVER_SSL", "WEBSERVER_SSLPORT", "WEBSERVER_SSLCERT", "WEBSERVER_SSLKEY",
-        "WEBSERVER_SSLSAN", 
+        "WEBSERVER_SSLSAN",
       #endif
-        "MYMPD_LOGLEVEL", "MYMPD_USER", "MYMPD_VARLIBDIR", "MYMPD_MIXRAMP", "MYMPD_STICKERS", 
+        "MYMPD_LOGLEVEL", "MYMPD_USER", "MYMPD_VARLIBDIR", "MYMPD_MIXRAMP", "MYMPD_STICKERS",
         "MYMPD_STICKERCACHE", "MYMPD_TAGLIST", "MYMPD_GENERATE_PLS_TAGS",
         "MYMPD_SMARTPLSSORT", "MYMPD_SMARTPLSPREFIX", "MYMPD_SMARTPLSINTERVAL",
-        "MYMPD_SEARCHTAGLIST", "MYMPD_BROWSETAGLIST", "MYMPD_SMARTPLS", "MYMPD_SYSCMDS", 
+        "MYMPD_SEARCHTAGLIST", "MYMPD_BROWSETAGLIST", "MYMPD_SMARTPLS", "MYMPD_SYSCMDS",
         "MYMPD_PAGINATION", "MYMPD_LASTPLAYEDCOUNT", "MYMPD_LOVE", "MYMPD_LOVECHANNEL", "MYMPD_LOVEMESSAGE",
         "MYMPD_NOTIFICATIONWEB", "MYMPD_CHROOT", "MYMPD_READONLY", "MYMPD_TIMER",
         "MYMPD_NOTIFICATIONPAGE", "MYMPD_AUTOPLAY", "MYMPD_JUKEBOXMODE", "MYMPD_BOOKMARKS",
         "MYMPD_MEDIASESSION", "MYMPD_COVERGRIDMINSONGS", "MYMPD_BOOKLETNAME",
         "MYMPD_JUKEBOXPLAYLIST", "MYMPD_JUKEBOXQUEUELENGTH", "MYMPD_JUKEBOXLASTPLAYED",
-        "MYMPD_JUKEBOXUNIQUETAG", "MYMPD_COLSQUEUECURRENT","MYMPD_COLSSEARCH", 
+        "MYMPD_JUKEBOXUNIQUETAG", "MYMPD_COLSQUEUECURRENT","MYMPD_COLSSEARCH",
         "MYMPD_COLSBROWSEDATABASE", "MYMPD_COLSBROWSEPLAYLISTDETAIL",
         "MYMPD_COLSBROWSEFILESYSTEM", "MYMPD_COLSPLAYBACK", "MYMPD_COLSQUEUELASTPLAYED",
         "MYMPD_LOCALPLAYER", "MYMPD_LOCALPLAYERAUTOPLAY", "MYMPD_STREAMPORT",
@@ -368,7 +374,7 @@ static void mympd_get_env(struct t_config *config) {
         "THEME_BGCOVER", "THEME_BGCOLOR", "THEME_BGCSSFILTER", "THEME_COVERGRIDSIZE",
         "THEME_COVERIMAGE", "THEME_COVERIMAGENAME", "THEME_COVERIMAGESIZE",
         "THEME_LOCALE", "THEME_HIGHLIGHTCOLOR",
-        // "QOBUZ_APPID", "QOBUZ_APPSECRET", "QOBUZ_USERNAME", "QOBUZ_PASSWORD", "QOBUZ_FORMATID", "MYMPD_COLSSEARCHQOBUZ", "MYMPD_SEARCHQOBUZTAGLIST",
+        "IDEON_NASTYPE", "IDEON_NASHOST", "IDEON_NASDIRECTORY", "IDEON_NASUSERNAME", "IDEON_NASPASSWORD", "IDEON_TIDAL", "IDEON_VERSION", "IDEON_UPDATE",
         "TIDAL_TOKEN", "TIDAL_USERNAME", "TIDAL_PASSWORD", "TIDAL_AUDIOQUALITY", "MYMPD_COLSSEARCHTIDAL", "MYMPD_SEARCHTIDALTAGLIST", 0};
     const char** ptr = env_vars;
     while (*ptr != 0) {
@@ -391,8 +397,6 @@ void mympd_free_config(t_config *config) {
     sdsfree(config->user);
     sdsfree(config->taglist);
     sdsfree(config->searchtaglist);
-    sdsfree(config->searchtidaltaglist);
-    // sdsfree(config->searchqobuztaglist);
     sdsfree(config->browsetaglist);
     sdsfree(config->varlibdir);
     sdsfree(config->love_channel);
@@ -404,8 +408,6 @@ void mympd_free_config(t_config *config) {
     sdsfree(config->cols_queue_current);
     sdsfree(config->cols_queue_last_played);
     sdsfree(config->cols_search);
-    sdsfree(config->cols_search_tidal);
-    // sdsfree(config->cols_search_qobuz);
     sdsfree(config->cols_browse_database);
     sdsfree(config->cols_browse_playlists_detail);
     sdsfree(config->cols_browse_filesystem);
@@ -415,20 +417,24 @@ void mympd_free_config(t_config *config) {
     sdsfree(config->bg_css_filter);
     sdsfree(config->coverimage_name);
     sdsfree(config->locale);
-    sdsfree(config->tidal_token);
-    sdsfree(config->tidal_username);
-    sdsfree(config->tidal_password);
-    sdsfree(config->tidal_audioquality);
-    // sdsfree(config->qobuz_app_secret);
-    // sdsfree(config->qobuz_username);
-    // sdsfree(config->qobuz_password);
-    sdsfree(config->mpd_conf);
     sdsfree(config->theme);
     sdsfree(config->highlight_color);
     sdsfree(config->generate_pls_tags);
     sdsfree(config->smartpls_sort);
     sdsfree(config->smartpls_prefix);
     sdsfree(config->booklet_name);
+    sdsfree(config->searchtidaltaglist);
+    sdsfree(config->cols_search_tidal);
+    sdsfree(config->tidal_token);
+    sdsfree(config->tidal_username);
+    sdsfree(config->tidal_password);
+    sdsfree(config->tidal_audioquality);
+    sdsfree(config->mpd_conf);
+    sdsfree(config->ideon_version);
+    sdsfree(config->nas_host);
+    sdsfree(config->nas_directory);
+    sdsfree(config->nas_username);
+    sdsfree(config->nas_password);
     list_free(&config->syscmd_list);
     FREE_PTR(config);
 }
@@ -456,7 +462,6 @@ void mympd_config_defaults(t_config *config) {
     config->taglist = sdsnew("Artist, Album, AlbumArtist, Title, Track, Genre, Date");
     config->searchtaglist = sdsnew("Artist, Album, AlbumArtist, Title, Genre");
     config->searchtidaltaglist = sdsnew("Artist,Album,Title");
-    // config->searchqobuztaglist = sdsnew("Artist,Album,Title");
     config->browsetaglist = sdsnew("Artist, Album, AlbumArtist, Genre");
     config->smartpls = true;
     config->smartpls_sort = sdsempty();
@@ -483,7 +488,6 @@ void mympd_config_defaults(t_config *config) {
     config->cols_queue_last_played = sdsnew("[\"Pos\",\"Title\",\"Artist\",\"Album\",\"LastPlayed\"]");
     config->cols_search = sdsnew("[\"Title\",\"Artist\",\"Album\",\"Duration\"]");
     config->cols_search_tidal = sdsnew("[\"Type\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
-    // config->cols_search_qobuz = sdsnew("[\"Type\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
     config->cols_browse_database = sdsnew("[\"Track\",\"Title\",\"Duration\"]");
     config->cols_browse_playlists_detail = sdsnew("[\"Pos\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
     config->cols_browse_filesystem = sdsnew("[\"Type\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
@@ -504,17 +508,6 @@ void mympd_config_defaults(t_config *config) {
     config->readonly = false;
     config->bookmarks = true;
     config->volume_step = 5;
-    config->tidal_token = sdsempty();
-    config->tidal_username = sdsempty();
-    config->tidal_password = sdsempty();
-    config->tidal_audioquality = sdsnew("HIGH");
-    // config->qobuz_app_id = 100000000;
-    // config->qobuz_app_secret = sdsempty();
-    // config->qobuz_username = sdsempty();
-    // config->qobuz_password = sdsempty();
-    // config->qobuz_format_id = 5;
-    config->mpd_conf = sdscat(sdsnew(ETC_PATH), "/mpd.conf");
-    // config->publish_library = true;
     config->publish = false;
     config->webdav = false;
     config->covercache_keep_days = 7;
@@ -527,6 +520,24 @@ void mympd_config_defaults(t_config *config) {
     config->sticker_cache = true;
     config->covergridminsongs = 1;
     config->booklet_name = sdsnew("booklet.pdf");
+    config->nas_type = 0;
+    config->nas_host = sdsempty();
+    config->nas_directory = sdsempty();
+    config->nas_username = sdsempty();
+    config->nas_password = sdsempty();
+    config->tidal = false;
+    config->tidal_token = sdsempty();
+    config->tidal_username = sdsempty();
+    config->tidal_password = sdsempty();
+    config->tidal_audioquality = sdsnew("HIGH");
+    config->ideon_version = sdsnew(IDEON_VERSION);
+    config->ideon_update = false;
+    // config->qobuz_app_id = 100000000;
+    // config->qobuz_app_secret = sdsempty();
+    // config->qobuz_username = sdsempty();
+    // config->qobuz_password = sdsempty();
+    // config->qobuz_format_id = 5;
+    config->mpd_conf = sdscat(sdsnew(ETC_PATH), "/mpd.conf");
     list_init(&config->syscmd_list);
 }
 
@@ -543,7 +554,7 @@ bool mympd_dump_config(void) {
         return false;
     }
     FILE *fp = fdopen(fd, "w");
-    
+
     fprintf(fp, "[mpd]\n"
         "host = %s\n"
         "port = %d\n"
@@ -557,7 +568,7 @@ bool mympd_dump_config(void) {
         p_config->playlist_directory,
         (p_config->regex == true ? "true" : "false")
     );
-    
+
     fprintf(fp, "[webserver]\n"
         "webport = %s\n"
     #ifdef ENABLE_SSL
@@ -722,7 +733,7 @@ bool mympd_dump_config(void) {
         return false;
     }
     printf("Default configuration dumped to /tmp/mympd.conf\n");
-    return true;    
+    return true;
 }
 
 bool mympd_read_config(t_config *config, sds configfile) {

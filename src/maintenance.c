@@ -34,7 +34,7 @@ int clear_covercache(t_config *config, int keepdays) {
         keepdays = config->covercache_keep_days;
     }
     time_t now = time(NULL) - keepdays * 24 * 60 * 60;
-    
+
     sds covercache = sdscatfmt(sdsempty(), "%s/covercache", config->varlibdir);
     LOG_INFO("Cleaning covercache %s", covercache);
     LOG_DEBUG("Remove files older than %ld sec", now);

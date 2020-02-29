@@ -14,15 +14,13 @@ function focusTable(rownr, table) {
         }
         //support for BrowseDatabaseAlbum cards
         if (app.current.app === 'Browse' && app.current.tab === 'Database' &&
-            !document.getElementById('BrowseDatabaseAlbumList').classList.contains('hide'))
-        {
+            !document.getElementById('BrowseDatabaseAlbumList').classList.contains('hide')) {
             table = document.getElementById('BrowseDatabaseAlbumList').getElementsByTagName('table')[0];
         }
     }
 
     if (app.current.app === 'Browse' && app.current.tab === 'Covergrid' &&
-            table.getElementsByTagName('tbody').length === 0)
-    {
+        table.getElementsByTagName('tbody').length === 0) {
         table = document.getElementsByClassName('card-grid')[0];
         table.focus();
         return;
@@ -59,7 +57,7 @@ function focusTable(rownr, table) {
             let tbody = table.getElementsByTagName('tbody')[0];
             if (tbody.rows.length > 0 && tbody.rows[0].getAttribute('data-type') !== 'parentDir' && app.current.search !== '') {
                 let nrCells = table.getElementsByTagName('thead')[0].rows[0].cells.length;
-                let uri = app.current.search.replace(/\/?([^/]+)$/,'');
+                let uri = app.current.search.replace(/\/?([^/]+)$/, '');
                 let row = tbody.insertRow(0);
                 row.setAttribute('data-type', 'parentDir');
                 row.setAttribute('tabindex', 0);
@@ -115,16 +113,16 @@ function navigateTable(table, keyCode) {
         }
         //only for BrowseDatabaseAlbum cards
         else if (app.current.app === 'Browse' && app.current.tab === 'Database' &&
-                 !document.getElementById('BrowseDatabaseAlbumList').classList.contains('hide') &&
-                 (keyCode === 'n' || keyCode === 'p')) {
+            !document.getElementById('BrowseDatabaseAlbumList').classList.contains('hide') &&
+            (keyCode === 'n' || keyCode === 'p')) {
             let tablesHtml = document.getElementById('BrowseDatabaseAlbumList').getElementsByTagName('table');
             let tables = Array.prototype.slice.call(tablesHtml);
             let idx = document.activeElement.nodeName === 'TR' ? tables.indexOf(document.activeElement.parentNode.parentNode)
-                                                              : tables.indexOf(document.activeElement);
+                : tables.indexOf(document.activeElement);
             idx = event.key === 'p' ? (idx > 1 ? idx - 1 : 0)
-                                   : event.key === 'n' ? ( idx < tables.length - 1 ? ( document.activeElement.nodeName === 'TR' ? idx + 1 : idx )
-                                                                                  : idx)
-                                                      : idx;
+                : event.key === 'n' ? (idx < tables.length - 1 ? (document.activeElement.nodeName === 'TR' ? idx + 1 : idx)
+                    : idx)
+                    : idx;
 
             if (tables[idx].getElementsByTagName('tbody')[0].rows.length > 0) {
                 next = tables[idx].getElementsByTagName('tbody')[0].rows[0];
@@ -151,7 +149,7 @@ function navigateTable(table, keyCode) {
 
 function dragAndDropTable(table) {
     let tableBody = document.getElementById(table).getElementsByTagName('tbody')[0];
-    tableBody.addEventListener('dragstart', function(event) {
+    tableBody.addEventListener('dragstart', function (event) {
         if (event.target.nodeName === 'TR') {
             event.target.classList.add('opacity05');
             event.dataTransfer.setDragImage(event.target, 0, 0);
@@ -160,7 +158,7 @@ function dragAndDropTable(table) {
             dragEl = event.target.cloneNode(true);
         }
     }, false);
-    tableBody.addEventListener('dragleave', function(event) {
+    tableBody.addEventListener('dragleave', function (event) {
         event.preventDefault();
         if (dragEl.nodeName !== 'TR') {
             return;
@@ -173,7 +171,7 @@ function dragAndDropTable(table) {
             target.classList.remove('dragover');
         }
     }, false);
-    tableBody.addEventListener('dragover', function(event) {
+    tableBody.addEventListener('dragover', function (event) {
         event.preventDefault();
         if (dragEl.nodeName !== 'TR') {
             return;
@@ -192,7 +190,7 @@ function dragAndDropTable(table) {
         }
         event.dataTransfer.dropEffect = 'move';
     }, false);
-    tableBody.addEventListener('dragend', function(event) {
+    tableBody.addEventListener('dragend', function (event) {
         event.preventDefault();
         if (dragEl.nodeName !== 'TR') {
             return;
@@ -206,7 +204,7 @@ function dragAndDropTable(table) {
             document.getElementById(event.dataTransfer.getData('Text')).classList.remove('opacity05');
         }
     }, false);
-    tableBody.addEventListener('drop', function(event) {
+    tableBody.addEventListener('drop', function (event) {
         event.stopPropagation();
         event.preventDefault();
         if (dragEl.nodeName !== 'TR') {
@@ -228,8 +226,8 @@ function dragAndDropTable(table) {
         }
         document.getElementById(table).classList.add('opacity05');
         if ((app.current.app === 'Queue' && app.current.tab === 'Current') ||
-             app.current.app === 'Playlist') {
-            sendAPI("MPD_API_QUEUE_MOVE_TRACK", {"from": oldSongpos, "to": newSongpos});
+            app.current.app === 'Playlist') {
+            sendAPI("MPD_API_QUEUE_MOVE_TRACK", { "from": oldSongpos, "to": newSongpos });
         }
         else if (app.current.app === 'Browse' && app.current.tab === 'Playlists' && app.current.view === 'Detail') {
             playlistMoveTrack(oldSongpos, newSongpos);
@@ -247,7 +245,7 @@ function dragAndDropTableHeader(table) {
         table = 'BrowseDatabase';
     }
 
-    tableHeader.addEventListener('dragstart', function(event) {
+    tableHeader.addEventListener('dragstart', function (event) {
         if (event.target.nodeName === 'TH') {
             event.target.classList.add('opacity05');
             event.dataTransfer.setDragImage(event.target, 0, 0);
@@ -256,7 +254,7 @@ function dragAndDropTableHeader(table) {
             dragEl = event.target.cloneNode(true);
         }
     }, false);
-    tableHeader.addEventListener('dragleave', function(event) {
+    tableHeader.addEventListener('dragleave', function (event) {
         event.preventDefault();
         if (dragEl.nodeName !== 'TH') {
             return;
@@ -265,7 +263,7 @@ function dragAndDropTableHeader(table) {
             event.target.classList.remove('dragover-th');
         }
     }, false);
-    tableHeader.addEventListener('dragover', function(event) {
+    tableHeader.addEventListener('dragover', function (event) {
         event.preventDefault();
         if (dragEl.nodeName !== 'TH') {
             return;
@@ -280,7 +278,7 @@ function dragAndDropTableHeader(table) {
         }
         event.dataTransfer.dropEffect = 'move';
     }, false);
-    tableHeader.addEventListener('dragend', function(event) {
+    tableHeader.addEventListener('dragend', function (event) {
         event.preventDefault();
         if (dragEl.nodeName !== 'TH') {
             return;
@@ -294,7 +292,7 @@ function dragAndDropTableHeader(table) {
             this.querySelector('[data-col=' + event.dataTransfer.getData('Text') + ']').classList.remove('opacity05');
         }
     }, false);
-    tableHeader.addEventListener('drop', function(event) {
+    tableHeader.addEventListener('drop', function (event) {
         event.stopPropagation();
         event.preventDefault();
         if (dragEl.nodeName !== 'TH') {
@@ -406,15 +404,21 @@ function setCols(table, className) {
 
     if (table !== 'Playback') {
         let heading = '';
+        if (table === 'QueueCurrent') {
+            heading += '<th data-col="Img"></th>'; // wip qimg
+        }
         for (let i = 0; i < settings['cols' + table].length; i++) {
             let h = settings['cols' + table][i];
-            heading += '<th draggable="true" data-col="' + h  + '">';
+            heading += '<th draggable="true" data-col="' + h + '">';
             if (h === 'Track' || h === 'Pos') {
                 h = '#';
             }
+            /* else if (h === 'Img') { // wip qimg
+                h = ' ';
+            } */
             heading += t(h);
 
-            if ((table === 'SearchDatabase') && (h === sort || '-' + h === sort) ) {
+            if ((table === 'SearchDatabase') && (h === sort || '-' + h === sort)) {
                 let sortdesc = false;
                 if (app.current.sort.indexOf('-') === 0) {
                     sortdesc = true;
@@ -445,12 +449,13 @@ function setCols(table, className) {
 }
 
 function saveCols(table, tableEl) {
+    // console.log('saveCols(', table, tableEl, ') {...}');
     let colsDropdown = document.getElementById(table + 'ColsDropdown');
     let header;
     if (tableEl === undefined) {
         header = document.getElementById(table + 'List').getElementsByTagName('tr')[0];
     }
-    else if (typeof(tableEl) === 'string') {
+    else if (typeof (tableEl) === 'string') {
         header = document.querySelector(tableEl).getElementsByTagName('tr')[0];
     }
     else {
@@ -477,11 +482,11 @@ function saveCols(table, tableEl) {
         }
     }
 
-    let params = {"table": "cols" + table, "cols": []};
+    let params = { "table": "cols" + table, "cols": [] };
     let ths = header.getElementsByTagName('th');
     for (let i = 0; i < ths.length; i++) {
         let name = ths[i].getAttribute('data-col');
-        if (name !== 'Action' && name !== null && name !== 'Add') {
+        if (name !== 'Action' && name !== null && name !== 'Add' && name !== 'Img') { // wip qimg
             params.cols.push(name);
         }
     }
@@ -493,7 +498,7 @@ function saveColsPlayback(table) {
     let colInputs = document.getElementById(table + 'ColsDropdown').firstChild.getElementsByTagName('button');
     let header = document.getElementById('cardPlaybackTags');
 
-    for (let i = 0; i < colInputs.length - 1; i++) {
+    for (let i = 0; i < colInputs.length; i++) {
         let th = document.getElementById('current' + colInputs[i].name);
         if (colInputs[i].classList.contains('active') === false) {
             if (th) {
@@ -510,7 +515,7 @@ function saveColsPlayback(table) {
         }
     }
 
-    let params = {"table": "cols" + table, "cols": []};
+    let params = { "table": "cols" + table, "cols": [] };
     let ths = header.getElementsByTagName('div');
     for (let i = 0; i < ths.length; i++) {
         let name = ths[i].getAttribute('data-tag');

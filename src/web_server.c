@@ -55,10 +55,10 @@ bool web_server_init(void *arg_mgr, t_config *config, t_mg_user_data *mg_user_da
     mg_user_data->conn_id = 1;
     mg_user_data->feat_library = false;
     mg_user_data->feat_mpd_albumart = false;
-    
+
     //init monogoose mgr with mg_user_data
     mg_mgr_init(mgr, mg_user_data);
-    
+
     //bind to webport
     struct mg_connection *nc_http;
     struct mg_bind_opts bind_opts_http;
@@ -98,7 +98,7 @@ bool web_server_init(void *arg_mgr, t_config *config, t_mg_user_data *mg_user_da
             LOG_ERROR("Can't bind to port %s: %s", config->ssl_port, err_https);
             mg_mgr_free(mgr);
             return false;
-        } 
+        }
         LOG_INFO("Listening on ssl port %s", config->ssl_port);
         LOG_DEBUG("Using certificate: %s", config->ssl_cert);
         LOG_DEBUG("Using private key: %s", config->ssl_key);
@@ -129,7 +129,7 @@ void *web_server_loop(void *arg_mgr) {
                 else if (response->conn_id == 0) {
                     //websocket notify from mpd idle
                     send_ws_notify(mgr, response);
-                } 
+                }
                 else {
                     //api response
                     send_api_response(mgr, response);
@@ -151,8 +151,8 @@ static bool parse_internal_message(t_work_result *response, t_mg_user_data *mg_u
     bool feat_mpd_albumart;
     bool rc = false;
     t_config *config = (t_config *) mg_user_data->config;
-    
-    int je = json_scanf(response->data, sdslen(response->data), "{playlistDirectory: %Q, musicDirectory: %Q, coverimageName: %Q, featLibrary: %B, featMpdAlbumart: %B}", 
+
+    int je = json_scanf(response->data, sdslen(response->data), "{playlistDirectory: %Q, musicDirectory: %Q, coverimageName: %Q, featLibrary: %B, featMpdAlbumart: %B}",
         &p_charbuf3, &p_charbuf1, &p_charbuf2, &feat_library, &feat_mpd_albumart);
     if (je == 5) {
         mg_user_data->music_directory = sdsreplace(mg_user_data->music_directory, p_charbuf1);
@@ -161,7 +161,7 @@ static bool parse_internal_message(t_work_result *response, t_mg_user_data *mg_u
         mg_user_data->coverimage_names = split_coverimage_names(p_charbuf2, mg_user_data->coverimage_names, &mg_user_data->coverimage_names_len);
         mg_user_data->feat_library = feat_library;
         mg_user_data->feat_mpd_albumart = feat_mpd_albumart;
-        
+
         mg_user_data->rewrite_patterns = sdscrop(mg_user_data->rewrite_patterns);
         if (config->publish == true) {
             mg_user_data->rewrite_patterns = sdscatfmt(mg_user_data->rewrite_patterns, "/browse/pics=%s/pics", config->varlibdir);
@@ -243,7 +243,7 @@ static void send_api_response(struct mg_mgr *mgr, t_work_result *response) {
 static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
     t_mg_user_data *mg_user_data = (t_mg_user_data *) nc->mgr->user_data;
     t_config *config = (t_config *) mg_user_data->config;
-    
+
     switch(ev) {
         case MG_EV_ACCEPT: {
             //increment conn_id
@@ -281,7 +281,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
             struct http_message *hm = (struct http_message *) ev_data;
             static const struct mg_str browse_prefix = MG_MK_STR("/browse");
             static const struct mg_str albumart_prefix = MG_MK_STR("/albumart");
-            static const struct mg_str image_prefix = MG_MK_STR("/image"); // tidal
+            static const struct mg_str image_prefix = MG_MK_STR("/image"); // alt
             LOG_VERBOSE("HTTP request (%d): %.*s", (intptr_t)nc->user_data, (int)hm->uri.len, hm->uri.p);
             if (mg_vcmp(&hm->uri, "/api/serverinfo") == 0) {
                 struct sockaddr_in localip;
@@ -313,7 +313,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
                 }
             }
             #ifdef ENABLE_SSL
-            else if (mg_vcmp(&hm->uri, "/ca.crt") == 0) { 
+            else if (mg_vcmp(&hm->uri, "/ca.crt") == 0) {
                 if (config->custom_cert == false) {
                     //deliver ca certificate
                     sds ca_file = sdscatfmt(sdsempty(), "%s/ssl/ca.pem", config->varlibdir);
@@ -406,12 +406,12 @@ static void ev_handler_redirect(struct mg_connection *nc, int ev, void *ev_data)
             struct mg_str *host_hdr = mg_get_http_header(hm, "Host");
             t_mg_user_data *mg_user_data = (t_mg_user_data *) nc->mgr->user_data;
             t_config *config = (t_config *) mg_user_data->config;
-            
+
             sds host_header = sdscatlen(sdsempty(), host_hdr->p, (int)host_hdr->len);
-            
+
             int count;
             sds *tokens = sdssplitlen(host_header, sdslen(host_header), ":", 1, &count);
-            
+
             sds s_redirect = sdscatfmt(sdsempty(), "https://%s", tokens[0]);
             if (strcmp(config->ssl_port, "443") != 0) {
                 s_redirect = sdscatfmt(s_redirect, ":%s", config->ssl_port);
@@ -436,7 +436,7 @@ static bool handle_api(int conn_id, struct http_message *hm) {
         LOG_ERROR("Request length of %d exceeds max request size, discarding request)", hm->body.len);
         return false;
     }
-    
+
     LOG_DEBUG("API request (%d): %.*s", conn_id, hm->body.len, hm->body.p);
     char *cmd = NULL;
     char *jsonrpc = NULL;
@@ -455,11 +455,11 @@ static bool handle_api(int conn_id, struct http_message *hm) {
         FREE_PTR(jsonrpc);
         return false;
     }
-    
+
     sds data = sdscatlen(sdsempty(), hm->body.p, hm->body.len);
     t_work_request *request = create_request(conn_id, id, cmd_id, cmd, data);
     sdsfree(data);
-    
+
     if (strncmp(cmd, "MYMPD_API_", 10) == 0) {
         tiny_queue_push(mympd_api_queue, request);
     }
@@ -468,6 +468,6 @@ static bool handle_api(int conn_id, struct http_message *hm) {
     }
 
     FREE_PTR(cmd);
-    FREE_PTR(jsonrpc);    
+    FREE_PTR(jsonrpc);
     return true;
 }

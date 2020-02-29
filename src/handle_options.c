@@ -56,39 +56,39 @@ bool smartpls_default(t_config *config) {
     else {
         prefix = sdscat(prefix, "myMPDsmart");
     }
-    
+
     sds smartpls_file = sdscatfmt(sdsempty(), "%s%sbestRated", prefix, (sdslen(prefix) > 0 ? "-" : ""));
-    rc = smartpls_init(config, smartpls_file, 
+    rc = smartpls_init(config, smartpls_file,
         "{\"type\": \"sticker\", \"sticker\": \"like\", \"maxentries\": 200, \"minvalue\": 2, \"sort\": \"\"}");
     if (rc == false) {
         sdsfree(smartpls_file);
         sdsfree(prefix);
         return rc;
     }
-    
+
     sdscrop(smartpls_file);
     smartpls_file = sdscatfmt(smartpls_file, "%s%smostPlayed", prefix, (sdslen(prefix) > 0 ? "-" : ""));
-    rc = smartpls_init(config, smartpls_file, 
+    rc = smartpls_init(config, smartpls_file,
         "{\"type\": \"sticker\", \"sticker\": \"playCount\", \"maxentries\": 200, \"minvalue\": 0, \"sort\": \"\"}");
     if (rc == false) {
         sdsfree(smartpls_file);
         sdsfree(prefix);
         return rc;
     }
-    
+
     sdscrop(smartpls_file);
     smartpls_file = sdscatfmt(smartpls_file, "%s%snewestSongs", prefix, (sdslen(prefix) > 0 ? "-" : ""));
-    rc = smartpls_init(config, smartpls_file, 
+    rc = smartpls_init(config, smartpls_file,
         "{\"type\": \"newest\", \"timerange\": 604800, \"sort\": \"\"}");
     sdsfree(smartpls_file);
     sdsfree(prefix);
-    
+
     return rc;
 }
 
 bool handle_option(t_config *config, char *cmd, sds option) {
     #define MATCH_OPTION(o) strcasecmp(option, o) == 0
-    
+
     if (MATCH_OPTION("reset_state")) {
         mympd_api_settings_delete(config);
         return true;
@@ -164,7 +164,7 @@ bool handle_option(t_config *config, char *cmd, sds option) {
                cmd
         );
     }
-    
+
     return false;
 }
 
@@ -173,7 +173,7 @@ static bool smartpls_init(t_config *config, const char *name, const char *value)
     if (!validate_string(name)) {
         return false;
     }
-    
+
     sds tmp_file = sdscatfmt(sdsempty(), "%s/smartpls/%s.XXXXXX", config->varlibdir, name);
     int fd = mkstemp(tmp_file);
     if (fd < 0 ) {

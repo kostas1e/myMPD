@@ -11,7 +11,7 @@ function setStateIcon(state) {
     let mpdStateIcon = document.getElementById('mpdState').children[0];
     let websocketStateText = document.getElementById('websocketState').getElementsByTagName('small')[0];
     let mpdStateText = document.getElementById('mpdState').getElementsByTagName('small')[0];
-    
+
     if (websocketConnected === false) {
         stateIcon.innerText = 'cloud_off';
     }
@@ -26,19 +26,19 @@ function setStateIcon(state) {
             stateIcon.innerText = 'chat_bubble_outline';
         }
     }
-    
+
     if (websocketConnected === false) {
         websocketStateIcon.innerText = 'cloud_off';
         websocketStateIcon.classList.remove('text-success');
         websocketStateText.innerText = t('Websocket disconnected');
     }
-    else { 
+    else {
         websocketStateIcon.innerText = 'cloud_done';
         websocketStateIcon.classList.add('text-success');
         websocketStateText.innerText = t('Websocket connected');
     }
 
-    if (websocketConnected === false) { 
+    if (websocketConnected === false) {
         mpdStateIcon.innerText = 'cloud_off';
         mpdStateIcon.classList.remove('text-success');
         mpdStateText.innerText = t('MPD disconnected');
@@ -64,15 +64,15 @@ function toggleAlert(alertBox, state, msg) {
 
 function showNotification(notificationTitle, notificationText, notificationHtml, notificationType) {
     if (settings.notificationWeb === true) {
-        let notification = new Notification(notificationTitle, {icon: 'assets/favicon.ico', body: notificationText});
+        let notification = new Notification(notificationTitle, { icon: 'assets/favicon.ico', body: notificationText });
         setTimeout(notification.close.bind(notification), 3000);
-    } 
+    }
     if (settings.notificationPage === true) {
         let alertBox;
         if (!document.getElementById('alertBox')) {
             alertBox = document.createElement('div');
             alertBox.setAttribute('id', 'alertBox');
-            alertBox.addEventListener('click', function() {
+            alertBox.addEventListener('click', function () {
                 hideNotification();
             }, false);
         }
@@ -80,14 +80,14 @@ function showNotification(notificationTitle, notificationText, notificationHtml,
             alertBox = document.getElementById('alertBox');
         }
         alertBox.classList.remove('alert-success', 'alert-danger');
-        alertBox.classList.add('alert','alert-' + notificationType);
+        alertBox.classList.add('alert', 'alert-' + notificationType);
         alertBox.innerHTML = '<strong>' + e(notificationTitle) + '</strong><br/>' + (notificationHtml === '' ? e(notificationText) : notificationHtml);
         document.getElementsByTagName('main')[0].append(alertBox);
         document.getElementById('alertBox').classList.add('alertBoxActive');
         if (alertTimeout) {
             clearTimeout(alertTimeout);
         }
-        alertTimeout = setTimeout(function() {
+        alertTimeout = setTimeout(function () {
             hideNotification();
         }, 3000);
     }
@@ -98,14 +98,14 @@ function showNotification(notificationTitle, notificationText, notificationHtml,
 function logMessage(notificationTitle, notificationText, notificationHtml, notificationType) {
     if (notificationType === 'success') { notificationType = 'Info'; }
     else if (notificationType === 'danger') { notificationType = 'Error'; }
-    
+
     let overview = document.getElementById('logOverview');
 
     let append = true;
     let lastEntry = overview.firstElementChild;
     if (lastEntry) {
         if (lastEntry.getAttribute('data-title') === notificationTitle) {
-            append = false;        
+            append = false;
         }
     }
 
@@ -121,7 +121,7 @@ function logMessage(notificationTitle, notificationText, notificationHtml, notif
         (occurence > 1 ? '&nbsp;(' + occurence + ')' : '') + '</small>' +
         '<p>' + e(notificationTitle) +
         (notificationHtml === '' && notificationText === '' ? '' :
-        '<br/>' + (notificationHtml === '' ? e(notificationText) : notificationHtml)) +
+            '<br/>' + (notificationHtml === '' ? e(notificationText) : notificationHtml)) +
         '</p>';
 
     if (append === true) {
@@ -130,14 +130,14 @@ function logMessage(notificationTitle, notificationText, notificationHtml, notif
     else {
         overview.replaceChild(entry, lastEntry);
     }
-   
+
     let overviewEls = overview.getElementsByTagName('div');
     if (overviewEls.length > 10) {
         overviewEls[10].remove();
     }
 
     document.getElementById('navState').children[0].classList.add('text-success');
-    setTimeout(function() {
+    setTimeout(function () {
         document.getElementById('navState').children[0].classList.remove('text-success');
     }, 250);
 }
@@ -154,7 +154,7 @@ function clearLogOverview() {
 function hideNotification() {
     if (document.getElementById('alertBox')) {
         document.getElementById('alertBox').classList.remove('alertBoxActive');
-        setTimeout(function() {
+        setTimeout(function () {
             let alertBox = document.getElementById('alertBox');
             if (alertBox)
                 alertBox.remove();

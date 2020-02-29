@@ -40,7 +40,7 @@
 void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request) {
     t_work_request *request = (t_work_request*) arg_request;
     unsigned int uint_buf1, uint_buf2;
-    int je, int_buf1, int_buf2; 
+    int je, int_buf1, int_buf2;
     bool bool_buf, rc;
     float float_buf;
     char *p_charbuf1 = NULL;
@@ -655,7 +655,7 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
             free(tagcols);
             break;
         }
-        case MPD_API_DATABASE_SEARCH_ADV: { // add play
+        case MPD_API_DATABASE_SEARCH_ADV: {
             t_tags *tagcols = (t_tags *)malloc(sizeof(t_tags));
             assert(tagcols);
             bool play = false;
@@ -693,7 +693,6 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
             break;
         case MPD_API_SETTINGS_GET:
             response->data = mpd_client_put_settings(mpd_state, response->data, request->method, request->id);
-            printf("\n\t%s\n\n", response->data);
             break;
         case MPD_API_DATABASE_STATS:
             response->data = mpd_client_put_stats(config, mpd_state, response->data, request->method, request->id);

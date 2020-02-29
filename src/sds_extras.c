@@ -42,8 +42,8 @@ sds sdscatjson(sds s, const char *p, size_t len) {
         // Escape < to prevent script execution
         case '<' : s = sdscatlen(s, "\\u003C", 6); break;
         //ignore vertical tabulator and alert
-        case '\v': 
-        case '\a': 
+        case '\v':
+        case '\a':
             break;
         default:
             if (isprint(*p)) {
@@ -51,7 +51,7 @@ sds sdscatjson(sds s, const char *p, size_t len) {
             }
             else if ((cl = json_get_utf8_char_len(*p)) == 1) {
                 s = sdscatprintf(s, "\\u00%s%s", &hex_digits[(*p >> 4) % 0xf], &hex_digits[*p % 0xf]);
-            } 
+            }
             else {
                 s = sdscatprintf(s, "%c", *p);
             }
@@ -78,7 +78,7 @@ sds sdsurldecode(sds s, const char *p, size_t len, int is_form_url_encoded) {
                 s = sdscatprintf(s, "%c", (char) ((HEXTOI(a) << 4) | HEXTOI(b)));
                 i += 2;
                 p += 2;
-            } 
+            }
             else {
                 s = sdscrop(s);
                 return s;

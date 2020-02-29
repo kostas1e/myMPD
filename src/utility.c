@@ -64,7 +64,7 @@ sds jsonrpc_respond_ok(sds buffer, const char *method, int id) {
 
 sds jsonrpc_respond_message(sds buffer, const char *method, int id, const char *message, bool error) {
     buffer = sdscrop(buffer);
-    buffer = sdscatprintf(buffer, "{\"jsonrpc\":\"2.0\",\"id\":%d,\"%s\":{\"method\":", 
+    buffer = sdscatprintf(buffer, "{\"jsonrpc\":\"2.0\",\"id\":%d,\"%s\":{\"method\":",
         id, (error == true ? "error" : "result"));
     buffer = sdscatjson(buffer, method, strlen(method)); /* Flawfinder: ignore */
     if (error == true) {
@@ -78,7 +78,7 @@ sds jsonrpc_respond_message(sds buffer, const char *method, int id, const char *
 
 sds jsonrpc_start_phrase(sds buffer, const char *method, int id, const char *message, bool error) {
     buffer = sdscrop(buffer);
-    buffer = sdscatprintf(buffer, "{\"jsonrpc\":\"2.0\",\"id\":%d,\"%s\":{\"method\":", 
+    buffer = sdscatprintf(buffer, "{\"jsonrpc\":\"2.0\",\"id\":%d,\"%s\":{\"method\":",
         id, (error == true ? "error" : "result"));
     buffer = sdscatjson(buffer, method, strlen(method)); /* Flawfinder: ignore */
     if (error == true) {
@@ -97,7 +97,7 @@ sds jsonrpc_end_phrase(sds buffer) {
 
 sds jsonrpc_start_phrase_notify(sds buffer, const char *message, bool error) {
     buffer = sdscrop(buffer);
-    buffer = sdscatfmt(buffer, "{\"jsonrpc\":\"2.0\",\"%s\":{", 
+    buffer = sdscatfmt(buffer, "{\"jsonrpc\":\"2.0\",\"%s\":{",
         (error == true ? "error" : "result"));
     if (error == true) {
         buffer = sdscat(buffer, "\"code\": -32000,");
@@ -218,7 +218,7 @@ bool validate_string(const char *data) {
 }
 
 bool validate_string_not_empty(const char *data) {
-    if (data == NULL) { 
+    if (data == NULL) {
         return false;
     }
     else if (strlen(data) == 0) {
@@ -234,7 +234,7 @@ bool validate_string_not_dir(const char *data) {
     if (rc == true) {
         if (strcmp(data, ".") == 0 || strcmp(data, "..") == 0) {
             rc = false;
-        }    
+        }
     }
     return rc;
 }
@@ -259,7 +259,7 @@ bool validate_songuri(const char *data) {
     else if (strchr(data, '.') == NULL) {
         return false;
     }
-    
+
     return true;
 }
 
@@ -334,7 +334,7 @@ sds get_mime_type_by_ext(const char *filename) {
         ext++;
     }
     else {
-        return sdsempty();        
+        return sdsempty();
     }
 
     const struct mime_type_entry *p = NULL;

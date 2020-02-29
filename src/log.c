@@ -55,7 +55,7 @@ void mympd_log(int level, const char *file, int line, const char *fmt, ...) {
         logline = sdscatlen(logline, "\n", 1);
     }
     logline = sdscat(logline, "\033[0m");
-    
+
     fputs(logline, stderr);
     fflush(stderr);
     sdsfree(logline);

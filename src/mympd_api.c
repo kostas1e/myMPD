@@ -45,7 +45,7 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
 //public functions
 void *mympd_api_loop(void *arg_config) {
     t_config *config = (t_config *) arg_config;
-    
+
     //read myMPD states under config.varlibdir
     t_mympd_state *mympd_state = (t_mympd_state *)malloc(sizeof(t_mympd_state));
     mympd_api_read_statefiles(config, mympd_state);
@@ -55,7 +55,7 @@ void *mympd_api_loop(void *arg_config) {
     if (mympd_state->timer == true) {
         timerfile_read(config, mympd_state);
     }
-    
+
     //set timers
     if (config->covercache == true) {
         LOG_DEBUG("Setting timer action \"clear covercache\" to periodic each 7200s");
@@ -65,7 +65,7 @@ void *mympd_api_loop(void *arg_config) {
     //push settings to mpd_client queue
     mympd_api_push_to_mpd_client(mympd_state);
 
-    // streaming services
+    //streaming services
     tidal_session_init(mympd_state->tidal_username, mympd_state->tidal_password, mympd_state->tidal_audioquality);
 
     while (s_signal_received == 0) {
@@ -95,10 +95,10 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
     unsigned int uint_buf1;
     int int_buf1, int_buf2;
     LOG_VERBOSE("MYMPD API request (%d): %s", request->conn_id, request->data);
-    
+
     //create response struct
     t_work_result *response = create_result(request);
-    
+
     switch(request->cmd_id) {
         case MYMPD_API_SYSCMD:
             if (config->syscmds == true) {
@@ -106,7 +106,7 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
                 if (je == 1) {
                     response->data = mympd_api_syscmd(config, response->data, request->method, request->id, p_charbuf1);
                 }
-            } 
+            }
             else {
                 response->data = jsonrpc_respond_message(response->data, request->method, request->id, "System commands are disabled", true);
             }
@@ -125,7 +125,7 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
                     response->data = tojson_char(response->data, "table", p_charbuf1, false);
                     response->data = jsonrpc_end_phrase(response->data);
                     LOG_ERROR("MYMPD_API_COLS_SAVE: Unknown table %s", p_charbuf1);
-                }            
+                }
             }
             sdsfree(cols);
             break;
@@ -147,7 +147,7 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
                 }
             }
             if (rc == true) {
-                //forward request to mpd_client queue            
+                //forward request to mpd_client queue
                 t_work_request *mpd_client_request = create_request(-1, request->id, request->cmd_id, request->method, request->data);
                 tiny_queue_push(mpd_client_queue, mpd_client_request);
                 // update tidal session
@@ -317,30 +317,9 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
                 response->data = tidal_artistdetails(response->data, request->method, request->id, p_charbuf1);
             }
             break;
-        /* case MYMPD_API_QOBUZ_SEARCH:
-            je = json_scanf(request->data, sdslen(request->data), "{params:{searchstr:%Q,filter:%Q,plist:%Q,offset:%u}}", &p_charbuf1, &p_charbuf2, &p_charbuf3, &uint_buf1);
-            if (je == 4) {
-                response->data = qobuz_catalog_search(response->data, request->method, request->id, p_charbuf1, p_charbuf2, p_charbuf3, uint_buf1);
-            }
+        case MYMPD_API_IDEON_UPDATE:
+            // wip
             break;
-        case MYMPD_API_QOBUZ_SONGDETAILS:
-            je = json_scanf(request->data, sdslen(request->data), "{params:{uri:%Q}}", &p_charbuf1);
-            if (je == 1) {
-                response->data = qobuz_songdetails(response->data, request->method, request->id, p_charbuf1);
-            }
-            break;
-        case MYMPD_API_QOBUZ_ALBUMDETAILS:
-            je = json_scanf(request->data, sdslen(request->data), "{params:{uri:%Q}}", &p_charbuf1);
-            if (je == 1) {
-                response->data = qobuz_albumdetails(response->data, request->method, request->id, p_charbuf1);
-            }
-            break;
-        case MYMPD_API_QOBUZ_ARTISTDETAILS:
-            je = json_scanf(request->data, sdslen(request->data), "{params:{uri:%Q}}", &p_charbuf1);
-            if (je == 1) {
-                response->data = qobuz_artistdetails(response->data, request->method, request->id, p_charbuf1);
-            }
-            break; */
         default:
             response->data = jsonrpc_respond_message(response->data, request->method, request->id, "Unknown request", true);
             LOG_ERROR("Unknown API request: %.*s", sdslen(request->data), request->data);
