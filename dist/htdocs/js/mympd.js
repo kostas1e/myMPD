@@ -1339,7 +1339,7 @@ function updateDBfinished(idleEvent) {
 */
 
 /* Disable eslint warnings */
-/* Global Modal, Dropdown, Collapse, Popover, Carousel */
+/* global Modal, Dropdown, Collapse, Popover, Carousel, phrases, locales */
 
 var socket = null;
 var lastSong = '';
@@ -5274,7 +5274,18 @@ function parseMPDSettings() {
     else {
         clearBackgroundImage();
     }
-
+    
+    settings.tags.sort();
+    settings.searchtags.sort();
+    settings.browsetags.sort();
+    filterCols('colsSearch');
+    filterCols('colsQueueCurrent');
+    filterCols('colsQueueLastPlayed');
+    filterCols('colsBrowsePlaylistsDetail');
+    filterCols('colsBrowseFilesystem');
+    filterCols('colsBrowseDatabase');
+    filterCols('colsPlayback');
+    
     if (settings.featTags === false) {
         app.apps.Browse.active = 'Filesystem';
         app.apps.Search.Database.state = '0/filename/-/';
@@ -5338,20 +5349,6 @@ function parseMPDSettings() {
     else {
         document.getElementById('selectJukeboxPlaylist').innerHTML = '<option value="Database">' + t('Database') + '</option>';
     }
-
-    settings.tags.sort();
-    settings.searchtags.sort();
-    settings.searchtidaltags.sort();
-    settings.browsetags.sort();
-
-    filterCols('colsSearchDatabase');
-    filterCols('colsSearchTidal');
-    filterCols('colsQueueCurrent');
-    filterCols('colsQueueLastPlayed');
-    filterCols('colsBrowsePlaylistsDetail');
-    filterCols('colsBrowseFilesystem');
-    filterCols('colsBrowseDatabase');
-    filterCols('colsPlayback');
 
     setCols('QueueCurrent');
     setCols('SearchDatabase');
@@ -5654,6 +5651,7 @@ function filterCols(x) {
         }
     }
     settings[x] = cols;
+    logDebug('Columns for ' + x + ': ' + cols);
 }
 
 //eslint-disable-next-line no-unused-vars
