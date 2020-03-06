@@ -670,10 +670,10 @@ Stop playing
 Stop
 
 Volume down
-Lauter
+Leiser
 
 Volume up
-Leiser
+Lauter
 
 Open settings
 Einstellungen
@@ -1295,3 +1295,9 @@ Benachrichtungen sind nicht erlaubt
 
 Adding timer failed
 Timers konnte nicht hinzugefügt werden
+
+Browse directories
+Verzeichnisse anzeigen
+
+Sorry, your MPD version is to old
+Entschuldige, deine MPD version ist zu alt

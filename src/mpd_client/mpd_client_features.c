@@ -44,6 +44,7 @@ void mpd_client_mpd_features(t_config *config, t_mpd_state *mpd_state) {
     mpd_state->feat_coverimage = true;
     mpd_state->feat_mpd_albumart = false;
     mpd_state->feat_mpd_readpicture = false;
+    mpd_state->feat_mpd_searchwindow = false;
     mpd_state->feat_single_oneshot = false;
 
     //get features
@@ -57,6 +58,13 @@ void mpd_client_mpd_features(t_config *config, t_mpd_state *mpd_state) {
     buffer = mpd_client_put_state(config, mpd_state, buffer, NULL, 0);
     sdsfree(buffer);
 
+    if (LIBMPDCLIENT_CHECK_VERSION(2, 10, 0) && mpd_connection_cmp_server_version(mpd_state->conn, 0, 20, 0) >= 0) {
+        mpd_state->feat_mpd_searchwindow = true;
+    }
+    else {
+        LOG_WARN("Disabling searchwindow support, depends on mpd >= 0.20.0 and libmpdclient >= 2.10.0.");
+    }
+    
     if (LIBMPDCLIENT_CHECK_VERSION(2, 17, 0) && mpd_connection_cmp_server_version(mpd_state->conn, 0, 21, 0) >= 0) {
         mpd_state->feat_advsearch = true;
         LOG_INFO("Enabling advanced search");

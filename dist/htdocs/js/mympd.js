@@ -2045,6 +2045,7 @@ function appInit() {
 
     document.getElementById('modalAddToQueue').addEventListener('shown.bs.modal', function () {
         document.getElementById('inputAddToQueueQuantity').classList.remove('is-invalid');
+        document.getElementById('warnJukeboxPlaylist2').classList.add('hide');
         if (settings.featPlaylists) {
             playlistEl = 'selectAddToQueuePlaylist';
             sendAPI("MPD_API_PLAYLIST_LIST", { "offset": 0, "filter": "-" }, getAllPlaylists);
@@ -4551,13 +4552,22 @@ function addToQueue() {
     if (!validateInt(inputAddToQueueQuantityEl)) {
         formOK = false;
     }
+    
+    let selectAddToQueueMode = document.getElementById('selectAddToQueueMode');
+    let jukeboxMode = selectAddToQueueMode.options[selectAddToQueueMode.selectedIndex].value
 
+    let selectAddToQueuePlaylist = document.getElementById('selectAddToQueuePlaylist');
+    let jukeboxPlaylist = selectAddToQueuePlaylist.options[selectAddToQueuePlaylist.selectedIndex].value;
+    
+    if (jukeboxMode === '1' && settings.featSearchwindow === false && jukeboxPlaylist === 'Database') {
+        document.getElementById('warnJukeboxPlaylist2').classList.remove('hide');
+        formOK = false;
+    }
+    
     if (formOK === true) {
-        let selectAddToQueueMode = document.getElementById('selectAddToQueueMode');
-        let selectAddToQueuePlaylist = document.getElementById('selectAddToQueuePlaylist');
         sendAPI("MPD_API_QUEUE_ADD_RANDOM", {
-            "mode": selectAddToQueueMode.options[selectAddToQueueMode.selectedIndex].value,
-            "playlist": selectAddToQueuePlaylist.options[selectAddToQueuePlaylist.selectedIndex].value,
+            "mode": jukeboxMode,
+            "playlist": jukeboxPlaylist,
             "quantity": document.getElementById('inputAddToQueueQuantity').value
         });
         modalAddToQueue.hide();
@@ -5035,8 +5045,9 @@ function parseSettings() {
     document.getElementById('inputLastPlayedCount').value = settings.lastPlayedCount;
 
     toggleBtnChkCollapse('btnSmartpls', 'collapseSmartpls', settings.smartpls);
-
-    let features = ["featLocalplayer", "featSyscmds", "featMixramp", "featCacert", "featBookmarks", "featRegex", "featTimer"];
+    
+    let features = ["featLocalplayer", "featSyscmds", "featMixramp", "featCacert", "featBookmarks", 
+        "featRegex", "featTimer"];
     for (let j = 0; j < features.length; j++) {
         let Els = document.getElementsByClassName(features[j]);
         let ElsLen = Els.length;
@@ -5237,9 +5248,17 @@ function parseMPDSettings() {
     else {
         settings.featCovergrid = true;
     }
+    
+        
+    if (settings.featLibrary === true && settings.publish === true) {
+        settings['featBrowse'] = true;    
+    }
+    else {
+        settings['featBrowse'] = false;
+    }
 
     let features = ['featStickers', 'featSmartpls', 'featPlaylists', 'featTags', 'featCoverimage', 'featAdvsearch',
-        'featLove', 'featSingleOneshot', 'featCovergrid'];
+        'featLove', 'featSingleOneshot', 'featCovergrid', 'featBrowse'];
     for (let j = 0; j < features.length; j++) {
         let Els = document.getElementsByClassName(features[j]);
         let ElsLen = Els.length;
@@ -5301,6 +5320,8 @@ function parseMPDSettings() {
     else {
         document.getElementById('warnMusicDirectory').classList.add('hide');
     }
+
+    document.getElementById('warnJukeboxPlaylist').classList.add('hide');
 
     if (settings.bgCover === true && settings.featCoverimage === true && settings.coverimage === true) {
         setBackgroundImage(lastSongObj.uri);
@@ -5531,12 +5552,19 @@ function saveSettings(closeModal) {
     let jukeboxUniqueTag = document.getElementById('selectJukeboxUniqueTag');
     let jukeboxUniqueTagValue = jukeboxUniqueTag.options[jukeboxUniqueTag.selectedIndex].value;
 
+    let selectJukeboxPlaylist = document.getElementById('selectJukeboxPlaylist');
+    let jukeboxPlaylist = selectJukeboxPlaylist.options[selectJukeboxPlaylist.selectedIndex].value;
+    
     if (jukeboxMode === '2') {
         jukeboxUniqueTagValue = 'Album';
     }
-
+    
+    if (jukeboxMode === '1' && settings.featSearchwindow === false && jukeboxPlaylist === 'Database') {
+        formOK = false;
+        document.getElementById('warnJukeboxPlaylist').classList.remove('hide');
+    }
+    
     if (formOK === true) {
-        let selectJukeboxPlaylist = document.getElementById('selectJukeboxPlaylist');
         let selectLocale = document.getElementById('selectLocale');
         let selectTheme = document.getElementById('selectTheme');
         sendAPI("MYMPD_API_SETTINGS_SET", {
@@ -5552,7 +5580,7 @@ function saveSettings(closeModal) {
             "notificationPage": (document.getElementById('btnNotifyPage').classList.contains('active') ? true : false),
             "mediaSession": (document.getElementById('btnMediaSession').classList.contains('active') ? true : false),
             "jukeboxMode": parseInt(jukeboxMode),
-            "jukeboxPlaylist": selectJukeboxPlaylist.options[selectJukeboxPlaylist.selectedIndex].value,
+            "jukeboxPlaylist": jukeboxPlaylist,
             "jukeboxQueueLength": parseInt(document.getElementById('inputJukeboxQueueLength').value),
             "jukeboxLastPlayed": parseInt(document.getElementById('inputJukeboxLastPlayed').value),
             "jukeboxUniqueTag": jukeboxUniqueTagValue,
