@@ -26,7 +26,7 @@
 #include "mympd_api_timer.h"
 #include "mympd_api_timer_handlers.h"
 #include "mympd_api_settings.h"
-#include "../tidal.h"
+#include "../ideon.h"
 
 void mympd_api_settings_delete(t_config *config) {
     if (config->readonly == true) {
@@ -40,8 +40,8 @@ void mympd_api_settings_delete(t_config *config) {
         "max_elements_per_page",  "mpd_host", "mpd_pass", "mpd_port", "notification_page", "notification_web", "searchtaglist",
         "smartpls", "stickers", "stream_port", "stream_url", "taglist", "music_directory", "bookmarks", "bookmark_list", "covergrid_size",
         "theme", "timer", "highlight_color", "media_session", "booklet_name",
-        "nas_type", "nas_host", "nas_directory", "nas_username", "nas_password", "tidal",
-        "cols_search_tidal", "searchtidaltaglist", "tidal_username", "tidal_password", "tidal_audioquality", 0};
+        "mixer_type", "dop", "ns_type", "ns_server", "ns_share", "ns_username", "ns_password", "airplay", "spotify",
+        "tidal_enabled", "cols_search_tidal", "searchtidaltaglist", "tidal_username", "tidal_password", "tidal_audioquality", 0};
     const char** ptr = state_files;
     while (*ptr != 0) {
         sds filename = sdscatfmt(sdsempty(), "%s/state/%s", config->varlibdir, *ptr);
@@ -137,7 +137,9 @@ bool mympd_api_cols_save(t_config *config, t_mympd_state *mympd_state, const cha
     return true;
 }
 
-bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct json_token *key, struct json_token *val) {
+bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct json_token *key,
+                            struct json_token *val, bool *mpd_conf_changed)
+{
     sds settingname = sdsempty();
     sds settingvalue = sdscatlen(sdsempty(), val->ptr, val->len);
     char *crap;
@@ -348,55 +350,77 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
         mympd_state->timer = val->type == JSON_TYPE_TRUE ? true : false;
         settingname = sdscat(settingname, "timer");
     }
-    else if (strncmp(key->ptr, "nasType", key->len) == 0) {
-        int nas_type = strtoimax(settingvalue, &crap, 10);
-        if (nas_type < 0 || nas_type > 2) {
+    else if (strncmp(key->ptr, "mixerType", key->len) == 0) {
+        if (sdscmp(mympd_state->mixer_type, settingvalue) != 0)
+            *mpd_conf_changed = true;
+        mympd_state->mixer_type = sdsreplacelen(mympd_state->mixer_type, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "mixer_type");
+    }
+    else if (strncmp(key->ptr, "dop", key->len) == 0) {
+        if ((mympd_state->dop == true && val->type == JSON_TYPE_FALSE) ||
+            (mympd_state->dop == false && val->type == JSON_TYPE_TRUE))
+            *mpd_conf_changed = true;
+        mympd_state->dop = val->type == JSON_TYPE_TRUE ? true : false;
+        settingname = sdscat(settingname, "dop");
+    }
+    else if (strncmp(key->ptr, "nsType", key->len) == 0) {
+        int ns_type = strtoimax(settingvalue, &crap, 10);
+        if (ns_type < 0 || ns_type > 2) {
             sdsfree(settingname);
             sdsfree(settingvalue);
             return false;
         }
-        mympd_state->nas_type = nas_type;
-        settingname = sdscat(settingname, "nas_type");
+        mympd_state->ns_type = ns_type;
+        settingname = sdscat(settingname, "ns_type");
     }
-    else if (strncmp(key->ptr, "nasHost", key->len) == 0) {
-        mympd_state->nas_host = sdsreplacelen(mympd_state->nas_host, settingvalue, sdslen(settingvalue));
-        settingname = sdscat(settingname, "nas_host");
+    else if (strncmp(key->ptr, "nsServer", key->len) == 0) {
+        mympd_state->ns_server = sdsreplacelen(mympd_state->ns_server, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "ns_server");
     }
-    else if (strncmp(key->ptr, "nasDirectory", key->len) == 0) {
-        mympd_state->nas_directory = sdsreplacelen(mympd_state->nas_directory, settingvalue, sdslen(settingvalue));
-        settingname = sdscat(settingname, "nas_directory");
+    else if (strncmp(key->ptr, "nsShare", key->len) == 0) {
+        mympd_state->ns_share = sdsreplacelen(mympd_state->ns_share, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "ns_share");
     }
-    else if (strncmp(key->ptr, "nasUsername", key->len) == 0) {
-        mympd_state->nas_username = sdsreplacelen(mympd_state->nas_username, settingvalue, sdslen(settingvalue));
-        settingname = sdscat(settingname, "nas_username");
+    else if (strncmp(key->ptr, "nsUsername", key->len) == 0) {
+        mympd_state->ns_username = sdsreplacelen(mympd_state->ns_username, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "ns_username");
     }
-    else if (strncmp(key->ptr, "nasPassword", key->len) == 0) {
-        mympd_state->nas_password = sdsreplacelen(mympd_state->nas_password, settingvalue, sdslen(settingvalue));
-        settingname = sdscat(settingname, "nas_password");
+    else if (strncmp(key->ptr, "nsPassword", key->len) == 0) {
+        mympd_state->ns_password = sdsreplacelen(mympd_state->ns_password, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "ns_password");
     }
-    else if (strncmp(key->ptr, "tidal", key->len) == 0) {
-        mympd_state->tidal = val->type == JSON_TYPE_TRUE ? true : false;
-        settingname = sdscat(settingname, "tidal");
+    else if (strncmp(key->ptr, "airplay", key->len) == 0) {
+        mympd_state->airplay = val->type == JSON_TYPE_TRUE ? true : false;
+        settingname = sdscat(settingname, "airplay");
+    }
+    else if (strncmp(key->ptr, "spotify", key->len) == 0) {
+        mympd_state->spotify = val->type == JSON_TYPE_TRUE ? true : false;
+        settingname = sdscat(settingname, "spotify");
+    }
+    else if (strncmp(key->ptr, "tidalEnabled", key->len) == 0) {
+        if ((mympd_state->tidal_enabled == true && val->type == JSON_TYPE_FALSE) ||
+            (mympd_state->tidal_enabled == false && val->type == JSON_TYPE_TRUE))
+            *mpd_conf_changed = true;
+        mympd_state->tidal_enabled = val->type == JSON_TYPE_TRUE ? true : false;
+        settingname = sdscat(settingname, "tidal_enabled");
     }
     else if (strncmp(key->ptr, "tidalUsername", key->len) == 0) {
+        if (sdscmp(mympd_state->tidal_username, settingvalue) != 0)
+            *mpd_conf_changed = true;
         mympd_state->tidal_username = sdsreplacelen(mympd_state->tidal_username, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "tidal_username");
     }
     else if (strncmp(key->ptr, "tidalPassword", key->len) == 0) {
+        if (sdscmp(mympd_state->tidal_password, settingvalue) != 0)
+            *mpd_conf_changed = true;
         mympd_state->tidal_password = sdsreplacelen(mympd_state->tidal_password, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "tidal_password");
     }
     else if (strncmp(key->ptr, "tidalAudioquality", key->len) == 0) {
+        if (sdscmp(mympd_state->tidal_audioquality, settingvalue) != 0)
+            *mpd_conf_changed = true;
         mympd_state->tidal_audioquality = sdsreplacelen(mympd_state->tidal_audioquality, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "tidal_audioquality");
-    }
-    else if (strncmp(key->ptr, "ideonVersion", key->len) == 0) { // rm
-        mympd_state->ideon_version = sdsreplacelen(mympd_state->ideon_version, settingvalue, sdslen(settingvalue));
-        settingname = sdscat(settingname, "ideon_version");
-    }
-    else if (strncmp(key->ptr, "ideonUpdate", key->len) == 0) {
-        mympd_state->ideon_update = val->type == JSON_TYPE_TRUE ? true : false;
-        settingname = sdscat(settingname, "ideon_update");
     }
     else if (strncmp(key->ptr, "set", key->len) == 0) { // mv init
         mympd_state->set = val->type == JSON_TYPE_TRUE ? true : false;
@@ -421,7 +445,7 @@ void mympd_api_settings_reset(t_config *config, t_mympd_state *mympd_state) {
     mympd_api_settings_delete(config);
     mympd_api_read_statefiles(config, mympd_state);
     mympd_api_push_to_mpd_client(mympd_state);
-    tidal_session_update(mympd_state->tidal_username, mympd_state->tidal_password, mympd_state->tidal_audioquality);
+    ideon_settings_set(mympd_state, true);
 }
 
 void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state) {
@@ -475,22 +499,24 @@ void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state) {
     mympd_state->bookmarks = state_file_rw_bool(config, "bookmarks", config->bookmarks, false);
     mympd_state->theme = state_file_rw_string(config, "theme", config->theme, false);
     mympd_state->timer = state_file_rw_bool(config, "timer", config->timer, false);
-    mympd_state->nas_type = state_file_rw_int(config, "nas_type", config->nas_type, false);
-    mympd_state->nas_host = state_file_rw_string(config, "nas_host", config->nas_host, false);
-    mympd_state->nas_directory = state_file_rw_string(config, "nas_directory", config->nas_directory, false);
-    mympd_state->nas_username = state_file_rw_string(config, "nas_username", config->nas_username, false);
-    mympd_state->nas_password = state_file_rw_string(config, "nas_password", config->nas_password, false);
+    mympd_state->highlight_color = state_file_rw_string(config, "highlight_color", config->highlight_color, false);
+    mympd_state->booklet_name = state_file_rw_string(config, "booklet_name", config->booklet_name, false);
+    mympd_state->mixer_type = state_file_rw_string(config, "mixer_type", config->mixer_type, false);
+    mympd_state->dop = state_file_rw_bool(config, "dop", config->dop, false);
+    mympd_state->ns_type = state_file_rw_int(config, "ns_type", config->ns_type, false);
+    mympd_state->ns_server = state_file_rw_string(config, "ns_server", config->ns_server, false);
+    mympd_state->ns_share = state_file_rw_string(config, "ns_share", config->ns_share, false);
+    mympd_state->ns_username = state_file_rw_string(config, "ns_username", config->ns_username, false);
+    mympd_state->ns_password = state_file_rw_string(config, "ns_password", config->ns_password, false);
+    mympd_state->airplay = state_file_rw_bool(config, "airplay", config->airplay, false);
+    mympd_state->spotify = state_file_rw_bool(config, "spotify", config->spotify, false);
     mympd_state->searchtidaltaglist = state_file_rw_string(config, "searchtidaltaglist", config->searchtidaltaglist, false);
     mympd_state->cols_search_tidal = state_file_rw_string(config, "cols_search_tidal", config->cols_search_tidal, false);
-    mympd_state->tidal = state_file_rw_bool(config, "tidal", config->tidal, false);
+    mympd_state->tidal_enabled = state_file_rw_bool(config, "tidal_enabled", config->tidal_enabled, false);
     mympd_state->tidal_username = state_file_rw_string(config, "tidal_username", config->tidal_username, false);
     mympd_state->tidal_password = state_file_rw_string(config, "tidal_password", config->tidal_password, false);
     mympd_state->tidal_audioquality = state_file_rw_string(config, "tidal_audioquality", config->tidal_audioquality, false);
-    mympd_state->ideon_version = state_file_rw_string(config, "ideon_version", config->ideon_version, false);
-    mympd_state->ideon_update = state_file_rw_bool(config, "ideon_update", config->ideon_update, false);
     mympd_state->set = state_file_rw_bool(config, "set", false, false); // no need for cfv
-    mympd_state->highlight_color = state_file_rw_string(config, "highlight_color", config->highlight_color, false);
-    mympd_state->booklet_name = state_file_rw_string(config, "booklet_name", config->booklet_name, false);
     if (config->readonly == true) {
         mympd_state->bookmarks = false;
         mympd_state->smartpls = false;
@@ -639,23 +665,26 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = tojson_bool(buffer, "readonly", config->readonly, true);
     buffer = tojson_bool(buffer, "featBookmarks", mympd_state->bookmarks, true);
     buffer = tojson_long(buffer, "volumeStep", config->volume_step, true);
-    buffer = tojson_long(buffer, "nasType", mympd_state->nas_type, true);
-    buffer = tojson_char(buffer, "nasHost", mympd_state->nas_host, true);
-    buffer = tojson_char(buffer, "nasDirectory", mympd_state->nas_directory, true);
-    buffer = tojson_char(buffer, "nasUsername", mympd_state->nas_username, true);
-    buffer = tojson_char(buffer, "nasPassword", mympd_state->nas_password, true);
-    buffer = tojson_char(buffer, "ideonVersion", mympd_state->ideon_version, true);
-    buffer = tojson_bool(buffer, "ideonUpdate", mympd_state->ideon_update, true);
-    buffer = tojson_bool(buffer, "tidal", mympd_state->tidal, true);
-    buffer = tojson_char(buffer, "tidalUsername", mympd_state->tidal_username, true);
-    buffer = tojson_char(buffer, "tidalPassword", mympd_state->tidal_password, true);
-    buffer = tojson_char(buffer, "tidalAudioquality", mympd_state->tidal_audioquality, true);
     buffer = tojson_bool(buffer, "publish", config->publish, true);
     buffer = tojson_char(buffer, "theme", mympd_state->theme, true);
     buffer = tojson_char(buffer, "highlightColor", mympd_state->highlight_color, true);
     buffer = tojson_bool(buffer, "featTimer", mympd_state->timer, true);
     buffer = tojson_bool(buffer, "featStickerCache", config->sticker_cache, true);
     buffer = tojson_char(buffer, "bookletName", mympd_state->booklet_name, true);
+    buffer = tojson_char(buffer, "mixerType", mympd_state->mixer_type, true);
+    buffer = tojson_bool(buffer, "dop", mympd_state->dop, true);
+    buffer = tojson_long(buffer, "nsType", mympd_state->ns_type, true);
+    buffer = tojson_char(buffer, "nsServer", mympd_state->ns_server, true);
+    buffer = tojson_char(buffer, "nsShare", mympd_state->ns_share, true);
+    buffer = tojson_char(buffer, "nsUsername", mympd_state->ns_username, true);
+    buffer = tojson_char(buffer, "nsPassword", mympd_state->ns_password, true);
+    buffer = tojson_bool(buffer, "airplay", mympd_state->airplay, true);
+    buffer = tojson_bool(buffer, "spotify", mympd_state->spotify, true);
+    buffer = tojson_bool(buffer, "tidalEnabled", mympd_state->tidal_enabled, true);
+    buffer = tojson_char(buffer, "tidalUsername", mympd_state->tidal_username, true);
+    buffer = tojson_char(buffer, "tidalPassword", mympd_state->tidal_password, true);
+    buffer = tojson_char(buffer, "tidalAudioquality", mympd_state->tidal_audioquality, true);
+    buffer = tojson_bool(buffer, "set", mympd_state->set, true);
     buffer = sdscatfmt(buffer, "\"colsQueueCurrent\":%s,", mympd_state->cols_queue_current);
     buffer = sdscatfmt(buffer, "\"colsSearchDatabase\":%s,", mympd_state->cols_search);
     buffer = sdscatfmt(buffer, "\"colsSearchTidal\":%s,", mympd_state->cols_search_tidal);
@@ -664,9 +693,7 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = sdscatfmt(buffer, "\"colsBrowseFilesystem\":%s,", mympd_state->cols_browse_filesystem);
     buffer = sdscatfmt(buffer, "\"colsPlayback\":%s,", mympd_state->cols_playback);
     buffer = sdscatfmt(buffer, "\"colsQueueLastPlayed\":%s", mympd_state->cols_queue_last_played);
-    buffer = sdscat(buffer, ",");
-    buffer = tojson_bool(buffer, "set", mympd_state->set, false);
-
+    
     if (config->syscmds == true) {
         buffer = sdscat(buffer, ",\"syscmdList\":[");
         int nr = 0;

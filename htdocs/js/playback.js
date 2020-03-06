@@ -1,13 +1,11 @@
 "use strict";
 
-var boxHeight = ''; // rm use only w/ calc
-
 var scrollToTopBtn = document.getElementById('scrollToTopBtn');
-
+/* 
 window.onscroll = function () {
     scrollFunction();
 };
-
+ */
 window.onresize = function () {
     calculateBoxHeight();
 };
@@ -23,7 +21,7 @@ function scrollFunction() {
 function setGridPlayback() {
     closeCover();
     let bts = document.getElementsByClassName('btnText');
-    let list = ['col-md-6', 'd-none', 'd-md-block']; // col2
+    let list = ['col-md-6', 'd-none', 'd-md-block'];
     if (app.current.app === 'Playback') {
         document.getElementById('row1').classList.add('row');
         document.getElementById('col1').classList.add('col-md-6');
@@ -32,10 +30,9 @@ function setGridPlayback() {
         document.getElementById('cardBrowse').classList.remove('hide');
         document.getElementById('cardHeaderBrowse').classList.add('hide');
         document.getElementById('cardBrowseCovergrid').classList.remove('hide');
-        /* for (let i = 0; i < bts.length; i++) {
+        for (let i = 0; i < bts.length; i++) {
             bts[i].style.display = 'none';
         }
-        document.getElementById('BrowseCovergridBox').style.height = boxHeight + 'px'; */
     }
     else {
         document.getElementById('row1').classList.remove('row');
@@ -43,7 +40,6 @@ function setGridPlayback() {
         document.getElementById('col2').classList.remove(...list);
         document.getElementById('cardQueueMini').classList.add('hide');
         document.getElementById('cardHeaderBrowse').classList.remove('hide');
-        document.getElementById('sortText').classList.remove('d-none');
         for (let i = 0; i < bts.length; i++) {
             bts[i].style.display = 'inline';
         }
@@ -58,7 +54,6 @@ function getQueueMini(pos, updFooter = false) {
     sendAPI("MPD_API_QUEUE_LIST", { "offset": 0, "cols": [] }, parseQueueList);
     // list
     if (pos !== undefined && pos !== -1) {
-        // console.log('api call mini', pos);
         sendAPI("MPD_API_QUEUE_MINI", { "pos": pos, "cols": colsQueueMini }, parseQueueMini);
     }
     else if (pos === undefined) {
@@ -132,11 +127,6 @@ function setCovergridList() {
 }
 
 function getBrowseCovergrid() {
-    let bts = document.getElementsByClassName('btnText');
-    for (let i = 0; i < bts.length; i++) {
-        bts[i].style.display = 'none';
-    }
-    // document.getElementById('BrowseCovergridBox').style.height = boxHeight + 'px';
     setCovergridList();
 
     document.getElementById('searchCovergridStr').value = app.current.search;
@@ -164,7 +154,7 @@ function calculateBoxHeight() {
     let bcb = document.getElementById('BrowseCovergridButtons').offsetHeight;
     let bcbb = document.getElementById('BrowseCovergridButtonsBottom').offsetHeight;
     let fb = document.getElementById('cardFooterBrowse').offsetHeight;
-    boxHeight = p + qm - bcb - bcbb - fb - 54 - 1;
+    let boxHeight = p + qm - bcb - bcbb - fb - 54 - 1;
     if (app.current.app === 'Playback') {
         document.getElementById('BrowseCovergridBox').style.height = boxHeight + 'px';
     }
@@ -185,7 +175,6 @@ function swapView() {
 }
 
 function gotoAlbumList() {
-    // console.log('gotoalbumlist');
     // maxof document.body.scrollTop document.documentElement.scrollTop // second one
     document.getElementById('btnBrowseCovergridAlbum').parentNode.classList.add('hide');
     getBrowseCovergrid();
@@ -197,7 +186,7 @@ function parseCovergridAlbum(obj) {
     let table = document.getElementById('BrowseCovergridAlbumList');
     let tbody = table.getElementsByTagName('tbody')[0];
     let tr = tbody.getElementsByTagName('tr');
-    let navigate = document.activeElement.parentNode.parentNode === table ? true : false;
+    // let navigate = document.activeElement.parentNode.parentNode === table ? true : false;
     let activeRow = 0;
     for (let i = 0; i < nrItems; i++) {
         let row = document.createElement('tr');
@@ -228,11 +217,11 @@ function parseCovergridAlbum(obj) {
     for (let i = trLen; i >= nrItems; i--) {
         tr[i].remove();
     }
-
+/* 
     if (navigate === true) {
         focusTable(0);
     }
-
+ */
     if (nrItems === 0)
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
             '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
@@ -313,7 +302,6 @@ function parseCovergridTitle(obj) {
 }
 
 function updateDBstats() {
-    console.log('update db stats');
     sendAPI("MPD_API_DATABASE_STATS", {}, parseDBstats);
 }
 

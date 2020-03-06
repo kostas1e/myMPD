@@ -16,7 +16,8 @@ var urlsToCache = [
     subdir + '/assets/coverimage-notavailable.svg',
     subdir + '/assets/coverimage-loading.svg',
     subdir + '/assets/favicon.ico',
-    subdir + '/assets/MaterialIcons-Regular.woff2'
+    subdir + '/assets/MaterialIcons-Regular.woff2',
+    subdir + '/assets/logo-ideon.png'
 ];
 
 var ignoreRequests = new RegExp('(' + [
@@ -54,7 +55,7 @@ self.addEventListener('fetch', function(event) {
                 return fetch(event.request);
             }
         })
-    );    
+    );
 });
 
 self.addEventListener('activate', function(event) {

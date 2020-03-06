@@ -93,8 +93,6 @@ function checkConsume() {
 }
 
 function parseSettings() {
-    parseIdeonSettings();
-
     if (settings.locale === 'default') {
         locale = navigator.language || navigator.userLanguage;
     }
@@ -383,6 +381,8 @@ function parseSettings() {
         logDebug('mediaSession not supported by browser');
     }
 
+    parseIdeonSettings();
+    
     settingsParsed = 'true';
 }
 
@@ -583,7 +583,6 @@ function parseMPDSettings() {
 
     initTagMultiSelect('inputEnabledTags', 'listEnabledTags', settings.allmpdtags, settings.tags);
     initTagMultiSelect('inputSearchTags', 'listSearchTags', settings.tags, settings.searchtags);
-    //initTagMultiSelect('inputSearchTidalTags', 'listSearchTidalTags', settings.tags, settings.searchtidaltags);
     initTagMultiSelect('inputBrowseTags', 'listBrowseTags', settings.tags, settings.browsetags);
     initTagMultiSelect('inputGeneratePlsTags', 'listGeneratePlsTags', settings.browsetags, settings.generatePlsTags);
 }
@@ -709,7 +708,6 @@ function saveSettings(closeModal) {
     if (formOK === true) {
         let selectJukeboxPlaylist = document.getElementById('selectJukeboxPlaylist');
         let selectLocale = document.getElementById('selectLocale');
-        // let selectTidalQuality = document.getElementById('selectTidalQual');
         let selectTheme = document.getElementById('selectTheme');
         sendAPI("MYMPD_API_SETTINGS_SET", {
             "consume": (document.getElementById('btnConsume').classList.contains('active') ? 1 : 0),
@@ -757,9 +755,6 @@ function saveSettings(closeModal) {
             "browsetaglist": getTagMultiSelectValues(document.getElementById('listBrowseTags'), false),
             "generatePlsTags": getTagMultiSelectValues(document.getElementById('listGeneratePlsTags'), false),
             "theme": selectTheme.options[selectTheme.selectedIndex].value,
-            // "tidalUsername": document.getElementById('inputTidalUser').value,
-            // "tidalPassword": document.getElementById('inputTidalPass').value,
-            // "tidalAudioquality": selectTidalQual.options[selectTidalQual.selectedIndex].value,
             "highlightColor": document.getElementById('inputHighlightColor').value,
             "timer": (document.getElementById('btnFeatTimer').classList.contains('active') ? true : false),
             "bookletName": document.getElementById('inputBookletName').value

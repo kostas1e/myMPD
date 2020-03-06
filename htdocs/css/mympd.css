@@ -7,7 +7,7 @@
 :root {
   --mympd-coverimagesize: 250px;
   --mympd-covergridsize: 200px;
-  --mympd-covergridsizehalf: 100px; /* ideon */
+  --mympd-covergridsizehalf: 100px;
   --mympd-highlightcolor: #28a745;
 }
 
@@ -38,6 +38,12 @@
 
 .splashScreenIcon {
   font-size: 4.8rem !important;
+  vertical-align: text-bottom !important;
+}
+
+#splashScreenLogo img {
+  filter: invert(100%);
+  height: 77px;
   vertical-align: text-bottom !important;
 }
 
@@ -150,6 +156,15 @@ button {
   .footerText {
     display: none;
   }
+  #mainMenu span {
+    display: none !important;
+  }
+}
+
+#mainMenu img {
+  height: 30px;
+  margin-right: 5px;
+  filter: invert(100%);
 }
 
 @media only screen and (min-width: 576px) and (max-width: 992px) {
@@ -159,13 +174,20 @@ button {
 }
 
 @media only screen and (max-width: 768px) {
-  #headerTitle {
+  #headerTitle, #headerCover {
     display: none !important;
   }
 }
 
 #headerTitle {
- text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  display: inline;
+}
+
+#headerCover {
+  display: inline-block;
+  width: 42px;
+  height: 42px;
 }
 
 .clickable {
@@ -259,6 +281,7 @@ a.card-img-left {
 
 .album-cover-loading {
   background-image: url("../assets/coverimage-loading.svg");
+  /* background-size: cover; */
 }
 
 .album-cover-songdetails {
@@ -267,10 +290,10 @@ a.card-img-left {
 
 .album-desc {
   min-width: 240px;
-  /* float: left; /* ideon */
+  /* float: left; */
   padding-bottom: 1.25rem;
-  height: var(--mympd-coverimagesize, 250px); /* ideon */
-  overflow-y: auto; /* ideon */
+  max-height: var(--mympd-coverimagesize, 250px);
+  overflow-y: auto;
 }
 
 .hide {
@@ -712,24 +735,22 @@ div#playDropdown .row {
   padding-top: 100%;
 }
 
-/* ideon */
-
 #scrollToTopBtn {
   display: none;
   position: fixed;
-  bottom: 4rem;
-  right: 1rem;
+  bottom: 76px;
+  right: 30px;
   z-index: 99;
-  border: none;
-  outline: none;
+  /* border: none; */
+  /* outline: none; */
   /* background-color: rgba(108, 117, 125, 0.5); */
-  background-color: rgba(255, 0, 0, 0.5);
+  /* background-color: rgba(255, 0, 0, 0.5); */
 }
 
-#scrollToTopBtn:hover {
+/* #scrollToTopBtn:hover { */
   /* background-color: rgba(90, 98, 104, 0.5); */
-  background-color: rgba(85, 85, 85, 0.5);
-}
+  /* background-color: rgba(85, 85, 85, 0.5); */
+/* } */
 
 #cardPlayback > div.card-header {
   height: 54px !important;
@@ -743,14 +764,6 @@ div#playDropdown .row {
   overflow-y: auto;
 }
 
-/*
-#QueueMiniList {
-  overflow-y: auto;
-  white-space: nowrap;
-
-}
- */
-
 [data-col=Add] {
   width: 2rem;
   text-align: right;
@@ -758,7 +771,6 @@ div#playDropdown .row {
 
 [data-col=Img] {
   width: 50px;
-  /* text-align: right; */
 }
 
 td[data-col=Add] {
@@ -778,4 +790,8 @@ td[data-col=Add] {
   .btnText {
     display: none !important;
   }
+}
+
+#QueueCurrentList td {
+  vertical-align: middle;
 }

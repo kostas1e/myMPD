@@ -1,7 +1,7 @@
 {
   "background_color": "#343a40",
   "theme_color": "#343a40",
-  "description": "myMPD - fast and lightweight MPD webclient",
+  "description": "IdeonAudio absolute",
   "display": "standalone",
   "icons": [
     {
@@ -15,7 +15,7 @@
       "type": "image/png"
     }
   ],
-  "name": "myMPD",
-  "short_name": "myMPD",
+  "name": "absolute",
+  "short_name": "absolute",
   "start_url": "."
 }

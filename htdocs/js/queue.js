@@ -67,7 +67,6 @@ function getQueue() {
 }
 
 function parseQueue(obj) {
-    console.log('qichk');
     if (obj.result.totalTime && obj.result.totalTime > 0 && obj.result.totalEntities <= settings.maxElementsPerPage) {
         document.getElementById('cardFooterQueue').innerText = t('Num songs', obj.result.totalEntities) + ' – ' + beautifyDuration(obj.result.totalTime);
     }
@@ -97,8 +96,7 @@ function parseQueue(obj) {
         row.setAttribute('data-uri', obj.result.data[i].uri);
         row.setAttribute('tabindex', 0);
         let tds = '';
-        // tmp cover td
-        tds += '<td data-col="Img"><img class="covergrid-header mr-0" src="' + subdir + '/albumart/' + obj.result.data[i].uri + '"/></td>';
+        tds += '<td data-col="Img"><img class="covergrid-header mr-0"/></td>';
         for (let c = 0; c < settings.colsQueueCurrent.length; c++) {
             tds += '<td data-col="' + settings.colsQueueCurrent[c] + '">' + e(obj.result.data[i][settings.colsQueueCurrent[c]]) + '</td>';
         }
@@ -109,6 +107,17 @@ function parseQueue(obj) {
         }
         else {
             tbody.append(row);
+        }
+        if ('IntersectionObserver' in window) {
+            let options = {
+                root: null,
+                rootMargin: '0px',
+            };
+            let observer = new IntersectionObserver(setRowImage, options);
+            observer.observe(row);
+        }
+        else {
+            row.firstChild.firstChild.src = subdir + '/albumart/' + obj.result.data[i].uri;
         }
     }
     let trLen = tr.length - 1;
@@ -134,6 +143,16 @@ function parseQueue(obj) {
 
     setPagination(obj.result.totalEntities, obj.result.returnedEntities);
     document.getElementById('QueueCurrentList').classList.remove('opacity05');
+}
+
+function setRowImage(changes, observer) {
+    changes.forEach(change => {
+        if (change.intersectionRatio > 0) {
+            observer.unobserve(change.target);
+            let uri = change.target.getAttribute('data-uri');
+            change.target.firstChild.firstChild.src = subdir + '/albumart/' + uri;
+        }
+    });
 }
 
 function parseLastPlayed(obj) {

@@ -275,27 +275,46 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     else if (MATCH("theme", "locale")) {
         p_config->locale = sdsreplace(p_config->locale, value);
     }
-    else if (MATCH("ideon", "nastype")) {
-        p_config->nas_type = strtoimax(value, &crap, 10);
-        if (p_config->nas_type < 0 || p_config->nas_type > 2) {
-            LOG_WARN("Invalid NAS type %d", p_config->nas_type);
-            p_config->nas_type = 0;
+    else if (MATCH("theme", "customplaceholderimages")) {
+        p_config->custom_placeholder_images = strtobool(value);
+    }
+    else if (strcasecmp(section, "syscmds") == 0) {
+        LOG_DEBUG("Adding syscmd %s: %s", name, value);
+        list_push(&p_config->syscmd_list, name, 0, value, NULL);
+    }
+    else if (MATCH("ideon", "mixertype")) {
+        p_config->mixer_type = sdsreplace(p_config->mixer_type, value);
+    }
+    else if (MATCH("ideon", "dop")) {
+        p_config->dop = strcmp(value, "true") == 0 ? true : false;
+    }
+    else if (MATCH("ideon", "nstype")) {
+        p_config->ns_type = strtoimax(value, &crap, 10);
+        if (p_config->ns_type < 0 || p_config->ns_type > 2) {
+            LOG_WARN("Invalid share type %d", p_config->ns_type);
+            p_config->ns_type = 0;
         }
     }
-    else if (MATCH("ideon", "nashost")) {
-        p_config->nas_host = sdsreplace(p_config->nas_host, value);
+    else if (MATCH("ideon", "nsserver")) {
+        p_config->ns_server = sdsreplace(p_config->ns_server, value);
     }
-    else if (MATCH("ideon", "nasdirectory")) {
-        p_config->nas_directory = sdsreplace(p_config->nas_directory, value);
+    else if (MATCH("ideon", "nsshare")) {
+        p_config->ns_share = sdsreplace(p_config->ns_share, value);
     }
-    else if (MATCH("ideon", "nasusername")) {
-        p_config->nas_username = sdsreplace(p_config->nas_username, value);
+    else if (MATCH("ideon", "nsusername")) {
+        p_config->ns_username = sdsreplace(p_config->ns_username, value);
     }
-    else if (MATCH("ideon", "naspassword")) {
-        p_config->nas_password = sdsreplace(p_config->nas_password, value);
+    else if (MATCH("ideon", "nspassword")) {
+        p_config->ns_password = sdsreplace(p_config->ns_password, value);
     }
-    else if (MATCH("ideon", "tidal")) {
-        p_config->tidal = strcmp(value, "true") == 0 ? true : false;
+    else if (MATCH("ideon", "airplay")) {
+        p_config->airplay = strcmp(value, "true") == 0 ? true : false;
+    }
+    else if (MATCH("ideon", "spotify")) {
+        p_config->spotify = strcmp(value, "true") == 0 ? true : false;
+    }
+    else if (MATCH("tidal", "enabled")) {
+        p_config->tidal_enabled = strcmp(value, "true") == 0 ? true : false;
     }
     else if (MATCH("tidal", "token")) {
         p_config->tidal_token = sdsreplace(p_config->tidal_token, value);
@@ -308,22 +327,6 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     }
     else if (MATCH("tidal", "audioquality")) {
         p_config->tidal_audioquality = sdsreplace(p_config->tidal_audioquality, value);
-    }
-    else if (MATCH("ideon", "version")) {
-        p_config->ideon_version = sdsreplace(p_config->ideon_version, value);
-    }
-    else if (MATCH("ideon", "update")) {
-        p_config->ideon_update = strcmp(value, "true") == 0 ? true : false;
-    }
-    else if (MATCH("mpd", "conf")) {
-        p_config->mpd_conf = sdsreplace(p_config->mpd_conf, value);
-    }
-    else if (MATCH("theme", "customplaceholderimages")) {
-        p_config->custom_placeholder_images = strtobool(value);
-    }
-    else if (strcasecmp(section, "syscmds") == 0) {
-        LOG_DEBUG("Adding syscmd %s: %s", name, value);
-        list_push(&p_config->syscmd_list, name, 0, value, NULL);
     }
     else {
         LOG_WARN("Unknown config option: %s - %s", section, name);
@@ -374,8 +377,8 @@ static void mympd_get_env(struct t_config *config) {
         "THEME_BGCOVER", "THEME_BGCOLOR", "THEME_BGCSSFILTER", "THEME_COVERGRIDSIZE",
         "THEME_COVERIMAGE", "THEME_COVERIMAGENAME", "THEME_COVERIMAGESIZE",
         "THEME_LOCALE", "THEME_HIGHLIGHTCOLOR",
-        "IDEON_NASTYPE", "IDEON_NASHOST", "IDEON_NASDIRECTORY", "IDEON_NASUSERNAME", "IDEON_NASPASSWORD", "IDEON_TIDAL", "IDEON_VERSION", "IDEON_UPDATE",
-        "TIDAL_TOKEN", "TIDAL_USERNAME", "TIDAL_PASSWORD", "TIDAL_AUDIOQUALITY", "MYMPD_COLSSEARCHTIDAL", "MYMPD_SEARCHTIDALTAGLIST", 0};
+        "IDEON_MIXERTYPE", "IDEON_DOP", "IDEON_NSTYPE", "IDEON_NSSERVER", "IDEON_NSSHARE", "IDEON_NSUSERNAME", "IDEON_NSPASSWORD", "IDEON_AIRPLAY", "IDEON_SPOTIFY",
+        "TIDAL_ENABLED", "TIDAL_TOKEN", "TIDAL_USERNAME", "TIDAL_PASSWORD", "TIDAL_AUDIOQUALITY", "MYMPD_COLSSEARCHTIDAL", "MYMPD_SEARCHTIDALTAGLIST", 0};
     const char** ptr = env_vars;
     while (*ptr != 0) {
         mympd_parse_env(config, *ptr);
@@ -423,19 +426,18 @@ void mympd_free_config(t_config *config) {
     sdsfree(config->smartpls_sort);
     sdsfree(config->smartpls_prefix);
     sdsfree(config->booklet_name);
+    list_free(&config->syscmd_list);
+    sdsfree(config->mixer_type);
+    sdsfree(config->ns_server);
+    sdsfree(config->ns_share);
+    sdsfree(config->ns_username);
+    sdsfree(config->ns_password);
     sdsfree(config->searchtidaltaglist);
     sdsfree(config->cols_search_tidal);
     sdsfree(config->tidal_token);
     sdsfree(config->tidal_username);
     sdsfree(config->tidal_password);
     sdsfree(config->tidal_audioquality);
-    sdsfree(config->mpd_conf);
-    sdsfree(config->ideon_version);
-    sdsfree(config->nas_host);
-    sdsfree(config->nas_directory);
-    sdsfree(config->nas_username);
-    sdsfree(config->nas_password);
-    list_free(&config->syscmd_list);
     FREE_PTR(config);
 }
 
@@ -461,7 +463,6 @@ void mympd_config_defaults(t_config *config) {
     config->mixramp = false;
     config->taglist = sdsnew("Artist, Album, AlbumArtist, Title, Track, Genre, Date");
     config->searchtaglist = sdsnew("Artist, Album, AlbumArtist, Title, Genre");
-    config->searchtidaltaglist = sdsnew("Artist,Album,Title");
     config->browsetaglist = sdsnew("Artist, Album, AlbumArtist, Genre");
     config->smartpls = true;
     config->smartpls_sort = sdsempty();
@@ -487,7 +488,6 @@ void mympd_config_defaults(t_config *config) {
     config->cols_queue_current = sdsnew("[\"Pos\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
     config->cols_queue_last_played = sdsnew("[\"Pos\",\"Title\",\"Artist\",\"Album\",\"LastPlayed\"]");
     config->cols_search = sdsnew("[\"Title\",\"Artist\",\"Album\",\"Duration\"]");
-    config->cols_search_tidal = sdsnew("[\"Type\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
     config->cols_browse_database = sdsnew("[\"Track\",\"Title\",\"Duration\"]");
     config->cols_browse_playlists_detail = sdsnew("[\"Pos\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
     config->cols_browse_filesystem = sdsnew("[\"Type\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
@@ -520,25 +520,23 @@ void mympd_config_defaults(t_config *config) {
     config->sticker_cache = true;
     config->covergridminsongs = 1;
     config->booklet_name = sdsnew("booklet.pdf");
-    config->nas_type = 0;
-    config->nas_host = sdsempty();
-    config->nas_directory = sdsempty();
-    config->nas_username = sdsempty();
-    config->nas_password = sdsempty();
-    config->tidal = false;
+    list_init(&config->syscmd_list);
+    config->mixer_type = sdsnew("disabled");
+    config->dop = false;
+    config->ns_type = 0;
+    config->ns_server = sdsempty();
+    config->ns_share = sdsempty();
+    config->ns_username = sdsempty();
+    config->ns_password = sdsempty();
+    config->airplay = false;
+    config->spotify = false;
+    config->tidal_enabled = false;
     config->tidal_token = sdsempty();
     config->tidal_username = sdsempty();
     config->tidal_password = sdsempty();
     config->tidal_audioquality = sdsnew("HIGH");
-    config->ideon_version = sdsnew(IDEON_VERSION);
-    config->ideon_update = false;
-    // config->qobuz_app_id = 100000000;
-    // config->qobuz_app_secret = sdsempty();
-    // config->qobuz_username = sdsempty();
-    // config->qobuz_password = sdsempty();
-    // config->qobuz_format_id = 5;
-    config->mpd_conf = sdscat(sdsnew(ETC_PATH), "/mpd.conf");
-    list_init(&config->syscmd_list);
+    config->searchtidaltaglist = sdsnew("Artist,Album,Title");
+    config->cols_search_tidal = sdsnew("[\"Type\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
 }
 
 bool mympd_dump_config(void) {

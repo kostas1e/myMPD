@@ -152,6 +152,7 @@ bool serve_embedded_files(struct mg_connection *nc, sds uri, struct http_message
         {"/assets/favicon.ico", 19, "image/vnd.microsoft.icon", false, favicon_ico_data, favicon_ico_size},
         {"/assets/appicon-192.png", 23, "image/png", false, appicon_192_png_data, appicon_192_png_size},
         {"/assets/appicon-512.png", 23, "image/png", false, appicon_512_png_data, appicon_512_png_size},
+        {"/assets/logo-ideon.png", 22, "image/png", false, logo_ideon_png_data, logo_ideon_png_size},
         {NULL, 0, NULL, false, NULL, 0}
     };
     //decode uri

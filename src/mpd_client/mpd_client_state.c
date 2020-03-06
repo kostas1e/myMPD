@@ -24,7 +24,6 @@
 #include "mpd_client_api.h"
 #include "mpd_client_sticker.h"
 #include "mpd_client_state.h"
-//#include "../tidal.h"
 
 sds mpd_client_get_updatedb_state(t_mpd_state *mpd_state, sds buffer) {
     struct mpd_status *status = mpd_run_status(mpd_state->conn);
@@ -42,8 +41,8 @@ sds mpd_client_get_updatedb_state(t_mpd_state *mpd_state, sds buffer) {
         buffer = jsonrpc_start_notify(buffer, "update_finished");
         buffer = jsonrpc_end_notify(buffer);
     }
-    mpd_status_free(status);    
-    return buffer;    
+    mpd_status_free(status);
+    return buffer;
 }
 
 sds mpd_client_put_state(t_config *config, t_mpd_state *mpd_state, sds buffer, sds method, int request_id) {
@@ -90,7 +89,7 @@ sds mpd_client_put_state(t_config *config, t_mpd_state *mpd_state, sds buffer, s
         mpd_state->song_end_time = now + total_time - elapsed_time - 10;
         mpd_state->song_start_time = now - elapsed_time;
         int half_time = total_time / 2;
-        
+
         if (half_time > 240) {
             mpd_state->set_song_played_time = now - elapsed_time + 240;
         }
@@ -104,7 +103,7 @@ sds mpd_client_put_state(t_config *config, t_mpd_state *mpd_state, sds buffer, s
         mpd_state->song_start_time = 0;
         mpd_state->set_song_played_time = 0;
     }
-    
+
     if (method == NULL) {
         buffer = jsonrpc_start_notify(buffer, "update_state");
     }
@@ -195,7 +194,7 @@ sds mpd_client_put_outputs(t_mpd_state *mpd_state, sds buffer, sds method, int r
     buffer = sdscat(buffer, "],");
     buffer = tojson_long(buffer, "numOutputs", nr, false);
     buffer = jsonrpc_end_result(buffer);
-    
+
     return buffer;
 }
 
@@ -205,7 +204,7 @@ sds mpd_client_put_current_song(t_mpd_state *mpd_state, sds buffer, sds method, 
         buffer = jsonrpc_respond_message(buffer, method, request_id, "No current song", false);
         return buffer;
     }
-    
+
     const char *uri = mpd_song_get_uri(song);
 
     buffer = jsonrpc_start_result(buffer, method, request_id);
@@ -213,17 +212,9 @@ sds mpd_client_put_current_song(t_mpd_state *mpd_state, sds buffer, sds method, 
     buffer = tojson_long(buffer, "pos", mpd_song_get_pos(song), true);
     buffer = tojson_long(buffer, "currentSongId", mpd_state->song_id, true);
     buffer = put_song_tags(buffer, mpd_state, &mpd_state->mympd_tag_types, song);
-    
+
     mpd_response_finish(mpd_state->conn);
 
-    /*
-    sds cover = sdsempty();
-    cover = mpd_client_get_cover(config, mpd_state, mpd_song_get_uri(song), cover);
-    buffer = sdscat(buffer, ",");
-    buffer = tojson_char(buffer, "cover", cover, false);
-    sdsfree(cover);
-    */
-    
     if (mpd_state->feat_sticker) {
         t_sticker *sticker = (t_sticker *) malloc(sizeof(t_sticker));
         assert(sticker);
@@ -240,7 +231,7 @@ sds mpd_client_put_current_song(t_mpd_state *mpd_state, sds buffer, sds method, 
     //waits for further implementation in 7.1.0 release
     //buffer = sdscat(buffer, ",");
     //buffer = put_extra_files(mpd_state, buffer, uri);
-    
+
     mpd_song_free(song);
     buffer = jsonrpc_end_result(buffer);
     return buffer;

@@ -82,7 +82,6 @@ function showMenuTh(el) {
         event.target.setAttribute('data-popover', 'true');
         let table = app.current.app + (app.current.tab !== undefined ? app.current.tab : '') + (app.current.view !== undefined ? app.current.view : '');
         // tmp fix rm view for tidal
-        console.log('showMenuTh in2', table);
         if (table === 'SearchTidalAll' || table === 'SearchTidalArtist' || table === 'SearchTidalAlbum') {
             table = 'SearchTidal';
         }
@@ -114,15 +113,15 @@ function showMenuTd(el) {
     let uri = decodeURI(el.getAttribute('data-uri'));
     let name = decodeURI(el.getAttribute('data-name'));
     let nextsongpos = 0;
-    console.log(1, type, uri, name);
+    // console.log(1, type, uri, name);
     if (type === null || uri === '') { // a > td > tr
         type = el.parentNode.parentNode.getAttribute('data-type');
         uri = decodeURI(el.parentNode.parentNode.getAttribute('data-uri'));
         name = el.parentNode.parentNode.getAttribute('data-name');
     }
-    console.log(2, type, uri, name);
+    // console.log(2, type, uri, name);
     if ((type === null || uri === '') && (app.current.tab === 'Playlists' || app.current.tab === 'Filesystem')) { // wip playlist td > tr plus
-        console.log('testa');
+        // console.log('testa');
         /* if (uri !== null && uri !== '') {
             //
             console.log('test');
@@ -133,7 +132,7 @@ function showMenuTd(el) {
         name = el.parentNode.getAttribute('data-name');
         // }
     }
-    console.log(3, type, uri, name);
+    // console.log(3, type, uri, name);
 
     if (lastState) {
         nextsongpos = lastState.nextSongPos;
@@ -223,7 +222,7 @@ function showMenuTd(el) {
         }
         else {
             // wip - plist details cap menu
-            console.log('cap2', app.current.search, type, uri, name);
+            // console.log('cap2', app.current.search, type, uri, name);
             type = 'plist';
             name = uri;
             menu += addMenuItem({ "cmd": "appendPlayQueue", "options": [type, uri, name] }, t('Play')) +

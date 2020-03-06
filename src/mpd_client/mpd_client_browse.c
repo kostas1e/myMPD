@@ -33,7 +33,7 @@ sds mpd_client_put_fingerprint(t_mpd_state *mpd_state, sds buffer, sds method, i
     }
 
     buffer = jsonrpc_start_result(buffer, method, request_id);
-    
+
     #if LIBMPDCLIENT_CHECK_VERSION(2,17,0)
     char fp_buffer[8192];
     const char *fingerprint = mpd_run_getfingerprint_chromaprint(mpd_state->conn, uri, fp_buffer, sizeof(fp_buffer));
@@ -52,7 +52,7 @@ sds mpd_client_put_fingerprint(t_mpd_state *mpd_state, sds buffer, sds method, i
     return buffer;
 }
 
-sds mpd_client_put_songdetails(t_mpd_state *mpd_state, sds buffer, sds method, int request_id, 
+sds mpd_client_put_songdetails(t_mpd_state *mpd_state, sds buffer, sds method, int request_id,
                                const char *uri)
 {
     if (validate_songuri(uri) == false) {
@@ -82,7 +82,7 @@ sds mpd_client_put_songdetails(t_mpd_state *mpd_state, sds buffer, sds method, i
     if (check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
         return buffer;
     }
-    
+
     if (mpd_state->feat_sticker) {
         t_sticker *sticker = (t_sticker *) malloc(sizeof(t_sticker));
         assert(sticker);
@@ -95,19 +95,19 @@ sds mpd_client_put_songdetails(t_mpd_state *mpd_state, sds buffer, sds method, i
         buffer = tojson_long(buffer, "lastSkipped", sticker->lastSkipped, false);
         FREE_PTR(sticker);
     }
-    
+
     buffer = sdscat(buffer, ",");
     buffer = put_extra_files(mpd_state, buffer, uri);
     buffer = jsonrpc_end_result(buffer);
     return buffer;
 }
 
-sds mpd_client_put_filesystem(t_config *config, t_mpd_state *mpd_state, sds buffer, sds method, int request_id, 
+sds mpd_client_put_filesystem(t_config *config, t_mpd_state *mpd_state, sds buffer, sds method, int request_id,
                               const char *path, const unsigned int offset, const char *filter, const t_tags *tagcols)
 {
     buffer = jsonrpc_start_result(buffer, method, request_id);
     buffer = sdscat(buffer, ",\"data\":[");
-    
+
     if (!mpd_send_list_meta(mpd_state->conn, path)) {
         buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
         return buffer;
@@ -128,7 +128,7 @@ sds mpd_client_put_filesystem(t_config *config, t_mpd_state *mpd_state, sds buff
                     const struct mpd_song *song = mpd_entity_get_song(entity);
                     const char *entityName = mpd_client_get_tag(song, MPD_TAG_TITLE);
                     if (strncmp(filter, "-", 1) == 0 || strncasecmp(filter, entityName, 1) == 0 ||
-                        (strncmp(filter, "0", 1) == 0 && isalpha(*entityName) == 0 )) 
+                        (strncmp(filter, "0", 1) == 0 && isalpha(*entityName) == 0 ))
                     {
                         if (entities_returned++) {
                             buffer = sdscat(buffer, ",");
@@ -143,7 +143,7 @@ sds mpd_client_put_filesystem(t_config *config, t_mpd_state *mpd_state, sds buff
                     break;
                 }
                 case MPD_ENTITY_TYPE_DIRECTORY: {
-                    const struct mpd_directory *dir = mpd_entity_get_directory(entity);                
+                    const struct mpd_directory *dir = mpd_entity_get_directory(entity);
                     const char *entityName = mpd_directory_get_path(dir);
                     char *dirName = strrchr(entityName, '/');
 
@@ -155,8 +155,8 @@ sds mpd_client_put_filesystem(t_config *config, t_mpd_state *mpd_state, sds buff
                     }
 
                     if (strncmp(filter, "-", 1) == 0 || strncasecmp(filter, dirName, 1) == 0 ||
-                        (strncmp(filter, "0", 1) == 0 && isalpha(*dirName) == 0 )) 
-                    {                
+                        (strncmp(filter, "0", 1) == 0 && isalpha(*dirName) == 0 ))
+                    {
                         if (entities_returned++) {
                             buffer = sdscat(buffer, ",");
                         }
@@ -181,7 +181,7 @@ sds mpd_client_put_filesystem(t_config *config, t_mpd_state *mpd_state, sds buff
                         plName = (char *)entityName;
                     }
                     if (strncmp(filter, "-", 1) == 0 || strncasecmp(filter, plName, 1) == 0 ||
-                        (strncmp(filter, "0", 1) == 0 && isalpha(*plName) == 0 )) 
+                        (strncmp(filter, "0", 1) == 0 && isalpha(*plName) == 0 ))
                     {
                         if (entities_returned++) {
                             buffer = sdscat(buffer, ",");
@@ -203,7 +203,7 @@ sds mpd_client_put_filesystem(t_config *config, t_mpd_state *mpd_state, sds buff
     }
 
     mpd_response_finish(mpd_state->conn);
-    
+
     if (check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
         return buffer;
     }
@@ -222,7 +222,7 @@ sds mpd_client_put_db_tag(t_mpd_state *mpd_state, sds buffer, sds method, int re
 {
     buffer = jsonrpc_start_result(buffer, method, request_id);
     buffer = sdscat(buffer, ",\"data\":[");
-    
+
     if (mpd_search_db_tags(mpd_state->conn, mpd_tag_name_parse(mpdtagtype)) == false) {
         buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
         mpd_search_cancel(mpd_state->conn);
@@ -249,7 +249,7 @@ sds mpd_client_put_db_tag(t_mpd_state *mpd_state, sds buffer, sds method, int re
                 entity_count--;
             }
             else if (strncmp(filter, "-", 1) == 0 || strncasecmp(filter, pair->value, 1) == 0 ||
-                    (strncmp(filter, "0", 1) == 0 && isalpha(*pair->value) == 0 )) 
+                    (strncmp(filter, "0", 1) == 0 && isalpha(*pair->value) == 0 ))
             {
                 if (entities_returned++) {
                     buffer = sdscat(buffer, ",");
@@ -292,7 +292,7 @@ sds mpd_client_put_songs_in_album(t_mpd_state *mpd_state, sds buffer, sds method
         buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
         mpd_search_cancel(mpd_state->conn);
         return buffer;
-    }    
+    }
     if (mpd_search_add_tag_constraint(mpd_state->conn, MPD_OPERATOR_DEFAULT, mpd_tag_name_parse(tag), search) == false) {
         buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
         mpd_search_cancel(mpd_state->conn);
@@ -345,19 +345,19 @@ sds mpd_client_put_songs_in_album(t_mpd_state *mpd_state, sds buffer, sds method
     buffer = tojson_char(buffer, "AlbumArtist", (albumartist != NULL ? albumartist : "-"), true);
     buffer = tojson_long(buffer, "totalTime", totalTime, false);
     buffer = jsonrpc_end_result(buffer);
-        
+
     if (first_song != NULL) {
         mpd_song_free(first_song);
     }
-    
+
     if (check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
         return buffer;
     }
-    
-    return buffer;    
+
+    return buffer;
 }
 
-sds mpd_client_put_firstsong_in_albums(t_config *config, t_mpd_state *mpd_state, sds buffer, sds method, int request_id, 
+sds mpd_client_put_firstsong_in_albums(t_config *config, t_mpd_state *mpd_state, sds buffer, sds method, int request_id,
                                        const char *searchstr, const char *tag, const char *sort, bool sortdesc, const unsigned int offset)
 {
     buffer = jsonrpc_start_result(buffer, method, request_id);
@@ -426,6 +426,6 @@ sds mpd_client_put_firstsong_in_albums(t_config *config, t_mpd_state *mpd_state,
     buffer = tojson_long(buffer, "totalEntities", -1, true);
     buffer = tojson_long(buffer, "returnedEntities", entities_returned, false);
     buffer = jsonrpc_end_result(buffer);
-        
-    return buffer;    
+
+    return buffer;
 }

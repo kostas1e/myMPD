@@ -86,15 +86,15 @@ void check_timer(struct t_timer_list *l, bool gui) {
     return;
 }
 
-bool replace_timer(struct t_timer_list *l, unsigned int timeout, unsigned int interval, time_handler handler, 
+bool replace_timer(struct t_timer_list *l, unsigned int timeout, unsigned int interval, time_handler handler,
                    int timer_id, struct t_timer_definition *definition, void *user_data)
 {
     remove_timer(l, timer_id);
     return add_timer(l, timeout, interval, handler, timer_id, definition, user_data);
 }
 
-bool add_timer(struct t_timer_list *l, unsigned int timeout, unsigned int interval, time_handler handler, 
-               int timer_id, struct t_timer_definition *definition, void *user_data) 
+bool add_timer(struct t_timer_list *l, unsigned int timeout, unsigned int interval, time_handler handler,
+               int timer_id, struct t_timer_definition *definition, void *user_data)
 {
 
     if (l->length == 100) {
@@ -106,14 +106,14 @@ bool add_timer(struct t_timer_list *l, unsigned int timeout, unsigned int interv
     if (new_node == NULL) {
         return false;
     }
- 
+
     new_node->callback = handler;
     new_node->definition = definition;
     new_node->user_data = user_data;
     new_node->timeout = timeout;
     new_node->interval = interval;
     new_node->timer_id = timer_id;
- 
+
     if (definition == NULL || definition->enabled == true) {
         new_node->fd = timerfd_create(CLOCK_REALTIME, 0);
         if (new_node->fd == -1) {
@@ -121,7 +121,7 @@ bool add_timer(struct t_timer_list *l, unsigned int timeout, unsigned int interv
             LOG_ERROR("Can't create timerfd");
             return false;
         }
- 
+
         struct itimerspec new_value;
         //timeout
         new_value.it_value.tv_sec = timeout;
@@ -144,11 +144,11 @@ bool add_timer(struct t_timer_list *l, unsigned int timeout, unsigned int interv
     }
     return true;
 }
- 
+
 void remove_timer(struct t_timer_list *l, int timer_id) {
     struct t_timer_node *current = NULL;
     struct t_timer_node *previous = NULL;
-    
+
     for (current = l->list; current != NULL; previous = current, current = current->next) {
         if (current->timer_id == timer_id) {
             LOG_DEBUG("Removing timer with id %d", timer_id);
@@ -183,7 +183,7 @@ void toggle_timer(struct t_timer_list *l, int timer_id) {
 void truncate_timerlist(struct t_timer_list *l) {
     struct t_timer_node *current = l->list;
     struct t_timer_node *tmp = NULL;
-    
+
     while (current != NULL) {
         LOG_DEBUG("Removing timer with id %d", current->timer_id);
         tmp = current;
@@ -295,7 +295,7 @@ sds timer_list(t_mympd_state *mympd_state, sds buffer, sds method, int request_i
         }
         current = current->next;
     }
-    
+
     buffer = sdscat(buffer, "],");
     buffer = tojson_long(buffer, "returnedEntities", entities_returned, false);
     buffer = jsonrpc_end_result(buffer);
@@ -331,9 +331,9 @@ sds timer_get(t_mympd_state *mympd_state, sds buffer, sds method, int request_id
         }
         current = current->next;
     }
-    
+
     buffer = jsonrpc_end_result(buffer);
-    
+
     if (found == false) {
         buffer = jsonrpc_respond_message(buffer, method, request_id, "Timer with given id not found", true);
     }
@@ -423,13 +423,13 @@ bool timerfile_save(t_config *config, t_mympd_state *mympd_state) {
     }
     sdsfree(tmp_file);
     sdsfree(timer_file);
-    return true;    
+    return true;
 }
 
-//private functions 
+//private functions
 static struct t_timer_node *get_timer_from_fd(struct t_timer_list *l, int fd) {
     struct t_timer_node *current = l->list;
- 
+
     while (current != NULL) {
         if (current->fd == fd) {
             return current;

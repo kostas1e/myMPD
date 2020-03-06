@@ -180,7 +180,6 @@ function appPrepare(scrollPos) {
         document.getElementById('cardBrowseCovergrid').classList.add('hide');
         document.getElementById('cardSearchDatabase').classList.add('hide');
         document.getElementById('cardSearchTidal').classList.add('hide');
-        document.getElementById('cardSearchQobuz').classList.add('hide'); // rm
         // Show active card + nav
         setGridPlayback(); // ch
         document.getElementById('card' + app.current.app).classList.remove('hide');
@@ -492,7 +491,6 @@ function clearAndReload() {
 }
 
 function appInitStart() {
-    console.log('appinitstart');
     subdir = window.location.pathname.replace('/index.html', '').replace(/\/$/, '');
     let localeList = '<option value="default" data-phrase="Browser default"></option>';
     for (let i = 0; i < locales.length; i++) {
@@ -531,7 +529,6 @@ function appInitStart() {
 }
 
 function appInitWait() {
-    console.log('appinitwait');
     setTimeout(function () {
         if (settingsParsed === 'true' && websocketConnected === true) {
             // App initialized
@@ -560,7 +557,6 @@ function appInitWait() {
 }
 
 function appInit() {
-    console.log('appinit');
     document.getElementById('btnChVolumeDown').addEventListener('click', function (event) {
         event.stopPropagation();
     }, false);
@@ -647,7 +643,6 @@ function appInit() {
     });
 
     document.getElementById('modalAddToPlaylist').addEventListener('keydown', function (event) {
-        event.preventDefault();
         event.stopPropagation();
         if (event.keyCode === 13) {
             if (!document.getElementById('addStreamFrm').classList.contains('hide')) {
@@ -722,7 +717,6 @@ function appInit() {
     });
 
     document.getElementById('modalSettings').addEventListener('keydown', function (event) {
-        event.preventDefault();
         event.stopPropagation();
         if (event.keyCode === 13) {
             saveSettings();
@@ -730,6 +724,11 @@ function appInit() {
         else if (event.keyCode == 27) {
             modalSettings.hide();
         }
+    });
+
+    document.getElementById('modalIdeon').addEventListener('shown.bs.modal', function () {
+        getSettings(); // ch to idset
+        // checkForUpdates(); // upd modal info in case of timer back changes
     });
 
     document.getElementById('modalConnection').addEventListener('shown.bs.modal', function () {
@@ -740,7 +739,6 @@ function appInit() {
     });
 
     document.getElementById('modalConnection').addEventListener('keydown', function (event) {
-        event.preventDefault();
         event.stopPropagation();
         if (event.keyCode === 13) {
             saveConnection();
@@ -1076,7 +1074,7 @@ function appInit() {
     }, false);
 
     // rm
-    document.getElementById('SearchQobuzList').addEventListener('click', function (event) {
+/*     document.getElementById('SearchQobuzList').addEventListener('click', function (event) {
         if (event.target.nodeName === 'TD') {
             let uri = decodeURI(event.target.parentNode.getAttribute("data-uri"));
             switch (event.target.parentNode.getAttribute('data-type')) {
@@ -1101,7 +1099,7 @@ function appInit() {
             showMenu(event.target, event);
         }
     }, false);
-
+ */
     document.getElementById('BrowseFilesystemAddAllSongsDropdown').addEventListener('click', function (event) {
         if (event.target.nodeName === 'BUTTON') {
             if (event.target.getAttribute('data-phrase') === 'Add all to queue') {
@@ -1205,12 +1203,12 @@ function appInit() {
     }, false);
 
     // rm
-    document.getElementById('searchqobuztags').addEventListener('click', function (event) {
+/*     document.getElementById('searchqobuztags').addEventListener('click', function (event) {
         if (event.target.nodeName === 'BUTTON') {
             app.current.filter = event.target.getAttribute('data-tag');
             searchQobuz(domCache.searchqobuzstr.value);
         }
-    }, false);
+    }, false); */
     document.getElementById('dropdownSortPlaylistTags').addEventListener('click', function (event) {
         if (event.target.nodeName === 'BUTTON') {
             event.preventDefault();
@@ -1358,10 +1356,10 @@ function appInit() {
         }
     }, false);
 
-    document.getElementById('SearchTidalList').getElementsByTagName('tr')[0].addEventListener('click', function (event) {
+/*     document.getElementById('SearchTidalList').getElementsByTagName('tr')[0].addEventListener('click', function (event) {
         // ch
     }, false);
-
+ */
     document.getElementById('BrowseDatabaseByTagDropdown').addEventListener('click', function (event) {
         if (event.target.nodeName === 'BUTTON') {
             appGoto(app.current.app, app.current.tab, event.target.getAttribute('data-tag'), '0/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
@@ -1470,29 +1468,34 @@ function appInit() {
         }
     });
     
-    document.getElementById('selectNasType').addEventListener('change', function () {
+    document.getElementById('selectNsType').addEventListener('change', function () {
         let value = this.options[this.selectedIndex].value;
         if (value === '0') {
-            document.getElementById('inputNasHost').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNasDirectory').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNasUsername').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNasPassword').setAttribute('disabled', 'disabled');
+            document.getElementById('inputNsServer').setAttribute('disabled', 'disabled');
+            document.getElementById('inputNsShare').setAttribute('disabled', 'disabled');
+            document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
+            document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
+            document.getElementById('inputNsServer').value = '';
+            document.getElementById('inputNsShare').value = '';
+            document.getElementById('inputNsUsername').value = '';
+            document.getElementById('inputNsPassword').value = '';
         }
         else if (value === '1') {
-            document.getElementById('inputNasHost').removeAttribute('disabled');
-            document.getElementById('inputNasDirectory').removeAttribute('disabled');
-            document.getElementById('inputNasUsername').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNasPassword').setAttribute('disabled', 'disabled');
+            document.getElementById('inputNsServer').removeAttribute('disabled');
+            document.getElementById('inputNsShare').removeAttribute('disabled');
+            document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
+            document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
+            document.getElementById('inputNsUsername').value = 'guest';
+            document.getElementById('inputNsPassword').value = '';
         }
         else if (value === '2') {
-            document.getElementById('inputNasHost').removeAttribute('disabled');
-            document.getElementById('inputNasDirectory').removeAttribute('disabled');
-            document.getElementById('inputNasUsername').removeAttribute('disabled');
-            document.getElementById('inputNasPassword').removeAttribute('disabled');
+            document.getElementById('inputNsServer').removeAttribute('disabled');
+            document.getElementById('inputNsShare').removeAttribute('disabled');
+            document.getElementById('inputNsUsername').removeAttribute('disabled');
+            document.getElementById('inputNsPassword').removeAttribute('disabled');
         }
     });
-    /*
-/* 
+
     /*
     // first time setup wip
     if (settings.set === false) {
@@ -1505,6 +1508,7 @@ function appInit() {
      */
     // setGridPlayback();
     // appPrepare();
+    checkForUpdates();
     updateDBstats();
     // sendAPI("MPD_API_DATABASE_STATS", {}, parseStats);
 }

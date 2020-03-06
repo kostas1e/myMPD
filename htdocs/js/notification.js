@@ -217,4 +217,8 @@ function toggleUI() {
         logMessage(t('Websocket is disconnected'), '', '', 'danger');
     }
     setStateIcon();
+
+    if (uiEnabled) {
+        reToggleUI();
+    }
 }

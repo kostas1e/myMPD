@@ -23,7 +23,7 @@
 #include "mpd_client_stats.h"
 
 //private definitions
-static sds mpd_client_put_last_played_obj(t_mpd_state *mpd_state, sds buffer, 
+static sds mpd_client_put_last_played_obj(t_mpd_state *mpd_state, sds buffer,
                                           unsigned entity_count, int last_played, const char *uri, const t_tags *tagcols);
 
 //public functions
@@ -39,8 +39,8 @@ bool mpd_client_last_played_list_save(t_config *config, t_mpd_state *mpd_state) 
         LOG_ERROR("Can't open %s for write", tmp_file);
         sdsfree(tmp_file);
         return false;
-    }    
-    
+    }
+
     FILE *fp = fdopen(fd, "w");
     //first write last_played list to tmp file
     int i = 0;
@@ -65,7 +65,7 @@ bool mpd_client_last_played_list_save(t_config *config, t_mpd_state *mpd_state) 
         fclose(fi);
     }
     fclose(fp);
-    
+
     if (rename(tmp_file, cfg_file) == -1) {
         LOG_ERROR("Renaming file from %s to %s failed", tmp_file, cfg_file);
         sdsfree(tmp_file);
@@ -75,7 +75,7 @@ bool mpd_client_last_played_list_save(t_config *config, t_mpd_state *mpd_state) 
     sdsfree(tmp_file);
     sdsfree(cfg_file);
     //empt list after write to disc
-    list_free(&mpd_state->last_played);    
+    list_free(&mpd_state->last_played);
     return true;
 }
 
@@ -117,15 +117,15 @@ bool mpd_client_last_played_list(t_config *config, t_mpd_state *mpd_state, const
     return true;
 }
 
-sds mpd_client_put_last_played_songs(t_config *config, t_mpd_state *mpd_state, sds buffer, sds method, int request_id, 
+sds mpd_client_put_last_played_songs(t_config *config, t_mpd_state *mpd_state, sds buffer, sds method, int request_id,
                                      unsigned int offset, const t_tags *tagcols)
 {
     unsigned entity_count = 0;
     unsigned entities_returned = 0;
-    
+
     buffer = jsonrpc_start_result(buffer, method, request_id);
     buffer = sdscat(buffer, ",\"data\":[");
-    
+
     if (mpd_state->last_played.length > 0) {
         struct list_node *current = mpd_state->last_played.head;
         while (current != NULL) {
@@ -177,7 +177,7 @@ sds mpd_client_put_last_played_songs(t_config *config, t_mpd_state *mpd_state, s
     buffer = tojson_long(buffer, "offset", offset, true);
     buffer = tojson_long(buffer, "returnedEntities", entities_returned, false);
     buffer = jsonrpc_end_result(buffer);
-    
+
     return buffer;
 }
 
@@ -185,9 +185,9 @@ sds mpd_client_put_stats(t_config *config, t_mpd_state *mpd_state, sds buffer, s
     struct mpd_stats *stats = mpd_run_stats(mpd_state->conn);
     if (stats == NULL) {
         buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
-        return buffer;        
+        return buffer;
     }
-    
+
     const unsigned *version = mpd_connection_get_server_version(mpd_state->conn);
     sds mpd_version = sdscatfmt(sdsempty(),"%u.%u.%u", version[0], version[1], version[2]);
     sds libmpdclient_version = sdscatfmt(sdsempty(), "%i.%i.%i", LIBMPDCLIENT_MAJOR_VERSION, LIBMPDCLIENT_MINOR_VERSION, LIBMPDCLIENT_PATCH_VERSION);
@@ -222,7 +222,7 @@ sds mpd_client_put_stats(t_config *config, t_mpd_state *mpd_state, sds buffer, s
 
 
 //private functions
-static sds mpd_client_put_last_played_obj(t_mpd_state *mpd_state, sds buffer, 
+static sds mpd_client_put_last_played_obj(t_mpd_state *mpd_state, sds buffer,
                                           unsigned entity_count, int last_played, const char *uri, const t_tags *tagcols)
 {
     buffer = sdscat(buffer, "{");

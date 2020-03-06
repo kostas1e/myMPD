@@ -37,6 +37,7 @@
 #include "mympd_api/mympd_api_timer.h"
 #include "mympd_api/mympd_api_timer_handlers.h"
 #include "mympd_api.h"
+#include "ideon.h"
 #include "tidal.h"
 
 //private definitions
@@ -66,7 +67,8 @@ void *mympd_api_loop(void *arg_config) {
     mympd_api_push_to_mpd_client(mympd_state);
 
     //streaming services
-    tidal_session_init(mympd_state->tidal_username, mympd_state->tidal_password, mympd_state->tidal_audioquality);
+    if (mympd_state->tidal_enabled)
+        tidal_session_manager(mympd_state->tidal_username, mympd_state->tidal_password, mympd_state->tidal_audioquality);
 
     while (s_signal_received == 0) {
         //poll message queue
@@ -140,8 +142,9 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
             struct json_token key;
             struct json_token val;
             bool rc = true;
+            bool mpd_conf_changed = false; // TODO: use adv cmp after sw
             while ((h = json_next_key(request->data, sdslen(request->data), h, ".params", &key, &val)) != NULL) {
-                rc = mympd_api_settings_set(config, mympd_state, &key, &val);
+                rc = mympd_api_settings_set(config, mympd_state, &key, &val, &mpd_conf_changed);
                 if (rc == false) {
                     break;
                 }
@@ -150,9 +153,9 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
                 //forward request to mpd_client queue
                 t_work_request *mpd_client_request = create_request(-1, request->id, request->cmd_id, request->method, request->data);
                 tiny_queue_push(mpd_client_queue, mpd_client_request);
-                // update tidal session
-                tidal_session_update(mympd_state->tidal_username, mympd_state->tidal_password, mympd_state->tidal_audioquality);
                 response->data = jsonrpc_respond_ok(response->data, request->method, request->id);
+                //set ideon settings
+                ideon_settings_set(mympd_state, mpd_conf_changed);
             }
             else {
                 response->data = jsonrpc_start_phrase(response->data, request->method, request->id, "Can't save setting %{setting}", true);
@@ -295,7 +298,6 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
         case MYMPD_API_TIDAL_SEARCH:
             je = json_scanf(request->data, sdslen(request->data), "{params: {searchstr:%Q, filter:%Q, plist:%Q, offset:%u}}", &p_charbuf1, &p_charbuf2, &p_charbuf3, &uint_buf1);
             if (je == 4) {
-                //data = tidal_search(data, request->method, request->id, p_charbuf1, p_charbuf2, p_charbuf3, uint_buf1);
                 response->data = tidal_search(response->data, request->method, request->id, p_charbuf1, p_charbuf2, p_charbuf3, uint_buf1);
             }
             break;
@@ -317,8 +319,11 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
                 response->data = tidal_artistdetails(response->data, request->method, request->id, p_charbuf1);
             }
             break;
-        case MYMPD_API_IDEON_UPDATE:
-            // wip
+        case MYMPD_API_CHECK_FOR_UPDATES:
+            response->data = ideon_check_for_updates(response->data, request->method, request->id);
+            break;
+        case MYMPD_API_INSTALL_UPDATES:
+            // not yet implemented
             break;
         default:
             response->data = jsonrpc_respond_message(response->data, request->method, request->id, "Unknown request", true);

@@ -382,10 +382,8 @@ function parseCovergrid(obj) {
             if (cols[i].firstChild.getAttribute('data-uri') !== col.firstChild.getAttribute('data-uri')) {
                 cols[i].replaceWith(col);
                 replaced = true;
-                // console.log('rplc');
             }
             else { // wip - rwn
-                // console.log('else');
                 document.getElementById(id).style.width = '';
                 document.getElementById(id).style.height = '';
                 cols[i].firstChild.style.width = '';
@@ -476,7 +474,6 @@ function parseCovergrid(obj) {
     parseCovergridAlbum(obj);
     closeCover();
     calculateBoxHeight();
-    // console.log('parsecovergridret');
 }
 
 function getCovergridTitleList(id) {
@@ -576,14 +573,9 @@ function parseCovergridTitleList(obj) {
 function showGridImage(cardBody, uri) {
     cardBody.innerHTML = '';
     cardBody.style.backgroundImage = 'url("' + subdir + '/albumart/' + uri + '")';
-    /*     cardBody.style.width = 'var(--mympd-covergridsize, 200px)';
-        cardBody.style.height = 'var(--mympd-covergridsize, 200px)';
-        cardBody.parentNode.style.width = 'var(--mympd-covergridsize, 200px)';
-     */    // if (app.current.app === 'Playback') {
     cardBody.style.width = (app.current.app === 'Playback' ? 'var(--mympd-covergridsizehalf, 100px)' : 'var(--mympd-covergridsize, 200px)');
     cardBody.style.height = (app.current.app === 'Playback' ? 'var(--mympd-covergridsizehalf, 100px)' : 'var(--mympd-covergridsize, 200px)');
     cardBody.parentNode.style.width = (app.current.app === 'Playback' ? 'var(--mympd-covergridsizehalf, 100px)' : 'var(--mympd-covergridsize, 200px)');
-    // }
     cardBody.parentNode.getElementsByClassName('card-footer')[0].classList.remove('hide');
     cardBody.parentNode.getElementsByClassName('card-header')[0].classList.add('hide', 'unvisible');
 }
@@ -599,7 +591,6 @@ function setGridImage(changes, observer) {
 }
 
 function closeCover(id = undefined) {
-    // console.log('closecover', id, openCoverId);
     if (openCoverId !== undefined) {
         let cardBody = document.getElementById(openCoverId);
         let uri = decodeURI(cardBody.parentNode.getAttribute('data-uri'));

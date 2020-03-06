@@ -22,6 +22,7 @@
 #include "mympd_api_utility.h"
 #include "mympd_api_timer.h"
 #include "mympd_api_timer_handlers.h"
+#include "../ideon.h"
 
 //timer_id 1
 void timer_handler_covercache(struct t_timer_definition *definition, void *user_data) {
@@ -68,7 +69,7 @@ void timer_handler_select(struct t_timer_definition *definition, void *user_data
         request->data = tojson_char(request->data, "playlist", definition->playlist, true);
         request->data = tojson_long(request->data, "jukeboxMode", definition->jukebox_mode, true);
         request->data = sdscat(request->data, "}}");
-        tiny_queue_push(mpd_client_queue, request);        
+        tiny_queue_push(mpd_client_queue, request);
     }
     else {
         t_work_request *request = create_request(-1, 0, MYMPD_API_SYSCMD, "MYMPD_API_SYSCMD", "");

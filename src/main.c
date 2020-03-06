@@ -45,7 +45,6 @@
 #include "handle_options.h"
 #include "maintenance.h"
 #include "tidal.h"
-// #include "qobuz.h"
 
 static void mympd_signal_handler(int sig_num) {
     signal(sig_num, mympd_signal_handler);  // Reinstantiate signal handler
@@ -148,8 +147,8 @@ static bool drop_privileges(t_config *config, uid_t startup_uid) {
         }
 
     }
-    /* //check if not root
-    if (getuid() == 0) {
+    //check if not root
+    /* if (getuid() == 0) {
         LOG_ERROR("myMPD should not be run with root privileges");
         return false;
     } */
@@ -417,13 +416,7 @@ int main(int argc, char **argv) {
         LOG_INFO("tidal init failed");
         goto cleanup;
     }
-    /*
-    //init qobuz
-    if (qobuz_init(config) == false) {
-        LOG_INFO("qobuz init failed");
-        goto cleanup;
-    }
-     */
+    
     //Create working threads
     pthread_t mpd_client_thread, web_server_thread, mympd_api_thread;
     //mympd api
@@ -481,8 +474,6 @@ int main(int argc, char **argv) {
     tiny_queue_free(web_server_queue);
     tiny_queue_free(mpd_client_queue);
     tiny_queue_free(mympd_api_queue);
-    //close_plugins(config);
-    //qobuz_cleanup();
     tidal_cleanup();
     mympd_free_config(config);
     sdsfree(configfile);

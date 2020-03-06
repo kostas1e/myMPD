@@ -151,7 +151,7 @@ sds mpd_client_put_queue(t_mpd_state *mpd_state, sds buffer, sds method, int req
     if (check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
         return buffer;
     }
-    
+
     return buffer;
 }
 
@@ -238,10 +238,10 @@ sds mpd_client_search_queue(t_mpd_state *mpd_state, sds buffer, sds method, int 
     buffer = tojson_long(buffer, "returnedEntities", entities_returned, true);
     buffer = tojson_char(buffer, "mpdtagtype", mpdtagtype, false);
     buffer = jsonrpc_end_result(buffer);
-    
+
     if (check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
         return buffer;
     }
-    
+
     return buffer;
 }

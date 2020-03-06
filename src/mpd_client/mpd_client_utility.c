@@ -51,16 +51,16 @@ sds put_extra_files(t_mpd_state *mpd_state, sds buffer, const char *uri) {
 void detect_extra_files(t_mpd_state *mpd_state, const char *uri, bool *booklet, bool *lyrics, struct list *images) {
     *booklet = false;
     *lyrics = false;
-  
+
     char *uricpy = strdup(uri);
-    
+
     char *filename = basename(uricpy);
     strip_extension(filename);
     sds lyricsfile = sdscatfmt(sdsempty(), "%s.txt", filename);
-    
+
     char *path = dirname(uricpy);
     sds albumpath = sdscatfmt(sdsempty(), "%s/%s", mpd_state->music_directory_value, path);
-    
+
     DIR *album_dir = opendir(albumpath);
     if (album_dir != NULL) {
         struct dirent *next_file;
@@ -78,7 +78,7 @@ void detect_extra_files(t_mpd_state *mpd_state, const char *uri, bool *booklet, 
                 if (strcmp(ext, ".webp") == 0 || strcmp(ext, ".jpg") == 0 ||
                     strcmp(ext, ".jpeg") == 0 || strcmp(ext, ".png") == 0 ||
                     strcmp(ext, ".tiff") == 0 || strcmp(ext, ".svg") == 0 ||
-                    strcmp(ext, ".bmp") == 0) 
+                    strcmp(ext, ".bmp") == 0)
                 {
                     sds fullpath = sdscatfmt(sdsempty(), "%s/%s", path, next_file->d_name);
                     list_push(images, fullpath, 0, NULL, NULL);
@@ -317,7 +317,6 @@ void default_mpd_state(t_mpd_state *mpd_state) {
     mpd_state->taglist = sdsempty();
     mpd_state->searchtaglist = sdsempty();
     mpd_state->searchtidaltaglist = sdsempty();
-    // mpd_state->searchqobuztaglist = sdsempty();
     mpd_state->browsetaglist = sdsempty();
     mpd_state->generate_pls_tags = sdsempty();
     mpd_state->mpd_host = sdsempty();
@@ -331,7 +330,6 @@ void default_mpd_state(t_mpd_state *mpd_state) {
     reset_t_tags(&mpd_state->mympd_tag_types);
     reset_t_tags(&mpd_state->search_tag_types);
     reset_t_tags(&mpd_state->search_tidal_tag_types);
-    // reset_t_tags(&mpd_state->search_qobuz_tag_types);
     reset_t_tags(&mpd_state->browse_tag_types);
     reset_t_tags(&mpd_state->generate_pls_tag_types);
     //init last played songs list

@@ -15,17 +15,16 @@ function parseStats(obj) {
     document.getElementById('mpdstats_mympd_uptime').innerText = beautifyDuration(obj.result.myMPDuptime);
     document.getElementById('mpdstats_dbUpdated').innerText = localeDate(obj.result.dbUpdated);
     document.getElementById('mympdVersion').innerText = obj.result.mympdVersion;
-    // document.getElementById('ideonVersion').innerText = obj.result.ideonVersion;
+    document.getElementById('ideonVersion').innerText = obj.result.ideonVersion;
     document.getElementById('mpdInfo_version').innerText = obj.result.mpdVersion;
     document.getElementById('mpdInfo_libmpdclientVersion').innerText = obj.result.libmpdclientVersion;
     if (obj.result.libmympdclientVersion !== undefined) {
         document.getElementById('mpdInfo_libmympdclientVersion').innerText = obj.result.libmympdclientVersion;
-        document.getElementById('mpdInfo_libmympdclientVersion').parentNode.classList.remove('hide');
+        // document.getElementById('mpdInfo_libmympdclientVersion').parentNode.classList.remove('hide');
     }
     else {
         document.getElementById('mpdInfo_libmympdclientVersion').parentNode.classList.add('hide');
     }
-    // parseDBstats(obj);
 }
 
 function getServerinfo() {
@@ -63,7 +62,7 @@ function setCounter(currentSongId, totalTime, elapsedTime) {
     let counterText = beautifySongDuration(elapsedTime) + "&nbsp;/&nbsp;" + beautifySongDuration(totalTime);
     domCache.counter.innerHTML = counterText;
 
-    //Set playing track in queue view
+    // Set playing track in queue view
     if (lastState) {
         if (lastState.currentSongId !== currentSongId) {
             let tr = document.getElementById('queueTrackId' + lastState.currentSongId);
@@ -78,7 +77,7 @@ function setCounter(currentSongId, totalTime, elapsedTime) {
                     posTd.innerText = tr.getAttribute('data-songpos');
                 }
                 tr.classList.remove('font-weight-bold');
-                tr.classList.remove('playing');
+                // tr.classList.remove('playing');
             }
         }
     }
@@ -96,7 +95,7 @@ function setCounter(currentSongId, totalTime, elapsedTime) {
             }
         }
         tr.classList.add('font-weight-bold');
-        tr.classList.add('playing');
+        // tr.classList.add('playing');
     }
 
     // Set playing track in playback view
@@ -104,10 +103,10 @@ function setCounter(currentSongId, totalTime, elapsedTime) {
         if (lastState.currentSongId !== currentSongId) {
             let tr = document.getElementById('queueMiniTrackId' + lastState.currentSongId);
             if (tr) {
-                let durationTd = tr.querySelector('[data-col=Duration]');
+                /* let durationTd = tr.querySelector('[data-col=Duration]');
                 if (durationTd) {
                     durationTd.innerText = tr.getAttribute('data-duration');
-                }
+                } */
                 let posTd = tr.querySelector('[data-col=Pos]');
                 if (posTd) {
                     posTd.classList.remove('material-icons');
@@ -120,10 +119,10 @@ function setCounter(currentSongId, totalTime, elapsedTime) {
     }
     tr = document.getElementById('queueMiniTrackId' + currentSongId);
     if (tr) {
-        let durationTd = tr.querySelector('[data-col=Duration]');
+        /* let durationTd = tr.querySelector('[data-col=Duration]');
         if (durationTd) {
             durationTd.innerHTML = counterText;
-        }
+        } */
         let posTd = tr.querySelector('[data-col=Pos]');
         if (posTd) {
             if (!posTd.classList.contains('material-icons')) {
@@ -171,7 +170,8 @@ function parseState(obj) {
     // Clear playback card if no current song
     if (obj.result.songPos === '-1') {
         domCache.currentTitle.innerText = 'Not playing';
-        document.title = 'myMPD';
+        // document.title = 'myMPD';
+        document.title = 'IdeonAudio';
         let headerTitle = document.getElementById('headerTitle');
         headerTitle.innerText = '';
         headerTitle.removeAttribute('title');
@@ -288,6 +288,9 @@ function setCurrentCover(url) {
         domCache.currentCover.querySelector('.coverbg').style.opacity = 1;
     };
     img.src = subdir + '/albumart/' + url;
+
+    document.getElementById('headerCover').src = img.src;
+    document.getElementById('headerCover').style.opacity = 1;
 }
 
 function clearCurrentCover() {
@@ -301,6 +304,8 @@ function clearCurrentCover() {
             old[i].style.opacity = '0';
         }
     }
+
+    document.getElementById('headerCover').style.opacity = '0';
 }
 
 function songChange(obj) {
@@ -340,7 +345,8 @@ function songChange(obj) {
         domCache.currentTitle.innerText = '';
         domCache.currentTitle.setAttribute('data-uri', '');
     }
-    document.title = 'myMPD: ' + pageTitle;
+    // document.title = 'myMPD: ' + pageTitle;
+    document.title = 'IdeonAudio: ' + pageTitle;
     let headerTitle = document.getElementById('headerTitle');
     headerTitle.innerText = pageTitle;
     headerTitle.title = pageTitle;
@@ -390,7 +396,8 @@ function songChange(obj) {
     // Update Artist in queue view for http streams
     let playingTr = document.getElementById('queueTrackId' + obj.result.currentSongId);
     if (playingTr) {
-        playingTr.getElementsByTagName('td')[1].innerText = obj.result.Title;
+        playingTr.getElementsByTagName('td')[2].innerText = obj.result.Title;
+        
     }
 
     if (playstate === 'play') {

@@ -26,7 +26,7 @@ static bool write_bookmarks_line(FILE *fp, int id, const char *name,
                                  const char *uri, const char *type);
 
 //public functions
-bool mympd_api_bookmark_update(t_config *config, const int id, const char *name, 
+bool mympd_api_bookmark_update(t_config *config, const int id, const char *name,
                                const char *uri, const char *type)
 {
     sds tmp_file = sdscatfmt(sdsempty(), "%s/state/bookmark_list.XXXXXX", config->varlibdir);
@@ -81,7 +81,7 @@ bool mympd_api_bookmark_update(t_config *config, const int id, const char *name,
         write_bookmarks_line(fo, line_nr, name, uri, type);
     }
     fclose(fo);
-    
+
     if (rename(tmp_file, b_file) == -1) {
         LOG_ERROR("Rename file from %s to %s failed", tmp_file, b_file);
         sdsfree(tmp_file);
@@ -112,7 +112,7 @@ sds mympd_api_bookmark_list(t_config *config, sds buffer, sds method, int reques
     ssize_t read;
     unsigned entity_count = 0;
     unsigned entities_returned = 0;
-    
+
     sds b_file = sdscatfmt(sdsempty(), "%s/state/bookmark_list", config->varlibdir);
     FILE *fi = fopen(b_file, "r");
 
@@ -158,7 +158,7 @@ sds mympd_api_bookmark_list(t_config *config, sds buffer, sds method, int reques
 }
 
 //private functions
-static bool write_bookmarks_line(FILE *fp, int id, const char *name, 
+static bool write_bookmarks_line(FILE *fp, int id, const char *name,
                                  const char *uri, const char *type)
 {
     sds line = sdscat(sdsempty(), "{");

@@ -6,9 +6,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>myMPD</title>
+  <title>IdeonAudio</title>
   <meta charset="utf-8">
-  <!--<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src https://*; child-src 'none';">-->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="myMPD - fast and lightweight MPD webclient">
   <meta name="author" content="mail@jcgames.de">
@@ -20,6 +19,7 @@
 <!--debug-->  <link href="css/mympd.css" rel="stylesheet">
 <!--debug-->  <link href="css/theme-dark.css" rel="stylesheet">
 <!--debug-->  <link href="css/theme-light.css" rel="stylesheet">
+<!--debug-->  <link href="css/theme-maroon.css" rel="stylesheet">
 <!--release   <link href="css/combined.css" rel="stylesheet">-->
   <link href="assets/favicon.ico" rel="shortcut icon" type="image/vnd.microsoft.icon">
   <link href="mympd.webmanifest" rel="manifest" crossorigin="anonymous">
@@ -33,19 +33,22 @@
   <!-- Splash screen -->
   <div id="splashScreen">
     <div id="splashScreenLogo">
-      <span class="material-icons splashScreenIcon">play_circle_outline</span> myMPD
+      <!-- <span class="material-icons splashScreenIcon">play_circle_outline</span> IdeonAudio -->
+      <img src="assets/logo-ideon.png"> absolute
     </div>
-    <div id="splashScreenAlert" data-phrase="Initializing myMPD"></div>
+    <div id="splashScreenAlert" data-phrase="Initializing"></div>
   </div>
   <!-- Header -->
   <header>
     <nav class="navbar navbar-expand navbar-dark fixed-top bg-dark d-flex justify-content-between">
       <div class="dropdown nav-item mr-3" id="headerLeft">
         <a class="dropdown-toggle navbar-brand pr-0" href="#" id="mainMenu">
-          <span class="material-icons header-logo">play_circle_outline</span>myMPD
+          <!-- <span class="material-icons header-logo">play_circle_outline</span>IdeonAudio -->
+          <img src="assets/logo-ideon.png">
+          <span>absolute</span>
         </a>
         <div class="dropdown-menu bg-lite-dark" id="mainMenuDropdown">
-          <a data-phrase="MPD connection" class="dropdown-item text-light alwaysEnabled" href="#" data-toggle="modal" data-target="#modalConnection"></a>
+          <!-- <a data-phrase="MPD connection" class="dropdown-item text-light alwaysEnabled" href="#" data-toggle="modal" data-target="#modalConnection"></a> -->
           <a data-phrase="Add stream" class="dropdown-item text-light" href="#" data-href='{"cmd": "showAddToPlaylist", "options": ["stream"]}'></a>
           <a id="navDBupdate" class="subMenu dropdown-item text-light" data-toggle="collapse" href="#menu-dbupdate"><span class="material-icons material-icons-left">keyboard_arrow_right</span><span data-phrase="Update"></span></a>
           <div class="collapse" id="menu-dbupdate">
@@ -54,7 +57,7 @@
             <a data-phrase="Update smart playlists" class="dropdown-item text-light bg-lite-dark featSmartpls" href="#" data-href='{"cmd": "updateSmartPlaylists", "options": []}'></a>
           </div>
           <a data-phrase="Settings" class="dropdown-item text-light" href="#" data-toggle="modal" data-target="#modalSettings"></a>
-          <a data-phrase="Ideon" class="dropdown-item text-light" href="#" data-toggle="modal" data-target="#modalIdeon"></a>
+          <a data-phrase="IDEON" class="dropdown-item text-light" href="#" data-toggle="modal" data-target="#modalIdeon"></a>
           <a data-phrase="Timer" class="dropdown-item text-light featTimer" href="#" data-toggle="modal" data-target="#modalTimer"></a>
           <a data-phrase="About" class="dropdown-item text-light " href="#" data-toggle="modal" data-target="#modalAbout"></a>
           <a data-phrase="Add to home screen" id="nav-add2homescreen" class="dropdown-item text-light bg-lite-dark hide" href="#"></a>
@@ -62,7 +65,10 @@
           <div id="syscmds" class="featSyscmds noInitChilds collapse"></div>
         </div>
       </div>
-      <div id="headerTitle" data-href='{"cmd": "clickTitle", "options": []}' class="mr-4 ml-4 text-light nav-item align-self-center flex-fill text-center overflow-hidden text-nowrap notclickable"></div>
+      <div>
+        <img id="headerCover" class="album-cover-loading featCoverimage"></img>
+        <div id="headerTitle" data-href='{"cmd": "clickTitle", "options": []}' class="mr-4 ml-4 text-light nav-item align-self-center flex-fill text-center overflow-hidden text-nowrap notclickable"></div>
+      </div>
       <div class="btn-toolbar nav-item flex-nowrap">
         <div class="btn-group mr-2" id="playControlBtns">
           <button data-href='{"cmd": "clickPrev", "options": []}' id="btnPrev" type="button" class="btn btn-secondary pl-2 pr-2 material-icons">skip_previous</button>
@@ -257,6 +263,7 @@
           <table id="QueueCurrentList" class="table table-hover table-sm" data-version="">
             <thead>
               <tr>
+                <th></th>
                 <th>#</th>
                 <th data-phrase="Title"></th>
                 <th data-phrase="Artist"></th>
@@ -361,7 +368,7 @@
   </div>
 </div>
 
-  </div> <!-- col1 -->
+  </div>
   <div id="col2" class="col-md-6 d-none d-md-block">
 
     <div class="card" id="cardBrowse">
@@ -728,8 +735,8 @@
       </div>
     </div>
 
-  </div> <!-- col2 -->
-</div> <!-- row1 -->
+  </div>
+</div>
 
     <div class="card hide" id="cardSearch">
       <div class="card-header" id="cardHeaderSearch">
@@ -825,10 +832,7 @@
         <div class="btn-toolbar card-toolbar" id="SearchTidalButtons">
           <div class="btn-group mr-2 hide">
             <button data-href='{"cmd": "appGoto", "options": ["Search", "Tidal", "All"]}' id="btnSearchTidalAll" type="button" class="btn btn-secondary">&laquo; <span data-phrase="Back"></span></button>
-            <!--
-            <button data-href='{"cmd": "goBack", "options": []}' id="btnSearchTidalAll" type="button" class="btn btn-secondary">&laquo; <span data-phrase="Back"></span></button>
-            -->
-          </div>
+            </div>
           <form id="searchtidal" class="flex-grow-1">
             <div class="input-group mr-2">
               <div class="input-group-prepend">
@@ -849,9 +853,7 @@
               <div class="dropdown-menu bg-dark dropdown-menu-right px-2" id="searchTidalAddAllSongsDropdown">
                   <button data-phrase="Add all to queue" type="button" class="btn btn-secondary btn-sm btn-block"></button>
                   <button data-phrase="Add all to playlist" type="button" class="btn btn-secondary btn-sm btn-block featPlaylists"></button>
-                  <!--
-                  <button data-phrase="Save as smart playlist" type="button" class="btn btn-secondary btn-sm btn-block featSmartpls"></button>
-                  -->
+                  <!-- <button data-phrase="Save as smart playlist" type="button" class="btn btn-secondary btn-sm btn-block featSmartpls"></button> -->
               </div>
             </div>
           </div>
@@ -976,7 +978,7 @@
       <div class="card-footer" id="cardFooterSearch">
       </div>
     </div>
-    <button id="scrollToTopBtn" type="button" class="btn btn-secondary material-icons" data-href='{"cmd": "scrollToPosY", "options": [0]}' data-title-phrase="Scroll To top">keyboard_arrow_up</button>
+    <button id="scrollToTopBtn" type="button" class="btn btn-secondary material-icons" data-href='{"cmd": "scrollToPosY", "options": [0]}' data-title-phrase="To top">keyboard_arrow_up</button>
   </main>
 
   <!-- Footer -->
@@ -1726,7 +1728,10 @@
         <div class="modal-header pb-0">
           <ul class="nav nav-tabs border-bottom-0">
             <li class="nav-item">
-              <a class="nav-link active text-dark" href="#tabNetworkSettings" data-toggle="tab" data-height="true" data-phrase="Network"></a>
+              <a class="nav-link active text-dark" href="#tabAudioSettings" data-toggle="tab" data-height="true" data-phrase="Audio"></a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-dark" href="#tabNetworkShare" data-toggle="tab" data-height="true" data-phrase="Network"></a>
             </li>
             <li class="nav-item">
               <a class="nav-link text-dark" href="#tabStreamingServices" data-toggle="tab" data-height="true" data-phrase="Streaming"></a>
@@ -1739,45 +1744,68 @@
         </div>
         <div class="modal-body">
           <div class="tab-content">
-            <div id="tabNetworkSettings" class="tab-pane active">
-              <form id="NetworkSettingsFrm">
-                <h4 data-phrase="NAS"></h4>
+            <div id="tabAudioSettings" class="tab-pane active">
+              <form id="tabAudioSettingsFrm">
+                <h4 data-phrase="Audio Settings"></h4>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="selectNasType" data-phrase="Type"></label>
+                  <label class="col-sm-4 col-form-label" for="selectMixerType" data-phrase="Mixer type"></label>
                   <div class="col-sm-8">
-                    <select id="selectNasType" class="form-control custom-select border-secondary">
-                      <option value="0" data-phrase="None"></option>
-                      <option value="1" data-phrase="Samba"></option>
-                      <option value="2" data-phrase="Samba (Username/Password)"></option>
+                    <select id="selectMixerType" class="form-control custom-select border-secondary">
+                      <option value="hardware" data-phrase="Hardware"></option>
+                      <option value="software" data-phrase="Software"></option>
+                      <!-- <option value="null" data-phrase="Null"></option> -->
+                      <!-- <option value="none" data-phrase="None"></option> -->
+                      <option value="disabled" data-phrase="Disabled"></option>
                     </select>
                   </div>
                 </div>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="inputNasHost" data-phrase="Host"></label>
-                  <div class="col-sm-4">
-                    <input id="inputNasHost" class="form-control border-secondary mt-2" type="text" data-placeholder-phrase="Host ip or name">
-                    <div class="invalid-feedback" data-phrase="Invalid host"></div>
+                  <label class="col-sm-4 col-form-label" for="btnDop" data-phrase="DoP"></label>
+                  <div class="col-sm-8">
+                    <button id="btnDop" class="btn btn-secondary btn-sm material-icons" data-href='{"cmd": "toggleBtnChk", "options": []}' type="button"></button>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div id="tabNetworkShare" class="tab-pane">
+              <form id="NetworkShareFrm">
+                <h4 data-phrase="Network Share"></h4>
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="selectNsType" data-phrase="Type"></label>
+                  <div class="col-sm-8">
+                    <select id="selectNsType" class="form-control custom-select border-secondary">
+                      <option value="0" data-phrase="None"></option>
+                      <option value="1" data-phrase="Samba"></option>
+                      <option value="2" data-phrase="Samba (User)"></option>
+                    </select>
                   </div>
                 </div>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="inputNasDirectory" data-phrase="Directory"></label>
-                  <div class="col-sm-4">
-                    <input id="inputNasDirectory" class="form-control border-secondary mt-2" type="text">
+                  <label class="col-sm-4 col-form-label" for="inputNsServer" data-phrase="Server"></label>
+                  <div class="col-sm-8">
+                    <input id="inputNsServer" class="form-control border-secondary" type="text" data-placeholder-phrase="Server IP or name">
+                    <div class="invalid-feedback" data-phrase="Invalid server"></div>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="inputNsShare" data-phrase="Share"></label>
+                  <div class="col-sm-8">
+                    <input id="inputNsShare" class="form-control border-secondary" type="text" data-placeholder-phrase="Name of the shared directory">
                     <div class="invalid-feedback" data-phrase="Invalid directory"></div>
                   </div>
                 </div>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="inputNasUsername" data-phrase="Username"></label>
+                  <label class="col-sm-4 col-form-label" for="inputNsUsername" data-phrase="Username"></label>
                   <div class="col-sm-8">
-                    <input id="inputNasUsername" class="form-control border-secondary" type="text">
-                    <div class="invalid-feedback" data-phrase="Invalid username"></div>
+                    <input id="inputNsUsername" class="form-control border-secondary" type="text" data-placeholder-phrase="Username">
+                    <div class="invalid-feedback" data-phrase="Username cannot be blank"></div>
                   </div>
                 </div>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="inputNasPassword" data-phrase="Password"></label>
+                  <label class="col-sm-4 col-form-label" for="inputNsPassword" data-phrase="Password"></label>
                   <div class="col-sm-8">
-                    <input id="inputNasPassword" class="form-control border-secondary" type="password">
-                    <div class="invalid-feedback" data-phrase="Invalid password"></div>
+                    <input id="inputNsPassword" class="form-control border-secondary" type="password" data-placeholder-phrase="Password">
+                    <div class="invalid-feedback" data-phrase="Password cannot be blank"></div>
                   </div>
                 </div>
               </form>
@@ -1786,24 +1814,36 @@
               <form id="StreamingServicesFrm">
                 <h4 data-phrase="Streaming Services"></h4>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="btnTidal" data-phrase="Tidal"></label>
-                  <div class="col-sm-8 ">
-                    <button data-toggle="collapse" data-target="#collapseTidal" data-href='{"cmd": "toggleBtnChk", "options": []}' type="button" id="btnTidal" class="btn btn-sm btn-secondary material-icons"></button>
+                  <label class="col-sm-4 col-form-label" for="btnAirplay" data-phrase="AirPlay"></label>
+                  <div class="col-sm-8">
+                    <button id="btnAirplay" class="btn btn-secondary btn-sm material-icons" data-href='{"cmd": "toggleBtnChk", "options": []}' type="button"></button>
                   </div>
                 </div>
-                <div class="collapse" id="collapseTidal">
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="btnSpotify" data-phrase="Spotify"></label>
+                  <div class="col-sm-8">
+                    <button id="btnSpotify" class="btn btn-secondary btn-sm material-icons" data-href='{"cmd": "toggleBtnChk", "options": []}' type="button"></button>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="btnTidalEnabled" data-phrase="Tidal"></label>
+                  <div class="col-sm-8 ">
+                    <button id="btnTidalEnabled" class="btn btn-sm btn-secondary material-icons" data-toggle="collapse" data-target="#collapseTidal" data-href='{"cmd": "toggleBtnChk", "options": []}' type="button"></button>
+                  </div>
+                </div>
+                <div id="collapseTidal" class="collapse">
                   <div class="form-group row">
                     <label class="col-sm-4 col-form-label" for="inputTidalUsername" data-phrase="Username"></label>
                     <div class="col-sm-8 ">
                       <input id="inputTidalUsername" type="text" class="form-control border-secondary">
-                      <!-- <div class="invalid-feedback" data-phrase="Invalid (empty chk)"></div> -->
+                      <div class="invalid-feedback" data-phrase="Username cannot be blank"></div>
                     </div>
                   </div>
                   <div class="form-group row">
                     <label class="col-sm-4 col-form-label" for="inputTidalPassword" data-phrase="Password"></label>
                     <div class="col-sm-8 ">
                       <input id="inputTidalPassword" type="password" class="form-control border-secondary">
-                      <!-- <div class="invalid-feedback" data-phrase="Invalid (empty chk)"></div> -->
+                      <div class="invalid-feedback" data-phrase="Password cannot be blank"></div>
                     </div>
                   </div>
                   <div class="form-group row">
@@ -1822,18 +1862,23 @@
             </div>
             <div id="tabUpdate" class="tab-pane">
               <form id="UpdateFrm">
-              <h4 class="text-success">Ideon OS</h4>
-              <ul>
-                <li><span data-phrase="Ideon OS Version"></span>: <span id="ideonVersion"></span></li>
-              </ul>
-                <h4 data-phrase="Update Ideon OS"></h4>
+                <h4 data-phrase="IdeonAudio Update"></h4>
+                <ul>
+                  <li><span data-phrase="Current version"></span>: <span id="currentVersion"></span></li>
+                  <li><span data-phrase="Latest version"></span>: <span id="latestVersion"></span></li>
+                </ul>
+
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="btnUpdate" data-phrase="Check for new version"></label>
+                  <label class="col-sm-4 col-form-label" for="btnCheckForUpdates" data-phrase="Check for updates"></label>
                   <div class="col-sm-8">
-		                <fieldset id="updateFieldset">
-                      <button type="button" id="btnUpdate" class="btn btn-raised btn-secondary" data-href='{"cmd": "inplaceUpdate", "options": ["btnUpdate"]}' data-phrase="Update">
-		                  </button>
-		                </fieldset>
+                    <button type="button" id="btnCheckForUpdates" class="btn btn-secondary btnCleanup" data-href='{"cmd": "checkForUpdates", "options": []}' data-phrase="Check"></button>
+                  </div>
+                </div>
+                
+                <div class="form-group row">
+                  <div id="updateMessage" class="col-sm-4 col-form-label"></div>
+                  <div class="col-sm-8">
+                    <button type="button" id="btnInstallUpdates" class="btn btn-secondary btnCleanup" data-href='{"cmd": "installUpdates", "options": []}' data-phrase="Install"></button>
                   </div>
                 </div>
               </form>
@@ -1865,31 +1910,33 @@
         <div class="modal-body">
           <div class="tab-content">
             <div class="tab-pane active" id="tabAbout">
-              <h4 class="text-success">Ideon OS</h4>
+              <h4 class="text-success">IdeonAudio</h4>
               <ul>
-                <li><span data-phrase="Version"></span>: <span id="mympdVersion"></span></li>
+                <li class="hide"><span data-phrase="Version"></span>: <span id="mympdVersion"></span></li>
+                <li><span data-phrase="Version"></span>: <span id="ideonVersion"></span></li>
                 <li><span data-phrase="Homepage"></span>: <a class="text-success" target="_blank" rel="noreferrer" href="https://ideonaudio.com">https://ideonaudio.com</a></li>
                 <li><span data-phrase="Contact"></span>: Info &lt;<a class="text-success" href="mailto:info@ideonaudio.com">info@ideonaudio.com</a>&gt;</li>
               </ul>
               <table class="table table-sm">
                 <tbody>
                   <tr><td colspan="2" class="pt-3"><h5 data-phrase="Database statistics"></h5></td></tr>
-                  <tr><th data-phrase="Artists">Artists</th><td id="mpdstats_artists"></td></tr>
+                  <tr><th data-phrase="Artists"></th><td id="mpdstats_artists"></td></tr>
                   <tr><th data-phrase="Albums"></th><td id="mpdstats_albums"></td></tr>
                   <tr><th data-phrase="Songs"></th><td id="mpdstats_songs"></td></tr>
                   <tr><th data-phrase="DB play time"></th><td id="mpdstats_dbPlaytime"></td></tr>
                   <tr><th data-phrase="DB updated"></th><td id="mpdstats_dbUpdated"></td></tr>
                   <tr><td colspan="2" class="pt-3"><h5 data-phrase="Playback statistics"></h5></td></tr>
-                  <tr><th data-phrase="myMPD uptime"></th><td id="mpdstats_mympd_uptime"></td></tr>
-                  <tr><th data-phrase="MPD uptime"></th><td id="mpdstats_uptime"></td></tr>
+                  <tr class="hide"><th data-phrase="myMPD uptime"></th><td id="mpdstats_mympd_uptime"></td></tr>
+                  <!-- <tr><th data-phrase="MPD uptime"></th><td id="mpdstats_uptime"></td></tr> -->
+                  <tr><th data-phrase="Uptime"></th><td id="mpdstats_uptime"></td></tr>
                   <tr><th data-phrase="Play time"></th><td id="mpdstats_playtime"></td></tr>
-                  <!-- <tr><td colspan="2" class="pt-3"><h5>MPD</h5></td></tr> -->
+                  <tr class="hide"><td colspan="2" class="pt-3"><h5>MPD</h5></td></tr>
                   <tr class="hide"><th data-phrase="Connection"></th><td id="mpdInfo_host"></td></tr>
                   <tr class="hide"><th data-phrase="Protocol version"></th><td id="mpdInfo_version"></td></tr>
                   <tr class="hide"><th data-phrase="Libmpdclient version"></th><td id="mpdInfo_libmpdclientVersion"></td></tr>
                   <tr class="hide"><th data-phrase="Libmympdclient version"></th><td id="mpdInfo_libmympdclientVersion"></td></tr>
                   <tr><td colspan="2" class="pt-3"><h5 data-phrase="Webserver"></h5></td></tr>
-                  <tr><th data-phrase="Mongoose version"></th><td id="wsMongooseVersion"></td></tr>
+                  <tr class="hide"><th data-phrase="Mongoose version"></th><td id="wsMongooseVersion"></td></tr>
                   <tr><th data-phrase="IP-Address"></th><td id="wsIP"></td></tr>
                   <!-- <tr class="featCacert"><th data-phrase="myMPD CA"></th><td><a class="text-success" href="/ca.crt" data-phrase="Download" target="_blank"></a></td></tr> -->
                 </tbody>

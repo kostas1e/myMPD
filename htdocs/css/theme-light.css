@@ -147,3 +147,7 @@ body.theme-light .bg-lite-dark {
 body.theme-light .form-control[readonly] {
   background-color: #fff;
 }
+
+body.theme-light #mainMenu img {
+  filter: invert(0%);
+}

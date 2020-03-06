@@ -9,5 +9,6 @@ var themes = {
     "theme-autodetect": "Autodetect",
     "theme-default": "Default",
     "theme-dark": "Dark",
-    "theme-light": "Light"
+    "theme-light": "Light",
+    "theme-maroon": "Maroon"
 };

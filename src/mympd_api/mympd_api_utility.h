@@ -91,20 +91,21 @@ typedef struct t_mympd_state {
     bool timer;
     sds booklet_name;
     struct t_timer_list timer_list;
-    // ideon
-    int nas_type;
-    sds nas_host;
-    sds nas_directory;
-    sds nas_username;
-    sds nas_password;
-    bool tidal;
-    sds searchtidaltaglist;
-    sds cols_search_tidal;
+    sds mixer_type;
+    bool dop;
+    int ns_type;
+    sds ns_server;
+    sds ns_share;
+    sds ns_username;
+    sds ns_password;
+    bool airplay;
+    bool spotify;
+    bool tidal_enabled;
     sds tidal_username;
     sds tidal_password;
     sds tidal_audioquality;
-    sds ideon_version;
-    bool ideon_update;
+    sds searchtidaltaglist;
+    sds cols_search_tidal;
     bool set;
 } t_mympd_state;
 

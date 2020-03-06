@@ -90,16 +90,16 @@ void free_mympd_state(t_mympd_state *mympd_state) {
     sdsfree(mympd_state->smartpls_prefix);
     sdsfree(mympd_state->booklet_name);
     truncate_timerlist(&mympd_state->timer_list);
-    sdsfree(mympd_state->nas_host);
-    sdsfree(mympd_state->nas_directory);
-    sdsfree(mympd_state->nas_username);
-    sdsfree(mympd_state->nas_password);
+    sdsfree(mympd_state->mixer_type);
+    sdsfree(mympd_state->ns_server);
+    sdsfree(mympd_state->ns_share);
+    sdsfree(mympd_state->ns_username);
+    sdsfree(mympd_state->ns_password);
     sdsfree(mympd_state->searchtidaltaglist);
     sdsfree(mympd_state->cols_search_tidal);
     sdsfree(mympd_state->tidal_username);
     sdsfree(mympd_state->tidal_password);
     sdsfree(mympd_state->tidal_audioquality);
-    sdsfree(mympd_state->ideon_version);
     FREE_PTR(mympd_state);
 }
 

@@ -95,7 +95,7 @@ bool mpd_client_count_song_uri(t_mpd_state *mpd_state, const char *uri, const ch
             else if (strcmp(name, "skipCount") == 0) {
                 sticker->skipCount = old_value;
             }
-        }    
+        }
     }
     return rc;
 }
@@ -126,7 +126,7 @@ sds mpd_client_like_song_uri(t_mpd_state *mpd_state, sds buffer, sds method, int
         }
     }
     buffer = jsonrpc_respond_ok(buffer, method, request_id);
-    return buffer;        
+    return buffer;
 }
 
 bool mpd_client_last_played_song_uri(t_mpd_state *mpd_state, const char *uri) {
@@ -139,7 +139,7 @@ bool mpd_client_last_played_song_uri(t_mpd_state *mpd_state, const char *uri) {
         check_error_and_recover(mpd_state, NULL, NULL, 0);
         sdsfree(value_str);
         return false;
-    } 
+    }
     else if (mpd_state->sticker_cache != NULL) {
         t_sticker *sticker = get_sticker_from_cache(mpd_state, uri);
         if (sticker != NULL) {
@@ -258,9 +258,9 @@ bool _sticker_cache_init(t_config *config, t_mpd_state *mpd_state) {
         }
         if (rc == false || mpd_search_commit(mpd_state->conn) == false || check_error_and_recover2(mpd_state, NULL, NULL, 0, false) == false) {
             LOG_VERBOSE("Sticker cache update failed");
-            return false;        
+            return false;
         }
-                    
+
         while ((song = mpd_recv_song(mpd_state->conn)) != NULL) {
             const char *uri = mpd_song_get_uri(song);
             t_sticker *sticker = (t_sticker *) malloc(sizeof(t_sticker));
@@ -273,7 +273,7 @@ bool _sticker_cache_init(t_config *config, t_mpd_state *mpd_state) {
         if (check_error_and_recover2(mpd_state, NULL, NULL, 0, false) == false) {
             sticker_cache_free(mpd_state);
             LOG_VERBOSE("Sticker cache update failed");
-            return false;        
+            return false;
         }
         start = end;
         end = end + 1000;

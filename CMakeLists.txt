@@ -207,6 +207,7 @@ set(SOURCES
   src/mympd_api/mympd_api_timer_handlers.c
   src/tidal.c
   src/tidal/tidal_utility.c
+  src/ideon.c
   src/web_server.c
   src/web_server/web_server_utility.c
   src/web_server/web_server_albumart.c

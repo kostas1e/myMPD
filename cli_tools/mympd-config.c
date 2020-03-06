@@ -50,7 +50,7 @@ int sdssplit_whitespace(sds line, sds *name, sds *value) {
     int tokens = 0;
     int i = 0;
     const char *p = line;
-    
+
     if (*p == '#') {
         return tokens;
     }
@@ -159,7 +159,7 @@ bool parse_mpd_conf(struct t_config *pconfig) {
 bool check_ldd(struct t_config *pconfig) {
     printf("Getting mpd linked libraries %s\n", pconfig->mpd_exe);
     pconfig->regex = false;
-    
+
     sds ldd = sdsnew("/usr/bin/ldd ");
     ldd = sdscatprintf(ldd, "%s", pconfig->mpd_exe);
     FILE *fp = popen(ldd, "r"); /* Flawfinder: ignore */
@@ -185,7 +185,7 @@ bool check_ldd(struct t_config *pconfig) {
 
 bool parse_options(struct t_config *pconfig, int argc, char **argv) {
     int n, option_index = 0;
-    
+
     static struct option long_options[] = {
         {"mpdconf",   required_argument, 0, 'c'},
         {"mpdexe",    required_argument, 0, 'e'},
@@ -277,7 +277,7 @@ bool parse_options(struct t_config *pconfig, int argc, char **argv) {
 }
 
 sds find_mpd_conf() {
-    const char *filenames[] = { 
+    const char *filenames[] = {
         "/etc/mpd.conf",
         "/usr/local/etc/mpd.conf",
         "/etc/opt/mpd/mpd.conf",
@@ -299,7 +299,7 @@ sds find_mpd_conf() {
 }
 
 sds find_mpd_exe() {
-    const char *filenames[] = { 
+    const char *filenames[] = {
         "/usr/bin/mpd",
         "/usr/local/bin/mpd",
         "/opt/mpd/bin/mpd",
@@ -321,7 +321,7 @@ sds find_mpd_exe() {
 
 void set_defaults(struct t_config *pconfig) {
     printf("Searching for mpd\n");
-    
+
     pconfig->host = sdsnew("/run/mpd/socket");
     pconfig->port = 6600;
     pconfig->pass = sdsempty();
@@ -436,13 +436,13 @@ bool write_mympd_conf(struct t_config *pconfig) {
         (pconfig->syscmds == true ? "true" : "false"),
         (pconfig->chroot == true ? "true" : "false"),
         (pconfig->readonly == true ? "true" : "false"));
-    
+
     fprintf(fp, "\n\n[syscmds]\n"
         "Shutdown = sudo /sbin/halt\n"
         "#To use this command add following lines to /etc/sudoers (without #)\n"
         "#Cmnd_Alias MYMPD_CMDS = /sbin/halt\n"
         "#mympd ALL=NOPASSWD: MYMPD_CMDS\n");
-    
+
     fclose(fp);
     sds conf_file = sdscatfmt(sdsempty(), "%s", pconfig->mympd_conf);
     int rc = rename(tmp_file, conf_file);
@@ -456,7 +456,7 @@ bool write_mympd_conf(struct t_config *pconfig) {
 
 int main(int argc, char **argv) {
     int rc = EXIT_SUCCESS;
-    
+
     struct t_config mpd_config;
     set_defaults(&mpd_config);
 
@@ -468,7 +468,7 @@ int main(int argc, char **argv) {
     if (sdslen(mpd_config.mpd_conf) > 0) {
         parse_mpd_conf(&mpd_config);
     }
- 
+
     if (sdslen(mpd_config.mpd_exe) > 0) {
         check_ldd(&mpd_config);
     }
