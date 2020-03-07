@@ -161,6 +161,7 @@ typedef struct t_config {
     sds tidal_username;
     sds tidal_password;
     sds tidal_audioquality;
+    bool init;
 } t_config;
 
 #endif

@@ -34,6 +34,7 @@ function getServerinfo() {
         if (ajaxRequest.readyState === 4) {
             let obj = JSON.parse(ajaxRequest.responseText);
             document.getElementById('wsIP').innerText = obj.result.ip;
+            document.getElementById('wsIPInit').innerText = obj.result.ip;
             document.getElementById('wsMongooseVersion').innerText = obj.result.version;
         }
     };

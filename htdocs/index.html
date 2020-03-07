@@ -28,7 +28,7 @@
 </head>
 <body class="overflow-hidden">
   <!-- rm -->
-  <!-- <button id= "btnS" type="button" class="btn" data-toggle="modal" data-target="#modalSetup">S</button> -->
+  <button id= "btnS" type="button" class="btn" data-toggle="modal" data-target="#modalInit">S</button>
   <button type="button" id="btnR" class="btn btn-danger" data-href='{"cmd": "clearAndReload", "options": []}'>R</button>
   <!-- Splash screen -->
   <div id="splashScreen">
@@ -2359,45 +2359,83 @@
     </div>
   </div>
 
-  <!-- wip -->
-  <div class="modal fade" id="modalSetup" data-backdrop="static" data-keyboard="false" tabindex="-1">
-    <div class="modal-dialog">
+  <!-- wip data-keyboard="false" -->
+  <div class="modal fade" id="modalInit" data-backdrop="static"  tabindex="-1">
+    <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title"><span class="material-icons title-icon">play_circle_outline</span> <span data-phrase="Setup"></span></h5>
+          <h5 class="modal-title"><img src="assets/logo-ideon.png"><span>Initialize</span></h5>
           <!-- <button type="button" class="close" data-dismiss="modal">&times;</button> -->
         </div>
         <div class="modal-body">
-          <form id="setupFrm">
-            <!-- <h4 data-phrase="Locale"></h4> -->
-            <div class="form-group row">
-              <label class="col-sm-4 col-form-label" for="selectLocale1" data-phrase="Locale"></label>
-              <div class="col-sm-8">
-                <select id="selectLocale1" class="form-control custom-select border-secondary">
-                  <option value="default" data-phrase="Browser default"></option>
-                </select>
+          <form id="initFrm">
+            <div class="tab">
+              <h4 data-phrase="Select language"></h4>
+              <div class="form-group row">
+                <label class="col-sm-4 col-form-label" for="selectLocaleInit" data-phrase="Locale"></label>
+                <div class="col-sm-8">
+                  <select id="selectLocaleInit" class="form-control custom-select border-secondary">
+                    <option value="default" selected="selected" data-phrase="Browser default"></option>
+                  </select>
+                </div>
               </div>
             </div>
-            <div class="form-group row">
-              <label class="col-sm-4 col-form-label" for="inputMpdHost1" data-phrase="smth"></label>
-              <div class="col-sm-8 ">
-                 <input id="smth" type="text" class="form-control border-secondary"/>
-                 <!-- <div class="invalid-feedback" data-phrase="Invalid smth"></div> -->
+            
+            <div class="tab">
+              <h4 data-phrase="Add network share"></h4>
+              <div class="form-group row">
+                <label class="col-sm-4 col-form-label" for="selectNsTypeInit" data-phrase="Type"></label>
+                <div class="col-sm-8">
+                  <select id="selectNsTypeInit" class="form-control custom-select border-secondary">
+                    <option value="0" selected="selected" data-phrase="None"></option>
+                    <option value="1" data-phrase="Samba"></option>
+                    <option value="2" data-phrase="Samba (User)"></option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group row">
+                <label class="col-sm-4 col-form-label" for="inputNsServerInit" data-phrase="Server"></label>
+                <div class="col-sm-8">
+                  <input disabled id="inputNsServerInit" class="form-control border-secondary" type="text" data-placeholder-phrase="Server IP or name">
+                  <div class="invalid-feedback" data-phrase="Invalid server"></div>
+                </div>
+              </div>
+              <div class="form-group row">
+                <label class="col-sm-4 col-form-label" for="inputNsShareInit" data-phrase="Share"></label>
+                <div class="col-sm-8">
+                  <input disabled id="inputNsShareInit" class="form-control border-secondary" type="text" data-placeholder-phrase="Name of the shared directory">
+                  <div class="invalid-feedback" data-phrase="Invalid directory"></div>
+                </div>
+              </div>
+              <div class="form-group row">
+                <label class="col-sm-4 col-form-label" for="inputNsUsernameInit" data-phrase="Username"></label>
+                <div class="col-sm-8">
+                  <input disabled id="inputNsUsernameInit" class="form-control border-secondary" type="text" data-placeholder-phrase="Username">
+                  <div class="invalid-feedback" data-phrase="Username cannot be blank"></div>
+                </div>
+              </div>
+              <div class="form-group row">
+                <label class="col-sm-4 col-form-label" for="inputNsPasswordInit" data-phrase="Password"></label>
+                <div class="col-sm-8">
+                  <input disabled id="inputNsPasswordInit" class="form-control border-secondary" type="password" data-placeholder-phrase="Password">
+                  <div class="invalid-feedback" data-phrase="Password cannot be blank"></div>
+                </div>
               </div>
             </div>
-            <div class="form-group row">
-              <label class="col-sm-4 col-form-label" for="smth else" data-phrase="smth else"></label>
-              <div class="col-sm-8 ">
-                 <input id="smthElse" type="text" class="form-control border-secondary"/>
-                 <!-- <div class="invalid-feedback" data-phrase="Invalid smth else"></div> -->
-              </div>
+
+            <div class="tab">
+              <h4 data-phrase="App info"></h4>
+              <ul>
+                <li>Launch app using IP <span id="wsIPInit"></span> in any browser.</li>
+                <li>Install app using "Add to Home screen" browser feature.</li>
+                <li>Goto Main menu > About to display launch IP at any time.</li>
+              </ul>
             </div>
-            <!-- <div id="warnMusicDirectory1" class="alert alert-warning hide" data-phrase="Music directory not found"></div> -->
           </form>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal" data-phrase="Cancel"></button>
-          <button type="button" class="btn btn-success" data-href='{"cmd": "saveSetup", "options": []}' data-phrase="Save"></button>
+          <button type="button" class="btn btn-secondary" id="prevBtn" data-href='{"cmd": "nextPrev", "options": [-1]}' data-phrase="Previous"></button>
+          <button type="button" class="btn btn-success" id="nextBtn" data-href='{"cmd": "nextPrev", "options": [1]}' data-phrase="Next"></button>
         </div>
       </div>
     </div>
@@ -2429,6 +2467,7 @@
 <!--debug-->  <script src="js/tidal.js"></script>
 <!--debug-->  <script src="js/playback.js"></script>
 <!--debug-->  <script src="js/ideon.js"></script>
+<!--debug-->  <script src="js/init.js"></script>
 <!--debug-->  <script src="js/mympd.js"></script>
 <!--release   <script src="js/combined.js"></script>-->
 </body>

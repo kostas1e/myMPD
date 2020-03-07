@@ -168,3 +168,7 @@ body.theme-dark .text-secondary {
 body.theme-dark .bg-white {
   background-color: #2f353a !important;
 }
+
+body.theme-dark #modalInit img {
+  filter: invert(100%);
+}

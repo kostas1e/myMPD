@@ -139,7 +139,7 @@ var modalTimer = new Modal(document.getElementById('modalTimer'));
 var modalAlbumDetails = new Modal(document.getElementById('modalAlbumDetails'));
 var modalArtistDetails = new Modal(document.getElementById('modalArtistDetails'));
 var modalIdeon = new Modal(document.getElementById('modalIdeon'));
-var modalSetup = new Modal(document.getElementById('modalSetup'));
+var modalInit = new Modal(document.getElementById('modalInit'));
 
 var dropdownMainMenu;
 var dropdownVolumeMenu = new Dropdown(document.getElementById('volumeMenu'));
@@ -199,8 +199,8 @@ function appPrepare(scrollPos) {
         list.classList.add('opacity05');
     }
     else if (app.current.app === 'Playback') {
-        document.getElementById('QueueMiniList').classList.add('opacity05');
-        document.getElementById('BrowseCovergridList').classList.add('opacity05');
+        document.getElementById('QueueMiniList').classList.add('opacity05'); // ch
+        document.getElementById('BrowseCovergridList').classList.add('opacity05'); // ch
     }
 }
 
@@ -728,8 +728,11 @@ function appInit() {
     });
 
     document.getElementById('modalIdeon').addEventListener('shown.bs.modal', function () {
-        getSettings(); // ch to idset
-        // checkForUpdates(); // upd modal info in case of timer back changes
+        getSettings();
+        document.getElementById('inputNsServer').classList.remove('is-invalid');
+        document.getElementById('inputNsShare').classList.remove('is-invalid');
+        document.getElementById('inputNsUsername').classList.remove('is-invalid');
+        document.getElementById('inputNsPassword').classList.remove('is-invalid');
     });
 
     document.getElementById('modalConnection').addEventListener('shown.bs.modal', function () {
@@ -1074,33 +1077,6 @@ function appInit() {
         }
     }, false);
 
-    // rm
-/*     document.getElementById('SearchQobuzList').addEventListener('click', function (event) {
-        if (event.target.nodeName === 'TD') {
-            let uri = decodeURI(event.target.parentNode.getAttribute("data-uri"));
-            switch (event.target.parentNode.getAttribute('data-type')) {
-                case 'song': // qobuz://track/track_id
-                    appendQueue('song', uri, event.target.parentNode.getAttribute("data-name"));
-                    break;
-                case 'artist': // qobuz://artist/artist_id
-                    uri = uri.split("://").pop();
-                    searchQobuz(uri);
-                    break;
-                case 'album': // qobuz://album/album_id
-                    uri = uri.split("://").pop();
-                    // wip - all or artist view
-                    app.back1.view = app.current.view;
-                    app.back1.search = app.current.search;
-                    app.back1.page = app.current.page;
-                    searchQobuz(uri);
-                    break;
-            }
-        }
-        else if (event.target.nodeName === 'A') {
-            showMenu(event.target, event);
-        }
-    }, false);
- */
     document.getElementById('BrowseFilesystemAddAllSongsDropdown').addEventListener('click', function (event) {
         if (event.target.nodeName === 'BUTTON') {
             if (event.target.getAttribute('data-phrase') === 'Add all to queue') {
@@ -1203,13 +1179,6 @@ function appInit() {
         }
     }, false);
 
-    // rm
-/*     document.getElementById('searchqobuztags').addEventListener('click', function (event) {
-        if (event.target.nodeName === 'BUTTON') {
-            app.current.filter = event.target.getAttribute('data-tag');
-            searchQobuz(domCache.searchqobuzstr.value);
-        }
-    }, false); */
     document.getElementById('dropdownSortPlaylistTags').addEventListener('click', function (event) {
         if (event.target.nodeName === 'BUTTON') {
             event.preventDefault();
@@ -1357,10 +1326,6 @@ function appInit() {
         }
     }, false);
 
-/*     document.getElementById('SearchTidalList').getElementsByTagName('tr')[0].addEventListener('click', function (event) {
-        // ch
-    }, false);
- */
     document.getElementById('BrowseDatabaseByTagDropdown').addEventListener('click', function (event) {
         if (event.target.nodeName === 'BUTTON') {
             appGoto(app.current.app, app.current.tab, event.target.getAttribute('data-tag'), '0/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
@@ -1494,24 +1459,13 @@ function appInit() {
             document.getElementById('inputNsShare').removeAttribute('disabled');
             document.getElementById('inputNsUsername').removeAttribute('disabled');
             document.getElementById('inputNsPassword').removeAttribute('disabled');
+            document.getElementById('inputNsUsername').value = '';
         }
     });
 
-    /*
-    // first time setup wip
-    if (settings.set === false) {
-        modalSetup.show();
-        // console.log(false);
-    }
-    else {
-        // console.log(true);
-    }
-     */
-    // setGridPlayback();
-    // appPrepare();
-    checkForUpdates();
     updateDBstats();
-    // sendAPI("MPD_API_DATABASE_STATS", {}, parseStats);
+    checkForUpdates();
+    checkInit();
 }
 
 // Init app

@@ -106,7 +106,7 @@ typedef struct t_mympd_state {
     sds tidal_audioquality;
     sds searchtidaltaglist;
     sds cols_search_tidal;
-    bool set;
+    bool init;
 } t_mympd_state;
 
 void free_mympd_state(t_mympd_state *mympd_state);

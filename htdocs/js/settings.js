@@ -948,17 +948,3 @@ function savePlaySettings() {
         "jukeboxMode": parseInt(jukeboxMode)
     }, getSettings);
 }
-
-function saveSetup() {
-    let formOK = true;
-    let selectLocale1 = document.getElementById('selectLocale1')
-    let smthEl = document.getElementById('smth');
-    let smthElseEl = document.getElementById('smthElse');
-
-    // validate
-
-    if (formOK === true) {
-        // sendAPI("MYMPD_API_SETUP_SAVE", {"locale": selectLocale1.options[selectLocale1.selectedIndex].value, "smth": smthEl.value, "smthElse": smthElseEl.value}, getSettings);
-        modalSetup.hide();
-    }
-}

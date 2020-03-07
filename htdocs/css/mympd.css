@@ -735,23 +735,6 @@ div#playDropdown .row {
   padding-top: 100%;
 }
 
-#scrollToTopBtn {
-  display: none;
-  position: fixed;
-  bottom: 76px;
-  right: 30px;
-  z-index: 99;
-  /* border: none; */
-  /* outline: none; */
-  /* background-color: rgba(108, 117, 125, 0.5); */
-  /* background-color: rgba(255, 0, 0, 0.5); */
-}
-
-/* #scrollToTopBtn:hover { */
-  /* background-color: rgba(90, 98, 104, 0.5); */
-  /* background-color: rgba(85, 85, 85, 0.5); */
-/* } */
-
 #cardPlayback > div.card-header {
   height: 54px !important;
 }
@@ -794,4 +777,21 @@ td[data-col=Add] {
 
 #QueueCurrentList td {
   vertical-align: middle;
+}
+
+#scrollToTopBtn {
+  display: none;
+  position: fixed;
+  bottom: 76px;
+  right: 30px;
+  z-index: 99;
+}
+
+.tab {
+  display: none;
+}
+
+#modalInit img {
+  height: 30px;
+  margin-right: 5px;
 }

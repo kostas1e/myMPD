@@ -328,6 +328,9 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     else if (MATCH("tidal", "audioquality")) {
         p_config->tidal_audioquality = sdsreplace(p_config->tidal_audioquality, value);
     }
+    else if (MATCH("ideon", "init")) {
+        p_config->init = strcmp(value, "true") == 0 ? true : false;
+    }
     else {
         LOG_WARN("Unknown config option: %s - %s", section, name);
         return 0;
@@ -377,7 +380,7 @@ static void mympd_get_env(struct t_config *config) {
         "THEME_BGCOVER", "THEME_BGCOLOR", "THEME_BGCSSFILTER", "THEME_COVERGRIDSIZE",
         "THEME_COVERIMAGE", "THEME_COVERIMAGENAME", "THEME_COVERIMAGESIZE",
         "THEME_LOCALE", "THEME_HIGHLIGHTCOLOR",
-        "IDEON_MIXERTYPE", "IDEON_DOP", "IDEON_NSTYPE", "IDEON_NSSERVER", "IDEON_NSSHARE", "IDEON_NSUSERNAME", "IDEON_NSPASSWORD", "IDEON_AIRPLAY", "IDEON_SPOTIFY",
+        "IDEON_MIXERTYPE", "IDEON_DOP", "IDEON_NSTYPE", "IDEON_NSSERVER", "IDEON_NSSHARE", "IDEON_NSUSERNAME", "IDEON_NSPASSWORD", "IDEON_AIRPLAY", "IDEON_SPOTIFY", "IDEON_INIT",
         "TIDAL_ENABLED", "TIDAL_TOKEN", "TIDAL_USERNAME", "TIDAL_PASSWORD", "TIDAL_AUDIOQUALITY", "MYMPD_COLSSEARCHTIDAL", "MYMPD_SEARCHTIDALTAGLIST", 0};
     const char** ptr = env_vars;
     while (*ptr != 0) {
@@ -537,6 +540,7 @@ void mympd_config_defaults(t_config *config) {
     config->tidal_audioquality = sdsnew("HIGH");
     config->searchtidaltaglist = sdsnew("Artist,Album,Title");
     config->cols_search_tidal = sdsnew("[\"Type\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
+    config->init = false;
 }
 
 bool mympd_dump_config(void) {

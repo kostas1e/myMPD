@@ -1023,6 +1023,122 @@ function saveIdeonSettings() {
         modalIdeon.hide();
     }
 }
+
+var currentTab;
+
+function showTab(n) {
+    let x = document.getElementsByClassName("tab");
+    x[n].style.display = "block";
+    if (n == 0) {
+        document.getElementById("prevBtn").style.display = "none";
+    } else {
+        document.getElementById("prevBtn").style.display = "inline";
+    }
+    if (n == (x.length - 1)) {
+        document.getElementById("nextBtn").innerHTML = "Submit";
+    } else {
+        document.getElementById("nextBtn").innerHTML = "Next";
+    }
+}
+
+function nextPrev(n) {
+    let x = document.getElementsByClassName("tab");
+    if (n == 1 && currentTab == 1 && !validateForm()) {
+        return false;
+    }
+    x[currentTab].style.display = "none";
+    currentTab = currentTab + n;
+    if (currentTab >= x.length) {
+        saveInitSettings();
+        return false;
+    }
+    showTab(currentTab);
+}
+
+function validateForm() {
+    let formOK = true;
+
+    let selectNsType = document.getElementById('selectNsTypeInit');
+    let selectNsTypeValue = selectNsType.options[selectNsType.selectedIndex].value;
+    let inputNsServer = document.getElementById('inputNsServerInit');
+    let inputNsShare = document.getElementById('inputNsShareInit');
+    let inputNsUsername = document.getElementById('inputNsUsernameInit');
+    let inputNsPassword = document.getElementById('inputNsPasswordInit');
+
+    if (selectNsTypeValue !== '0') {
+        if (inputNsServer.value.indexOf('/') !== 0) {
+            if (!validateHost(inputNsServer)) {
+                formOK = false;
+            }
+        }
+        if (!validatePath(inputNsShare)) {
+            formOK = false;
+        }
+    }
+    if (selectNsTypeValue === '2') {
+        if (!validateNotBlank(inputNsUsername) || !validateNotBlank(inputNsPassword)) {
+            formOK = false;
+        }
+    }
+
+    return formOK;
+}
+
+function checkInit() {
+    if (settings.init == true) {
+        getServerinfo();
+
+        document.getElementById('selectNsTypeInit').addEventListener('change', function () {
+            let value = this.options[this.selectedIndex].value;
+            if (value === '0') {
+                document.getElementById('inputNsServerInit').setAttribute('disabled', 'disabled');
+                document.getElementById('inputNsShareInit').setAttribute('disabled', 'disabled');
+                document.getElementById('inputNsUsernameInit').setAttribute('disabled', 'disabled');
+                document.getElementById('inputNsPasswordInit').setAttribute('disabled', 'disabled');
+                document.getElementById('inputNsServerInit').value = '';
+                document.getElementById('inputNsShareInit').value = '';
+                document.getElementById('inputNsUsernameInit').value = '';
+                document.getElementById('inputNsPasswordInit').value = '';
+            }
+            else if (value === '1') {
+                document.getElementById('inputNsServerInit').removeAttribute('disabled');
+                document.getElementById('inputNsShareInit').removeAttribute('disabled');
+                document.getElementById('inputNsUsernameInit').setAttribute('disabled', 'disabled');
+                document.getElementById('inputNsPasswordInit').setAttribute('disabled', 'disabled');
+                document.getElementById('inputNsUsernameInit').value = 'guest';
+                document.getElementById('inputNsPasswordInit').value = '';
+            }
+            else if (value === '2') {
+                document.getElementById('inputNsServerInit').removeAttribute('disabled');
+                document.getElementById('inputNsShareInit').removeAttribute('disabled');
+                document.getElementById('inputNsUsernameInit').removeAttribute('disabled');
+                document.getElementById('inputNsPasswordInit').removeAttribute('disabled');
+                document.getElementById('inputNsUsernameInit').value = '';
+            }
+        });
+
+        document.getElementById('selectLocaleInit').innerHTML = document.getElementById('selectLocale').innerHTML;
+
+        currentTab = 0;
+        showTab(currentTab);
+        modalInit.show();
+    }
+}
+
+function saveInitSettings() {
+    let selectLocale = document.getElementById('selectLocaleInit');
+    let selectNsType = document.getElementById('selectNsTypeInit');
+    sendAPI("MYMPD_API_SETTINGS_SET", {
+        "locale": selectLocale.options[selectLocale.selectedIndex].value,
+        "nsType": parseInt(selectNsType.options[selectNsType.selectedIndex].value),
+        "nsServer": document.getElementById('inputNsServerInit').value,
+        "nsShare": document.getElementById('inputNsShareInit').value,
+        "nsUsername": document.getElementById('inputNsUsernameInit').value,
+        "nsPassword": document.getElementById('inputNsPasswordInit').value,
+        "init": true
+    }, getSettings);
+    modalInit.hide();
+}
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
  myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
@@ -1492,7 +1608,7 @@ var modalTimer = new Modal(document.getElementById('modalTimer'));
 var modalAlbumDetails = new Modal(document.getElementById('modalAlbumDetails'));
 var modalArtistDetails = new Modal(document.getElementById('modalArtistDetails'));
 var modalIdeon = new Modal(document.getElementById('modalIdeon'));
-var modalSetup = new Modal(document.getElementById('modalSetup'));
+var modalInit = new Modal(document.getElementById('modalInit'));
 
 var dropdownMainMenu;
 var dropdownVolumeMenu = new Dropdown(document.getElementById('volumeMenu'));
@@ -1552,8 +1668,8 @@ function appPrepare(scrollPos) {
         list.classList.add('opacity05');
     }
     else if (app.current.app === 'Playback') {
-        document.getElementById('QueueMiniList').classList.add('opacity05');
-        document.getElementById('BrowseCovergridList').classList.add('opacity05');
+        document.getElementById('QueueMiniList').classList.add('opacity05'); // ch
+        document.getElementById('BrowseCovergridList').classList.add('opacity05'); // ch
     }
 }
 
@@ -2081,8 +2197,11 @@ function appInit() {
     });
 
     document.getElementById('modalIdeon').addEventListener('shown.bs.modal', function () {
-        getSettings(); // ch to idset
-        // checkForUpdates(); // upd modal info in case of timer back changes
+        getSettings();
+        document.getElementById('inputNsServer').classList.remove('is-invalid');
+        document.getElementById('inputNsShare').classList.remove('is-invalid');
+        document.getElementById('inputNsUsername').classList.remove('is-invalid');
+        document.getElementById('inputNsPassword').classList.remove('is-invalid');
     });
 
     document.getElementById('modalConnection').addEventListener('shown.bs.modal', function () {
@@ -2427,33 +2546,6 @@ function appInit() {
         }
     }, false);
 
-    // rm
-/*     document.getElementById('SearchQobuzList').addEventListener('click', function (event) {
-        if (event.target.nodeName === 'TD') {
-            let uri = decodeURI(event.target.parentNode.getAttribute("data-uri"));
-            switch (event.target.parentNode.getAttribute('data-type')) {
-                case 'song': // qobuz://track/track_id
-                    appendQueue('song', uri, event.target.parentNode.getAttribute("data-name"));
-                    break;
-                case 'artist': // qobuz://artist/artist_id
-                    uri = uri.split("://").pop();
-                    searchQobuz(uri);
-                    break;
-                case 'album': // qobuz://album/album_id
-                    uri = uri.split("://").pop();
-                    // wip - all or artist view
-                    app.back1.view = app.current.view;
-                    app.back1.search = app.current.search;
-                    app.back1.page = app.current.page;
-                    searchQobuz(uri);
-                    break;
-            }
-        }
-        else if (event.target.nodeName === 'A') {
-            showMenu(event.target, event);
-        }
-    }, false);
- */
     document.getElementById('BrowseFilesystemAddAllSongsDropdown').addEventListener('click', function (event) {
         if (event.target.nodeName === 'BUTTON') {
             if (event.target.getAttribute('data-phrase') === 'Add all to queue') {
@@ -2556,13 +2648,6 @@ function appInit() {
         }
     }, false);
 
-    // rm
-/*     document.getElementById('searchqobuztags').addEventListener('click', function (event) {
-        if (event.target.nodeName === 'BUTTON') {
-            app.current.filter = event.target.getAttribute('data-tag');
-            searchQobuz(domCache.searchqobuzstr.value);
-        }
-    }, false); */
     document.getElementById('dropdownSortPlaylistTags').addEventListener('click', function (event) {
         if (event.target.nodeName === 'BUTTON') {
             event.preventDefault();
@@ -2710,10 +2795,6 @@ function appInit() {
         }
     }, false);
 
-/*     document.getElementById('SearchTidalList').getElementsByTagName('tr')[0].addEventListener('click', function (event) {
-        // ch
-    }, false);
- */
     document.getElementById('BrowseDatabaseByTagDropdown').addEventListener('click', function (event) {
         if (event.target.nodeName === 'BUTTON') {
             appGoto(app.current.app, app.current.tab, event.target.getAttribute('data-tag'), '0/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
@@ -2847,24 +2928,13 @@ function appInit() {
             document.getElementById('inputNsShare').removeAttribute('disabled');
             document.getElementById('inputNsUsername').removeAttribute('disabled');
             document.getElementById('inputNsPassword').removeAttribute('disabled');
+            document.getElementById('inputNsUsername').value = '';
         }
     });
 
-    /*
-    // first time setup wip
-    if (settings.set === false) {
-        modalSetup.show();
-        // console.log(false);
-    }
-    else {
-        // console.log(true);
-    }
-     */
-    // setGridPlayback();
-    // appPrepare();
-    checkForUpdates();
     updateDBstats();
-    // sendAPI("MPD_API_DATABASE_STATS", {}, parseStats);
+    checkForUpdates();
+    checkInit();
 }
 
 // Init app
@@ -5788,20 +5858,6 @@ function savePlaySettings() {
         "jukeboxMode": parseInt(jukeboxMode)
     }, getSettings);
 }
-
-function saveSetup() {
-    let formOK = true;
-    let selectLocale1 = document.getElementById('selectLocale1')
-    let smthEl = document.getElementById('smth');
-    let smthElseEl = document.getElementById('smthElse');
-
-    // validate
-
-    if (formOK === true) {
-        // sendAPI("MYMPD_API_SETUP_SAVE", {"locale": selectLocale1.options[selectLocale1.selectedIndex].value, "smth": smthEl.value, "smthElse": smthElseEl.value}, getSettings);
-        modalSetup.hide();
-    }
-}
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
  myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
@@ -6085,6 +6141,7 @@ function getServerinfo() {
         if (ajaxRequest.readyState === 4) {
             let obj = JSON.parse(ajaxRequest.responseText);
             document.getElementById('wsIP').innerText = obj.result.ip;
+            document.getElementById('wsIPInit').innerText = obj.result.ip;
             document.getElementById('wsMongooseVersion').innerText = obj.result.version;
         }
     };

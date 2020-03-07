@@ -169,19 +169,6 @@ body.theme-maroon .bg-white {
   background-color: #750000 !important;
 }
 
-/* 
-body.theme-maroon #BrowsePlaylistsDetailList > caption {
-  background-color: #2f353a;
-  padding-left: 1.25rem;
+body.theme-maroon #modalInit img {
+  filter: invert(100%);
 }
-
-body.theme-maroon #BrowseCovergridTitleList > caption {
-  background-color: #2f353a;
-  padding-left: 1.25rem;
-}
-
-body.theme-maroon .playing {
-  background-color: #4d0000 !important;
-}
- */
- 

@@ -32,8 +32,8 @@ umask 0022
 
 #get myMPD version
 VERSION=$(grep CPACK_PACKAGE_VERSION_ CMakeLists.txt | cut -d\" -f2 | tr '\n' '.' | sed 's/\.$//')
-#get Ideon OS version
-VERSION=$(grep CPACK_PACKAGE_IDEONVERSION_ CMakeLists.txt | cut -d\" -f2 | tr '\n' '.' | sed 's/\.$//')
+#get ideon version
+IDEONVERSION=$(grep CPACK_PACKAGE_IDEONVERSION_ CMakeLists.txt | cut -d\" -f2 | tr '\n' '.' | sed 's/\.$//')
 
 #gzip is needed to compress assets for release
 GZIPBIN=$(command -v gzip)
