@@ -41,12 +41,6 @@
   vertical-align: text-bottom !important;
 }
 
-#splashScreenLogo img {
-  filter: invert(100%);
-  height: 77px;
-  vertical-align: text-bottom !important;
-}
-
 #splashScreenAlert {
   min-height: 25vh;
   width: 100vw;
@@ -161,12 +155,6 @@ button {
   }
 }
 
-#mainMenu img {
-  height: 30px;
-  margin-right: 5px;
-  filter: invert(100%);
-}
-
 @media only screen and (min-width: 576px) and (max-width: 992px) {
   .modal-lg {
     max-width: calc(100vw - 5rem) !important;
@@ -182,12 +170,6 @@ button {
 #headerTitle {
   text-overflow: ellipsis;
   display: inline;
-}
-
-#headerCover {
-  display: inline-block;
-  width: 42px;
-  height: 42px;
 }
 
 .clickable {
@@ -509,12 +491,8 @@ caption {
   animation-iteration-count: infinite;
 }
 
-.modal-body {
-  overflow-x: hidden;
-}
-
 .modal-body .album-cover {
-  float:none;
+  float: none;
 }
 
 #BrowseDatabaseAlbumListCaption {
@@ -735,7 +713,25 @@ div#playDropdown .row {
   padding-top: 100%;
 }
 
-#cardPlayback > div.card-header {
+#splashScreenLogo img {
+  filter: invert(100%);
+  height: 77px;
+  vertical-align: text-bottom !important;
+}
+
+#mainMenu img {
+  height: 30px;
+  margin-right: 5px;
+  filter: invert(100%);
+}
+
+#headerCover {
+  display: inline-block;
+  width: 42px;
+  height: 42px;
+}
+
+#cardPlayback > div.card-header, #cardHeaderBrowse {
   height: 54px !important;
 }
 
@@ -747,17 +743,8 @@ div#playDropdown .row {
   overflow-y: auto;
 }
 
-[data-col=Add] {
-  width: 2rem;
-  text-align: right;
-}
-
 [data-col=Img] {
   width: 50px;
-}
-
-td[data-col=Add] {
-  text-align: right;
 }
 
 .card-grid-half {

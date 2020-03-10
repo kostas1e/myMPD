@@ -68,7 +68,7 @@ void *mympd_api_loop(void *arg_config) {
 
     //streaming services
     if (mympd_state->tidal_enabled)
-        tidal_session_manager(mympd_state->tidal_username, mympd_state->tidal_password, mympd_state->tidal_audioquality);
+        tidal_session_manager(mympd_state->tidal_username, mympd_state->tidal_password);
 
     while (s_signal_received == 0) {
         //poll message queue

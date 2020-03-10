@@ -34,15 +34,15 @@ static bool syscmd(const char *cmdline)
 
 static bool ns_set(int type, const char *server, const char *share, const char *username, const char *password)
 {
-    /* sds tmp_file = sdsnew("/tmp/fstab.XXXXXX");
+    sds tmp_file = sdsnew("/tmp/fstab.XXXXXX");
     int fd = mkstemp(tmp_file);
     if (fd < 0)
     {
         LOG_ERROR("Can't open %s for write", tmp_file);
         sdsfree(tmp_file);
         return false;
-    } */
-    sds tmp_file = sdsnew("/tmp/fstab.new");
+    }
+    // sds tmp_file = sdsnew("/tmp/fstab.new");
     FILE *tmp = setmntent(tmp_file, "w");
     sds org_file = sdsnew("/tmp/fstab"); // /etc/fstab
     FILE *org = setmntent(org_file, "r");
@@ -136,7 +136,7 @@ bool ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed)
                             tidal_enabled, mympd_state->tidal_username, mympd_state->tidal_password, mympd_state->tidal_audioquality, conf);
         rc = syscmd(cmdline);
         if (rc == true && mympd_state->tidal_enabled == true)
-            tidal_session_manager(mympd_state->tidal_username, mympd_state->tidal_password, mympd_state->tidal_audioquality);
+            tidal_session_manager(mympd_state->tidal_username, mympd_state->tidal_password);
 
         syscmd("systemctl restart mpd");
         sdsfree(conf);

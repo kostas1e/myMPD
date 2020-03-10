@@ -176,11 +176,11 @@ function parseSettings() {
     document.getElementById('inputCovergridSize').value = settings.covergridSize;
 
     document.documentElement.style.setProperty('--mympd-coverimagesize', settings.coverimageSize + "px");
-    calculateBoxHeight();
+    calcBoxHeight();
     document.documentElement.style.setProperty('--mympd-covergridsize', settings.covergridSize + "px");
     document.documentElement.style.setProperty('--mympd-covergridsizehalf', settings.covergridSize / 2 + "px");
     document.documentElement.style.setProperty('--mympd-highlightcolor', settings.highlightColor);
-    
+
     document.getElementById('inputHighlightColor').value = settings.highlightColor;
     document.getElementById('inputBgColor').value = settings.bgColor;
     document.getElementsByTagName('body')[0].style.backgroundColor = settings.bgColor;
@@ -205,8 +205,8 @@ function parseSettings() {
     document.getElementById('inputLastPlayedCount').value = settings.lastPlayedCount;
 
     toggleBtnChkCollapse('btnSmartpls', 'collapseSmartpls', settings.smartpls);
-    
-    let features = ["featLocalplayer", "featSyscmds", "featMixramp", "featCacert", "featBookmarks", 
+
+    let features = ["featLocalplayer", "featSyscmds", "featMixramp", "featCacert", "featBookmarks",
         "featRegex", "featTimer"];
     for (let j = 0; j < features.length; j++) {
         let Els = document.getElementsByClassName(features[j]);
@@ -383,7 +383,7 @@ function parseSettings() {
     }
 
     parseIdeonSettings();
-    
+
     settingsParsed = 'true';
 }
 
@@ -408,10 +408,10 @@ function parseMPDSettings() {
     else {
         settings.featCovergrid = true;
     }
-    
-        
+
+
     if (settings.featLibrary === true && settings.publish === true) {
-        settings['featBrowse'] = true;    
+        settings['featBrowse'] = true;
     }
     else {
         settings['featBrowse'] = false;
@@ -489,20 +489,20 @@ function parseMPDSettings() {
     else {
         clearBackgroundImage();
     }
-    
+
     settings.tags.sort();
     settings.searchtags.sort();
-    settings.searchtidaltags.sort(); // ch
+    settings.searchtidaltags.sort();
     settings.browsetags.sort();
     filterCols('colsSearchDatabase');
-    filterCols('colsSearchTidal'); // ch
+    filterCols('colsSearchTidal');
     filterCols('colsQueueCurrent');
     filterCols('colsQueueLastPlayed');
     filterCols('colsBrowsePlaylistsDetail');
     filterCols('colsBrowseFilesystem');
     filterCols('colsBrowseDatabase');
     filterCols('colsPlayback');
-    
+
     if (settings.featTags === false) {
         app.apps.Browse.active = 'Filesystem';
         app.apps.Search.Database.state = '0/filename/-/';
@@ -510,7 +510,7 @@ function parseMPDSettings() {
         settings.colsQueueCurrent = ["Pos", "Title", "Duration"];
         settings.colsQueueLastPlayed = ["Pos", "Title", "LastPlayed"];
         settings.colsSearchDatabase = ["Title", "Duration"];
-        settings.colsSearchTidal = ["Title", "Duration"]; // add album artist type
+        settings.colsSearchTidal = ["Type", "Title", "Artist", "Album", "Duration"];
         settings.colsBrowseFilesystem = ["Type", "Title", "Duration"];
         settings.colsBrowseDatabase = ["Track", "Title", "Duration"];
         settings.colsPlayback = [];
@@ -521,7 +521,6 @@ function parseMPDSettings() {
             pbtl += '<div id="current' + settings.colsPlayback[i] + '" data-tag="' + settings.colsPlayback[i] + '" ' +
                 'data-name="' + (lastSongObj[settings.colsPlayback[i]] ? encodeURI(lastSongObj[settings.colsPlayback[i]]) : '') + '">' +
                 '<small>' + t(settings.colsPlayback[i]) + ': </small>' +
-                // '<p';
                 '<span';
             if (settings.browsetags.includes(settings.colsPlayback[i])) {
                 pbtl += ' class="clickable"';
@@ -539,7 +538,6 @@ function parseMPDSettings() {
             else {
                 pbtl += (lastSongObj[settings.colsPlayback[i]] ? e(lastSongObj[settings.colsPlayback[i]]) : '');
             }
-            // pbtl += '</p></div>';
             pbtl += '</span></div>';
         }
         document.getElementById('cardPlaybackTags').innerHTML = pbtl;
@@ -714,16 +712,16 @@ function saveSettings(closeModal) {
 
     let selectJukeboxPlaylist = document.getElementById('selectJukeboxPlaylist');
     let jukeboxPlaylist = selectJukeboxPlaylist.options[selectJukeboxPlaylist.selectedIndex].value;
-    
+
     if (jukeboxMode === '2') {
         jukeboxUniqueTagValue = 'Album';
     }
-    
+
     if (jukeboxMode === '1' && settings.featSearchwindow === false && jukeboxPlaylist === 'Database') {
         formOK = false;
         document.getElementById('warnJukeboxPlaylist').classList.remove('hide');
     }
-    
+
     if (formOK === true) {
         let selectLocale = document.getElementById('selectLocale');
         let selectTheme = document.getElementById('selectTheme');
@@ -846,9 +844,6 @@ function filterCols(x) {
     if (x === 'colsQueueCurrent' || x === 'colsBrowsePlaylistsDetail' || x === 'colsQueueLastPlayed') {
         tags.push('Pos');
     }
-    /* if (x === 'colsQueueCurrent') { // wip qimg
-        tags.push('Img');
-    } */
     else if (x === 'colsBrowseFilesystem' || x === 'colsSearchTidal' || x === 'colsSearchQobuz') {
         tags.push('Type');
     }
@@ -863,8 +858,6 @@ function filterCols(x) {
     let cols = [];
     for (let i = 0; i < settings[x].length; i++) {
         if (tags.includes(settings[x][i])) {
-            /* if (x === 'QueueCurrent')
-                console.log(settings[x][i]); // wip qimg */
             cols.push(settings[x][i]);
         }
     }

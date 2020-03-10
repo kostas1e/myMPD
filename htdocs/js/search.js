@@ -28,7 +28,7 @@ function search(x) {
 }
 
 function parseSearch(obj) {
-    //document.getElementById('panel-heading-search').innerText = gtPage('Num songs', obj.result.returnedEntities, obj.result.totalEntities);
+    // document.getElementById('panel-heading-search').innerText = gtPage('Num songs', obj.result.returnedEntities, obj.result.totalEntities);
     document.getElementById('cardFooterSearch').innerText = gtPage('Num songs', obj.result.returnedEntities, obj.result.totalEntities);
 
     let tab = app.current.tab === 'Database' ? '' : app.current.tab;
@@ -41,10 +41,12 @@ function parseSearch(obj) {
         document.getElementById('search' + tab + 'AddAllSongsBtn').setAttribute('disabled', 'disabled');
     }
 
-    if (tab === '' || tab === 'Qobuz') // database
+    if (tab === '') {
         parseFilesystem(obj);
-    else // tidal/qobuz
+    }
+    else {
         parseTidal(obj);
+    }
 }
 
 function saveSearchAsSmartPlaylist() {
@@ -125,13 +127,14 @@ function parseTidal(obj) {
         row.setAttribute('data-type', type);
         row.setAttribute('data-uri', uri);
         row.setAttribute('tabindex', 0);
-        if (type !== 'artist') { // song/album
+        if (type !== 'artist') {
             row.setAttribute('data-name', obj.result.data[i].Title);
             obj.result.data[i].Duration = beautifySongDuration(obj.result.data[i].Duration);
-            if (app.current.tab === 'Qobuz')
+            if (app.current.tab === 'Qobuz') {
                 obj.result.data[i].Date = new Date(obj.result.data[i].Date).toLocaleDateString();
+            }
         }
-        else { // artist
+        else {
             row.setAttribute('data-name', obj.result.data[i].Artist);
         }
         for (let c = 0; c < settings['cols' + list].length; c++) {
@@ -153,20 +156,24 @@ function parseTidal(obj) {
         tds += '<td data-col="Action"><a href="#" class="material-icons color-darkgrey">' + ligatureMore + '</a></td>';
         row.innerHTML = tds;
 
-        if (i < tr.length)
+        if (i < tr.length) {
             activeRow = replaceTblRow(tr[i], row) === true ? i : activeRow;
-        else
+        }
+        else {
             tbody.append(row);
+        }
     }
     let trLen = tr.length - 1;
-    for (let i = trLen; i >= nrItems; i--)
+    for (let i = trLen; i >= nrItems; i--) {
         tr[i].remove();
+    }
 
     if (navigate === true) {
         focusTable(0);
     }
 
-    setTidalPagination(obj.result.maxTotalItems, obj.result.maxReturnedItems, obj.result.limit);
+    // setTidalPagination(obj.result.maxTotalItems, obj.result.maxReturnedItems, obj.result.limit);
+    setPagination(obj.result.maxTotalItems, obj.result.maxReturnedItems, obj.result.limit);
 
     if (nrItems === 0)
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +

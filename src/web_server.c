@@ -281,7 +281,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
             struct http_message *hm = (struct http_message *) ev_data;
             static const struct mg_str browse_prefix = MG_MK_STR("/browse");
             static const struct mg_str albumart_prefix = MG_MK_STR("/albumart");
-            static const struct mg_str image_prefix = MG_MK_STR("/image"); // alt
+            static const struct mg_str image_prefix = MG_MK_STR("/image");
             LOG_VERBOSE("HTTP request (%d): %.*s", (intptr_t)nc->user_data, (int)hm->uri.len, hm->uri.p);
             if (mg_vcmp(&hm->uri, "/api/serverinfo") == 0) {
                 struct sockaddr_in localip;
@@ -299,7 +299,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
                     sdsfree(method);
                 }
             }
-            if (mg_vcmp(&hm->uri, "/api") == 0) {
+            else if (mg_vcmp(&hm->uri, "/api") == 0) {
                 //api request
                 bool rc = handle_api((intptr_t)nc->user_data, hm);
                 if (rc == false) {

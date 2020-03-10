@@ -2,6 +2,47 @@
 
 var currentTab;
 
+function checkInit() {
+    if (settings.init === false) {
+        getServerinfo();
+
+        document.getElementById('selectNsTypeInit').addEventListener('change', function () {
+            let value = this.options[this.selectedIndex].value;
+            if (value === '0') {
+                document.getElementById('inputNsServerInit').setAttribute('disabled', 'disabled');
+                document.getElementById('inputNsShareInit').setAttribute('disabled', 'disabled');
+                document.getElementById('inputNsUsernameInit').setAttribute('disabled', 'disabled');
+                document.getElementById('inputNsPasswordInit').setAttribute('disabled', 'disabled');
+                document.getElementById('inputNsServerInit').value = '';
+                document.getElementById('inputNsShareInit').value = '';
+                document.getElementById('inputNsUsernameInit').value = '';
+                document.getElementById('inputNsPasswordInit').value = '';
+            }
+            else if (value === '1') {
+                document.getElementById('inputNsServerInit').removeAttribute('disabled');
+                document.getElementById('inputNsShareInit').removeAttribute('disabled');
+                document.getElementById('inputNsUsernameInit').setAttribute('readonly', 'readonly');
+                document.getElementById('inputNsPasswordInit').setAttribute('readonly', 'readonly');
+                document.getElementById('inputNsUsernameInit').value = 'guest';
+                document.getElementById('inputNsPasswordInit').value = '';
+            }
+            else if (value === '2') {
+                document.getElementById('inputNsServerInit').removeAttribute('disabled');
+                document.getElementById('inputNsShareInit').removeAttribute('disabled');
+                document.getElementById('inputNsUsernameInit').removeAttribute('readonly');
+                document.getElementById('inputNsPasswordInit').removeAttribute('readonly');
+                document.getElementById('inputNsUsernameInit').value = '';
+            }
+        });
+
+        document.getElementById('selectLocaleInit').innerHTML = document.getElementById('selectLocale').innerHTML;
+
+        currentTab = 0;
+        showTab(currentTab);
+        modalInit.show();
+    }
+}
+
 function showTab(n) {
     let x = document.getElementsByClassName("tab");
     x[n].style.display = "block";
@@ -58,47 +99,6 @@ function validateForm() {
     }
 
     return formOK;
-}
-
-function checkInit() {
-    if (settings.init == true) {
-        getServerinfo();
-
-        document.getElementById('selectNsTypeInit').addEventListener('change', function () {
-            let value = this.options[this.selectedIndex].value;
-            if (value === '0') {
-                document.getElementById('inputNsServerInit').setAttribute('disabled', 'disabled');
-                document.getElementById('inputNsShareInit').setAttribute('disabled', 'disabled');
-                document.getElementById('inputNsUsernameInit').setAttribute('disabled', 'disabled');
-                document.getElementById('inputNsPasswordInit').setAttribute('disabled', 'disabled');
-                document.getElementById('inputNsServerInit').value = '';
-                document.getElementById('inputNsShareInit').value = '';
-                document.getElementById('inputNsUsernameInit').value = '';
-                document.getElementById('inputNsPasswordInit').value = '';
-            }
-            else if (value === '1') {
-                document.getElementById('inputNsServerInit').removeAttribute('disabled');
-                document.getElementById('inputNsShareInit').removeAttribute('disabled');
-                document.getElementById('inputNsUsernameInit').setAttribute('disabled', 'disabled');
-                document.getElementById('inputNsPasswordInit').setAttribute('disabled', 'disabled');
-                document.getElementById('inputNsUsernameInit').value = 'guest';
-                document.getElementById('inputNsPasswordInit').value = '';
-            }
-            else if (value === '2') {
-                document.getElementById('inputNsServerInit').removeAttribute('disabled');
-                document.getElementById('inputNsShareInit').removeAttribute('disabled');
-                document.getElementById('inputNsUsernameInit').removeAttribute('disabled');
-                document.getElementById('inputNsPasswordInit').removeAttribute('disabled');
-                document.getElementById('inputNsUsernameInit').value = '';
-            }
-        });
-
-        document.getElementById('selectLocaleInit').innerHTML = document.getElementById('selectLocale').innerHTML;
-
-        currentTab = 0;
-        showTab(currentTab);
-        modalInit.show();
-    }
 }
 
 function saveInitSettings() {

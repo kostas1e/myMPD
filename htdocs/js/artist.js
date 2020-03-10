@@ -32,7 +32,7 @@ function parseTidalArtistDetails(obj) {
     modal.getElementsByTagName('tbody')[0].innerHTML = artistDetails;
 }
 
-function artistRadio(uri) { // tidal artist radio
+function artistRadio(uri) {
     uri = uri.split('://').pop() + '/mix';
     searchTidal(uri);
 }

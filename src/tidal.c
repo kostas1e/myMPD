@@ -5,10 +5,10 @@
 
 #include "../dist/src/frozen/frozen.h"
 #include "../dist/src/sds/sds.h"
+#include "sds_extras.h"
 #include "list.h"
 #include "config_defs.h"
 #include "log.h"
-#include "sds_extras.h"
 #include "utility.h"
 #include "tidal/tidal_utility.h"
 #include "tidal.h"
@@ -17,17 +17,12 @@
 #define TIDAL_RESOURCES "https://resources.tidal.com/images"
 
 static int curl_cleanup = 0;
-static const char *tidal_token; // hard code token
-static sds tidal_username;
-static sds tidal_password;
-static sds tidal_audioquality;
 static sds cache_dir;
 static CURL *tidalhandle;
 struct memory_struct chunk;
-//static struct curl_slist *slist = NULL;
 static char *user_id = NULL;
 static char *session_id = NULL;
-static char *country_code = NULL; // "US"
+static char *country_code = NULL;
 static bool is_logged_in = false;
 
 size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp)
@@ -56,16 +51,6 @@ bool tidal_init(t_config *config)
     if (curl_global_init(CURL_GLOBAL_ALL) == 0)
     {
         curl_cleanup++;
-        // api_token = "kgsOOmYk3zShYrNP";
-        // preview_token = "8C7kRFdkaRp0dLBp";
-        tidal_token = "kgsOOmYk3zShYrNP";
-        tidal_username = sdsempty();
-        tidal_password = sdsempty();
-        tidal_audioquality = sdsnew("HIGH");
-        //tidal_token = config->tidal_token;
-        //tidal_username = config->tidal_username;
-        //tidal_password = config->tidal_password;
-        //tidal_audioquality = config->tidal_audioquality;
         cache_dir = sdscatfmt(sdsempty(), "%s/covercache", config->varlibdir);
         tidalhandle = curl_easy_init();
         if (tidalhandle)
@@ -76,13 +61,13 @@ bool tidal_init(t_config *config)
             return true;
         }
         else
-        { // NULL
+        {
             LOG_ERROR("curl_easy_init");
             return false;
         }
     }
     else
-    { // non-zero
+    {
         LOG_ERROR("curl_global_init");
         return false;
     }
@@ -93,13 +78,14 @@ void tidal_cleanup(void)
     FREE_PTR(country_code);
     FREE_PTR(session_id);
     if (curl_cleanup--)
+    {
         curl_easy_cleanup(tidalhandle);
+    }
     sdsfree(cache_dir);
-    sdsfree(tidal_audioquality);
-    sdsfree(tidal_password);
-    sdsfree(tidal_username);
     if (curl_cleanup--)
+    {
         curl_global_cleanup();
+    }
 }
 
 static void logout(void)
@@ -113,17 +99,19 @@ static bool login(const char *username, const char *password)
 {
     logout();
     if (!username || !password)
+    {
         return false;
+    }
+
+    const char *tidal_token = "kgsOOmYk3zShYrNP";
 
     chunk.memory = malloc(1);
     chunk.size = 0;
 
     sds url = sdscat(sdsnew(TIDALHIFI_API), "/login/username");
     curl_easy_setopt(tidalhandle, CURLOPT_URL, url);
-    // x-tidal-token
     sds data = sdscatfmt(sdsempty(), "token=%s&username=%s&password=%s", tidal_token, username, password);
     curl_easy_setopt(tidalhandle, CURLOPT_POSTFIELDS, data);
-    // bypass auth w/ ua plus opts
 
     CURLcode res = curl_easy_perform(tidalhandle);
     sdsfree(data);
@@ -135,7 +123,7 @@ static bool login(const char *username, const char *password)
         return false;
     }
     else
-    { // 0
+    {
         int je = json_scanf(chunk.memory, chunk.size, "{userId:%lu,sessionId:%Q,countryCode:%Q}", &user_id, &session_id, &country_code);
         if (je == 3)
         {
@@ -157,22 +145,19 @@ static bool login(const char *username, const char *password)
     }
 }
 
-void tidal_session_manager(sds username, sds password, sds audioquality)
+void tidal_session_manager(sds username, sds password)
 {
-    tidal_username = sdsreplacelen(tidal_username, username, sdslen(username));
-    tidal_password = sdsreplacelen(tidal_password, password, sdslen(password));
-    tidal_audioquality = sdsreplacelen(tidal_audioquality, audioquality, sdslen(audioquality));
     is_logged_in = login(username, password);
 }
 
 static sds request(sds buffer, const char *method, sds uri)
 {
-    if (!is_logged_in)
+    if (is_logged_in == false)
     {
         buffer = sdscrop(buffer);
         return buffer;
     }
-    // add x-tidal-sessionid and x-tidal-token headers
+
     chunk.memory = malloc(1);
     chunk.size = 0;
 
@@ -310,7 +295,6 @@ static sds get_artist_albums_other(sds buffer, const char *artist_id, const unsi
 
 static sds get_artist_toptracks(sds buffer, const char *artist_id, const unsigned limit, const unsigned offset)
 {
-    // items 50 per page
     sds url = sdscatfmt(sdsempty(), "/artists/%s/toptracks?limit=%u&offset=%u", artist_id, limit, offset);
     buffer = request(buffer, "GET", url);
     sdsfree(url);
@@ -584,7 +568,7 @@ sds tidal_search(sds buffer, sds method, int request_id, const char *query,
                  const char *type, const char *plist, const unsigned offset)
 {
 
-    (void)(plist); // unused
+    (void)(plist);
 
     unsigned limit = 10;
     unsigned t1, t2, t3, t4, r1, r2, r3, r4;
@@ -752,7 +736,7 @@ sds tidal_search(sds buffer, sds method, int request_id, const char *query,
 }
 
 sds tidal_get_cover(sds cover, const char *uri)
-{ // track uri
+{
     char *track_id = extract_id(uri);
     sds res = get_track(sdsempty(), track_id);
     // parse track

@@ -341,12 +341,12 @@ function toggleBtnChkCollapse(btn, collapse, state) {
     }
 }
 
-function setPagination(total, returned, at) {
+function setPagination(total, returned, limit = settings.maxElementsPerPage, at = undefined) {
     let cat = app.current.app + app.current.tab;
     if (at !== undefined) {
         cat = at;
     }
-    let totalPages = Math.ceil(total / settings.maxElementsPerPage);
+    let totalPages = Math.ceil(total / limit);
     if (totalPages === 0) {
         totalPages = 1;
     }
@@ -358,12 +358,12 @@ function setPagination(total, returned, at) {
         let pages = p[i].children[1].children[1];
         let next = p[i].children[2];
 
-        page.innerText = (app.current.page / settings.maxElementsPerPage + 1) + ' / ' + totalPages;
+        page.innerText = (app.current.page / limit + 1) + ' / ' + totalPages;
         if (totalPages > 1) {
             page.removeAttribute('disabled');
             let pl = '';
             for (let j = 0; j < totalPages; j++) {
-                pl += '<button data-page="' + (j * settings.maxElementsPerPage) + '" type="button" class="mr-1 mb-1 btn-sm btn btn-secondary">' +
+                pl += '<button data-page="' + (j * limit) + '" type="button" class="mr-1 mb-1 btn-sm btn btn-secondary">' +
                     (j + 1) + '</button>';
             }
             pages.innerHTML = pl;
@@ -371,7 +371,7 @@ function setPagination(total, returned, at) {
         }
         else if (total === -1) {
             page.setAttribute('disabled', 'disabled');
-            page.innerText = (app.current.page / settings.maxElementsPerPage + 1);
+            page.innerText = (app.current.page / limit + 1);
             page.classList.add('nodropdown');
         }
         else {
@@ -379,7 +379,7 @@ function setPagination(total, returned, at) {
             page.classList.add('nodropdown');
         }
 
-        if (total > app.current.page + settings.maxElementsPerPage || total === -1 && returned >= settings.maxElementsPerPage) {
+        if (total > app.current.page + limit || total === -1 && returned >= limit) {
             next.removeAttribute('disabled');
             p[i].classList.remove('hide');
             document.getElementById(cat + 'ButtonsBottom').classList.remove('hide');
@@ -437,20 +437,16 @@ function parseCmd(event, href) {
 }
 
 function gotoPage(x) {
-    // rm - scroll top nav 58
-    // check for playback
-    // document.getElementById(app.current.app + app.current.tab + 'PaginationTop').scrollIntoView();
-    document.getElementById('card' + app.current.app).scrollIntoView(); // cardHeader
+    document.getElementById('card' + app.current.app).scrollIntoView();
 
     let offset = settings.maxElementsPerPage;
-    if (app.current.tab === 'Tidal') {
-        if (app.current.view === 'All') {
-            offset = 10;
-        }
-        else if (app.current.view === 'Artist') {
-            offset = 50;
-        }
+    if (app.current.tab === 'Tidal' && app.current.view === 'All') {
+        offset = 10;
     }
+    else if (app.current.tab === 'Tidal' && app.current.view === 'Artist') {
+        offset = 50;
+    }
+
     switch (x) {
         case 'next':
             app.current.page += offset;

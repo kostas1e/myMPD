@@ -1433,7 +1433,7 @@ function appInit() {
             localplayerPlay();
         }
     });
-    
+
     document.getElementById('selectNsType').addEventListener('change', function () {
         let value = this.options[this.selectedIndex].value;
         if (value === '0') {

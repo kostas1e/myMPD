@@ -31,18 +31,6 @@ function installUpdates() {
     // sendAPI("MYMPD_API_INSTALL_UPDATES", {});
 }
 
-function reToggleUI() {
-    if (settings.tidalEnabled) {
-        document.getElementById('cardSearchNavTidal').classList.remove('disabled');
-    }
-    else {
-        document.getElementById('cardSearchNavTidal').classList.add('disabled');
-        if (app.current.tab === 'Tidal') {
-            appGoto('Search', 'Database');
-        }
-    }
-}
-
 function parseIdeonSettings() {
     console.log('parseideonsettings');
     document.getElementById('selectMixerType').value = settings.mixerType;

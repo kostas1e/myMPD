@@ -299,18 +299,18 @@ function addToQueue() {
     if (!validateInt(inputAddToQueueQuantityEl)) {
         formOK = false;
     }
-    
+
     let selectAddToQueueMode = document.getElementById('selectAddToQueueMode');
     let jukeboxMode = selectAddToQueueMode.options[selectAddToQueueMode.selectedIndex].value
 
     let selectAddToQueuePlaylist = document.getElementById('selectAddToQueuePlaylist');
     let jukeboxPlaylist = selectAddToQueuePlaylist.options[selectAddToQueuePlaylist.selectedIndex].value;
-    
+
     if (jukeboxMode === '1' && settings.featSearchwindow === false && jukeboxPlaylist === 'Database') {
         document.getElementById('warnJukeboxPlaylist2').classList.remove('hide');
         formOK = false;
     }
-    
+
     if (formOK === true) {
         sendAPI("MPD_API_QUEUE_ADD_RANDOM", {
             "mode": jukeboxMode,

@@ -237,13 +237,21 @@ function parseTidalSongDetails(obj) {
     modal.getElementsByClassName('album-cover')[0].style.backgroundImage = 'url("' + cover + '"), url("' + subdir + '/assets/coverimage-loading.svg")';
     modal.getElementsByTagName('h1')[0].innerText = obj.result.title;
 
-    let songDetails = '';
-    songDetails += '<tr><th>' + t('Album') + '</th><td>' + obj.result.album.title + '</td></tr>';
-    songDetails += '<tr><th>' + t('AlbumArtist') + '</th><td>' + obj.result.album.artist + '</td></tr>';
-    songDetails += '<tr><th>' + t('Artist') + '</th><td>' + obj.result.artist.name + '</td></tr>';
-    songDetails += '<tr><th>' + t('Date') + '</th><td>' + obj.result.album.releaseDate + '</td></tr>';
-    songDetails += '<tr><th>' + t('Track') + '</th><td>' + obj.result.trackNumber + '</td></tr>';
-    songDetails += '<tr><th>' + t('Duration') + '</th><td>' + beautifyDuration(obj.result.duration) + '</td></tr>';
+    let songDetailsHTML = '';
+    songDetailsHTML += '<tr><th>' + t('Album') + '</th><td>' + obj.result.album.title + '</td></tr>';
+    songDetailsHTML += '<tr><th>' + t('AlbumArtist') + '</th><td>' + obj.result.album.artist + '</td></tr>';
+    songDetailsHTML += '<tr><th>' + t('Artist') + '</th><td>' + obj.result.artist.name + '</td></tr>';
+    songDetailsHTML += '<tr><th>' + t('Date') + '</th><td>' + obj.result.album.releaseDate + '</td></tr>';
+    songDetailsHTML += '<tr><th>' + t('Track') + '</th><td>' + obj.result.trackNumber + '</td></tr>';
+    songDetailsHTML += '<tr><th>' + t('Duration') + '</th><td>' + beautifyDuration(obj.result.duration) + '</td></tr>';
 
-    modal.getElementsByTagName('tbody')[0].innerHTML = songDetails;
+    document.getElementById('tbodySongDetails').innerHTML = songDetailsHTML;
+    
+    modal.getElementsByClassName('featLyrics')[0].classList.add('hide');
+    modal.getElementsByClassName('featPictures')[0].classList.add('hide');
+}
+
+function songRadio(uri) {
+    uri = uri.split('://').pop() + '/mix';
+    searchTidal(uri);
 }
