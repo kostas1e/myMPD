@@ -6,7 +6,7 @@
 */
 
 function parseUpdateQueue(obj) {
-    // Set playstate
+    //Set playstate
     if (obj.result.state === 1) {
         for (let i = 0; i < domCache.btnsPlayLen; i++) {
             domCache.btnsPlay[i].innerText = 'play_arrow';

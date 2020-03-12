@@ -32,7 +32,7 @@ function hideMenu() {
             focusTable(undefined, menuEl.parentNode.parentNode.parentNode.parentNode);
         }
         else if ((app.current.app === 'Browse' && app.current.tab === 'Covergrid') ||
-            (app.current.app === 'Playlist' && getTableId(menuEl) !== 'QueueCurrentList')) {
+            app.current.app === 'Playlist') {
             focusTable(undefined, menuEl.parentNode.parentNode.parentNode.parentNode);
         }
     }
@@ -55,16 +55,8 @@ function showMenu(el, event) {
 
 function showMenuTh(el) {
     let table = app.current.app + (app.current.tab !== undefined ? app.current.tab : '') + (app.current.view !== undefined ? app.current.view : '');
-    // tmp fix rm view for tidal
-    // console.log('showMenuTh in1', table);
-    if (table === 'SearchTidalAll' || table === 'SearchTidalArtist' || table === 'SearchTidalAlbum') {
+    if (app.current.tab === 'Tidal') {
         table = 'SearchTidal';
-    }
-    else if (table === 'Playback' && getTableId(el) === 'QueueCurrentList') {
-        table = 'QueueCurrent'
-    }
-    else if (table === 'Playback' && getTableId(el) !== 'QueueCurrentList') {
-        table = 'BrowseCovergrid'
     }
     let menu = '<form class="p-2" id="colChecklist' + table + '">';
     menu += setColsChecklist(table);
@@ -81,25 +73,16 @@ function showMenuTh(el) {
     el.addEventListener('shown.bs.popover', function (event) {
         event.target.setAttribute('data-popover', 'true');
         let table = app.current.app + (app.current.tab !== undefined ? app.current.tab : '') + (app.current.view !== undefined ? app.current.view : '');
-        // tmp fix rm view for tidal
-        if (table === 'SearchTidalAll' || table === 'SearchTidalArtist' || table === 'SearchTidalAlbum') {
+        if (app.current.tab === 'Tidal') {
             table = 'SearchTidal';
-        }
-        else if (table === 'Playback' && getTableId(el) === 'QueueCurrentList') {
-            table = 'QueueCurrent'
-        }
-        else if (table === 'Playback' && getTableId(el) !== 'QueueCurrentList') {
-            table = 'BrowseCovergrid'
         }
         document.getElementById('colChecklist' + table).addEventListener('click', function (eventClick) {
             if (eventClick.target.nodeName === 'BUTTON' && eventClick.target.classList.contains('material-icons')) {
-                // console.log('showmenuth button if');
                 toggleBtnChk(eventClick.target);
                 eventClick.preventDefault();
                 eventClick.stopPropagation();
             }
             else if (eventClick.target.nodeName === 'BUTTON') {
-                // console.log('showmenuth button else');
                 eventClick.preventDefault();
                 saveCols(table);
             }
@@ -113,26 +96,11 @@ function showMenuTd(el) {
     let uri = decodeURI(el.getAttribute('data-uri'));
     let name = decodeURI(el.getAttribute('data-name'));
     let nextsongpos = 0;
-    // console.log(1, type, uri, name);
-    if (type === null || uri === '') { // a > td > tr
+    if (type === null || uri === '') {
         type = el.parentNode.parentNode.getAttribute('data-type');
         uri = decodeURI(el.parentNode.parentNode.getAttribute('data-uri'));
         name = el.parentNode.parentNode.getAttribute('data-name');
     }
-    // console.log(2, type, uri, name);
-    if ((type === null || uri === '') && (app.current.tab === 'Playlists' || app.current.tab === 'Filesystem')) { // wip playlist td > tr plus
-        // console.log('testa');
-        /* if (uri !== null && uri !== '') {
-            //
-            console.log('test');
-        }
-        else { */
-        type = el.parentNode.getAttribute('data-type');
-        uri = decodeURI(el.parentNode.getAttribute('data-uri'));
-        name = el.parentNode.getAttribute('data-name');
-        // }
-    }
-    // console.log(3, type, uri, name);
 
     if (lastState) {
         nextsongpos = lastState.nextSongPos;
@@ -143,59 +111,33 @@ function showMenuTd(el) {
         (app.current.app === 'Search' && app.current.tab === 'Database') ||
         (app.current.app === 'Browse' && app.current.tab === 'Database') ||
         (app.current.app === 'Browse' && app.current.tab === 'Covergrid' && el.nodeName === 'A') ||
-        // alter line below
-        (app.current.app === 'Playback' && el.nodeName === 'A' && getTableId(el) !== 'QueueCurrentList')) {
-        // menu += (type === 'song' ? addMenuItem({"cmd": "appendPlayQueue", "options": [type, uri, name]}, t('Play')) : '') +
-        // console.log('pop', type, uri, name);
+        app.current.app === 'Playback') {
         menu += addMenuItem({ "cmd": "appendPlayQueue", "options": [type, uri, name] }, t('Play')) +
             addMenuItem({ "cmd": "appendQueue", "options": [type, uri, name] }, t('Add to queue')) +
             (type === 'song' ? addMenuItem({ "cmd": "appendAfterQueue", "options": [type, uri, nextsongpos, name] }, t('Add after current playing song')) : '') +
             addMenuItem({ "cmd": "replaceQueue", "options": [type, uri, name] }, t('Replace queue')) +
             (type !== 'plist' && type !== 'smartpls' && settings.featPlaylists ? addMenuItem({ "cmd": "showAddToPlaylist", "options": [uri, ""] }, t('Add to playlist')) : '') +
             (type === 'song' ? addMenuItem({ "cmd": "songDetails", "options": [uri] }, t('Song details')) : '') +
-            (type === 'plist' || type === 'smartpls' ? addMenuItem({ "cmd": "playlistDetails", "options": [uri] }, t('View/Edit playlist')) : '') +
+            (type === 'plist' || type === 'smartpls' ? addMenuItem({ "cmd": "playlistDetails", "options": [uri] }, t('View playlist')) : '') +
             (type === 'dir' && settings.featBookmarks && app.current.tab !== 'Covergrid' ? addMenuItem({ "cmd": "showBookmarkSave", "options": [-1, name, uri, type] }, t('Add bookmark')) : '');
         if (app.current.tab === 'Filesystem') {
-            menu += (type === 'dir' ? addMenuItem({ "cmd": "updateDB", "options": [dirname(uri)] }, t('Update directory')) : '') +
-                (type === 'dir' ? addMenuItem({ "cmd": "rescanDB", "options": [dirname(uri)] }, t('Rescan directory')) : '');
+            menu += (type === 'dir' ? addMenuItem({ "cmd": "updateDB", "options": [dirname(uri), true] }, t('Update directory')) : '') +
+                (type === 'dir' ? addMenuItem({ "cmd": "rescanDB", "options": [dirname(uri), true] }, t('Rescan directory')) : '');
         }
         if (app.current.app === 'Search') {
             //songs must be arragend in one album per folder
             let baseuri = dirname(uri);
+            let albumName = baseuri.split('/').pop();
             menu += '<div class="dropdown-divider"></div>' +
                 '<a class="dropdown-item" id="advancedMenuLink" data-toggle="collapse" href="#advancedMenu"><span class="material-icons material-icons-small-left">keyboard_arrow_right</span>Album actions</a>' +
                 '<div class="collapse" id="advancedMenu">' +
-                addMenuItem({ "cmd": "appendPlayQueue", "options": [type, baseuri, name] }, t('Play')) +
-                addMenuItem({ "cmd": "appendQueue", "options": [type, baseuri, name] }, t('Add to queue')) +
-                addMenuItem({ "cmd": "appendAfterQueue", "options": [type, baseuri, nextsongpos, name] }, t('Add after current playing song')) +
-                addMenuItem({ "cmd": "replaceQueue", "options": [type, baseuri, name] }, t('Replace queue')) +
+                addMenuItem({ "cmd": "appendPlayQueue", "options": ["dir", baseuri, albumName] }, t('Play')) +
+                addMenuItem({ "cmd": "appendQueue", "options": ["dir", baseuri, albumName] }, t('Add to queue')) +
+                // addMenuItem({ "cmd": "appendAfterQueue", "options": ["dir", baseuri, nextsongpos, albumName] }, t('Add after current playing song')) +
+                addMenuItem({ "cmd": "replaceQueue", "options": ["dir", baseuri, albumName] }, t('Replace queue')) +
                 (settings.featPlaylists ? addMenuItem({ "cmd": "showAddToPlaylist", "options": [baseuri, ""] }, t('Add to playlist')) : '') +
                 '</div>';
         }
-    }
-    else if (app.current.tab === 'Tidal') {
-        menu += (type === 'song' ? addMenuItem({ "cmd": "appendPlayQueue", "options": [type, uri, name] }, t('Play song')) : '') +
-            (type === 'song' ? addMenuItem({ "cmd": "appendQueue", "options": [type, uri, name] }, t('Add to queue')) : '') +
-            (type === 'song' ? addMenuItem({ "cmd": "appendAfterQueue", "options": [type, uri, nextsongpos, name] }, t('Add after current playing song')) : '') +
-            (type === 'song' ? addMenuItem({ "cmd": "replaceQueue", "options": [type, uri, name] }, t('Replace queue')) : '') +
-            (type === 'song' && settings.featPlaylists ? addMenuItem({ "cmd": "showAddToPlaylist", "options": [uri] }, t('Add to playlist')) : '') +
-            (type === 'song' ? addMenuItem({ "cmd": "songDetails", "options": [uri] }, t('Song details')) : '') +
-            (type === 'album' ? addMenuItem({ "cmd": "albumDetails", "options": [uri] }, t('Album details')) : '') +
-            (type === 'artist' ? addMenuItem({ "cmd": "artistDetails", "options": [uri] }, t('Artist info')) : '') +
-            (type === 'song' ? addMenuItem({ "cmd": "songRadio", "options": [uri] }, t('Go to song radio')) : '') +
-            // credits
-            (type === 'artist' ? addMenuItem({ "cmd": "artistRadio", "options": [uri] }, t('Go to artist radio')) : '');
-        // go to artist
-    }
-    else if (app.current.tab === 'Qobuz') {
-        menu += (type !== 'song' ? addMenuItem({ "cmd": "appendQueue", "options": [type, uri, name] }, t('Add to queue')) : '') +
-            (type === 'song' ? addMenuItem({ "cmd": "appendAfterQueue", "options": [type, uri, nextsongpos, name] }, t('Add after current playing song')) : '') +
-            (type === 'song' ? addMenuItem({ "cmd": "replaceQueue", "options": [type, uri, name] }, t('Replace queue')) : '') +
-            (type === 'song' && settings.featPlaylists ? addMenuItem({ "cmd": "showAddToPlaylist", "options": [uri] }, t('Add to playlist')) : '') +
-            (type === 'song' ? addMenuItem({ "cmd": "songDetails", "options": [uri] }, t('Song details')) : '') +
-            (type === 'album' ? addMenuItem({ "cmd": "albumDetails", "options": [uri] }, t('Album details')) : '') +
-            (type === 'artist' ? addMenuItem({ "cmd": "artistDetails", "options": [uri] }, t('Artist info')) : '');
-        // mr
     }
     else if (app.current.app === 'Browse' && app.current.tab === 'Playlists' && app.current.view === 'All') {
         menu += addMenuItem({ "cmd": "appendPlayQueue", "options": [type, uri, name] }, t('Play')) +
@@ -220,10 +162,9 @@ function showMenuTd(el) {
                 (settings.featPlaylists ? addMenuItem({ "cmd": "showAddToPlaylist", "options": [uri, ""] }, t('Add to playlist')) : '') +
                 (uri.indexOf('http') === -1 ? addMenuItem({ "cmd": "songDetails", "options": [uri] }, t('Song details')) : '');
         }
-        else {
-            // wip - plist details cap menu
-            // console.log('cap2', app.current.search, type, uri, name);
+        else if (el.nodeName === 'CAPTION') {
             type = 'plist';
+            uri = decodeURI(el.parentNode.getAttribute('data-uri'));
             name = uri;
             menu += addMenuItem({ "cmd": "appendPlayQueue", "options": [type, uri, name] }, t('Play')) +
                 addMenuItem({ "cmd": "appendQueue", "options": [type, uri, name] }, t('Add to queue')) +
@@ -231,8 +172,7 @@ function showMenuTd(el) {
 
         }
     }
-    else if ((app.current.app === 'Queue' && app.current.tab === 'Current') ||
-        (app.current.app === 'Playback' && getTableId(el) === 'QueueCurrentList')) {
+    else if (app.current.app === 'Queue' && app.current.tab === 'Current') {
         menu += addMenuItem({ "cmd": "delQueueSong", "options": ["single", el.parentNode.parentNode.getAttribute('data-trackid')] }, t('Remove')) +
             addMenuItem({ "cmd": "delQueueSong", "options": ["range", 0, el.parentNode.parentNode.getAttribute('data-songpos')] }, t('Remove all upwards')) +
             addMenuItem({ "cmd": "delQueueSong", "options": ["range", (parseInt(el.parentNode.parentNode.getAttribute('data-songpos')) - 1), -1] }, t('Remove all downwards')) +
@@ -258,17 +198,18 @@ function showMenuTd(el) {
             addMenuItem({ "cmd": "addAllFromSearchPlist", "options": ["queue", expression, true, true] }, t('Replace queue')) +
             (settings.featPlaylists ? addMenuItem({ "cmd": "showAddToPlaylist", "options": ["ALBUM", expression] }, t('Add to playlist')) : '');
     }
-    /* else if ((app.current.app === 'Browse' && app.current.tab === 'Covergrid' && el.nodeName === 'CAPTION') ||
-             (app.current.app === 'Playback' &&  el.nodeName === 'CAPTION')) {
-        console.log('cap2', app.current.search, type, uri, name);
-        type = 'dir';
-        name = uri;
-        console.log('popover', type, name, uri);
-        menu += addMenuItem({"cmd": "appendPlayQueue", "options": [type, uri, name]}, t('Play')) +
-                addMenuItem({"cmd": "appendQueue", "options": [type, uri, name]}, t('Add to queue')) +
-                addMenuItem({"cmd": "replaceQueue", "options": [type, uri, name]}, t('Replace queue')) +
-                (settings.featPlaylists ? addMenuItem({"cmd": "showAddToPlaylist", "options": [uri, ""]}, t('Add to playlist')) : '');
-    } */
+    else if (app.current.tab === 'Tidal') {
+        menu += (type === 'song' ? addMenuItem({ "cmd": "appendPlayQueue", "options": [type, uri, name] }, t('Play song')) : '') +
+            (type === 'song' ? addMenuItem({ "cmd": "appendQueue", "options": [type, uri, name] }, t('Add to queue')) : '') +
+            (type === 'song' ? addMenuItem({ "cmd": "appendAfterQueue", "options": [type, uri, nextsongpos, name] }, t('Add after current playing song')) : '') +
+            (type === 'song' ? addMenuItem({ "cmd": "replaceQueue", "options": [type, uri, name] }, t('Replace queue')) : '') +
+            (type === 'song' && settings.featPlaylists ? addMenuItem({ "cmd": "showAddToPlaylist", "options": [uri] }, t('Add to playlist')) : '') +
+            (type === 'song' ? addMenuItem({ "cmd": "songDetails", "options": [uri] }, t('Song details')) : '') +
+            (type === 'album' ? addMenuItem({ "cmd": "albumDetails", "options": [uri] }, t('Album details')) : '') +
+            (type === 'artist' ? addMenuItem({ "cmd": "artistDetails", "options": [uri] }, t('Artist info')) : '') +
+            (type === 'song' ? addMenuItem({ "cmd": "songRadio", "options": [uri] }, t('Go to song radio')) : '') +
+            (type === 'artist' ? addMenuItem({ "cmd": "artistRadio", "options": [uri] }, t('Go to artist radio')) : '');
+    }
 
     new Popover(el, {
         trigger: 'click', delay: 0, dismissible: true, template: '<div class="popover" role="tooltip">' +

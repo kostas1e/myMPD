@@ -41,12 +41,14 @@ function setStateIcon(state) {
     if (websocketConnected === false) {
         mpdStateIcon.innerText = 'cloud_off';
         mpdStateIcon.classList.remove('text-success');
-        mpdStateText.innerText = t('MPD disconnected');
+        // mpdStateText.innerText = t('MPD disconnected');
+        mpdStateText.innerText = t('Streamer disconnected');
     }
     else {
         mpdStateIcon.innerText = 'cloud_done';
         mpdStateIcon.classList.add('text-success');
-        mpdStateText.innerText = t('MPD connected');
+        // mpdStateText.innerText = t('MPD connected');
+        mpdStateText.innerText = t('Streamer connected');
     }
 }
 
@@ -205,8 +207,10 @@ function toggleUI() {
         toggleAlert('alertMpdState', false, '');
     }
     else {
-        toggleAlert('alertMpdState', true, t('MPD disconnected'));
-        logMessage(t('MPD disconnected'), '', '', 'danger');
+        // toggleAlert('alertMpdState', true, t('MPD disconnected'));
+        toggleAlert('alertMpdState', true, t('Streamer disconnected'));
+        // logMessage(t('MPD disconnected'), '', '', 'danger');
+        logMessage(t('Streamer disconnected'), '', '', 'danger');
     }
 
     if (websocketConnected === true) {

@@ -61,13 +61,13 @@ function showTab(n) {
 function nextPrev(n) {
     let x = document.getElementsByClassName("tab");
     if (n == 1 && currentTab == 1 && !validateForm()) {
-        return false;
+        return;
     }
     x[currentTab].style.display = "none";
     currentTab = currentTab + n;
     if (currentTab >= x.length) {
         saveInitSettings();
-        return false;
+        return;
     }
     showTab(currentTab);
 }

@@ -353,7 +353,6 @@ void free_mpd_state(t_mpd_state *mpd_state) {
     sdsfree(mpd_state->taglist);
     sdsfree(mpd_state->searchtaglist);
     sdsfree(mpd_state->searchtidaltaglist);
-    // sdsfree(mpd_state->searchqobuztaglist);
     sdsfree(mpd_state->browsetaglist);
     sdsfree(mpd_state->generate_pls_tags);
     sdsfree(mpd_state->mpd_host);

@@ -49,7 +49,8 @@ function getSettings(onerror) {
 function getMpdSettings(obj) {
     if (obj !== '' && obj.result) {
         settingsNew = obj.result;
-        document.getElementById('splashScreenAlert').innerText = t('Fetch MPD settings');
+        // document.getElementById('splashScreenAlert').innerText = t('Fetch MPD settings');
+        document.getElementById('splashScreenAlert').innerText = t('Fetch Sreamer settings');
         sendAPI("MPD_API_SETTINGS_GET", {}, joinSettings, true);
     }
     else {
@@ -553,7 +554,7 @@ function parseMPDSettings() {
     }
     if (settings.tags.includes('Title')) {
         app.apps.Search.tabs.Database.state = '0/any/Title/';
-        app.apps.Search.tabs.Tidal.views.All.state = '0/any/Title/';
+        // app.apps.Search.tabs.Tidal.views.All.state = '0/any/Title/';
     }
 
     if (settings.featPlaylists) {
@@ -844,7 +845,7 @@ function filterCols(x) {
     if (x === 'colsQueueCurrent' || x === 'colsBrowsePlaylistsDetail' || x === 'colsQueueLastPlayed') {
         tags.push('Pos');
     }
-    else if (x === 'colsBrowseFilesystem' || x === 'colsSearchTidal' || x === 'colsSearchQobuz') {
+    else if (x === 'colsBrowseFilesystem' || x === 'colsSearchTidal') {
         tags.push('Type');
     }
     if (x === 'colsQueueLastPlayed') {

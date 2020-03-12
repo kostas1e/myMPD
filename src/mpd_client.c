@@ -202,7 +202,8 @@ static void mpd_client_idle(t_config *config, t_mpd_state *mpd_state) {
                     //create response struct
                     if (request->conn_id > -1) {
                         t_work_result *response = create_result(request);
-                        response->data = jsonrpc_respond_message(response->data, request->method, request->id, "MPD disconnected", true);
+                        // response->data = jsonrpc_respond_message(response->data, request->method, request->id, "MPD disconnected", true);
+                        response->data = jsonrpc_respond_message(response->data, request->method, request->id, "Streamer disconnected", true);
                         LOG_DEBUG("Send http response to connection %lu: %s", request->conn_id, response->data);
                         tiny_queue_push(web_server_queue, response);
                     }
@@ -232,7 +233,8 @@ static void mpd_client_idle(t_config *config, t_mpd_state *mpd_state) {
 
             if (mpd_connection_get_error(mpd_state->conn) != MPD_ERROR_SUCCESS) {
                 LOG_ERROR("MPD connection: %s", mpd_connection_get_error_message(mpd_state->conn));
-                buffer = jsonrpc_start_phrase_notify(buffer, "MPD connection error: %{error}", true);
+                // buffer = jsonrpc_start_phrase_notify(buffer, "MPD connection error: %{error}", true);
+                buffer = jsonrpc_start_phrase_notify(buffer, "Streamer connection error: %{error}", true);
                 buffer = tojson_char(buffer, "error", mpd_connection_get_error_message(mpd_state->conn), false);
                 buffer = jsonrpc_end_phrase(buffer);
                 mpd_client_notify(buffer);
@@ -243,7 +245,8 @@ static void mpd_client_idle(t_config *config, t_mpd_state *mpd_state) {
 
             if (sdslen(mpd_state->mpd_pass) > 0 && !mpd_run_password(mpd_state->conn, mpd_state->mpd_pass)) {
                 LOG_ERROR("MPD connection: %s", mpd_connection_get_error_message(mpd_state->conn));
-                buffer = jsonrpc_start_phrase_notify(buffer, "MPD connection error: %{error}", true);
+                // buffer = jsonrpc_start_phrase_notify(buffer, "MPD connection error: %{error}", true);
+                buffer = jsonrpc_start_phrase_notify(buffer, "Streamer connection error: %{error}", true);
                 buffer = tojson_char(buffer, "error", mpd_connection_get_error_message(mpd_state->conn), false);
                 buffer = jsonrpc_end_phrase(buffer);
                 mpd_client_notify(buffer);

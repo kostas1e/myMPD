@@ -1,15 +1,12 @@
 "use strict";
 
 function checkForUpdates() {
-    // run at startup plus 24h timer
-    console.log('checkforupdates');
     sendAPI("MYMPD_API_CHECK_FOR_UPDATES", {}, parseVersion);
 
     btnWaiting(document.getElementById('btnCheckForUpdates'), true);
 }
 
 function parseVersion(obj) {
-    console.log('parseversion');
     document.getElementById('currentVersion').innerText = obj.result.currentVersion;
     if (obj.result.latestVersion !== undefined) {
         document.getElementById('latestVersion').innerText = obj.result.latestVersion;
@@ -27,12 +24,10 @@ function parseVersion(obj) {
 }
 
 function installUpdates() {
-    console.log('installupdates');
-    // sendAPI("MYMPD_API_INSTALL_UPDATES", {});
+    sendAPI("MYMPD_API_INSTALL_UPDATES", {});
 }
 
 function parseIdeonSettings() {
-    console.log('parseideonsettings');
     document.getElementById('selectMixerType').value = settings.mixerType;
     toggleBtnChk('btnDop', settings.dop);
 
@@ -70,7 +65,6 @@ function parseIdeonSettings() {
 }
 
 function saveIdeonSettings() {
-    console.log('saveideonsettings');
     let formOK = true;
 
     let selectNsType = document.getElementById('selectNsType');
@@ -106,12 +100,10 @@ function saveIdeonSettings() {
     }
 
     if (formOK === true) {
-        // let selectNsType = document.getElementById('selectNsType');
         let selectMixerType = document.getElementById('selectMixerType');
         let selectTidalAudioquality = document.getElementById('selectTidalAudioquality');
         sendAPI("MYMPD_API_SETTINGS_SET", {
             "mixerType": selectMixerType.options[selectMixerType.selectedIndex].value,
-            // change to dropdown menu
             "dop": (document.getElementById('btnDop').classList.contains('active') ? true : false),
             "nsType": parseInt(selectNsTypeValue),
             "nsServer": inputNsServer.value,
@@ -121,9 +113,7 @@ function saveIdeonSettings() {
             "airplay": (document.getElementById('btnAirplay').classList.contains('active') ? true : false),
             "spotify": (document.getElementById('btnSpotify').classList.contains('active') ? true : false),
             "tidalEnabled": (document.getElementById('btnTidalEnabled').classList.contains('active') ? true : false),
-            // "tidalUsername": document.getElementById('inputTidalUsername').value,
             "tidalUsername": inputTidalUsername.value,
-            // "tidalPassword": document.getElementById('inputTidalPassword').value,
             "tidalPassword": inputTidalPassword.value,
             "tidalAudioquality": selectTidalAudioquality.options[selectTidalAudioquality.selectedIndex].value
         }, getSettings);

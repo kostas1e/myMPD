@@ -1,7 +1,7 @@
 {
   "background_color": "#343a40",
   "theme_color": "#343a40",
-  "description": "IdeonAudio absolute",
+  "description": "ideonOS - fast and lightweight Streamer webclient",
   "display": "standalone",
   "icons": [
     {
@@ -15,7 +15,7 @@
       "type": "image/png"
     }
   ],
-  "name": "absolute",
-  "short_name": "absolute",
+  "name": "ideonOS",
+  "short_name": "ideonOS",
   "start_url": "."
 }

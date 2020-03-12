@@ -41,8 +41,7 @@ function filetype(uri) {
         return '';
     }
     let ext = uri.split('.').pop().toUpperCase();
-    if (uri.includes('tidal')) {
-        // Remove token from tidal streamUrl
+    if (uri.startsWith('tidal://')) {
         ext = ext.slice(0, ext.indexOf('?'));
     }
     switch (ext) {
@@ -55,9 +54,9 @@ function filetype(uri) {
         case 'AAC': return ext + ' - Advancded Audio Coding';
         case 'MPC': return ext + ' - Musepack';
         case 'MP4': return ext + ' - MPEG-4';
-        case 'M4A': return ext + ' - MPEG-4 Audio';
         case 'APE': return ext + ' - Monkey Audio ';
         case 'WMA': return ext + ' - Windows Media Audio';
+        case 'M4A': return ext + ' - MPEG-4 Audio';
         default: return ext;
     }
 }
@@ -165,7 +164,7 @@ function addTagListSelect(el, list) {
         tagList += '<option value="filename">' + t('Filename') + '</option>';
     }
     else if (el === 'selectJukeboxUniqueTag' && settings.browsetags.includes('Title') === false) {
-        // Title tag should be always in the list
+        //Title tag should be always in the list
         tagList = '<option value="Title">' + t('Song') + '</option>';
     }
     for (let i = 0; i < settings[list].length; i++) {
@@ -341,11 +340,8 @@ function toggleBtnChkCollapse(btn, collapse, state) {
     }
 }
 
-function setPagination(total, returned, limit = settings.maxElementsPerPage, at = undefined) {
-    let cat = app.current.app + app.current.tab;
-    if (at !== undefined) {
-        cat = at;
-    }
+function setPagination(total, returned, limit = settings.maxElementsPerPage) {
+    let cat = (app.current.app === 'Playback' ? 'BrowseCovergrid' : app.current.app + app.current.tab);
     let totalPages = Math.ceil(total / limit);
     if (totalPages === 0) {
         totalPages = 1;
@@ -439,12 +435,15 @@ function parseCmd(event, href) {
 function gotoPage(x) {
     document.getElementById('card' + app.current.app).scrollIntoView();
 
-    let offset = settings.maxElementsPerPage;
+    let offset;
     if (app.current.tab === 'Tidal' && app.current.view === 'All') {
         offset = 10;
     }
     else if (app.current.tab === 'Tidal' && app.current.view === 'Artist') {
         offset = 50;
+    }
+    else {
+        offset = settings.maxElementsPerPage;
     }
 
     switch (x) {

@@ -447,12 +447,7 @@ function parseCovergrid(obj) {
         cols[i].remove();
     }
 
-    if (app.current.app === 'Browse' && app.current.tab === 'Covergrid') {
-        setPagination(obj.result.totalEntities, obj.result.returnedEntities);
-    }
-    else {
-        setPagination(obj.result.totalEntities, obj.result.returnedEntities, settings.maxElementsPerPage, 'BrowseCovergrid');
-    }
+    setPagination(obj.result.totalEntities, obj.result.returnedEntities);
 
     if (nrItems === 0) {
         cardContainer.innerHTML = t('Empty list');

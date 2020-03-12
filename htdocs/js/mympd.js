@@ -74,14 +74,6 @@ app.apps = {
                     "ArtistRadio": { "state": "0/any/-/", "scrollPos": 0 },
                     "TrackRadio": { "state": "0/any/-/", "scrollPos": 0 }
                 }
-            },
-            "Qobuz": { // rm
-                "active": "All",
-                "views": {
-                    "All": { "state": "0/any/-/", "scrollPos": 0 },
-                    "Album": { "state": "0/any/-/", "scrollPos": 0 },
-                    "Artist": { "state": "0/any/-/", "scrollPos": 0 }
-                }
             }
         }
     }
@@ -118,9 +110,8 @@ domCache.btnVoteDown = document.getElementById('btnVoteDown');
 domCache.badgeQueueItems = document.getElementById('badgeQueueItems');
 domCache.searchstr = document.getElementById('searchstr');
 domCache.searchCrumb = document.getElementById('searchCrumb');
-domCache.body = document.getElementsByTagName('body')[0];
 domCache.searchtidalstr = document.getElementById('searchtidalstr');
-domCache.searchqobuzstr = document.getElementById('searchqobuzstr'); // rm
+domCache.body = document.getElementsByTagName('body')[0];
 
 /* eslint-disable no-unused-vars */
 var modalConnection = new Modal(document.getElementById('modalConnection'));
@@ -155,7 +146,7 @@ var collapseJukeboxMode = new Collapse(document.getElementById('labelJukeboxMode
 
 function appPrepare(scrollPos) {
     if (app.current.app !== app.last.app || app.current.tab !== app.last.tab || app.current.view !== app.last.view) {
-        // Hide all cards + nav
+        //Hide all cards + nav
         for (let i = 0; i < domCache.navbarBottomBtnsLen; i++) {
             domCache.navbarBottomBtns[i].classList.remove('active');
         }
@@ -180,8 +171,8 @@ function appPrepare(scrollPos) {
         document.getElementById('cardBrowseCovergrid').classList.add('hide');
         document.getElementById('cardSearchDatabase').classList.add('hide');
         document.getElementById('cardSearchTidal').classList.add('hide');
-        // Show active card + nav
-        setGridPlayback(); // ch
+        //show active card + nav
+        setGridPlayback();
         document.getElementById('card' + app.current.app).classList.remove('hide');
         if (document.getElementById('nav' + app.current.app)) {
             document.getElementById('nav' + app.current.app).classList.add('active');
@@ -199,8 +190,8 @@ function appPrepare(scrollPos) {
         list.classList.add('opacity05');
     }
     else if (app.current.app === 'Playback') {
-        document.getElementById('QueueMiniList').classList.add('opacity05'); // ch
-        document.getElementById('BrowseCovergridList').classList.add('opacity05'); // ch
+        document.getElementById('QueueMiniList').classList.add('opacity05');
+        document.getElementById('BrowseCovergridList').classList.add('opacity05');
     }
 }
 
@@ -283,8 +274,9 @@ function appRoute() {
     appPrepare(app.current.scrollPos);
 
     if (app.current.app === 'Playback') {
+        console.log('approute playback');
         sendAPI("MPD_API_PLAYER_CURRENT_SONG", {}, songChange);
-        getBrowseCovergrid(); // ch
+        getBrowseCovergrid();
     }
     else if (app.current.app === 'Queue' && app.current.tab === 'Current') {
         selectTag('searchqueuetags', 'searchqueuetagsdesc', app.current.filter);
@@ -341,7 +333,7 @@ function appRoute() {
         doSetFilterLetter('BrowseFilesystemFilter');
     }
     else if (app.current.app === 'Browse' && app.current.tab === 'Covergrid') {
-        setCovergridList(); // ch
+        setCovergridList();
         document.getElementById('searchCovergridStr').value = app.current.search;
         selectTag('searchCovergridTags', 'searchCovergridTagsDesc', app.current.filter);
         let sort = app.current.sort;
@@ -478,7 +470,6 @@ function showAppInitAlert(text) {
     }, false);
 }
 
-
 function clearAndReload() {
     if ('serviceWorker' in navigator) {
         caches.keys().then(function (cacheNames) {
@@ -522,7 +513,7 @@ function appInitStart() {
     appInited = false;
     document.getElementById('splashScreen').classList.remove('hide');
     document.getElementsByTagName('body')[0].classList.add('overflow-hidden');
-    document.getElementById('splashScreenAlert').innerText = t('Fetch myMPD settings');
+    document.getElementById('splashScreenAlert').innerText = t('Fetch ideonOS settings');
 
     getSettings(true);
     appInitWait();
@@ -531,7 +522,7 @@ function appInitStart() {
 function appInitWait() {
     setTimeout(function () {
         if (settingsParsed === 'true' && websocketConnected === true) {
-            // App initialized
+            //app initialized
             document.getElementById('splashScreenAlert').innerText = t('Applying settings');
             document.getElementById('splashScreen').classList.add('hide-fade');
             setTimeout(function () {
@@ -545,7 +536,7 @@ function appInitWait() {
         }
 
         if (settingsParsed === 'true') {
-            // Parsed settings, now its safe to connect to websocket
+            //parsed settings, now its safe to connect to websocket
             document.getElementById('splashScreenAlert').innerText = t('Connect to websocket');
             webSocketConnect();
         }
@@ -711,6 +702,7 @@ function appInit() {
     });
 
     document.getElementById('modalSettings').addEventListener('shown.bs.modal', function () {
+        this.focus();
         getSettings();
         document.getElementById('inputCrossfade').classList.remove('is-invalid');
         document.getElementById('inputMixrampdb').classList.remove('is-invalid');
@@ -718,16 +710,15 @@ function appInit() {
     });
 
     document.getElementById('modalSettings').addEventListener('keydown', function (event) {
-        event.stopPropagation();
-        if (event.keyCode === 13) {
+        if (event.key === 'Enter') {
             saveSettings();
-        }
-        else if (event.keyCode == 27) {
-            modalSettings.hide();
+            event.stopPropagation();
+            event.preventDefault();
         }
     });
 
     document.getElementById('modalIdeon').addEventListener('shown.bs.modal', function () {
+        this.focus();
         getSettings();
         document.getElementById('inputNsServer').classList.remove('is-invalid');
         document.getElementById('inputNsShare').classList.remove('is-invalid');
@@ -735,21 +726,48 @@ function appInit() {
         document.getElementById('inputNsPassword').classList.remove('is-invalid');
     });
 
+    document.getElementById('modalIdeon').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            saveIdeonSettings();
+            event.stopPropagation();
+            event.preventDefault();
+        }
+    });
+
+    document.getElementById('selectNsType').addEventListener('change', function () {
+        let value = this.options[this.selectedIndex].value;
+        if (value === '0') {
+            document.getElementById('inputNsServer').setAttribute('disabled', 'disabled');
+            document.getElementById('inputNsShare').setAttribute('disabled', 'disabled');
+            document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
+            document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
+            document.getElementById('inputNsServer').value = '';
+            document.getElementById('inputNsShare').value = '';
+            document.getElementById('inputNsUsername').value = '';
+            document.getElementById('inputNsPassword').value = '';
+        }
+        else if (value === '1') {
+            document.getElementById('inputNsServer').removeAttribute('disabled');
+            document.getElementById('inputNsShare').removeAttribute('disabled');
+            document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
+            document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
+            document.getElementById('inputNsUsername').value = 'guest';
+            document.getElementById('inputNsPassword').value = '';
+        }
+        else if (value === '2') {
+            document.getElementById('inputNsServer').removeAttribute('disabled');
+            document.getElementById('inputNsShare').removeAttribute('disabled');
+            document.getElementById('inputNsUsername').removeAttribute('disabled');
+            document.getElementById('inputNsPassword').removeAttribute('disabled');
+            document.getElementById('inputNsUsername').value = '';
+        }
+    });
+
     document.getElementById('modalConnection').addEventListener('shown.bs.modal', function () {
         getSettings();
         document.getElementById('inputMpdHost').classList.remove('is-invalid');
         document.getElementById('inputMpdPort').classList.remove('is-invalid');
         document.getElementById('inputMpdPass').classList.remove('is-invalid');
-    });
-
-    document.getElementById('modalConnection').addEventListener('keydown', function (event) {
-        event.stopPropagation();
-        if (event.keyCode === 13) {
-            saveConnection();
-        }
-        else if (event.keyCode == 27) {
-            modalConnection.hide();
-        }
     });
 
     document.getElementById('btnJukeboxModeGroup').addEventListener('mouseup', function () {
@@ -850,7 +868,7 @@ function appInit() {
         }
         let parentInit = hrefs[i].parentNode.classList.contains('noInitChilds') ? true : false;
         if (parentInit === true) {
-            // Handler on parentnode
+            //handler on parentnode
             continue;
         }
         hrefs[i].addEventListener('click', function (event) {
@@ -870,8 +888,9 @@ function appInit() {
 
     document.getElementById('cardPlaybackTags').addEventListener('click', function (event) {
         // if (event.target.nodeName === 'H4')
-        if (event.target.nodeName === 'SPAN' && event.target.parentNode.getAttribute('data-tag') !== null)
+        if (event.target.nodeName === 'SPAN' && event.target.parentNode.getAttribute('data-tag') !== null) {
             gotoBrowse(event.target);
+        }
     }, false);
 
     document.getElementById('BrowseBreadcrumb').addEventListener('click', function (event) {
@@ -962,6 +981,7 @@ function appInit() {
                     // appendQueue('song', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
                     appendPlayQueue('song', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
                     break;
+                // TODO case smartplist
                 case 'plist':
                     // appendQueue('plist', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
                     showMenu(event.target, event);
@@ -989,9 +1009,6 @@ function appInit() {
         else if (event.target.nodeName === 'A') {
             showMenu(event.target, event);
         }
-        /* else if (event.target.nodeName === 'CAPTION') {
-            showMenu(event.target, event);
-        } */
     }, false);
 
     document.getElementById('BrowseFilesystemBookmarks').addEventListener('click', function (event) {
@@ -1021,7 +1038,7 @@ function appInit() {
     document.getElementById('BrowsePlaylistsAllList').addEventListener('click', function (event) {
         if (event.target.nodeName === 'TD') {
             // appendQueue('plist', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
-            showMenu(event.target, event);
+            showMenu(event.target.parentNode, event);
         }
         else if (event.target.nodeName === 'A') {
             showMenu(event.target, event);
@@ -1037,7 +1054,6 @@ function appInit() {
             showMenu(event.target, event);
         }
         else if (event.target.nodeName === 'CAPTION') {
-            // showMenu(event.target.parentNode, event);
             showMenu(event.target, event); // ch
         }
     }, false);
@@ -1110,9 +1126,6 @@ function appInit() {
             else if (event.target.getAttribute('data-phrase') === 'Add all to playlist') {
                 showAddToPlaylist('SEARCHTIDAL');
             }
-            /* else if (event.target.getAttribute('data-phrase') === 'Save as smart playlist') {
-                saveSearchAsSmartPlaylist();
-            } */
         }
     }, false);
 
@@ -1342,7 +1355,6 @@ function appInit() {
     dragAndDropTableHeader('QueueLastPlayed');
     dragAndDropTableHeader('SearchDatabase');
     dragAndDropTableHeader('SearchTidal');
-    dragAndDropTableHeader('SearchQobuz'); // rm
     dragAndDropTableHeader('BrowseFilesystem');
     dragAndDropTableHeader('BrowsePlaylistsDetail');
 
@@ -1410,8 +1422,8 @@ function appInit() {
     });
 
     window.addEventListener('appinstalled', function () {
-        logInfo('myMPD installed as app');
-        showNotification(t('myMPD installed as app'), '', '', 'success');
+        logInfo('ideonOS installed as app');
+        showNotification(t('ideonOS installed as app'), '', '', 'success');
     });
 
     window.addEventListener('beforeunload', function () {
@@ -1420,7 +1432,7 @@ function appInit() {
             websocketTimer = null;
         }
         if (socket !== null) {
-            socket.onclose = function () { }; // Disable onclose handler first
+            socket.onclose = function () { }; // disable onclose handler first
             socket.close();
             socket = null;
         }
@@ -1434,41 +1446,12 @@ function appInit() {
         }
     });
 
-    document.getElementById('selectNsType').addEventListener('change', function () {
-        let value = this.options[this.selectedIndex].value;
-        if (value === '0') {
-            document.getElementById('inputNsServer').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNsShare').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNsServer').value = '';
-            document.getElementById('inputNsShare').value = '';
-            document.getElementById('inputNsUsername').value = '';
-            document.getElementById('inputNsPassword').value = '';
-        }
-        else if (value === '1') {
-            document.getElementById('inputNsServer').removeAttribute('disabled');
-            document.getElementById('inputNsShare').removeAttribute('disabled');
-            document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNsUsername').value = 'guest';
-            document.getElementById('inputNsPassword').value = '';
-        }
-        else if (value === '2') {
-            document.getElementById('inputNsServer').removeAttribute('disabled');
-            document.getElementById('inputNsShare').removeAttribute('disabled');
-            document.getElementById('inputNsUsername').removeAttribute('disabled');
-            document.getElementById('inputNsPassword').removeAttribute('disabled');
-            document.getElementById('inputNsUsername').value = '';
-        }
-    });
-
+    checkInit();
     updateDBstats();
     checkForUpdates();
-    checkInit();
 }
 
-// Init app
+//Init app
 window.onerror = function (msg, url, line) {
     logError('JavaScript error: ' + msg + ' (' + url + ': ' + line + ')');
     if (settings.loglevel >= 4) {

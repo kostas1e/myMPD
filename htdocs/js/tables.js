@@ -8,6 +8,10 @@
 function focusTable(rownr, table) {
     if (table === undefined) {
         table = document.getElementById(app.current.app + (app.current.tab !== undefined ? app.current.tab : '') + (app.current.view !== undefined ? app.current.view : '') + 'List');
+        //support for SearchTidal list
+        if (app.current.tab === 'Tidal') {
+            table = document.getElementById('SearchTidalList');
+        }
         //support for BrowseDatabaseAlbum list
         if (table === null) {
             table = document.getElementById(app.current.app + app.current.tab + 'TagList');
@@ -75,7 +79,7 @@ function scrollFocusIntoView() {
     let height = el.offsetHeight;
 
     if (posY < 74) {
-        window.scrollBy(0, - 74);
+        window.scrollBy(0, -74);
     }
     else if (posY + height > window.innerHeight - 74) {
         window.scrollBy(0, 74);
@@ -336,7 +340,7 @@ function setColTags(table) {
         tags.push('Fileformat');
         tags.push('LastModified');
     }
-    if (table == 'SearchTidal') { // wip - add more cols
+    if (table === 'SearchTidal') {
         tags = settings.searchtidaltags.slice();
         tags.push('Type');
         tags.push('Duration');
@@ -384,28 +388,10 @@ function setCols(table, className) {
         }
     }
 
-    if (table === 'SearchTidal' && app.apps.Search.tabs.Tidal.views.All.state === '0/any/Title/') {
-        if (settings.tags.includes('Title')) {
-            sort = 'Title';
-        }
-        else {
-            sort = '-';
-        }
-    }
-
-    if (table === 'SearchQobuz' && app.apps.Search.tabs.Qobuz.views.All.state === '0/any/Title/') {
-        if (settings.tags.includes('Title')) {
-            sort = 'Title';
-        }
-        else {
-            sort = '-';
-        }
-    }
-
     if (table !== 'Playback') {
         let heading = '';
         if (table === 'QueueCurrent') {
-            heading += '<th data-col="Img"></th>'; // wip qimg
+            heading += '<th data-col="Img"></th>';
         }
         for (let i = 0; i < settings['cols' + table].length; i++) {
             let h = settings['cols' + table][i];
@@ -413,9 +399,6 @@ function setCols(table, className) {
             if (h === 'Track' || h === 'Pos') {
                 h = '#';
             }
-            /* else if (h === 'Img') { // wip qimg
-                h = ' ';
-            } */
             heading += t(h);
 
             if ((table === 'SearchDatabase') && (h === sort || '-' + h === sort)) {
@@ -428,8 +411,6 @@ function setCols(table, className) {
             heading += '</th>';
         }
         if (settings.featTags === true && table !== 'BrowseDatabase') {
-            /* if (table === 'BrowseFilesystem' || table === 'SearchDatabase' || table === 'SearchTidal')
-                heading += '<th data-col="Add"></th>'; */
             heading += '<th data-col="Action"><a href="#" class="text-secondary align-middle material-icons material-icons-small">settings</a></th>';
         }
         else {
@@ -449,7 +430,6 @@ function setCols(table, className) {
 }
 
 function saveCols(table, tableEl) {
-    // console.log('saveCols(', table, tableEl, ') {...}');
     let colsDropdown = document.getElementById(table + 'ColsDropdown');
     let header;
     if (tableEl === undefined) {
@@ -486,7 +466,7 @@ function saveCols(table, tableEl) {
     let ths = header.getElementsByTagName('th');
     for (let i = 0; i < ths.length; i++) {
         let name = ths[i].getAttribute('data-col');
-        if (name !== 'Action' && name !== null && name !== 'Add' && name !== 'Img') { // wip qimg
+        if (name !== 'Action' && name !== null && name !== 'Img') {
             params.cols.push(name);
         }
     }
@@ -507,7 +487,6 @@ function saveColsPlayback(table) {
         }
         else if (!th) {
             th = document.createElement('div');
-            // th.innerHTML = '<small>' + t(colInputs[i].name) + '</small><p></p>';
             th.innerHTML = '<small>' + t(colInputs[i].name) + ': </small><span></span>';
             th.setAttribute('id', 'current' + colInputs[i].name);
             th.setAttribute('data-tag', colInputs[i].name);

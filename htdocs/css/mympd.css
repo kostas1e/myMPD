@@ -739,6 +739,10 @@ div#playDropdown .row {
   height: 377px;
 }
 
+#cardFooterQueueMini {
+  height: 49px;
+}
+
 #BrowseCovergridBox {
   overflow-y: auto;
 }
@@ -764,14 +768,6 @@ div#playDropdown .row {
 
 #QueueCurrentList td {
   vertical-align: middle;
-}
-
-#scrollToTopBtn {
-  display: none;
-  position: fixed;
-  bottom: 76px;
-  right: 30px;
-  z-index: 99;
 }
 
 .tab {

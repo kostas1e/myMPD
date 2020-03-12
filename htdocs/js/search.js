@@ -40,7 +40,6 @@ function parseSearch(obj) {
         document.getElementById('search' + tab + 'AddAllSongs').setAttribute('disabled', 'disabled');
         document.getElementById('search' + tab + 'AddAllSongsBtn').setAttribute('disabled', 'disabled');
     }
-
     if (tab === '') {
         parseFilesystem(obj);
     }
@@ -111,7 +110,7 @@ function searchTidal(x) {
 }
 
 function parseTidal(obj) {
-    let list = 'Search' + app.current.tab;
+    let list = 'SearchTidal';
     let colspan = settings['cols' + list].length - 1;
     let nrItems = obj.result.sumReturnedItems;
     let table = document.getElementById(list + 'List');
@@ -127,32 +126,32 @@ function parseTidal(obj) {
         row.setAttribute('data-type', type);
         row.setAttribute('data-uri', uri);
         row.setAttribute('tabindex', 0);
-        if (type !== 'artist') {
-            row.setAttribute('data-name', obj.result.data[i].Title);
-            obj.result.data[i].Duration = beautifySongDuration(obj.result.data[i].Duration);
-            if (app.current.tab === 'Qobuz') {
-                obj.result.data[i].Date = new Date(obj.result.data[i].Date).toLocaleDateString();
-            }
-        }
-        else {
-            row.setAttribute('data-name', obj.result.data[i].Artist);
+        let icon = '';
+        switch (type) {
+            case 'artist':
+                row.setAttribute('data-name', obj.result.data[i].Artist);
+                icon = 'person';
+                break;
+            case 'album':
+                row.setAttribute('data-name', obj.result.data[i].Album);
+                icon = 'album';
+                break;
+            case 'song':
+                row.setAttribute('data-name', obj.result.data[i].Title);
+                obj.result.data[i].Duration = beautifySongDuration(obj.result.data[i].Duration);
+                icon = 'music_note';
+                break;
         }
         for (let c = 0; c < settings['cols' + list].length; c++) {
             tds += '<td data-col="' + settings['cols' + list][c] + '">';
             if (settings['cols' + list][c] === 'Type') {
-                if (type === 'song')
-                    tds += '<span class="material-icons">music_note</span>';
-                else if (type === 'artist')
-                    tds += '<span class="material-icons">person</span>';
-                else if (type === 'album')
-                    tds += '<span class="material-icons">album</span>';
+                tds += '<span class="material-icons">' + icon + '</span>';
             }
             else {
                 tds += e(obj.result.data[i][settings['cols' + list][c]]);
             }
             tds += '</td>';
         }
-        // tds += '<td data-col="Add" title="Append to queue">' + (type === 'song' ? '<a href="#" class="material-icons color-darkgrey">add</a>' : '') + '</td>';
         tds += '<td data-col="Action"><a href="#" class="material-icons color-darkgrey">' + ligatureMore + '</a></td>';
         row.innerHTML = tds;
 
@@ -172,7 +171,6 @@ function parseTidal(obj) {
         focusTable(0);
     }
 
-    // setTidalPagination(obj.result.maxTotalItems, obj.result.maxReturnedItems, obj.result.limit);
     setPagination(obj.result.maxTotalItems, obj.result.maxReturnedItems, obj.result.limit);
 
     if (nrItems === 0)
@@ -187,7 +185,6 @@ function parseTidal(obj) {
     else {
         document.getElementById('btnSearch' + app.current.tab + 'All').parentNode.classList.remove('hide');
     }
-
 }
 
 function addAllFromSearchTidalPlist(plist) {
@@ -220,34 +217,4 @@ function addAllFromSearchTidalPlist(plist) {
         //sendAPI("MPD_API_PLAYLIST_ADD_ALL_TRACKS", {"uri": uris, "plist": plist});
         showNotification(t('Added songs to %{playlist}', { "playlist": plist }), '', '', 'success');
     }
-}
-
-function searchQobuz(x) { // mrg w/ st
-    if (x.startsWith('album/'))
-        appGoto('Search', 'Qobuz', 'Album', '0/' + app.current.filter + '/' + app.current.sort + '/' + x);
-    else if (x.startsWith('artist/'))
-        appGoto('Search', 'Qobuz', 'Artist', '0/' + app.current.filter + '/' + app.current.sort + '/' + x);
-    else
-        appGoto('Search', 'Qobuz', 'All', '0/' + app.current.filter + '/' + app.current.sort + '/' + x);
-}
-
-function goBack() { // wip
-    // tidal/qobaz table history to browse between diff types
-    /*
-    console.log(app.back1, app.current);
-    if (app.current.search.startsWith('album/')) { //&& app.last.tab === 'Tidal')
-        // can goback to artist too
-        //appGoto('Search', 'Qobuz', 'All', app.last.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.last.search);
-        //appGoto('Search', 'Qobuz', 'All');
-        //appGoto(app.back1);
-        appGoto('Search', 'Qobuz', app.back1.view, app.back1.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.back1.search);
-    }
-    else { // artist/
-        // can only go back to all until goto artist menu items is added
-        appGoto('Search', 'Qobuz', 'All', app.last.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.last.search);
-    }
-    */
-
-    // temp
-    appGoto('Search', 'Qobuz', 'All');
 }
