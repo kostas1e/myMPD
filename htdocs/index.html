@@ -1670,8 +1670,6 @@
                     <select id="selectMixerType" class="form-control custom-select border-secondary">
                       <option value="hardware" data-phrase="Hardware"></option>
                       <option value="software" data-phrase="Software"></option>
-                      <!-- <option value="null" data-phrase="Null"></option> -->
-                      <!-- <option value="none" data-phrase="None"></option> -->
                       <option value="disabled" data-phrase="Disabled"></option>
                     </select>
                   </div>
@@ -1707,7 +1705,7 @@
                 <div class="form-group row">
                   <label class="col-sm-4 col-form-label" for="inputNsShare" data-phrase="Share"></label>
                   <div class="col-sm-8">
-                    <input id="inputNsShare" class="form-control border-secondary" type="text" data-placeholder-phrase="Name of the shared directory">
+                    <input id="inputNsShare" class="form-control border-secondary" type="text" data-placeholder-phrase="Name of the shared directory (eg /mymusic)">
                     <div class="invalid-feedback" data-phrase="Invalid directory"></div>
                   </div>
                 </div>
@@ -1843,9 +1841,10 @@
                   <tr><th data-phrase="DB play time"></th><td id="mpdstats_dbPlaytime"></td></tr>
                   <tr><th data-phrase="DB updated"></th><td id="mpdstats_dbUpdated"></td></tr>
                   <tr><td colspan="2" class="pt-3"><h5 data-phrase="Playback statistics"></h5></td></tr>
-                  <tr class="hide"><th data-phrase="myMPD uptime"></th><td id="mpdstats_mympd_uptime"></td></tr>
+                  <!-- <tr class="hide"><th data-phrase="myMPD uptime"></th><td id="mpdstats_mympd_uptime"></td></tr> -->
+                  <tr class="hide"><th data-phrase="ideonOS uptime"></th><td id="mpdstats_mympd_uptime"></td></tr>
                   <!-- <tr><th data-phrase="MPD uptime"></th><td id="mpdstats_uptime"></td></tr> -->
-                  <tr><th data-phrase="Uptime"></th><td id="mpdstats_uptime"></td></tr>
+                  <tr><th data-phrase="Streamer ptime"></th><td id="mpdstats_uptime"></td></tr>
                   <tr><th data-phrase="Play time"></th><td id="mpdstats_playtime"></td></tr>
                   <tr class="hide"><td colspan="2" class="pt-3"><h5>MPD</h5></td></tr>
                   <tr class="hide"><th data-phrase="Connection"></th><td id="mpdInfo_host"></td></tr>
@@ -2034,8 +2033,6 @@
   <div class="modal fade" id="modalSongDetails" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content">
-        <!-- <div class="modal-header">
-          <h5 class="modal-title"><span class="material-icons title-icon">music_note</span> <span data-phrase="Song details"></span></h5> -->
         <div class="modal-header pb-0">
           <ul class="nav nav-tabs border-bottom-0">
             <li class="nav-item">
@@ -2274,8 +2271,7 @@
     </div>
   </div>
 
-  <!-- wip data-keyboard="false" -->
-  <div class="modal fade" id="modalInit" data-backdrop="static"  tabindex="-1">
+  <div class="modal fade" id="modalInit" data-backdrop="static" data-keyboard="false"  tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">

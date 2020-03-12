@@ -128,7 +128,6 @@ function webSocketConnect() {
             switch (obj.method) {
                 case 'welcome':
                     websocketConnected = true;
-                    // showNotification(t('Connected to myMPD') + ': ' + wsUrl, '', '', 'success');
                     showNotification(t('Connected to ideonOS') + ': ' + wsUrl, '', '', 'success');
                     appRoute();
                     sendAPI("MPD_API_PLAYER_STATE", {}, parseState, true);
@@ -144,7 +143,6 @@ function webSocketConnect() {
                     getSettings(true);
                     break;
                 case 'mpd_connected':
-                    // showNotification(t('Connected to MPD'), '', '', 'success');
                     showNotification(t('Connected to Streamer'), '', '', 'success');
                     sendAPI("MPD_API_PLAYER_STATE", {}, parseState);
                     getSettings(true);
@@ -1009,17 +1007,16 @@ function checkInit() {
             else if (value === '1') {
                 document.getElementById('inputNsServerInit').removeAttribute('disabled');
                 document.getElementById('inputNsShareInit').removeAttribute('disabled');
-                document.getElementById('inputNsUsernameInit').setAttribute('readonly', 'readonly');
-                document.getElementById('inputNsPasswordInit').setAttribute('readonly', 'readonly');
-                document.getElementById('inputNsUsernameInit').value = 'guest';
+                document.getElementById('inputNsUsernameInit').setAttribute('disabled', 'disabled');
+                document.getElementById('inputNsPasswordInit').setAttribute('disabled', 'disabled');
+                document.getElementById('inputNsUsernameInit').value = '';
                 document.getElementById('inputNsPasswordInit').value = '';
             }
             else if (value === '2') {
                 document.getElementById('inputNsServerInit').removeAttribute('disabled');
                 document.getElementById('inputNsShareInit').removeAttribute('disabled');
-                document.getElementById('inputNsUsernameInit').removeAttribute('readonly');
-                document.getElementById('inputNsPasswordInit').removeAttribute('readonly');
-                document.getElementById('inputNsUsernameInit').value = '';
+                document.getElementById('inputNsUsernameInit').removeAttribute('disabled');
+                document.getElementById('inputNsPasswordInit').removeAttribute('disabled');
             }
         });
 
@@ -2207,7 +2204,7 @@ function appInit() {
             document.getElementById('inputNsShare').removeAttribute('disabled');
             document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
             document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNsUsername').value = 'guest';
+            document.getElementById('inputNsUsername').value = '';
             document.getElementById('inputNsPassword').value = '';
         }
         else if (value === '2') {
@@ -2215,8 +2212,11 @@ function appInit() {
             document.getElementById('inputNsShare').removeAttribute('disabled');
             document.getElementById('inputNsUsername').removeAttribute('disabled');
             document.getElementById('inputNsPassword').removeAttribute('disabled');
-            document.getElementById('inputNsUsername').value = '';
         }
+    });
+
+    document.getElementById('modalInit').addEventListener('keydown', function (event) {
+        event.stopPropagation();
     });
 
     document.getElementById('modalConnection').addEventListener('shown.bs.modal', function () {

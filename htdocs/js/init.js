@@ -21,17 +21,16 @@ function checkInit() {
             else if (value === '1') {
                 document.getElementById('inputNsServerInit').removeAttribute('disabled');
                 document.getElementById('inputNsShareInit').removeAttribute('disabled');
-                document.getElementById('inputNsUsernameInit').setAttribute('readonly', 'readonly');
-                document.getElementById('inputNsPasswordInit').setAttribute('readonly', 'readonly');
-                document.getElementById('inputNsUsernameInit').value = 'guest';
+                document.getElementById('inputNsUsernameInit').setAttribute('disabled', 'disabled');
+                document.getElementById('inputNsPasswordInit').setAttribute('disabled', 'disabled');
+                document.getElementById('inputNsUsernameInit').value = '';
                 document.getElementById('inputNsPasswordInit').value = '';
             }
             else if (value === '2') {
                 document.getElementById('inputNsServerInit').removeAttribute('disabled');
                 document.getElementById('inputNsShareInit').removeAttribute('disabled');
-                document.getElementById('inputNsUsernameInit').removeAttribute('readonly');
-                document.getElementById('inputNsPasswordInit').removeAttribute('readonly');
-                document.getElementById('inputNsUsernameInit').value = '';
+                document.getElementById('inputNsUsernameInit').removeAttribute('disabled');
+                document.getElementById('inputNsPasswordInit').removeAttribute('disabled');
             }
         });
 

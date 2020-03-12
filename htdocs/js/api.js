@@ -101,7 +101,6 @@ function webSocketConnect() {
             switch (obj.method) {
                 case 'welcome':
                     websocketConnected = true;
-                    // showNotification(t('Connected to myMPD') + ': ' + wsUrl, '', '', 'success');
                     showNotification(t('Connected to ideonOS') + ': ' + wsUrl, '', '', 'success');
                     appRoute();
                     sendAPI("MPD_API_PLAYER_STATE", {}, parseState, true);
@@ -117,7 +116,6 @@ function webSocketConnect() {
                     getSettings(true);
                     break;
                 case 'mpd_connected':
-                    // showNotification(t('Connected to MPD'), '', '', 'success');
                     showNotification(t('Connected to Streamer'), '', '', 'success');
                     sendAPI("MPD_API_PLAYER_STATE", {}, parseState);
                     getSettings(true);

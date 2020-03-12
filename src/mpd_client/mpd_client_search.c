@@ -100,17 +100,13 @@ sds mpd_client_search_adv(t_mpd_state *mpd_state, sds buffer, sds method, int re
                           const char *grouptag, const char *plist, const unsigned int offset,
                           const t_tags *tagcols)
 {
-    LOG_ERROR("1");
     if (strcmp(expression, "") == 0) {
-        LOG_ERROR("2");
         buffer = jsonrpc_respond_message(buffer, method, request_id, "No search expression defined", true);
         return buffer;
     }
 #if LIBMPDCLIENT_CHECK_VERSION(2, 17, 0)
     if (strcmp(plist, "") == 0) {
-        LOG_ERROR("3");
         if (mpd_search_db_songs(mpd_state->conn, false) == false) {
-            LOG_ERROR("4");
             mpd_search_cancel(mpd_state->conn);
             buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
             return buffer;
@@ -119,18 +115,14 @@ sds mpd_client_search_adv(t_mpd_state *mpd_state, sds buffer, sds method, int re
         buffer = sdscat(buffer, ",\"data\":[");
     }
     else if (strcmp(plist, "queue") == 0) {
-        LOG_ERROR("5");
         if (mpd_search_add_db_songs(mpd_state->conn, false) == false) {
-            LOG_ERROR("6");
             mpd_search_cancel(mpd_state->conn);
             buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
             return buffer;
         }
     }
     else {
-        LOG_ERROR("7");
         if (mpd_search_add_db_songs_to_playlist(mpd_state->conn, plist) == false) {
-            LOG_ERROR("8");
             mpd_search_cancel(mpd_state->conn);
             buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
             return buffer;
@@ -138,34 +130,27 @@ sds mpd_client_search_adv(t_mpd_state *mpd_state, sds buffer, sds method, int re
     }
 
     if (mpd_search_add_expression(mpd_state->conn, expression) == false) {
-        LOG_ERROR("9");
             mpd_search_cancel(mpd_state->conn);
             buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
             return buffer;
     }
 
     if (strcmp(plist, "") == 0) {
-        LOG_ERROR("10");
         if (sort != NULL && strcmp(sort, "") != 0 && strcmp(sort, "-") != 0 && mpd_state->feat_tags == true) {
-            LOG_ERROR("11");
             if (mpd_search_add_sort_name(mpd_state->conn, sort, sortdesc) == false) {
-                LOG_ERROR("12");
                 mpd_search_cancel(mpd_state->conn);
                 buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
                 return buffer;
             }
         }
         if (grouptag != NULL && strcmp(grouptag, "") != 0 && mpd_state->feat_tags == true) {
-            LOG_ERROR("13");
             if (mpd_search_add_group_tag(mpd_state->conn, mpd_tag_name_parse(grouptag)) == false) {
-                LOG_ERROR("14");
                 mpd_search_cancel(mpd_state->conn);
                 buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
                 return buffer;
             }
         }
         if (mpd_search_add_window(mpd_state->conn, offset, offset + mpd_state->max_elements_per_page) == false) {
-            LOG_ERROR("15");
             mpd_search_cancel(mpd_state->conn);
             buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
             return buffer;
@@ -173,12 +158,10 @@ sds mpd_client_search_adv(t_mpd_state *mpd_state, sds buffer, sds method, int re
     }
 
     if (mpd_search_commit(mpd_state->conn) == false || check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
-        LOG_ERROR("16");
         return buffer;
     }
 
     if (strcmp(plist, "") == 0) {
-        LOG_ERROR("17");
         struct mpd_song *song;
         unsigned entities_returned = 0;
         while ((song = mpd_recv_song(mpd_state->conn)) != NULL) {
@@ -200,14 +183,10 @@ sds mpd_client_search_adv(t_mpd_state *mpd_state, sds buffer, sds method, int re
         buffer = tojson_bool(buffer, "sortdesc", sortdesc, true);
         buffer = tojson_char(buffer, "grouptag", grouptag, false);
         buffer = jsonrpc_end_result(buffer);
-
-
     }
     else {
-        LOG_ERROR("18");
         mpd_response_finish(mpd_state->conn);
         if (strcmp(plist, "queue") == 0) {
-            LOG_ERROR("19");
             buffer = jsonrpc_respond_message(buffer, method, request_id, "Added songs to queue", false);
         }
         else {
@@ -218,8 +197,7 @@ sds mpd_client_search_adv(t_mpd_state *mpd_state, sds buffer, sds method, int re
     }
 
     if (check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
-        LOG_ERROR("20");
-       return buffer;
+        return buffer;
     }
 #else
     //prevent unused warnings

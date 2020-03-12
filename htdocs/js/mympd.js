@@ -751,7 +751,7 @@ function appInit() {
             document.getElementById('inputNsShare').removeAttribute('disabled');
             document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
             document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNsUsername').value = 'guest';
+            document.getElementById('inputNsUsername').value = '';
             document.getElementById('inputNsPassword').value = '';
         }
         else if (value === '2') {
@@ -759,8 +759,11 @@ function appInit() {
             document.getElementById('inputNsShare').removeAttribute('disabled');
             document.getElementById('inputNsUsername').removeAttribute('disabled');
             document.getElementById('inputNsPassword').removeAttribute('disabled');
-            document.getElementById('inputNsUsername').value = '';
         }
+    });
+
+    document.getElementById('modalInit').addEventListener('keydown', function (event) {
+        event.stopPropagation();
     });
 
     document.getElementById('modalConnection').addEventListener('shown.bs.modal', function () {
