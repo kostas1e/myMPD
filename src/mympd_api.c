@@ -142,20 +142,25 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
             struct json_token key;
             struct json_token val;
             bool rc = true;
-            bool mpd_conf_changed = false; // TODO: use adv cmp after sw
+            bool mpd_conf_changed = false; // wip
+            bool ns_changed = false;
+            bool airplay_changed = false;
+            bool spotify_changed = false;
             while ((h = json_next_key(request->data, sdslen(request->data), h, ".params", &key, &val)) != NULL) {
-                rc = mympd_api_settings_set(config, mympd_state, &key, &val, &mpd_conf_changed);
+                rc = mympd_api_settings_set(config, mympd_state, &key, &val, &mpd_conf_changed, &ns_changed, &airplay_changed, &spotify_changed);
                 if (rc == false) {
                     break;
                 }
             }
             if (rc == true) {
+                //set ideon settings
+                int dc = ideon_settings_set(mympd_state, mpd_conf_changed, ns_changed, airplay_changed, spotify_changed);
+                sdsrange(request->data, 0, -3);
+                request->data = sdscatfmt(request->data, ",\"dc\":%i}}", dc);
                 //forward request to mpd_client queue
                 t_work_request *mpd_client_request = create_request(-1, request->id, request->cmd_id, request->method, request->data);
                 tiny_queue_push(mpd_client_queue, mpd_client_request);
                 response->data = jsonrpc_respond_ok(response->data, request->method, request->id);
-                //set ideon settings
-                ideon_settings_set(mympd_state, mpd_conf_changed);
             }
             else {
                 response->data = jsonrpc_start_phrase(response->data, request->method, request->id, "Can't save setting %{setting}", true);
@@ -324,6 +329,7 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
             break;
         case MYMPD_API_INSTALL_UPDATES:
             // not yet implemented
+            ideon_install_updates();
             break;
         default:
             response->data = jsonrpc_respond_message(response->data, request->method, request->id, "Unknown request", true);

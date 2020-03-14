@@ -323,6 +323,7 @@ void default_mpd_state(t_mpd_state *mpd_state) {
     mpd_state->mpd_host = sdsempty();
     mpd_state->mpd_port = 0;
     mpd_state->mpd_pass = sdsempty();
+    mpd_state->dc = 0;
     mpd_state->smartpls_sort = sdsempty();
     mpd_state->smartpls_prefix = sdsempty();
     mpd_state->smartpls_interval = 14400;

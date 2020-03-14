@@ -265,6 +265,7 @@ function appRoute() {
         app.current.filter = params[6];
         app.current.sort = params[7];
         app.current.search = params[8];
+        setState(app.current.page, app.current.filter, app.current.sort, app.current.search);
     }
     else {
         appGoto('Playback');
@@ -274,7 +275,6 @@ function appRoute() {
     appPrepare(app.current.scrollPos);
 
     if (app.current.app === 'Playback') {
-        console.log('approute playback');
         sendAPI("MPD_API_PLAYER_CURRENT_SONG", {}, songChange);
         getBrowseCovergrid();
     }
@@ -1191,6 +1191,7 @@ function appInit() {
             this.blur();
         }
         else {
+            setState(0, app.current.filter, app.current.sort, this.value);
             appGoto(app.current.app, app.current.tab, app.current.view, '0/' + app.current.filter + '/' + app.current.sort + '/' + this.value);
         }
     }, false);

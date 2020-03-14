@@ -111,7 +111,7 @@ function showMenuTd(el) {
         (app.current.app === 'Search' && app.current.tab === 'Database') ||
         (app.current.app === 'Browse' && app.current.tab === 'Database') ||
         (app.current.app === 'Browse' && app.current.tab === 'Covergrid' && el.nodeName === 'A') ||
-        app.current.app === 'Playback') {
+        app.current.app === 'Playback' && el.nodeName === 'A') {
         menu += addMenuItem({ "cmd": "appendPlayQueue", "options": [type, uri, name] }, t('Play')) +
             addMenuItem({ "cmd": "appendQueue", "options": [type, uri, name] }, t('Add to queue')) +
             (type === 'song' ? addMenuItem({ "cmd": "appendAfterQueue", "options": [type, uri, nextsongpos, name] }, t('Add after current playing song')) : '') +

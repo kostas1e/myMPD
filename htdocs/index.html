@@ -41,7 +41,7 @@
       <div class="dropdown nav-item mr-3" id="headerLeft">
         <a class="dropdown-toggle navbar-brand pr-0" href="#" id="mainMenu">
           <!-- <span class="material-icons header-logo">play_circle_outline</span>IdeonAudio -->
-          <img src="assets/logo-ideon.png">
+          <img class="header-logo" src="assets/logo-ideon.png">
           <span>ideonOS</span>
         </a>
         <div class="dropdown-menu bg-lite-dark" id="mainMenuDropdown">
@@ -380,7 +380,7 @@
             <a data-phrase="Covergrid" data-href='{"cmd": "appGoto", "options": ["Browse", "Covergrid"]}' class="nav-link text-dark" href="#" id="cardBrowseNavCovergrid"></a>
           </li>
         </ul>
-        <div id="cardBrowseDBStats" class="p-0 float-right">
+        <div id="cardBrowseDBStats" class="p-0 float-right d-none d-md-block">
           <small></small>
         </div>
       </div>
@@ -1724,6 +1724,7 @@
                   </div>
                 </div>
               </form>
+              <small>Changes here will cause a system reboot.</small>
             </div>
             <div id="tabStreamingServices" class="tab-pane">
               <form id="StreamingServicesFrm">
@@ -1842,9 +1843,9 @@
                   <tr><th data-phrase="DB updated"></th><td id="mpdstats_dbUpdated"></td></tr>
                   <tr><td colspan="2" class="pt-3"><h5 data-phrase="Playback statistics"></h5></td></tr>
                   <!-- <tr class="hide"><th data-phrase="myMPD uptime"></th><td id="mpdstats_mympd_uptime"></td></tr> -->
-                  <tr class="hide"><th data-phrase="ideonOS uptime"></th><td id="mpdstats_mympd_uptime"></td></tr>
+                  <tr><th data-phrase="ideonOS uptime"></th><td id="mpdstats_mympd_uptime"></td></tr>
                   <!-- <tr><th data-phrase="MPD uptime"></th><td id="mpdstats_uptime"></td></tr> -->
-                  <tr><th data-phrase="Streamer ptime"></th><td id="mpdstats_uptime"></td></tr>
+                  <tr><th data-phrase="Streamer uptime"></th><td id="mpdstats_uptime"></td></tr>
                   <tr><th data-phrase="Play time"></th><td id="mpdstats_playtime"></td></tr>
                   <tr class="hide"><td colspan="2" class="pt-3"><h5>MPD</h5></td></tr>
                   <tr class="hide"><th data-phrase="Connection"></th><td id="mpdInfo_host"></td></tr>
@@ -2332,6 +2333,7 @@
                   <div class="invalid-feedback" data-phrase="Password cannot be blank"></div>
                 </div>
               </div>
+              <small>Changes here will cause a system reboot.</small>
             </div>
 
             <div class="tab">

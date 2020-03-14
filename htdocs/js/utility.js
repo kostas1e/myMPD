@@ -458,5 +458,6 @@ function gotoPage(x) {
         default:
             app.current.page = x;
     }
+    setState(app.current.page, app.current.filter, app.current.sort, app.current.search);
     appGoto(app.current.app, app.current.tab, app.current.view, app.current.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
 }

@@ -56,6 +56,9 @@ bool mpd_api_settings_set(t_config *config, t_mpd_state *mpd_state, struct json_
             mpd_state->mpd_port = mpd_port;
         }
     }
+    else if (strncmp(key->ptr, "dc", key->len) == 0) {
+        mpd_state->dc = strtoimax(settingvalue, &crap, 10);
+    }
     else if (strncmp(key->ptr, "musicDirectory", key->len) == 0) {
         mpd_state->music_directory = sdsreplacelen(mpd_state->music_directory, settingvalue, sdslen(settingvalue));
     }

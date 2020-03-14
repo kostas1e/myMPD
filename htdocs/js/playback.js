@@ -29,6 +29,15 @@ function setGridPlayback() {
     }
 }
 
+function setState(page, filter, sort, search) {
+    if (app.current.app === 'Playback') { // set browse/covergrid state
+        app.apps['Browse'].tabs['Covergrid'].state = page + '/' + filter + '/' + sort + '/' + search;
+    }
+    else if (app.current.app === 'Browse' && app.current.tab === 'Covergrid') { // set playback state
+        app.apps['Playback'].state = page + '/' + filter + '/' + sort + '/' + search;
+    }
+}
+
 function getQueueMini(pos, updateFooter = false) {
     let colsQueueMini = ["Pos", "Title", "Artist", "Album", "Duration"];
     // footer
@@ -98,7 +107,6 @@ function parseQueueMini(obj) {
 
 function getBrowseCovergrid() {
     setCovergridList();
-
     document.getElementById('searchCovergridStr').value = app.current.search;
     selectTag('searchCovergridTags', 'searchCovergridTagsDesc', app.current.filter);
     let sort = app.current.sort;
@@ -253,7 +261,7 @@ function updateDBstats() {
 }
 
 function parseDBstats(obj) {
-    document.getElementById('cardBrowseDBStats').firstChild.innerHTML = 'Songs: ' + obj.result.songs + ' &bull; DB play time: ' + beautifyDuration(obj.result.dbPlaytime);
+    document.getElementById('cardBrowseDBStats').firstChild.innerHTML = 'Songs: ' + obj.result.songs + ' &bull; Time: ' + beautifyDuration(obj.result.dbPlaytime);
 }
 
 function calcBoxHeight() {

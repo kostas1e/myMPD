@@ -138,7 +138,7 @@ bool mympd_api_cols_save(t_config *config, t_mympd_state *mympd_state, const cha
 }
 
 bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct json_token *key,
-                            struct json_token *val, bool *mpd_conf_changed)
+                            struct json_token *val, bool *mpd_conf_changed, bool *ns_changed, bool *airplay_changed, bool *spotify_changed)
 {
     sds settingname = sdsempty();
     sds settingvalue = sdscatlen(sdsempty(), val->ptr, val->len);
@@ -374,26 +374,40 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
         settingname = sdscat(settingname, "ns_type");
     }
     else if (strncmp(key->ptr, "nsServer", key->len) == 0) {
+        if (sdscmp(mympd_state->ns_server, settingvalue) != 0)
+            *ns_changed = true;
         mympd_state->ns_server = sdsreplacelen(mympd_state->ns_server, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "ns_server");
     }
     else if (strncmp(key->ptr, "nsShare", key->len) == 0) {
+        if (sdscmp(mympd_state->ns_share, settingvalue) != 0)
+            *ns_changed = true;
         mympd_state->ns_share = sdsreplacelen(mympd_state->ns_share, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "ns_share");
     }
     else if (strncmp(key->ptr, "nsUsername", key->len) == 0) {
+        if (sdscmp(mympd_state->ns_username, settingvalue) != 0)
+            *ns_changed = true;
         mympd_state->ns_username = sdsreplacelen(mympd_state->ns_username, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "ns_username");
     }
     else if (strncmp(key->ptr, "nsPassword", key->len) == 0) {
+        if (sdscmp(mympd_state->ns_password, settingvalue) != 0)
+            *ns_changed = true;
         mympd_state->ns_password = sdsreplacelen(mympd_state->ns_password, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "ns_password");
     }
     else if (strncmp(key->ptr, "airplay", key->len) == 0) {
+        if ((mympd_state->airplay == true && val->type == JSON_TYPE_FALSE) ||
+            (mympd_state->airplay == false && val->type == JSON_TYPE_TRUE))
+            *airplay_changed = true;
         mympd_state->airplay = val->type == JSON_TYPE_TRUE ? true : false;
         settingname = sdscat(settingname, "airplay");
     }
     else if (strncmp(key->ptr, "spotify", key->len) == 0) {
+        if ((mympd_state->spotify == true && val->type == JSON_TYPE_FALSE) ||
+            (mympd_state->spotify == false && val->type == JSON_TYPE_TRUE))
+            *spotify_changed = true;
         mympd_state->spotify = val->type == JSON_TYPE_TRUE ? true : false;
         settingname = sdscat(settingname, "spotify");
     }
@@ -445,7 +459,7 @@ void mympd_api_settings_reset(t_config *config, t_mympd_state *mympd_state) {
     mympd_api_settings_delete(config);
     mympd_api_read_statefiles(config, mympd_state);
     mympd_api_push_to_mpd_client(mympd_state);
-    ideon_settings_set(mympd_state, true);
+    ideon_settings_set(mympd_state, true, true, true, true);
 }
 
 void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state) {

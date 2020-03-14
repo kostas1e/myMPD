@@ -89,6 +89,7 @@ typedef struct t_mpd_state {
     sds mpd_host;
     int mpd_port;
     sds mpd_pass;
+    int dc;
     int last_played_count;
     int max_elements_per_page;
     sds music_directory;

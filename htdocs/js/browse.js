@@ -367,7 +367,7 @@ function parseCovergrid(obj) {
                 cols[i].replaceWith(col);
                 replaced = true;
             }
-            else {
+            // else { // wip - fix size
                 document.getElementById(id).style.width = '';
                 document.getElementById(id).style.height = '';
                 cols[i].firstChild.style.width = '';
@@ -387,7 +387,7 @@ function parseCovergrid(obj) {
                         document.getElementById(id).classList.remove('album-cover-grid-half');
                     }
                 }
-            }
+            // }
         }
         else {
             cardContainer.append(col);

@@ -213,6 +213,20 @@ static void mpd_client_idle(t_config *config, t_mpd_state *mpd_state) {
             break;
         }
         case MPD_DISCONNECTED:
+            if (mpd_state->dc != 0) {
+                LOG_DEBUG("dc %d", mpd_state->dc);
+                int rc;
+                if (mpd_state->dc != 3) {
+                    rc = system("reboot");
+                }
+                else {
+                    rc = system("systemctl restart mpd");
+                }
+                if (rc != 0) {
+                    LOG_ERROR("Executing syscmd failed");
+                }
+                mpd_state->dc = 0;
+            }
             /* Try to connect */
             if (strncmp(mpd_state->mpd_host, "/", 1) == 0) {
                 LOG_INFO("MPD connecting to socket %s", mpd_state->mpd_host);

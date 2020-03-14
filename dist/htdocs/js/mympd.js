@@ -649,7 +649,7 @@ function parseCovergrid(obj) {
                 cols[i].replaceWith(col);
                 replaced = true;
             }
-            else {
+            // else { // wip - fix size
                 document.getElementById(id).style.width = '';
                 document.getElementById(id).style.height = '';
                 cols[i].firstChild.style.width = '';
@@ -669,7 +669,7 @@ function parseCovergrid(obj) {
                         document.getElementById(id).classList.remove('album-cover-grid-half');
                     }
                 }
-            }
+            // }
         }
         else {
             cardContainer.append(col);
@@ -1718,6 +1718,7 @@ function appRoute() {
         app.current.filter = params[6];
         app.current.sort = params[7];
         app.current.search = params[8];
+        setState(app.current.page, app.current.filter, app.current.sort, app.current.search);
     }
     else {
         appGoto('Playback');
@@ -1727,7 +1728,6 @@ function appRoute() {
     appPrepare(app.current.scrollPos);
 
     if (app.current.app === 'Playback') {
-        console.log('approute playback');
         sendAPI("MPD_API_PLAYER_CURRENT_SONG", {}, songChange);
         getBrowseCovergrid();
     }
@@ -2644,6 +2644,7 @@ function appInit() {
             this.blur();
         }
         else {
+            setState(0, app.current.filter, app.current.sort, this.value);
             appGoto(app.current.app, app.current.tab, app.current.view, '0/' + app.current.filter + '/' + app.current.sort + '/' + this.value);
         }
     }, false);
@@ -3191,6 +3192,15 @@ function setGridPlayback() {
     }
 }
 
+function setState(page, filter, sort, search) {
+    if (app.current.app === 'Playback') { // set browse/covergrid state
+        app.apps['Browse'].tabs['Covergrid'].state = page + '/' + filter + '/' + sort + '/' + search;
+    }
+    else if (app.current.app === 'Browse' && app.current.tab === 'Covergrid') { // set playback state
+        app.apps['Playback'].state = page + '/' + filter + '/' + sort + '/' + search;
+    }
+}
+
 function getQueueMini(pos, updateFooter = false) {
     let colsQueueMini = ["Pos", "Title", "Artist", "Album", "Duration"];
     // footer
@@ -3260,7 +3270,6 @@ function parseQueueMini(obj) {
 
 function getBrowseCovergrid() {
     setCovergridList();
-
     document.getElementById('searchCovergridStr').value = app.current.search;
     selectTag('searchCovergridTags', 'searchCovergridTagsDesc', app.current.filter);
     let sort = app.current.sort;
@@ -3415,7 +3424,7 @@ function updateDBstats() {
 }
 
 function parseDBstats(obj) {
-    document.getElementById('cardBrowseDBStats').firstChild.innerHTML = 'Songs: ' + obj.result.songs + ' &bull; DB play time: ' + beautifyDuration(obj.result.dbPlaytime);
+    document.getElementById('cardBrowseDBStats').firstChild.innerHTML = 'Songs: ' + obj.result.songs + ' &bull; Time: ' + beautifyDuration(obj.result.dbPlaytime);
 }
 
 function calcBoxHeight() {
@@ -4036,7 +4045,7 @@ function showMenuTd(el) {
         (app.current.app === 'Search' && app.current.tab === 'Database') ||
         (app.current.app === 'Browse' && app.current.tab === 'Database') ||
         (app.current.app === 'Browse' && app.current.tab === 'Covergrid' && el.nodeName === 'A') ||
-        app.current.app === 'Playback') {
+        app.current.app === 'Playback' && el.nodeName === 'A') {
         menu += addMenuItem({ "cmd": "appendPlayQueue", "options": [type, uri, name] }, t('Play')) +
             addMenuItem({ "cmd": "appendQueue", "options": [type, uri, name] }, t('Add to queue')) +
             (type === 'song' ? addMenuItem({ "cmd": "appendAfterQueue", "options": [type, uri, nextsongpos, name] }, t('Add after current playing song')) : '') +
@@ -7602,6 +7611,7 @@ function gotoPage(x) {
         default:
             app.current.page = x;
     }
+    setState(app.current.page, app.current.filter, app.current.sort, app.current.search);
     appGoto(app.current.app, app.current.tab, app.current.view, app.current.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
 }
 /*
