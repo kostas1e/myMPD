@@ -435,7 +435,6 @@ function parseCmd(event, href) {
 function gotoPage(x) {
     document.getElementById('card' + app.current.app).scrollIntoView();
     if (app.current.app === 'Playback') {
-        console.log('box scroll test');
         document.getElementById('BrowseCovergridBox').scrollTop = 0;
     }
 
