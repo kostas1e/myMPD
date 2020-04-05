@@ -8,10 +8,6 @@
 function focusTable(rownr, table) {
     if (table === undefined) {
         table = document.getElementById(app.current.app + (app.current.tab !== undefined ? app.current.tab : '') + (app.current.view !== undefined ? app.current.view : '') + 'List');
-        //support for SearchTidal list
-        if (app.current.tab === 'Tidal') {
-            table = document.getElementById('SearchTidalList');
-        }
         //support for BrowseDatabaseAlbum list
         if (table === null) {
             table = document.getElementById(app.current.app + app.current.tab + 'TagList');
@@ -20,6 +16,10 @@ function focusTable(rownr, table) {
         if (app.current.app === 'Browse' && app.current.tab === 'Database' &&
             !document.getElementById('BrowseDatabaseAlbumList').classList.contains('hide')) {
             table = document.getElementById('BrowseDatabaseAlbumList').getElementsByTagName('table')[0];
+        }
+        //support for SearchTidal list
+        if (app.current.app === 'Search' && app.current.tab === 'Tidal') {
+            table = document.getElementById('SearchTidalList');
         }
     }
 

@@ -352,11 +352,11 @@ function parseCovergrid(obj) {
             obj.result.data[i].Album = t('Unknown album');
         }
         let id = genId('covergrid' + obj.result.data[i].Album + obj.result.data[i].AlbumArtist);
-        let html = '<div class="card card-grid clickable' + (app.current.app === 'Playback' ? ' card-grid-half' : '') + '" data-uri="' + encodeURI(obj.result.data[i].FirstSongUri) + '" ' +
+        let html = '<div class="card card-grid clickable" data-uri="' + encodeURI(obj.result.data[i].FirstSongUri) + '" ' +
             'data-album="' + encodeURI(obj.result.data[i].Album) + '" ' +
             'data-albumartist="' + encodeURI(obj.result.data[i].AlbumArtist) + '" tabindex="0">' +
             '<div class="card-header covergrid-header hide unvisible"></div>' +
-            '<div class="card-body album-cover-loading album-cover-grid bg-white' + (app.current.app === 'Playback' ? ' album-cover-grid-half' : '') + '" id="' + id + '"></div>' +
+            '<div class="card-body album-cover-loading album-cover-grid bg-white" id="' + id + '"></div>' +
             '<div class="card-footer card-footer-grid p-2" title="' + obj.result.data[i].AlbumArtist + ': ' + obj.result.data[i].Album + '">' +
             obj.result.data[i].Album + '<br/><small>' + obj.result.data[i].AlbumArtist + '</small>' +
             '</div></div>';
@@ -367,27 +367,6 @@ function parseCovergrid(obj) {
                 cols[i].replaceWith(col);
                 replaced = true;
             }
-            // else { // wip - fix size
-                document.getElementById(id).style.width = '';
-                document.getElementById(id).style.height = '';
-                cols[i].firstChild.style.width = '';
-                if (app.current.app === 'Playback') {
-                    if (!cols[i].firstChild.classList.contains('card-grid-half')) {
-                        cols[i].firstChild.classList.add('card-grid-half');
-                    }
-                    if (!document.getElementById(id).classList.contains('album-cover-grid-half')) {
-                        document.getElementById(id).classList.add('album-cover-grid-half');
-                    }
-                }
-                else {
-                    if (cols[i].firstChild.classList.contains('card-grid-half')) {
-                        cols[i].firstChild.classList.remove('card-grid-half');
-                    }
-                    if (document.getElementById(id).classList.contains('album-cover-grid-half')) {
-                        document.getElementById(id).classList.remove('album-cover-grid-half');
-                    }
-                }
-            // }
         }
         else {
             cardContainer.append(col);
@@ -557,9 +536,9 @@ function parseCovergridTitleList(obj) {
 function showGridImage(cardBody, uri) {
     cardBody.innerHTML = '';
     cardBody.style.backgroundImage = 'url("' + subdir + '/albumart/' + uri + '")';
-    cardBody.style.width = (app.current.app === 'Playback' ? 'var(--mympd-covergridsizehalf, 100px)' : 'var(--mympd-covergridsize, 200px)');
-    cardBody.style.height = (app.current.app === 'Playback' ? 'var(--mympd-covergridsizehalf, 100px)' : 'var(--mympd-covergridsize, 200px)');
-    cardBody.parentNode.style.width = (app.current.app === 'Playback' ? 'var(--mympd-covergridsizehalf, 100px)' : 'var(--mympd-covergridsize, 200px)');
+    cardBody.style.width = 'var(--mympd-covergridsize, 200px)';
+    cardBody.style.height = 'var(--mympd-covergridsize, 200px)';
+    cardBody.parentNode.style.width = 'var(--mympd-covergridsize, 200px)';
     cardBody.parentNode.getElementsByClassName('card-footer')[0].classList.remove('hide');
     cardBody.parentNode.getElementsByClassName('card-header')[0].classList.add('hide', 'unvisible');
 }

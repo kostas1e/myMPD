@@ -7,7 +7,6 @@
 :root {
   --mympd-coverimagesize: 250px;
   --mympd-covergridsize: 200px;
-  --mympd-covergridsizehalf: 100px;
   --mympd-highlightcolor: #28a745;
 }
 
@@ -750,15 +749,6 @@ div#playDropdown .row {
 
 [data-col=Img] {
   width: 50px;
-}
-
-.card-grid-half {
-  width: var(--mympd-covergridsizehalf, 100px);
-}
-
-.album-cover-grid-half {
-  width: var(--mympd-covergridsizehalf, 100px);
-  height: var(--mympd-covergridsizehalf, 100px);
 }
 
 @media only screen and (max-width: 576px) {

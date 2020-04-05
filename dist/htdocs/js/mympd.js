@@ -634,11 +634,11 @@ function parseCovergrid(obj) {
             obj.result.data[i].Album = t('Unknown album');
         }
         let id = genId('covergrid' + obj.result.data[i].Album + obj.result.data[i].AlbumArtist);
-        let html = '<div class="card card-grid clickable' + (app.current.app === 'Playback' ? ' card-grid-half' : '') + '" data-uri="' + encodeURI(obj.result.data[i].FirstSongUri) + '" ' +
+        let html = '<div class="card card-grid clickable" data-uri="' + encodeURI(obj.result.data[i].FirstSongUri) + '" ' +
             'data-album="' + encodeURI(obj.result.data[i].Album) + '" ' +
             'data-albumartist="' + encodeURI(obj.result.data[i].AlbumArtist) + '" tabindex="0">' +
             '<div class="card-header covergrid-header hide unvisible"></div>' +
-            '<div class="card-body album-cover-loading album-cover-grid bg-white' + (app.current.app === 'Playback' ? ' album-cover-grid-half' : '') + '" id="' + id + '"></div>' +
+            '<div class="card-body album-cover-loading album-cover-grid bg-white" id="' + id + '"></div>' +
             '<div class="card-footer card-footer-grid p-2" title="' + obj.result.data[i].AlbumArtist + ': ' + obj.result.data[i].Album + '">' +
             obj.result.data[i].Album + '<br/><small>' + obj.result.data[i].AlbumArtist + '</small>' +
             '</div></div>';
@@ -649,27 +649,6 @@ function parseCovergrid(obj) {
                 cols[i].replaceWith(col);
                 replaced = true;
             }
-            // else { // wip - fix size
-                document.getElementById(id).style.width = '';
-                document.getElementById(id).style.height = '';
-                cols[i].firstChild.style.width = '';
-                if (app.current.app === 'Playback') {
-                    if (!cols[i].firstChild.classList.contains('card-grid-half')) {
-                        cols[i].firstChild.classList.add('card-grid-half');
-                    }
-                    if (!document.getElementById(id).classList.contains('album-cover-grid-half')) {
-                        document.getElementById(id).classList.add('album-cover-grid-half');
-                    }
-                }
-                else {
-                    if (cols[i].firstChild.classList.contains('card-grid-half')) {
-                        cols[i].firstChild.classList.remove('card-grid-half');
-                    }
-                    if (document.getElementById(id).classList.contains('album-cover-grid-half')) {
-                        document.getElementById(id).classList.remove('album-cover-grid-half');
-                    }
-                }
-            // }
         }
         else {
             cardContainer.append(col);
@@ -839,9 +818,9 @@ function parseCovergridTitleList(obj) {
 function showGridImage(cardBody, uri) {
     cardBody.innerHTML = '';
     cardBody.style.backgroundImage = 'url("' + subdir + '/albumart/' + uri + '")';
-    cardBody.style.width = (app.current.app === 'Playback' ? 'var(--mympd-covergridsizehalf, 100px)' : 'var(--mympd-covergridsize, 200px)');
-    cardBody.style.height = (app.current.app === 'Playback' ? 'var(--mympd-covergridsizehalf, 100px)' : 'var(--mympd-covergridsize, 200px)');
-    cardBody.parentNode.style.width = (app.current.app === 'Playback' ? 'var(--mympd-covergridsizehalf, 100px)' : 'var(--mympd-covergridsize, 200px)');
+    cardBody.style.width = 'var(--mympd-covergridsize, 200px)';
+    cardBody.style.height = 'var(--mympd-covergridsize, 200px)';
+    cardBody.parentNode.style.width = 'var(--mympd-covergridsize, 200px)';
     cardBody.parentNode.getElementsByClassName('card-footer')[0].classList.remove('hide');
     cardBody.parentNode.getElementsByClassName('card-header')[0].classList.add('hide', 'unvisible');
 }
@@ -866,30 +845,48 @@ function closeCover(id = undefined) {
 }
 
 function checkForUpdates() {
-    sendAPI("MYMPD_API_CHECK_FOR_UPDATES", {}, parseVersion);
+    sendAPI("MYMPD_API_CHECK_FOR_UPDATES", {}, parseCheck);
 
     btnWaiting(document.getElementById('btnCheckForUpdates'), true);
 }
 
-function parseVersion(obj) {
+function parseCheck(obj) {
     document.getElementById('currentVersion').innerText = obj.result.currentVersion;
     if (obj.result.latestVersion !== undefined) {
         document.getElementById('latestVersion').innerText = obj.result.latestVersion;
+        document.getElementById('latestVersion').parentNode.classList.remove('hide');
+    }
+    else {
+        document.getElementById('latestVersion').parentNode.classList.add('hide');
     }
 
     if (obj.result.updatesAvailable) {
-        document.getElementById('updateMessage').innerText = 'New version available';
-        document.getElementById('btnInstallUpdates').classList.remove('hide');
+        document.getElementById('updateMsg').innerText = 'New version available';
+        document.getElementById('btnInstallUpdates').removeAttribute('disabled');
+        document.getElementById('restartMsg').innerText = 'System will automatically reboot after install.';
+        document.getElementById('restartMsg').classList.remove('hide');
     }
     else {
-        document.getElementById('updateMessage').innerText = 'System is up to date';
-        document.getElementById('btnInstallUpdates').classList.add('hide');
+        document.getElementById('updateMsg').innerText = 'System is up to date';
+        document.getElementById('btnInstallUpdates').setAttribute('disabled', 'disabled');
+        document.getElementById('restartMsg').classList.add('hide');
     }
+
     btnWaiting(document.getElementById('btnCheckForUpdates'), false);
 }
 
 function installUpdates() {
-    sendAPI("MYMPD_API_INSTALL_UPDATES", {});
+    sendAPI("MYMPD_API_INSTALL_UPDATES", {}, parseInstall);
+
+    btnWaiting(document.getElementById('btnInstallUpdates'), true);
+}
+
+function parseInstall(obj) {
+    if (!obj.result.restartSystem) {
+        document.getElementById('restartMsg').innerText = 'An error occured, please try again.';
+    }
+
+    btnWaiting(document.getElementById('btnInstallUpdates'), false);
 }
 
 function parseIdeonSettings() {
@@ -1718,7 +1715,7 @@ function appRoute() {
         app.current.filter = params[6];
         app.current.sort = params[7];
         app.current.search = params[8];
-        setState(app.current.page, app.current.filter, app.current.sort, app.current.search);
+        setAppState(app.current.page, app.current.filter, app.current.sort, app.current.search);
     }
     else {
         appGoto('Playback');
@@ -1786,24 +1783,7 @@ function appRoute() {
         doSetFilterLetter('BrowseFilesystemFilter');
     }
     else if (app.current.app === 'Browse' && app.current.tab === 'Covergrid') {
-        setCovergridList();
-        document.getElementById('searchCovergridStr').value = app.current.search;
-        selectTag('searchCovergridTags', 'searchCovergridTagsDesc', app.current.filter);
-        let sort = app.current.sort;
-        let sortdesc = false;
-        if (app.current.sort.charAt(0) === '-') {
-            sortdesc = true;
-            sort = app.current.sort.substr(1);
-            toggleBtnChk('covergridSortDesc', true);
-        }
-        else {
-            toggleBtnChk('covergridSortDesc', false);
-        }
-        selectTag('covergridSortTags', undefined, sort);
-        sendAPI("MPD_API_DATABASE_GET_ALBUMS", {
-            "offset": app.current.page, "searchstr": app.current.search,
-            "tag": app.current.filter, "sort": sort, "sortdesc": sortdesc
-        }, parseCovergrid);
+        getBrowseCovergrid();
     }
     else if (app.current.app === 'Search' && app.current.tab === 'Database') {
         domCache.searchstr.focus();
@@ -2164,7 +2144,12 @@ function appInit() {
 
     document.getElementById('modalSettings').addEventListener('keydown', function (event) {
         if (event.key === 'Enter') {
-            saveSettings();
+            saveSettings(true);
+            event.stopPropagation();
+            event.preventDefault();
+        }
+        else if (event.key === 'Escape') {
+            cancelSettings();
             event.stopPropagation();
             event.preventDefault();
         }
@@ -2437,10 +2422,9 @@ function appInit() {
                     // appendQueue('song', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
                     appendPlayQueue('song', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
                     break;
-                // TODO case smartplist
                 case 'plist':
                     // appendQueue('plist', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
-                    showMenu(event.target, event);
+                    appendPlayQueue('plist', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
                     break;
             }
         }
@@ -2494,7 +2478,7 @@ function appInit() {
     document.getElementById('BrowsePlaylistsAllList').addEventListener('click', function (event) {
         if (event.target.nodeName === 'TD') {
             // appendQueue('plist', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
-            showMenu(event.target.parentNode, event);
+            appendPlayQueue('plist', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
         }
         else if (event.target.nodeName === 'A') {
             showMenu(event.target, event);
@@ -2510,7 +2494,7 @@ function appInit() {
             showMenu(event.target, event);
         }
         else if (event.target.nodeName === 'CAPTION') {
-            showMenu(event.target, event); // ch
+            showMenu(event.target, event);
         }
     }, false);
 
@@ -2644,7 +2628,7 @@ function appInit() {
             this.blur();
         }
         else {
-            setState(0, app.current.filter, app.current.sort, this.value);
+            setAppState(0, app.current.filter, app.current.sort, this.value);
             appGoto(app.current.app, app.current.tab, app.current.view, '0/' + app.current.filter + '/' + app.current.sort + '/' + this.value);
         }
     }, false);
@@ -2847,6 +2831,22 @@ function appInit() {
     });
     document.getElementById('selectTheme').innerHTML = selectThemeHtml;
 
+    document.getElementById('selectTheme').addEventListener('change', function () {
+        let value = this.options[this.selectedIndex].value;
+        if (value === 'theme-autodetect') {
+            value = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
+        }
+
+        Object.keys(themes).forEach(function (key) {
+            if (key === value) {
+                domCache.body.classList.add(key);
+            }
+            else {
+                domCache.body.classList.remove(key);
+            }
+        });
+    });
+
     window.addEventListener('beforeinstallprompt', function (event) {
         // Prevent Chrome 67 and earlier from automatically showing the prompt
         event.preventDefault();
@@ -2903,9 +2903,9 @@ function appInit() {
         }
     });
 
-    checkInit();
-    updateDBstats();
-    checkForUpdates();
+    checkInit(); // first run check
+    updateDBstats(); // update database stats (songs, playtime)
+    checkForUpdates(); // check for updates on launch
 }
 
 //Init app
@@ -3192,11 +3192,14 @@ function setGridPlayback() {
     }
 }
 
-function setState(page, filter, sort, search) {
-    if (app.current.app === 'Playback') { // set browse/covergrid state
+function setAppState(page, filter, sort, search) {
+    if (search === null) {
+        search = '';
+    }
+    if (app.current.app === 'Playback') { // set BrowseCovergrid state
         app.apps['Browse'].tabs['Covergrid'].state = page + '/' + filter + '/' + sort + '/' + search;
     }
-    else if (app.current.app === 'Browse' && app.current.tab === 'Covergrid') { // set playback state
+    else if (app.current.app === 'Browse' && app.current.tab === 'Covergrid') { // set Playback state
         app.apps['Playback'].state = page + '/' + filter + '/' + sort + '/' + search;
     }
 }
@@ -3270,6 +3273,7 @@ function parseQueueMini(obj) {
 
 function getBrowseCovergrid() {
     setCovergridList();
+
     document.getElementById('searchCovergridStr').value = app.current.search;
     selectTag('searchCovergridTags', 'searchCovergridTagsDesc', app.current.filter);
     let sort = app.current.sort;
@@ -4045,7 +4049,7 @@ function showMenuTd(el) {
         (app.current.app === 'Search' && app.current.tab === 'Database') ||
         (app.current.app === 'Browse' && app.current.tab === 'Database') ||
         (app.current.app === 'Browse' && app.current.tab === 'Covergrid' && el.nodeName === 'A') ||
-        app.current.app === 'Playback' && el.nodeName === 'A') {
+        (app.current.app === 'Playback' && el.nodeName === 'A')) {
         menu += addMenuItem({ "cmd": "appendPlayQueue", "options": [type, uri, name] }, t('Play')) +
             addMenuItem({ "cmd": "appendQueue", "options": [type, uri, name] }, t('Add to queue')) +
             (type === 'song' ? addMenuItem({ "cmd": "appendAfterQueue", "options": [type, uri, nextsongpos, name] }, t('Add after current playing song')) : '') +
@@ -4819,7 +4823,6 @@ function getSettings(onerror) {
 function getMpdSettings(obj) {
     if (obj !== '' && obj.result) {
         settingsNew = obj.result;
-        // document.getElementById('splashScreenAlert').innerText = t('Fetch MPD settings');
         document.getElementById('splashScreenAlert').innerText = t('Fetch Sreamer settings');
         sendAPI("MPD_API_SETTINGS_GET", {}, joinSettings, true);
     }
@@ -4949,7 +4952,6 @@ function parseSettings() {
     document.documentElement.style.setProperty('--mympd-coverimagesize', settings.coverimageSize + "px");
     calcBoxHeight();
     document.documentElement.style.setProperty('--mympd-covergridsize', settings.covergridSize + "px");
-    document.documentElement.style.setProperty('--mympd-covergridsizehalf', settings.covergridSize / 2 + "px");
     document.documentElement.style.setProperty('--mympd-highlightcolor', settings.highlightColor);
 
     document.getElementById('inputHighlightColor').value = settings.highlightColor;
@@ -5553,6 +5555,25 @@ function saveSettings(closeModal) {
             btnWaiting(document.getElementById('btnApplySettings'), true);
         }
     }
+}
+
+function cancelSettings() {
+    let setTheme = settings.theme;
+    if (settings.theme === 'theme-autodetect') {
+        setTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
+    }
+
+    Object.keys(themes).forEach(function (key) {
+        if (key === setTheme) {
+            domCache.body.classList.add(key);
+        }
+        else {
+            domCache.body.classList.remove(key);
+        }
+    });
+
+    document.getElementById('selectTheme').value = settings.theme;
+    modalSettings.hide();
 }
 
 function getTagMultiSelectValues(taglist, translated) {
@@ -6243,6 +6264,7 @@ function setCurrentCover(url) {
     };
     img.src = subdir + '/albumart/' + url;
 
+    // Set current header cover
     document.getElementById('headerCover').src = img.src;
     document.getElementById('headerCover').style.opacity = 1;
 }
@@ -6259,6 +6281,7 @@ function clearCurrentCover() {
         }
     }
 
+    // Clear current header cover
     document.getElementById('headerCover').style.opacity = '0';
 }
 
@@ -6351,7 +6374,6 @@ function songChange(obj) {
     let playingTr = document.getElementById('queueTrackId' + obj.result.currentSongId);
     if (playingTr) {
         playingTr.getElementsByTagName('td')[2].innerText = obj.result.Title;
-        
     }
 
     if (playstate === 'play') {
@@ -6448,10 +6470,6 @@ function mediaSessionSetMetadata(title, artist, album, url) {
 function focusTable(rownr, table) {
     if (table === undefined) {
         table = document.getElementById(app.current.app + (app.current.tab !== undefined ? app.current.tab : '') + (app.current.view !== undefined ? app.current.view : '') + 'List');
-        //support for SearchTidal list
-        if (app.current.tab === 'Tidal') {
-            table = document.getElementById('SearchTidalList');
-        }
         //support for BrowseDatabaseAlbum list
         if (table === null) {
             table = document.getElementById(app.current.app + app.current.tab + 'TagList');
@@ -6460,6 +6478,10 @@ function focusTable(rownr, table) {
         if (app.current.app === 'Browse' && app.current.tab === 'Database' &&
             !document.getElementById('BrowseDatabaseAlbumList').classList.contains('hide')) {
             table = document.getElementById('BrowseDatabaseAlbumList').getElementsByTagName('table')[0];
+        }
+        //support for SearchTidal list
+        if (app.current.app === 'Search' && app.current.tab === 'Tidal') {
+            table = document.getElementById('SearchTidalList');
         }
     }
 
@@ -7494,7 +7516,7 @@ function toggleBtnChkCollapse(btn, collapse, state) {
 }
 
 function setPagination(total, returned, limit = settings.maxElementsPerPage) {
-    let cat = (app.current.app === 'Playback' ? 'BrowseCovergrid' : app.current.app + app.current.tab);
+    let cat = app.current.app === 'Playback' ? 'BrowseCovergrid' : app.current.app + app.current.tab;
     let totalPages = Math.ceil(total / limit);
     if (totalPages === 0) {
         totalPages = 1;
@@ -7587,6 +7609,10 @@ function parseCmd(event, href) {
 
 function gotoPage(x) {
     document.getElementById('card' + app.current.app).scrollIntoView();
+    if (app.current.app === 'Playback') {
+        console.log('box scroll test');
+        document.getElementById('BrowseCovergridBox').scrollTop = 0;
+    }
 
     let offset;
     if (app.current.tab === 'Tidal' && app.current.view === 'All') {
@@ -7611,7 +7637,7 @@ function gotoPage(x) {
         default:
             app.current.page = x;
     }
-    setState(app.current.page, app.current.filter, app.current.sort, app.current.search);
+    setAppState(app.current.page, app.current.filter, app.current.sort, app.current.search);
     appGoto(app.current.app, app.current.tab, app.current.view, app.current.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
 }
 /*

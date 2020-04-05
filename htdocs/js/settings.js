@@ -49,7 +49,6 @@ function getSettings(onerror) {
 function getMpdSettings(obj) {
     if (obj !== '' && obj.result) {
         settingsNew = obj.result;
-        // document.getElementById('splashScreenAlert').innerText = t('Fetch MPD settings');
         document.getElementById('splashScreenAlert').innerText = t('Fetch Sreamer settings');
         sendAPI("MPD_API_SETTINGS_GET", {}, joinSettings, true);
     }
@@ -179,7 +178,6 @@ function parseSettings() {
     document.documentElement.style.setProperty('--mympd-coverimagesize', settings.coverimageSize + "px");
     calcBoxHeight();
     document.documentElement.style.setProperty('--mympd-covergridsize', settings.covergridSize + "px");
-    document.documentElement.style.setProperty('--mympd-covergridsizehalf', settings.covergridSize / 2 + "px");
     document.documentElement.style.setProperty('--mympd-highlightcolor', settings.highlightColor);
 
     document.getElementById('inputHighlightColor').value = settings.highlightColor;
@@ -783,6 +781,25 @@ function saveSettings(closeModal) {
             btnWaiting(document.getElementById('btnApplySettings'), true);
         }
     }
+}
+
+function cancelSettings() {
+    let setTheme = settings.theme;
+    if (settings.theme === 'theme-autodetect') {
+        setTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
+    }
+
+    Object.keys(themes).forEach(function (key) {
+        if (key === setTheme) {
+            domCache.body.classList.add(key);
+        }
+        else {
+            domCache.body.classList.remove(key);
+        }
+    });
+
+    document.getElementById('selectTheme').value = settings.theme;
+    modalSettings.hide();
 }
 
 function getTagMultiSelectValues(taglist, translated) {

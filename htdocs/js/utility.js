@@ -341,7 +341,7 @@ function toggleBtnChkCollapse(btn, collapse, state) {
 }
 
 function setPagination(total, returned, limit = settings.maxElementsPerPage) {
-    let cat = (app.current.app === 'Playback' ? 'BrowseCovergrid' : app.current.app + app.current.tab);
+    let cat = app.current.app === 'Playback' ? 'BrowseCovergrid' : app.current.app + app.current.tab;
     let totalPages = Math.ceil(total / limit);
     if (totalPages === 0) {
         totalPages = 1;
@@ -434,6 +434,10 @@ function parseCmd(event, href) {
 
 function gotoPage(x) {
     document.getElementById('card' + app.current.app).scrollIntoView();
+    if (app.current.app === 'Playback') {
+        console.log('box scroll test');
+        document.getElementById('BrowseCovergridBox').scrollTop = 0;
+    }
 
     let offset;
     if (app.current.tab === 'Tidal' && app.current.view === 'All') {
@@ -458,6 +462,6 @@ function gotoPage(x) {
         default:
             app.current.page = x;
     }
-    setState(app.current.page, app.current.filter, app.current.sort, app.current.search);
+    setAppState(app.current.page, app.current.filter, app.current.sort, app.current.search);
     appGoto(app.current.app, app.current.tab, app.current.view, app.current.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
 }

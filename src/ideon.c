@@ -263,11 +263,17 @@ sds ideon_check_for_updates(sds buffer, sds method, int request_id)
     return buffer;
 }
 
-bool ideon_install_updates(void)
+sds ideon_install_updates(sds buffer, sds method, int request_id)
 {
-    // system commands
-    // reboot or reload daemon & restart service
-    // syscmd("pacman -Syu");
+    bool restart_system = syscmd("pacman -Syu");
 
-    return false;
+    if (restart_system == true) {
+        syscmd("reboot");
+    }
+
+    buffer = jsonrpc_start_result(buffer, method, request_id);
+    buffer = sdscat(buffer, ",");
+    buffer = tojson_bool(buffer, "restartSystem", restart_system, false);
+    buffer = jsonrpc_end_result(buffer);
+    return buffer;
 }

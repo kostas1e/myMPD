@@ -328,8 +328,7 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
             response->data = ideon_check_for_updates(response->data, request->method, request->id);
             break;
         case MYMPD_API_INSTALL_UPDATES:
-            // not yet implemented
-            ideon_install_updates();
+            response->data = ideon_install_updates(response->data, request->method, request->id);
             break;
         default:
             response->data = jsonrpc_respond_message(response->data, request->method, request->id, "Unknown request", true);

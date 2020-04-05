@@ -1,30 +1,48 @@
 "use strict";
 
 function checkForUpdates() {
-    sendAPI("MYMPD_API_CHECK_FOR_UPDATES", {}, parseVersion);
+    sendAPI("MYMPD_API_CHECK_FOR_UPDATES", {}, parseCheck);
 
     btnWaiting(document.getElementById('btnCheckForUpdates'), true);
 }
 
-function parseVersion(obj) {
+function parseCheck(obj) {
     document.getElementById('currentVersion').innerText = obj.result.currentVersion;
     if (obj.result.latestVersion !== undefined) {
         document.getElementById('latestVersion').innerText = obj.result.latestVersion;
+        document.getElementById('latestVersion').parentNode.classList.remove('hide');
+    }
+    else {
+        document.getElementById('latestVersion').parentNode.classList.add('hide');
     }
 
     if (obj.result.updatesAvailable) {
-        document.getElementById('updateMessage').innerText = 'New version available';
-        document.getElementById('btnInstallUpdates').classList.remove('hide');
+        document.getElementById('updateMsg').innerText = 'New version available';
+        document.getElementById('btnInstallUpdates').removeAttribute('disabled');
+        document.getElementById('restartMsg').innerText = 'System will automatically reboot after install.';
+        document.getElementById('restartMsg').classList.remove('hide');
     }
     else {
-        document.getElementById('updateMessage').innerText = 'System is up to date';
-        document.getElementById('btnInstallUpdates').classList.add('hide');
+        document.getElementById('updateMsg').innerText = 'System is up to date';
+        document.getElementById('btnInstallUpdates').setAttribute('disabled', 'disabled');
+        document.getElementById('restartMsg').classList.add('hide');
     }
+
     btnWaiting(document.getElementById('btnCheckForUpdates'), false);
 }
 
 function installUpdates() {
-    sendAPI("MYMPD_API_INSTALL_UPDATES", {});
+    sendAPI("MYMPD_API_INSTALL_UPDATES", {}, parseInstall);
+
+    btnWaiting(document.getElementById('btnInstallUpdates'), true);
+}
+
+function parseInstall(obj) {
+    if (!obj.result.restartSystem) {
+        document.getElementById('restartMsg').innerText = 'An error occured, please try again.';
+    }
+
+    btnWaiting(document.getElementById('btnInstallUpdates'), false);
 }
 
 function parseIdeonSettings() {

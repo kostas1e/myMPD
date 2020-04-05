@@ -274,6 +274,7 @@ function setCurrentCover(url) {
     };
     img.src = subdir + '/albumart/' + url;
 
+    // Set current header cover
     document.getElementById('headerCover').src = img.src;
     document.getElementById('headerCover').style.opacity = 1;
 }
@@ -290,6 +291,7 @@ function clearCurrentCover() {
         }
     }
 
+    // Clear current header cover
     document.getElementById('headerCover').style.opacity = '0';
 }
 
@@ -382,7 +384,6 @@ function songChange(obj) {
     let playingTr = document.getElementById('queueTrackId' + obj.result.currentSongId);
     if (playingTr) {
         playingTr.getElementsByTagName('td')[2].innerText = obj.result.Title;
-        
     }
 
     if (playstate === 'play') {
