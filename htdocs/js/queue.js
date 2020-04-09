@@ -76,6 +76,7 @@ function parseQueue(obj) {
     else {
         document.getElementById('cardFooterQueue').innerText = '';
     }
+    document.getElementById('panel-heading-queue').innerText = document.getElementById('cardFooterQueue').innerText;
 
     let nrItems = obj.result.returnedEntities;
     let table = document.getElementById('QueueCurrentList');
@@ -143,6 +144,8 @@ function parseQueue(obj) {
 
     setPagination(obj.result.totalEntities, obj.result.returnedEntities);
     document.getElementById('QueueCurrentList').classList.remove('opacity05');
+
+    scrollToPosY(appScrollPos);
 }
 
 function setRowImage(changes, observer) {

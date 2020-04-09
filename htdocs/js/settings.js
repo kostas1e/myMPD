@@ -49,7 +49,7 @@ function getSettings(onerror) {
 function getMpdSettings(obj) {
     if (obj !== '' && obj.result) {
         settingsNew = obj.result;
-        document.getElementById('splashScreenAlert').innerText = t('Fetch Sreamer settings');
+        // document.getElementById('splashScreenAlert').innerText = t('Fetch MPD settings');
         sendAPI("MPD_API_SETTINGS_GET", {}, joinSettings, true);
     }
     else {
@@ -79,6 +79,8 @@ function joinSettings(obj) {
     parseSettings();
     toggleUI();
     btnWaiting(document.getElementById('btnApplySettings'), false);
+    btnWaiting(document.getElementById('btnResetSettings'), false);
+    // document.getElementById('resetSettingsMsg').classList.remove('hide');
 }
 
 function checkConsume() {
@@ -598,6 +600,9 @@ function parseMPDSettings() {
 //eslint-disable-next-line no-unused-vars
 function resetSettings() {
     sendAPI("MYMPD_API_SETTINGS_RESET", {}, getSettings);
+
+    btnWaiting(document.getElementById('btnResetSettings'), true);
+    // document.getElementById('resetSettingsMsg').classList.add('hide');
 }
 
 //eslint-disable-next-line no-unused-vars

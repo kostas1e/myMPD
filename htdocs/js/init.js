@@ -6,6 +6,26 @@ function checkInit() {
     if (settings.init === false) {
         getServerinfo();
 
+        document.getElementById('selectLocaleInit').innerHTML = document.getElementById('selectLocale').innerHTML;
+        document.getElementById('selectThemeInit').innerHTML = document.getElementById('selectTheme').innerHTML;
+        document.getElementById('selectThemeInit').value = settings.theme;
+    
+        document.getElementById('selectThemeInit').addEventListener('change', function () {
+            let value = this.options[this.selectedIndex].value;
+            if (value === 'theme-autodetect') {
+                value = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
+            }
+    
+            Object.keys(themes).forEach(function (key) {
+                if (key === value) {
+                    domCache.body.classList.add(key);
+                }
+                else {
+                    domCache.body.classList.remove(key);
+                }
+            });
+        });
+
         document.getElementById('selectNsTypeInit').addEventListener('change', function () {
             let value = this.options[this.selectedIndex].value;
             if (value === '0') {
@@ -33,8 +53,6 @@ function checkInit() {
                 document.getElementById('inputNsPasswordInit').removeAttribute('disabled');
             }
         });
-
-        document.getElementById('selectLocaleInit').innerHTML = document.getElementById('selectLocale').innerHTML;
 
         currentTab = 0;
         showTab(currentTab);
@@ -102,9 +120,11 @@ function validateForm() {
 
 function saveInitSettings() {
     let selectLocale = document.getElementById('selectLocaleInit');
+    let selectTheme = document.getElementById('selectThemeInit');
     let selectNsType = document.getElementById('selectNsTypeInit');
     sendAPI("MYMPD_API_SETTINGS_SET", {
         "locale": selectLocale.options[selectLocale.selectedIndex].value,
+        "theme": selectTheme.options[selectTheme.selectedIndex].value,
         "nsType": parseInt(selectNsType.options[selectNsType.selectedIndex].value),
         "nsServer": document.getElementById('inputNsServerInit').value,
         "nsShare": document.getElementById('inputNsShareInit').value,

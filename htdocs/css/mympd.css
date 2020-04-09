@@ -769,3 +769,27 @@ div#playDropdown .row {
   height: 30px;
   margin-right: 5px;
 }
+
+#cardHeaderBrowse > ul, #cardHeaderQueue > ul {
+  float: left;
+}
+
+#cardHeaderQueueMini {
+  height: 32px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+#cardHeaderQueueMini > span {
+  vertical-align: middle;
+}
+
+.cardFooterPlayback .btnPlay, #btnPlayDropdown, #counter {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+#tabPlaybackSettings .btn, #tabGeneralSettings .btn, #tabInterfaceSettings .btn,
+#tabPlaybackSettings .btn-group {
+    float: right !important;
+}

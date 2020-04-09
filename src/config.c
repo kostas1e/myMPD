@@ -470,7 +470,7 @@ void mympd_config_defaults(t_config *config) {
     config->smartpls = true;
     config->smartpls_sort = sdsempty();
     // config->smartpls_prefix = sdsnew("myMPDsmart");
-    config->smartpls_prefix = sdsnew("ideonOSsmart");
+    config->smartpls_prefix = sdsnew("ideonSmart");
     config->smartpls_interval = 14400;
     config->generate_pls_tags = sdsnew("Genre");
     config->max_elements_per_page = 100;

@@ -185,6 +185,8 @@ function parseTidal(obj) {
     else {
         document.getElementById('btnSearch' + app.current.tab + 'All').parentNode.classList.remove('hide');
     }
+    
+    scrollToPosY(appScrollPos);
 }
 
 function addAllFromSearchTidalPlist(plist) {

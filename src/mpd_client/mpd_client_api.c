@@ -13,7 +13,7 @@
 
 #include "../../dist/src/sds/sds.h"
 #include "../sds_extras.h"
-#include "../dist/src/frozen/frozen.h"
+#include "../../dist/src/frozen/frozen.h"
 #include "../list.h"
 #include "config_defs.h"
 #include "../utility.h"
@@ -65,7 +65,7 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
         case MPD_API_LIKE:
             if (mpd_state->feat_sticker) {
                 je = json_scanf(request->data, sdslen(request->data), "{params: {uri: %Q, like: %d}}", &p_charbuf1, &uint_buf1);
-                if (je == 2) {
+                if (je == 2 && strlen(p_charbuf1) > 0) {
                     response->data = mpd_client_like_song_uri(mpd_state, response->data, request->method, request->id, p_charbuf1, uint_buf1);
                 }
             }
@@ -360,7 +360,7 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
         case MPD_API_DATABASE_FINGERPRINT:
             if (mpd_state->feat_fingerprint == true) {
                 je = json_scanf(request->data, sdslen(request->data), "{params: { uri: %Q}}", &p_charbuf1);
-                if (je == 1) {
+                if (je == 1 && strlen(p_charbuf1) > 0) {
                     response->data = mpd_client_put_fingerprint(mpd_state, response->data, request->method, request->id, p_charbuf1);
                 }
             }

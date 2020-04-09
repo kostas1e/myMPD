@@ -1,7 +1,7 @@
 {
   "background_color": "#343a40",
   "theme_color": "#343a40",
-  "description": "ideonOS - fast and lightweight Streamer webclient",
+  "description": "Ideon",
   "display": "standalone",
   "icons": [
     {
@@ -15,7 +15,7 @@
       "type": "image/png"
     }
   ],
-  "name": "ideonOS",
-  "short_name": "ideonOS",
+  "name": "Ideon",
+  "short_name": "Ideon",
   "start_url": "."
 }

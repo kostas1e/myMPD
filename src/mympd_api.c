@@ -142,7 +142,7 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
             struct json_token key;
             struct json_token val;
             bool rc = true;
-            bool mpd_conf_changed = false; // wip
+            bool mpd_conf_changed = false;
             bool ns_changed = false;
             bool airplay_changed = false;
             bool spotify_changed = false;

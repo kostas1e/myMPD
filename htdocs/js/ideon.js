@@ -18,13 +18,12 @@ function parseCheck(obj) {
 
     if (obj.result.updatesAvailable) {
         document.getElementById('updateMsg').innerText = 'New version available';
-        document.getElementById('btnInstallUpdates').removeAttribute('disabled');
-        document.getElementById('restartMsg').innerText = 'System will automatically reboot after install.';
+        document.getElementById('btnInstallUpdates').classList.remove('hide');
         document.getElementById('restartMsg').classList.remove('hide');
     }
     else {
         document.getElementById('updateMsg').innerText = 'System is up to date';
-        document.getElementById('btnInstallUpdates').setAttribute('disabled', 'disabled');
+        document.getElementById('btnInstallUpdates').classList.add('hide');
         document.getElementById('restartMsg').classList.add('hide');
     }
 

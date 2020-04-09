@@ -135,7 +135,8 @@ function _updateDBfinished(idleEvent) {
             document.getElementById('updateDBfinished').innerText = t('Database successfully updated');
         }
         else if (idleEvent === 'update_finished') {
-            document.getElementById('updateDBfinished').innerText = t('Database update finished');
+            // document.getElementById('updateDBfinished').innerText = t('Database update finished');
+            document.getElementById('updateDBfinished').innerText = t('Indexing / update complete');
         }
         let updateDBprogress = document.getElementById('updateDBprogress');
         updateDBprogress.classList.remove('updateDBprogressAnimate');

@@ -42,13 +42,13 @@ function setStateIcon(state) {
         mpdStateIcon.innerText = 'cloud_off';
         mpdStateIcon.classList.remove('text-success');
         // mpdStateText.innerText = t('MPD disconnected');
-        mpdStateText.innerText = t('Streamer disconnected');
+        mpdStateText.innerText = t('Ideon server disconnected');
     }
     else {
         mpdStateIcon.innerText = 'cloud_done';
         mpdStateIcon.classList.add('text-success');
         // mpdStateText.innerText = t('MPD connected');
-        mpdStateText.innerText = t('Streamer connected');
+        mpdStateText.innerText = t('Ideon server connected');
     }
 }
 
@@ -69,7 +69,7 @@ function showNotification(notificationTitle, notificationText, notificationHtml,
         let notification = new Notification(notificationTitle, { icon: 'assets/favicon.ico', body: notificationText });
         setTimeout(notification.close.bind(notification), 3000);
     }
-    if (settings.notificationPage === true) {
+    if (settings.notificationPage === true || notificationType === 'danger') {
         let alertBox;
         if (!document.getElementById('alertBox')) {
             alertBox = document.createElement('div');
@@ -208,9 +208,9 @@ function toggleUI() {
     }
     else {
         // toggleAlert('alertMpdState', true, t('MPD disconnected'));
-        toggleAlert('alertMpdState', true, t('Streamer disconnected'));
+        toggleAlert('alertMpdState', true, t('Ideon server disconnected'));
         // logMessage(t('MPD disconnected'), '', '', 'danger');
-        logMessage(t('Streamer disconnected'), '', '', 'danger');
+        logMessage(t('Ideon server disconnected'), '', '', 'danger');
     }
 
     if (websocketConnected === true) {

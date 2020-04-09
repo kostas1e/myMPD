@@ -155,8 +155,7 @@ function parseState(obj) {
     //Clear playback card if no current song
     if (obj.result.songPos === '-1') {
         domCache.currentTitle.innerText = 'Not playing';
-        // document.title = 'myMPD';
-        document.title = 'ideonOS';
+        document.title = 'Ideon';
         let headerTitle = document.getElementById('headerTitle');
         headerTitle.innerText = '';
         headerTitle.removeAttribute('title');
@@ -333,7 +332,7 @@ function songChange(obj) {
         domCache.currentTitle.setAttribute('data-uri', '');
     }
     // document.title = 'myMPD: ' + pageTitle;
-    document.title = 'ideonOS: ' + pageTitle;
+    document.title = 'Ideon: ' + pageTitle;
     let headerTitle = document.getElementById('headerTitle');
     headerTitle.innerText = pageTitle;
     headerTitle.title = pageTitle;

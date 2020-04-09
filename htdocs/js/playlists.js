@@ -114,6 +114,8 @@ function parsePlaylists(obj) {
     }
 
     document.getElementById(app.current.app + app.current.tab + app.current.view + 'List').classList.remove('opacity05');
+
+    scrollToPosY(appScrollPos);
 }
 
 //eslint-disable-next-line no-unused-vars

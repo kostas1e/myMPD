@@ -128,7 +128,7 @@ function webSocketConnect() {
             switch (obj.method) {
                 case 'welcome':
                     websocketConnected = true;
-                    showNotification(t('Connected to ideonOS') + ': ' + wsUrl, '', '', 'success');
+                    showNotification(t('Connected to Ideon client') + ': ' + wsUrl, '', '', 'success');
                     appRoute();
                     sendAPI("MPD_API_PLAYER_STATE", {}, parseState, true);
                     break;
@@ -143,7 +143,7 @@ function webSocketConnect() {
                     getSettings(true);
                     break;
                 case 'mpd_connected':
-                    showNotification(t('Connected to Streamer'), '', '', 'success');
+                    showNotification(t('Connected to Ideon server'), '', '', 'success');
                     sendAPI("MPD_API_PLAYER_STATE", {}, parseState);
                     getSettings(true);
                     break;
@@ -299,11 +299,20 @@ function gotoBrowse(x) {
 
 function parseFilesystem(obj) {
     let list = app.current.app + app.current.tab;
-    let colspan = settings['cols' + list].length;
-    colspan--;
-    let nrItems = obj.result.returnedEntities;
     let table = document.getElementById(list + 'List');
     let tbody = table.getElementsByTagName('tbody')[0];
+    let colspan = settings['cols' + list].length;
+    colspan--;
+
+    if (obj.error) {
+        tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
+            '<td colspan="' + colspan + '">' + t(obj.error.message) + '</td></tr>';
+        document.getElementById(app.current.app + (app.current.tab === undefined ? '' : app.current.tab) + 'List').classList.remove('opacity05');
+        document.getElementById('cardFooterBrowse').innerText = '';
+        return;
+    }
+
+    let nrItems = obj.result.returnedEntities;
     let tr = tbody.getElementsByTagName('tr');
     let navigate = document.activeElement.parentNode.parentNode === table ? true : false;
     let activeRow = 0;
@@ -377,11 +386,14 @@ function parseFilesystem(obj) {
 
     setPagination(obj.result.totalEntities, obj.result.returnedEntities);
 
-    if (nrItems === 0)
+    if (nrItems === 0) {
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
             '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
+    }
     document.getElementById(list + 'List').classList.remove('opacity05');
     document.getElementById('cardFooterBrowse').innerText = t('Num entries', obj.result.totalEntities);
+
+    scrollToPosY(appScrollPos);
 }
 
 function parseListDBtags(obj) {
@@ -488,6 +500,8 @@ function parseListDBtags(obj) {
         }
         document.getElementById('BrowseDatabaseTagList').classList.remove('opacity05');
     }
+
+    scrollToPosY(appScrollPos);
 }
 
 function createListTitleObserver(ele) {
@@ -716,6 +730,8 @@ function parseCovergrid(obj) {
     document.getElementById('BrowseCovergridList').classList.remove('opacity05');
     document.getElementById('cardFooterBrowse').innerText = gtPage('Num entries', obj.result.returnedEntities, obj.result.totalEntities);
 
+    scrollToPosY(appScrollPos);
+
     calcBoxHeight();
     closeCover();
     parseCovergridAlbum(obj);
@@ -862,13 +878,12 @@ function parseCheck(obj) {
 
     if (obj.result.updatesAvailable) {
         document.getElementById('updateMsg').innerText = 'New version available';
-        document.getElementById('btnInstallUpdates').removeAttribute('disabled');
-        document.getElementById('restartMsg').innerText = 'System will automatically reboot after install.';
+        document.getElementById('btnInstallUpdates').classList.remove('hide');
         document.getElementById('restartMsg').classList.remove('hide');
     }
     else {
         document.getElementById('updateMsg').innerText = 'System is up to date';
-        document.getElementById('btnInstallUpdates').setAttribute('disabled', 'disabled');
+        document.getElementById('btnInstallUpdates').classList.add('hide');
         document.getElementById('restartMsg').classList.add('hide');
     }
 
@@ -989,6 +1004,26 @@ function checkInit() {
     if (settings.init === false) {
         getServerinfo();
 
+        document.getElementById('selectLocaleInit').innerHTML = document.getElementById('selectLocale').innerHTML;
+        document.getElementById('selectThemeInit').innerHTML = document.getElementById('selectTheme').innerHTML;
+        document.getElementById('selectThemeInit').value = settings.theme;
+    
+        document.getElementById('selectThemeInit').addEventListener('change', function () {
+            let value = this.options[this.selectedIndex].value;
+            if (value === 'theme-autodetect') {
+                value = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
+            }
+    
+            Object.keys(themes).forEach(function (key) {
+                if (key === value) {
+                    domCache.body.classList.add(key);
+                }
+                else {
+                    domCache.body.classList.remove(key);
+                }
+            });
+        });
+
         document.getElementById('selectNsTypeInit').addEventListener('change', function () {
             let value = this.options[this.selectedIndex].value;
             if (value === '0') {
@@ -1016,8 +1051,6 @@ function checkInit() {
                 document.getElementById('inputNsPasswordInit').removeAttribute('disabled');
             }
         });
-
-        document.getElementById('selectLocaleInit').innerHTML = document.getElementById('selectLocale').innerHTML;
 
         currentTab = 0;
         showTab(currentTab);
@@ -1085,9 +1118,11 @@ function validateForm() {
 
 function saveInitSettings() {
     let selectLocale = document.getElementById('selectLocaleInit');
+    let selectTheme = document.getElementById('selectThemeInit');
     let selectNsType = document.getElementById('selectNsTypeInit');
     sendAPI("MYMPD_API_SETTINGS_SET", {
         "locale": selectLocale.options[selectLocale.selectedIndex].value,
+        "theme": selectTheme.options[selectTheme.selectedIndex].value,
         "nsType": parseInt(selectNsType.options[selectNsType.selectedIndex].value),
         "nsServer": document.getElementById('inputNsServerInit').value,
         "nsShare": document.getElementById('inputNsShareInit').value,
@@ -1432,7 +1467,8 @@ function _updateDBfinished(idleEvent) {
             document.getElementById('updateDBfinished').innerText = t('Database successfully updated');
         }
         else if (idleEvent === 'update_finished') {
-            document.getElementById('updateDBfinished').innerText = t('Database update finished');
+            // document.getElementById('updateDBfinished').innerText = t('Database update finished');
+            document.getElementById('updateDBfinished').innerText = t('Indexing / update complete');
         }
         let updateDBprogress = document.getElementById('updateDBprogress');
         updateDBprogress.classList.remove('updateDBprogressAnimate');
@@ -1482,6 +1518,8 @@ var uiEnabled = true;
 var locale = navigator.language || navigator.userLanguage;
 
 var ligatureMore = 'menu';
+
+var appScrollPos;
 
 var app = {};
 app.apps = {
@@ -1648,17 +1686,17 @@ function appPrepare(scrollPos) {
 function appGoto(card, tab, view, state) {
     let scrollPos = 0;
     if (document.body.scrollTop) {
-        scrollPos = document.body.scrollTop
+        scrollPos = document.body.scrollTop;
     }
     else {
         scrollPos = document.documentElement.scrollTop;
     }
 
     if (app.apps[app.current.app].scrollPos !== undefined) {
-        app.apps[app.current.app].scrollPos = scrollPos
+        app.apps[app.current.app].scrollPos = scrollPos;
     }
     else if (app.apps[app.current.app].tabs[app.current.tab].scrollPos !== undefined) {
-        app.apps[app.current.app].tabs[app.current.tab].scrollPos = scrollPos
+        app.apps[app.current.app].tabs[app.current.tab].scrollPos = scrollPos;
     }
     else if (app.apps[app.current.app].tabs[app.current.tab].views[app.current.view].scrollPos !== undefined) {
         app.apps[app.current.app].tabs[app.current.tab].views[app.current.view].scrollPos = scrollPos;
@@ -1716,6 +1754,7 @@ function appRoute() {
         app.current.sort = params[7];
         app.current.search = params[8];
         setAppState(app.current.page, app.current.filter, app.current.sort, app.current.search);
+        appScrollPos = app.current.scrollPos;
     }
     else {
         appGoto('Playback');
@@ -1755,7 +1794,7 @@ function appRoute() {
         }
     }
     else if (app.current.app === 'Browse' && app.current.tab === 'Filesystem') {
-        sendAPI("MPD_API_DATABASE_FILESYSTEM_LIST", { "offset": app.current.page, "path": (app.current.search ? app.current.search : "/"), "filter": app.current.filter, "cols": settings.colsBrowseFilesystem }, parseFilesystem);
+        sendAPI("MPD_API_DATABASE_FILESYSTEM_LIST", { "offset": app.current.page, "path": (app.current.search ? app.current.search : "/"), "filter": app.current.filter, "cols": settings.colsBrowseFilesystem }, parseFilesystem, true);
         // Don't add all songs from root
         if (app.current.search) {
             document.getElementById('BrowseFilesystemAddAllSongs').removeAttribute('disabled');
@@ -1946,7 +1985,7 @@ function appInitStart() {
     appInited = false;
     document.getElementById('splashScreen').classList.remove('hide');
     document.getElementsByTagName('body')[0].classList.add('overflow-hidden');
-    document.getElementById('splashScreenAlert').innerText = t('Fetch ideonOS settings');
+    // document.getElementById('splashScreenAlert').innerText = t('Fetch myMPD settings');
 
     getSettings(true);
     appInitWait();
@@ -1956,7 +1995,7 @@ function appInitWait() {
     setTimeout(function () {
         if (settingsParsed === 'true' && websocketConnected === true) {
             //app initialized
-            document.getElementById('splashScreenAlert').innerText = t('Applying settings');
+            // document.getElementById('splashScreenAlert').innerText = t('Applying settings');
             document.getElementById('splashScreen').classList.add('hide-fade');
             setTimeout(function () {
                 document.getElementById('splashScreen').classList.add('hide');
@@ -1970,7 +2009,7 @@ function appInitWait() {
 
         if (settingsParsed === 'true') {
             //parsed settings, now its safe to connect to websocket
-            document.getElementById('splashScreenAlert').innerText = t('Connect to websocket');
+            // document.getElementById('splashScreenAlert').innerText = t('Connect to websocket');
             webSocketConnect();
         }
         else if (settingsParsed === 'error') {
@@ -2046,14 +2085,14 @@ function appInit() {
     document.getElementById('modalAbout').addEventListener('shown.bs.modal', function () {
         sendAPI("MPD_API_DATABASE_STATS", {}, parseStats);
         getServerinfo();
-        let trs = '';
+        /* let trs = '';
         for (let key in keymap) {
             if (keymap[key].req === undefined || settings[keymap[key].req] === true) {
                 trs += '<tr><td><div class="key' + (keymap[key].key && keymap[key].key.length > 1 ? ' material-icons material-icons-small' : '') +
                     '">' + (keymap[key].key !== undefined ? keymap[key].key : key) + '</div></td><td>' + t(keymap[key].desc) + '</td></tr>';
             }
         }
-        document.getElementById('tbodyShortcuts').innerHTML = trs;
+        document.getElementById('tbodyShortcuts').innerHTML = trs; */
     });
 
     document.getElementById('modalAddToPlaylist').addEventListener('shown.bs.modal', function () {
@@ -2136,6 +2175,7 @@ function appInit() {
 
     document.getElementById('modalSettings').addEventListener('shown.bs.modal', function () {
         this.focus();
+        // document.getElementById('resetSettingsMsg').classList.add('hide');
         getSettings();
         document.getElementById('inputCrossfade').classList.remove('is-invalid');
         document.getElementById('inputMixrampdb').classList.remove('is-invalid');
@@ -2810,11 +2850,11 @@ function appInit() {
             event.ctrlKey || event.altKey) {
             return;
         }
-        let cmd = keymap[event.key];
+        /* let cmd = keymap[event.key];
         if (cmd && typeof window[cmd.cmd] === 'function') {
             if (keymap[event.key].req === undefined || settings[keymap[event.key].req] === true)
                 parseCmd(event, cmd);
-        }
+        } */
     }, false);
 
     let tables = document.getElementsByTagName('table');
@@ -2879,8 +2919,8 @@ function appInit() {
     });
 
     window.addEventListener('appinstalled', function () {
-        logInfo('ideonOS installed as app');
-        showNotification(t('ideonOS installed as app'), '', '', 'success');
+        logInfo('Ideon installed as app');
+        showNotification(t('Ideon installed as app'), '', '', 'success');
     });
 
     window.addEventListener('beforeunload', function () {
@@ -2966,13 +3006,13 @@ function setStateIcon(state) {
         mpdStateIcon.innerText = 'cloud_off';
         mpdStateIcon.classList.remove('text-success');
         // mpdStateText.innerText = t('MPD disconnected');
-        mpdStateText.innerText = t('Streamer disconnected');
+        mpdStateText.innerText = t('Ideon server disconnected');
     }
     else {
         mpdStateIcon.innerText = 'cloud_done';
         mpdStateIcon.classList.add('text-success');
         // mpdStateText.innerText = t('MPD connected');
-        mpdStateText.innerText = t('Streamer connected');
+        mpdStateText.innerText = t('Ideon server connected');
     }
 }
 
@@ -2993,7 +3033,7 @@ function showNotification(notificationTitle, notificationText, notificationHtml,
         let notification = new Notification(notificationTitle, { icon: 'assets/favicon.ico', body: notificationText });
         setTimeout(notification.close.bind(notification), 3000);
     }
-    if (settings.notificationPage === true) {
+    if (settings.notificationPage === true || notificationType === 'danger') {
         let alertBox;
         if (!document.getElementById('alertBox')) {
             alertBox = document.createElement('div');
@@ -3132,9 +3172,9 @@ function toggleUI() {
     }
     else {
         // toggleAlert('alertMpdState', true, t('MPD disconnected'));
-        toggleAlert('alertMpdState', true, t('Streamer disconnected'));
+        toggleAlert('alertMpdState', true, t('Ideon server disconnected'));
         // logMessage(t('MPD disconnected'), '', '', 'danger');
-        logMessage(t('Streamer disconnected'), '', '', 'danger');
+        logMessage(t('Ideon server disconnected'), '', '', 'danger');
     }
 
     if (websocketConnected === true) {
@@ -3173,7 +3213,7 @@ function setGridPlayback() {
         document.getElementById('col2').classList.add(...list);
         document.getElementById('cardQueueMini').classList.remove('hide');
         document.getElementById('cardBrowse').classList.remove('hide');
-        document.getElementById('cardHeaderBrowse').firstElementChild.classList.add('hide');
+        document.getElementById('cardHeaderBrowse').getElementsByTagName('ul')[0].classList.add('hide');
         document.getElementById('cardBrowseCovergrid').classList.remove('hide');
         for (let i = 0; i < bts.length; i++) {
             bts[i].classList.add('hide');
@@ -3184,7 +3224,7 @@ function setGridPlayback() {
         document.getElementById('col1').classList.remove('col-md-6');
         document.getElementById('col2').classList.remove(...list);
         document.getElementById('cardQueueMini').classList.add('hide');
-        document.getElementById('cardHeaderBrowse').firstElementChild.classList.remove('hide');
+        document.getElementById('cardHeaderBrowse').getElementsByTagName('ul')[0].classList.remove('hide');
         for (let i = 0; i < bts.length; i++) {
             bts[i].classList.remove('hide');
         }
@@ -3428,7 +3468,7 @@ function updateDBstats() {
 }
 
 function parseDBstats(obj) {
-    document.getElementById('cardBrowseDBStats').firstChild.innerHTML = 'Songs: ' + obj.result.songs + ' &bull; Time: ' + beautifyDuration(obj.result.dbPlaytime);
+    document.getElementById('panel-heading-browse').innerHTML = 'Library total: Tracks ' + obj.result.songs + ' &bull; Time ' + beautifyDuration(obj.result.dbPlaytime);
 }
 
 function calcBoxHeight() {
@@ -3561,6 +3601,8 @@ function parsePlaylists(obj) {
     }
 
     document.getElementById(app.current.app + app.current.tab + app.current.view + 'List').classList.remove('opacity05');
+
+    scrollToPosY(appScrollPos);
 }
 
 //eslint-disable-next-line no-unused-vars
@@ -4289,6 +4331,7 @@ function parseQueue(obj) {
     else {
         document.getElementById('cardFooterQueue').innerText = '';
     }
+    document.getElementById('panel-heading-queue').innerText = document.getElementById('cardFooterQueue').innerText;
 
     let nrItems = obj.result.returnedEntities;
     let table = document.getElementById('QueueCurrentList');
@@ -4356,6 +4399,8 @@ function parseQueue(obj) {
 
     setPagination(obj.result.totalEntities, obj.result.returnedEntities);
     document.getElementById('QueueCurrentList').classList.remove('opacity05');
+
+    scrollToPosY(appScrollPos);
 }
 
 function setRowImage(changes, observer) {
@@ -4740,6 +4785,8 @@ function parseTidal(obj) {
     else {
         document.getElementById('btnSearch' + app.current.tab + 'All').parentNode.classList.remove('hide');
     }
+    
+    scrollToPosY(appScrollPos);
 }
 
 function addAllFromSearchTidalPlist(plist) {
@@ -4823,7 +4870,7 @@ function getSettings(onerror) {
 function getMpdSettings(obj) {
     if (obj !== '' && obj.result) {
         settingsNew = obj.result;
-        document.getElementById('splashScreenAlert').innerText = t('Fetch Sreamer settings');
+        // document.getElementById('splashScreenAlert').innerText = t('Fetch MPD settings');
         sendAPI("MPD_API_SETTINGS_GET", {}, joinSettings, true);
     }
     else {
@@ -4853,6 +4900,8 @@ function joinSettings(obj) {
     parseSettings();
     toggleUI();
     btnWaiting(document.getElementById('btnApplySettings'), false);
+    btnWaiting(document.getElementById('btnResetSettings'), false);
+    // document.getElementById('resetSettingsMsg').classList.remove('hide');
 }
 
 function checkConsume() {
@@ -5372,6 +5421,9 @@ function parseMPDSettings() {
 //eslint-disable-next-line no-unused-vars
 function resetSettings() {
     sendAPI("MYMPD_API_SETTINGS_RESET", {}, getSettings);
+
+    btnWaiting(document.getElementById('btnResetSettings'), true);
+    // document.getElementById('resetSettingsMsg').classList.add('hide');
 }
 
 //eslint-disable-next-line no-unused-vars
@@ -6145,8 +6197,7 @@ function parseState(obj) {
     //Clear playback card if no current song
     if (obj.result.songPos === '-1') {
         domCache.currentTitle.innerText = 'Not playing';
-        // document.title = 'myMPD';
-        document.title = 'ideonOS';
+        document.title = 'Ideon';
         let headerTitle = document.getElementById('headerTitle');
         headerTitle.innerText = '';
         headerTitle.removeAttribute('title');
@@ -6323,7 +6374,7 @@ function songChange(obj) {
         domCache.currentTitle.setAttribute('data-uri', '');
     }
     // document.title = 'myMPD: ' + pageTitle;
-    document.title = 'ideonOS: ' + pageTitle;
+    document.title = 'Ideon: ' + pageTitle;
     let headerTitle = document.getElementById('headerTitle');
     headerTitle.innerText = pageTitle;
     headerTitle.title = pageTitle;
@@ -7610,7 +7661,6 @@ function parseCmd(event, href) {
 function gotoPage(x) {
     document.getElementById('card' + app.current.app).scrollIntoView();
     if (app.current.app === 'Playback') {
-        console.log('box scroll test');
         document.getElementById('BrowseCovergridBox').scrollTop = 0;
     }
 

@@ -10,7 +10,7 @@ function setGridPlayback() {
         document.getElementById('col2').classList.add(...list);
         document.getElementById('cardQueueMini').classList.remove('hide');
         document.getElementById('cardBrowse').classList.remove('hide');
-        document.getElementById('cardHeaderBrowse').firstElementChild.classList.add('hide');
+        document.getElementById('cardHeaderBrowse').getElementsByTagName('ul')[0].classList.add('hide');
         document.getElementById('cardBrowseCovergrid').classList.remove('hide');
         for (let i = 0; i < bts.length; i++) {
             bts[i].classList.add('hide');
@@ -21,7 +21,7 @@ function setGridPlayback() {
         document.getElementById('col1').classList.remove('col-md-6');
         document.getElementById('col2').classList.remove(...list);
         document.getElementById('cardQueueMini').classList.add('hide');
-        document.getElementById('cardHeaderBrowse').firstElementChild.classList.remove('hide');
+        document.getElementById('cardHeaderBrowse').getElementsByTagName('ul')[0].classList.remove('hide');
         for (let i = 0; i < bts.length; i++) {
             bts[i].classList.remove('hide');
         }
@@ -265,7 +265,7 @@ function updateDBstats() {
 }
 
 function parseDBstats(obj) {
-    document.getElementById('cardBrowseDBStats').firstChild.innerHTML = 'Songs: ' + obj.result.songs + ' &bull; Time: ' + beautifyDuration(obj.result.dbPlaytime);
+    document.getElementById('panel-heading-browse').innerHTML = 'Library total: Tracks ' + obj.result.songs + ' &bull; Time ' + beautifyDuration(obj.result.dbPlaytime);
 }
 
 function calcBoxHeight() {

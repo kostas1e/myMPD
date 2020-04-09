@@ -54,7 +54,8 @@ bool smartpls_default(t_config *config) {
         fclose(fp);
     }
     else {
-        prefix = sdscat(prefix, "myMPDsmart");
+        // prefix = sdscat(prefix, "myMPDsmart");
+        prefix = sdscat(prefix, "ideonSmart");
     }
 
     sds smartpls_file = sdscatfmt(sdsempty(), "%s%sbestRated", prefix, (sdslen(prefix) > 0 ? "-" : ""));

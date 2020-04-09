@@ -12,7 +12,7 @@
 #include <assert.h>
 #include <mpd/client.h>
 
-#include "../dist/src/sds/sds.h"
+#include "../../dist/src/sds/sds.h"
 #include "../sds_extras.h"
 #include "../api.h"
 #include "../log.h"
@@ -32,7 +32,7 @@ sds mpd_client_get_updatedb_state(t_mpd_state *mpd_state, sds buffer) {
     }
     int update_id = mpd_status_get_update_id(status);
     LOG_INFO("Update database ID: %d", update_id);
-    if ( update_id > 0) {
+    if (update_id > 0) {
         buffer = jsonrpc_start_notify(buffer, "update_started");
         buffer = tojson_long(buffer, "jobid", update_id, false);
         buffer = jsonrpc_end_notify(buffer);

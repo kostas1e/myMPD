@@ -17,11 +17,20 @@ function gotoBrowse(x) {
 
 function parseFilesystem(obj) {
     let list = app.current.app + app.current.tab;
-    let colspan = settings['cols' + list].length;
-    colspan--;
-    let nrItems = obj.result.returnedEntities;
     let table = document.getElementById(list + 'List');
     let tbody = table.getElementsByTagName('tbody')[0];
+    let colspan = settings['cols' + list].length;
+    colspan--;
+
+    if (obj.error) {
+        tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
+            '<td colspan="' + colspan + '">' + t(obj.error.message) + '</td></tr>';
+        document.getElementById(app.current.app + (app.current.tab === undefined ? '' : app.current.tab) + 'List').classList.remove('opacity05');
+        document.getElementById('cardFooterBrowse').innerText = '';
+        return;
+    }
+
+    let nrItems = obj.result.returnedEntities;
     let tr = tbody.getElementsByTagName('tr');
     let navigate = document.activeElement.parentNode.parentNode === table ? true : false;
     let activeRow = 0;
@@ -95,11 +104,14 @@ function parseFilesystem(obj) {
 
     setPagination(obj.result.totalEntities, obj.result.returnedEntities);
 
-    if (nrItems === 0)
+    if (nrItems === 0) {
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
             '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
+    }
     document.getElementById(list + 'List').classList.remove('opacity05');
     document.getElementById('cardFooterBrowse').innerText = t('Num entries', obj.result.totalEntities);
+
+    scrollToPosY(appScrollPos);
 }
 
 function parseListDBtags(obj) {
@@ -206,6 +218,8 @@ function parseListDBtags(obj) {
         }
         document.getElementById('BrowseDatabaseTagList').classList.remove('opacity05');
     }
+
+    scrollToPosY(appScrollPos);
 }
 
 function createListTitleObserver(ele) {
@@ -433,6 +447,8 @@ function parseCovergrid(obj) {
     }
     document.getElementById('BrowseCovergridList').classList.remove('opacity05');
     document.getElementById('cardFooterBrowse').innerText = gtPage('Num entries', obj.result.returnedEntities, obj.result.totalEntities);
+
+    scrollToPosY(appScrollPos);
 
     calcBoxHeight();
     closeCover();

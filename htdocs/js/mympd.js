@@ -33,6 +33,8 @@ var locale = navigator.language || navigator.userLanguage;
 
 var ligatureMore = 'menu';
 
+var appScrollPos;
+
 var app = {};
 app.apps = {
     "Playback": { "state": "0/AlbumArtist/AlbumArtist/", "scrollPos": 0 },
@@ -198,17 +200,17 @@ function appPrepare(scrollPos) {
 function appGoto(card, tab, view, state) {
     let scrollPos = 0;
     if (document.body.scrollTop) {
-        scrollPos = document.body.scrollTop
+        scrollPos = document.body.scrollTop;
     }
     else {
         scrollPos = document.documentElement.scrollTop;
     }
 
     if (app.apps[app.current.app].scrollPos !== undefined) {
-        app.apps[app.current.app].scrollPos = scrollPos
+        app.apps[app.current.app].scrollPos = scrollPos;
     }
     else if (app.apps[app.current.app].tabs[app.current.tab].scrollPos !== undefined) {
-        app.apps[app.current.app].tabs[app.current.tab].scrollPos = scrollPos
+        app.apps[app.current.app].tabs[app.current.tab].scrollPos = scrollPos;
     }
     else if (app.apps[app.current.app].tabs[app.current.tab].views[app.current.view].scrollPos !== undefined) {
         app.apps[app.current.app].tabs[app.current.tab].views[app.current.view].scrollPos = scrollPos;
@@ -266,6 +268,7 @@ function appRoute() {
         app.current.sort = params[7];
         app.current.search = params[8];
         setAppState(app.current.page, app.current.filter, app.current.sort, app.current.search);
+        appScrollPos = app.current.scrollPos;
     }
     else {
         appGoto('Playback');
@@ -305,7 +308,7 @@ function appRoute() {
         }
     }
     else if (app.current.app === 'Browse' && app.current.tab === 'Filesystem') {
-        sendAPI("MPD_API_DATABASE_FILESYSTEM_LIST", { "offset": app.current.page, "path": (app.current.search ? app.current.search : "/"), "filter": app.current.filter, "cols": settings.colsBrowseFilesystem }, parseFilesystem);
+        sendAPI("MPD_API_DATABASE_FILESYSTEM_LIST", { "offset": app.current.page, "path": (app.current.search ? app.current.search : "/"), "filter": app.current.filter, "cols": settings.colsBrowseFilesystem }, parseFilesystem, true);
         // Don't add all songs from root
         if (app.current.search) {
             document.getElementById('BrowseFilesystemAddAllSongs').removeAttribute('disabled');
@@ -496,7 +499,7 @@ function appInitStart() {
     appInited = false;
     document.getElementById('splashScreen').classList.remove('hide');
     document.getElementsByTagName('body')[0].classList.add('overflow-hidden');
-    document.getElementById('splashScreenAlert').innerText = t('Fetch ideonOS settings');
+    // document.getElementById('splashScreenAlert').innerText = t('Fetch myMPD settings');
 
     getSettings(true);
     appInitWait();
@@ -506,7 +509,7 @@ function appInitWait() {
     setTimeout(function () {
         if (settingsParsed === 'true' && websocketConnected === true) {
             //app initialized
-            document.getElementById('splashScreenAlert').innerText = t('Applying settings');
+            // document.getElementById('splashScreenAlert').innerText = t('Applying settings');
             document.getElementById('splashScreen').classList.add('hide-fade');
             setTimeout(function () {
                 document.getElementById('splashScreen').classList.add('hide');
@@ -520,7 +523,7 @@ function appInitWait() {
 
         if (settingsParsed === 'true') {
             //parsed settings, now its safe to connect to websocket
-            document.getElementById('splashScreenAlert').innerText = t('Connect to websocket');
+            // document.getElementById('splashScreenAlert').innerText = t('Connect to websocket');
             webSocketConnect();
         }
         else if (settingsParsed === 'error') {
@@ -596,14 +599,14 @@ function appInit() {
     document.getElementById('modalAbout').addEventListener('shown.bs.modal', function () {
         sendAPI("MPD_API_DATABASE_STATS", {}, parseStats);
         getServerinfo();
-        let trs = '';
+        /* let trs = '';
         for (let key in keymap) {
             if (keymap[key].req === undefined || settings[keymap[key].req] === true) {
                 trs += '<tr><td><div class="key' + (keymap[key].key && keymap[key].key.length > 1 ? ' material-icons material-icons-small' : '') +
                     '">' + (keymap[key].key !== undefined ? keymap[key].key : key) + '</div></td><td>' + t(keymap[key].desc) + '</td></tr>';
             }
         }
-        document.getElementById('tbodyShortcuts').innerHTML = trs;
+        document.getElementById('tbodyShortcuts').innerHTML = trs; */
     });
 
     document.getElementById('modalAddToPlaylist').addEventListener('shown.bs.modal', function () {
@@ -686,6 +689,7 @@ function appInit() {
 
     document.getElementById('modalSettings').addEventListener('shown.bs.modal', function () {
         this.focus();
+        // document.getElementById('resetSettingsMsg').classList.add('hide');
         getSettings();
         document.getElementById('inputCrossfade').classList.remove('is-invalid');
         document.getElementById('inputMixrampdb').classList.remove('is-invalid');
@@ -1360,11 +1364,11 @@ function appInit() {
             event.ctrlKey || event.altKey) {
             return;
         }
-        let cmd = keymap[event.key];
+        /* let cmd = keymap[event.key];
         if (cmd && typeof window[cmd.cmd] === 'function') {
             if (keymap[event.key].req === undefined || settings[keymap[event.key].req] === true)
                 parseCmd(event, cmd);
-        }
+        } */
     }, false);
 
     let tables = document.getElementsByTagName('table');
@@ -1429,8 +1433,8 @@ function appInit() {
     });
 
     window.addEventListener('appinstalled', function () {
-        logInfo('ideonOS installed as app');
-        showNotification(t('ideonOS installed as app'), '', '', 'success');
+        logInfo('Ideon installed as app');
+        showNotification(t('Ideon installed as app'), '', '', 'success');
     });
 
     window.addEventListener('beforeunload', function () {

@@ -242,7 +242,8 @@ static sds get_version(sds version)
 
 sds ideon_check_for_updates(sds buffer, sds method, int request_id)
 {
-    sds latest_version = get_version(sdsempty()); // trim
+    sds latest_version = get_version(sdsempty());
+    sdstrim(latest_version, " \n");
     bool updates_available;
     if (sdslen(latest_version) > 0)
     {

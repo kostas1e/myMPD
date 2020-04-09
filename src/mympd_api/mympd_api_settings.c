@@ -17,7 +17,7 @@
 
 #include "../../dist/src/sds/sds.h"
 #include "../sds_extras.h"
-#include "../dist/src/frozen/frozen.h"
+#include "../../dist/src/frozen/frozen.h"
 #include "../log.h"
 #include "../list.h"
 #include "config_defs.h"
@@ -457,6 +457,7 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
 
 void mympd_api_settings_reset(t_config *config, t_mympd_state *mympd_state) {
     mympd_api_settings_delete(config);
+    free_mympd_state_sds(mympd_state);
     mympd_api_read_statefiles(config, mympd_state);
     mympd_api_push_to_mpd_client(mympd_state);
     ideon_settings_set(mympd_state, true, true, true, true);
