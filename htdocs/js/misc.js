@@ -119,18 +119,8 @@ function updateDBfinished(idleEvent) {
 }
 
 function _updateDBfinished(idleEvent) {
-    //spinner in mounts modal
-    let el = document.getElementById('spinnerUpdateProgress');
-    if (el) {
-        let parent = el.parentNode;
-        el.remove();
-        for (let i = 0; i < parent.children.length; i++) {
-            parent.children[i].classList.remove('hide');
-        }
-    }
-
     //update database modal
-    if (document.getElementById('modalUpdateDB').classList.contains('show')) {
+    // if (document.getElementById('modalUpdateDB').classList.contains('show')) {
         if (idleEvent === 'update_database') {
             document.getElementById('updateDBfinished').innerText = t('Database successfully updated');
         }
@@ -143,7 +133,8 @@ function _updateDBfinished(idleEvent) {
         updateDBprogress.style.width = '100%';
         updateDBprogress.style.marginLeft = '0px';
         document.getElementById('updateDBfooter').classList.remove('hide');
-    }
+    // }
+    modalUpdateDB.show();
 
     //general notification
     if (idleEvent === 'update_database') {
