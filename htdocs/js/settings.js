@@ -788,25 +788,6 @@ function saveSettings(closeModal) {
     }
 }
 
-function cancelSettings() {
-    let setTheme = settings.theme;
-    if (settings.theme === 'theme-autodetect') {
-        setTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
-    }
-
-    Object.keys(themes).forEach(function (key) {
-        if (key === setTheme) {
-            domCache.body.classList.add(key);
-        }
-        else {
-            domCache.body.classList.remove(key);
-        }
-    });
-
-    document.getElementById('selectTheme').value = settings.theme;
-    modalSettings.hide();
-}
-
 function getTagMultiSelectValues(taglist, translated) {
     let values = [];
     let chkBoxes = taglist.getElementsByTagName('button');

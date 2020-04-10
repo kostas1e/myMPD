@@ -250,6 +250,7 @@ function appendPlayQueue(type, uri, name) {
             showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
             break;
         case 'plist':
+        case 'smartpls':
             sendAPI("MPD_API_QUEUE_ADD_PLAY_PLAYLIST", { "plist": uri });
             showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
             break;
@@ -264,6 +265,7 @@ function appendQueue(type, uri, name) {
             showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
             break;
         case 'plist':
+        case 'smartpls':
             sendAPI("MPD_API_QUEUE_ADD_PLAYLIST", { "plist": uri });
             showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
             break;
@@ -289,6 +291,7 @@ function replaceQueue(type, uri, name) {
             showNotification(t('Queue replaced with %{name}', { "name": name }), '', '', 'success');
             break;
         case 'plist':
+        case 'smartpls':
             sendAPI("MPD_API_QUEUE_REPLACE_PLAYLIST", { "plist": uri });
             showNotification(t('Queue replaced with %{name}', { "name": name }), '', '', 'success');
             break;

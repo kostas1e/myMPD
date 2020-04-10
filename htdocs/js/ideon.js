@@ -74,6 +74,7 @@ function parseIdeonSettings() {
     }
 
     toggleBtnChk('btnAirplay', settings.airplay);
+    toggleBtnChk('btnRoon', settings.roon);
     toggleBtnChk('btnSpotify', settings.spotify);
     toggleBtnChkCollapse('btnTidalEnabled', 'collapseTidal', settings.tidalEnabled);
     document.getElementById('inputTidalUsername').value = settings.tidalUsername;
@@ -128,6 +129,7 @@ function saveIdeonSettings() {
             "nsUsername": inputNsUsername.value,
             "nsPassword": inputNsPassword.value,
             "airplay": (document.getElementById('btnAirplay').classList.contains('active') ? true : false),
+            "roon": (document.getElementById('btnRoon').classList.contains('active') ? true : false),
             "spotify": (document.getElementById('btnSpotify').classList.contains('active') ? true : false),
             "tidalEnabled": (document.getElementById('btnTidalEnabled').classList.contains('active') ? true : false),
             "tidalUsername": inputTidalUsername.value,

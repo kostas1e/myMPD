@@ -40,7 +40,7 @@ void mympd_api_settings_delete(t_config *config) {
         "max_elements_per_page",  "mpd_host", "mpd_pass", "mpd_port", "notification_page", "notification_web", "searchtaglist",
         "smartpls", "stickers", "stream_port", "stream_url", "taglist", "music_directory", "bookmarks", "bookmark_list", "covergrid_size",
         "theme", "timer", "highlight_color", "media_session", "booklet_name",
-        "mixer_type", "dop", "ns_type", "ns_server", "ns_share", "ns_username", "ns_password", "airplay", "spotify", "init",
+        "mixer_type", "dop", "ns_type", "ns_server", "ns_share", "ns_username", "ns_password", "airplay", "roon", "spotify", "init",
         "tidal_enabled", "cols_search_tidal", "searchtidaltaglist", "tidal_username", "tidal_password", "tidal_audioquality", 0};
     const char** ptr = state_files;
     while (*ptr != 0) {
@@ -138,7 +138,8 @@ bool mympd_api_cols_save(t_config *config, t_mympd_state *mympd_state, const cha
 }
 
 bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct json_token *key,
-                            struct json_token *val, bool *mpd_conf_changed, bool *ns_changed, bool *airplay_changed, bool *spotify_changed)
+                            struct json_token *val, bool *mpd_conf_changed, bool *ns_changed,
+                            bool *airplay_changed, bool *roon_changed, bool *spotify_changed)
 {
     sds settingname = sdsempty();
     sds settingvalue = sdscatlen(sdsempty(), val->ptr, val->len);
@@ -404,6 +405,13 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
         mympd_state->airplay = val->type == JSON_TYPE_TRUE ? true : false;
         settingname = sdscat(settingname, "airplay");
     }
+    else if (strncmp(key->ptr, "roon", key->len) == 0) {
+        if ((mympd_state->roon == true && val->type == JSON_TYPE_FALSE) ||
+            (mympd_state->roon == false && val->type == JSON_TYPE_TRUE))
+            *roon_changed = true;
+        mympd_state->roon = val->type == JSON_TYPE_TRUE ? true : false;
+        settingname = sdscat(settingname, "roon");
+    }
     else if (strncmp(key->ptr, "spotify", key->len) == 0) {
         if ((mympd_state->spotify == true && val->type == JSON_TYPE_FALSE) ||
             (mympd_state->spotify == false && val->type == JSON_TYPE_TRUE))
@@ -460,7 +468,7 @@ void mympd_api_settings_reset(t_config *config, t_mympd_state *mympd_state) {
     free_mympd_state_sds(mympd_state);
     mympd_api_read_statefiles(config, mympd_state);
     mympd_api_push_to_mpd_client(mympd_state);
-    ideon_settings_set(mympd_state, true, true, true, true);
+    ideon_settings_set(mympd_state, true, true, true, true, true);
 }
 
 void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state) {
@@ -524,6 +532,7 @@ void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state) {
     mympd_state->ns_username = state_file_rw_string(config, "ns_username", config->ns_username, false);
     mympd_state->ns_password = state_file_rw_string(config, "ns_password", config->ns_password, false);
     mympd_state->airplay = state_file_rw_bool(config, "airplay", config->airplay, false);
+    mympd_state->roon = state_file_rw_bool(config, "roon", config->roon, false);
     mympd_state->spotify = state_file_rw_bool(config, "spotify", config->spotify, false);
     mympd_state->searchtidaltaglist = state_file_rw_string(config, "searchtidaltaglist", config->searchtidaltaglist, false);
     mympd_state->cols_search_tidal = state_file_rw_string(config, "cols_search_tidal", config->cols_search_tidal, false);
@@ -694,6 +703,7 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = tojson_char(buffer, "nsUsername", mympd_state->ns_username, true);
     buffer = tojson_char(buffer, "nsPassword", mympd_state->ns_password, true);
     buffer = tojson_bool(buffer, "airplay", mympd_state->airplay, true);
+    buffer = tojson_bool(buffer, "roon", mympd_state->roon, true);
     buffer = tojson_bool(buffer, "spotify", mympd_state->spotify, true);
     buffer = tojson_bool(buffer, "tidalEnabled", mympd_state->tidal_enabled, true);
     buffer = tojson_char(buffer, "tidalUsername", mympd_state->tidal_username, true);

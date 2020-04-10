@@ -934,6 +934,7 @@ function parseIdeonSettings() {
     }
 
     toggleBtnChk('btnAirplay', settings.airplay);
+    toggleBtnChk('btnRoon', settings.roon);
     toggleBtnChk('btnSpotify', settings.spotify);
     toggleBtnChkCollapse('btnTidalEnabled', 'collapseTidal', settings.tidalEnabled);
     document.getElementById('inputTidalUsername').value = settings.tidalUsername;
@@ -988,6 +989,7 @@ function saveIdeonSettings() {
             "nsUsername": inputNsUsername.value,
             "nsPassword": inputNsPassword.value,
             "airplay": (document.getElementById('btnAirplay').classList.contains('active') ? true : false),
+            "roon": (document.getElementById('btnRoon').classList.contains('active') ? true : false),
             "spotify": (document.getElementById('btnSpotify').classList.contains('active') ? true : false),
             "tidalEnabled": (document.getElementById('btnTidalEnabled').classList.contains('active') ? true : false),
             "tidalUsername": inputTidalUsername.value,
@@ -2179,10 +2181,25 @@ function appInit() {
             event.stopPropagation();
             event.preventDefault();
         }
-        else if (event.key === 'Escape') {
-            cancelSettings();
-            event.stopPropagation();
-            event.preventDefault();
+    });
+
+    document.getElementById('modalSettings').addEventListener('hidden.bs.modal', function () {
+        let setTheme = settings.theme;
+        if (settings.theme !== document.getElementById('selectTheme').value) {
+            if (settings.theme === 'theme-autodetect') {
+                setTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
+            }
+
+            Object.keys(themes).forEach(function (key) {
+                if (key === setTheme) {
+                    domCache.body.classList.add(key);
+                }
+                else {
+                    domCache.body.classList.remove(key);
+                }
+            });
+            
+            document.getElementById('selectTheme').value = settings.theme;
         }
     });
 
@@ -2454,6 +2471,7 @@ function appInit() {
                     appendPlayQueue('song', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
                     break;
                 case 'plist':
+                case 'smartpls':
                     // appendQueue('plist', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
                     appendPlayQueue('plist', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
                     break;
@@ -4496,6 +4514,7 @@ function appendPlayQueue(type, uri, name) {
             showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
             break;
         case 'plist':
+        case 'smartpls':
             sendAPI("MPD_API_QUEUE_ADD_PLAY_PLAYLIST", { "plist": uri });
             showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
             break;
@@ -4510,6 +4529,7 @@ function appendQueue(type, uri, name) {
             showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
             break;
         case 'plist':
+        case 'smartpls':
             sendAPI("MPD_API_QUEUE_ADD_PLAYLIST", { "plist": uri });
             showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
             break;
@@ -4535,6 +4555,7 @@ function replaceQueue(type, uri, name) {
             showNotification(t('Queue replaced with %{name}', { "name": name }), '', '', 'success');
             break;
         case 'plist':
+        case 'smartpls':
             sendAPI("MPD_API_QUEUE_REPLACE_PLAYLIST", { "plist": uri });
             showNotification(t('Queue replaced with %{name}', { "name": name }), '', '', 'success');
             break;
@@ -5598,25 +5619,6 @@ function saveSettings(closeModal) {
             btnWaiting(document.getElementById('btnApplySettings'), true);
         }
     }
-}
-
-function cancelSettings() {
-    let setTheme = settings.theme;
-    if (settings.theme === 'theme-autodetect') {
-        setTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
-    }
-
-    Object.keys(themes).forEach(function (key) {
-        if (key === setTheme) {
-            domCache.body.classList.add(key);
-        }
-        else {
-            domCache.body.classList.remove(key);
-        }
-    });
-
-    document.getElementById('selectTheme').value = settings.theme;
-    modalSettings.hide();
 }
 
 function getTagMultiSelectValues(taglist, translated) {
@@ -7285,6 +7287,10 @@ function fileformat(audioformat) {
 function scrollToPosY(pos) {
     document.body.scrollTop = pos; // For Safari
     document.documentElement.scrollTop = pos; // For Chrome, Firefox, IE and Opera
+
+    if (app.current.app === 'Playback') {
+        document.getElementById('BrowseCovergridBox').scrollTop = 0;
+    }
 }
 
 function doSetFilterLetter(x) {

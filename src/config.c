@@ -310,6 +310,9 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     else if (MATCH("ideon", "airplay")) {
         p_config->airplay = strcmp(value, "true") == 0 ? true : false;
     }
+    else if (MATCH("ideon", "roon")) {
+        p_config->roon = strcmp(value, "true") == 0 ? true : false;
+    }
     else if (MATCH("ideon", "spotify")) {
         p_config->spotify = strcmp(value, "true") == 0 ? true : false;
     }
@@ -380,7 +383,7 @@ static void mympd_get_env(struct t_config *config) {
         "THEME_BGCOVER", "THEME_BGCOLOR", "THEME_BGCSSFILTER", "THEME_COVERGRIDSIZE",
         "THEME_COVERIMAGE", "THEME_COVERIMAGENAME", "THEME_COVERIMAGESIZE",
         "THEME_LOCALE", "THEME_HIGHLIGHTCOLOR",
-        "IDEON_MIXERTYPE", "IDEON_DOP", "IDEON_NSTYPE", "IDEON_NSSERVER", "IDEON_NSSHARE", "IDEON_NSUSERNAME", "IDEON_NSPASSWORD", "IDEON_AIRPLAY", "IDEON_SPOTIFY", "IDEON_INIT",
+        "IDEON_MIXERTYPE", "IDEON_DOP", "IDEON_NSTYPE", "IDEON_NSSERVER", "IDEON_NSSHARE", "IDEON_NSUSERNAME", "IDEON_NSPASSWORD", "IDEON_AIRPLAY", "IDEON_ROON", "IDEON_SPOTIFY", "IDEON_INIT",
         "TIDAL_ENABLED", "TIDAL_TOKEN", "TIDAL_USERNAME", "TIDAL_PASSWORD", "TIDAL_AUDIOQUALITY", "MYMPD_COLSSEARCHTIDAL", "MYMPD_SEARCHTIDALTAGLIST", 0};
     const char** ptr = env_vars;
     while (*ptr != 0) {
@@ -533,6 +536,7 @@ void mympd_config_defaults(t_config *config) {
     config->ns_username = sdsempty();
     config->ns_password = sdsempty();
     config->airplay = false;
+    config->roon = false;
     config->spotify = false;
     config->tidal_enabled = false;
     config->tidal_token = sdsempty();

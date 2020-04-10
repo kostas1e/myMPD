@@ -153,6 +153,7 @@ typedef struct t_config {
     sds ns_username;
     sds ns_password;
     bool airplay;
+    bool roon;
     bool spotify;
     bool tidal_enabled;
     sds searchtidaltaglist;

@@ -132,7 +132,7 @@ static int ns_set(int type, const char *server, const char *share, const char *u
 }
 
 int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed,
-                       bool ns_changed, bool airplay_changed, bool spotify_changed)
+                       bool ns_changed, bool airplay_changed, bool roon_changed, bool spotify_changed)
 {
     // TODO: error checking, revert to old values on fail
     bool rc = true;
@@ -186,6 +186,20 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed,
         {
             syscmd("systemctl stop shairport-sync");
             syscmd("systemctl disable shairport-sync");
+        }
+    }
+
+    if (roon_changed == true)
+    {
+        if (mympd_state->roon == true)
+        {
+            syscmd("systemctl enable roonbridge");
+            syscmd("systemctl start roonbridge");
+        }
+        else
+        {
+            syscmd("systemctl stop roonbridge");
+            syscmd("systemctl disable roonbridge");
         }
     }
 

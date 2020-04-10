@@ -172,3 +172,7 @@ body.theme-maroon .bg-white {
 body.theme-maroon #modalInit img {
   filter: invert(100%);
 }
+
+#navbar-bottom > div.active {
+  border-bottom: 3px solid maroon;
+}

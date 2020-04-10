@@ -172,29 +172,34 @@ sds mpd_client_put_filesystem(t_config *config, t_mpd_state *mpd_state, sds buff
                     break;
                 }
                 case MPD_ENTITY_TYPE_PLAYLIST: {
-                    const struct mpd_playlist *pl = mpd_entity_get_playlist(entity);
-                    const char *entityName = mpd_playlist_get_path(pl);
-                    char *plName = strrchr(entityName, '/');
-                    if (plName != NULL) {
-                        plName++;
-                    } else {
-                        plName = (char *)entityName;
+                    if (strcmp(path, "/") == 0) {
+                        entity_count--; // ignore root pls
                     }
-                    if (strncmp(filter, "-", 1) == 0 || strncasecmp(filter, plName, 1) == 0 ||
-                        (strncmp(filter, "0", 1) == 0 && isalpha(*plName) == 0 ))
-                    {
-                        if (entities_returned++) {
-                            buffer = sdscat(buffer, ",");
+                    else {
+                        const struct mpd_playlist *pl = mpd_entity_get_playlist(entity);
+                        const char *entityName = mpd_playlist_get_path(pl);
+                        char *plName = strrchr(entityName, '/');
+                        if (plName != NULL) {
+                            plName++;
+                        } else {
+                            plName = (char *)entityName;
                         }
-                        bool smartpls = is_smartpls(config, mpd_state, plName);
-                        buffer = sdscatfmt(buffer, "{\"Type\": \"%s\",", (smartpls == true ? "smartpls" : "plist"));
-                        buffer = tojson_char(buffer, "uri", entityName, true);
-                        buffer = tojson_char(buffer, "name", plName, false);
-                        buffer = sdscat(buffer, "}");
-                    } else {
-                        entity_count--;
+                        if (strncmp(filter, "-", 1) == 0 || strncasecmp(filter, plName, 1) == 0 ||
+                            (strncmp(filter, "0", 1) == 0 && isalpha(*plName) == 0 ))
+                        {
+                            if (entities_returned++) {
+                                buffer = sdscat(buffer, ",");
+                            }
+                            bool smartpls = is_smartpls(config, mpd_state, plName);
+                            buffer = sdscatfmt(buffer, "{\"Type\": \"%s\",", (smartpls == true ? "smartpls" : "plist"));
+                            buffer = tojson_char(buffer, "uri", entityName, true);
+                            buffer = tojson_char(buffer, "name", plName, false);
+                            buffer = sdscat(buffer, "}");
+                        } else {
+                            entity_count--;
+                        }
+                        plName = NULL;
                     }
-                    plName = NULL;
                     break;
                 }
             }

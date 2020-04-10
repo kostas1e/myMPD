@@ -68,6 +68,10 @@ function fileformat(audioformat) {
 function scrollToPosY(pos) {
     document.body.scrollTop = pos; // For Safari
     document.documentElement.scrollTop = pos; // For Chrome, Firefox, IE and Opera
+
+    if (app.current.app === 'Playback') {
+        document.getElementById('BrowseCovergridBox').scrollTop = 0;
+    }
 }
 
 function doSetFilterLetter(x) {

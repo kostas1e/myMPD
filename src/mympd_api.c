@@ -145,16 +145,17 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
             bool mpd_conf_changed = false;
             bool ns_changed = false;
             bool airplay_changed = false;
+            bool roon_changed = false;
             bool spotify_changed = false;
             while ((h = json_next_key(request->data, sdslen(request->data), h, ".params", &key, &val)) != NULL) {
-                rc = mympd_api_settings_set(config, mympd_state, &key, &val, &mpd_conf_changed, &ns_changed, &airplay_changed, &spotify_changed);
+                rc = mympd_api_settings_set(config, mympd_state, &key, &val, &mpd_conf_changed, &ns_changed, &airplay_changed, &roon_changed, &spotify_changed);
                 if (rc == false) {
                     break;
                 }
             }
             if (rc == true) {
                 //set ideon settings
-                int dc = ideon_settings_set(mympd_state, mpd_conf_changed, ns_changed, airplay_changed, spotify_changed);
+                int dc = ideon_settings_set(mympd_state, mpd_conf_changed, ns_changed, airplay_changed, roon_changed, spotify_changed);
                 sdsrange(request->data, 0, -3);
                 request->data = sdscatfmt(request->data, ",\"dc\":%i}}", dc);
                 //forward request to mpd_client queue

@@ -755,7 +755,7 @@
                 <div class="dropdown-menu bg-lite-dark px-2" id="searchtags">
                 </div>
               </div>
-              <div class="input-group-prepend featAdvsearch">
+              <div class="input-group-prepend featAdvsearch hide">
                 <select class="form-control custom-select border-secondary rounded-0" id="searchMatch">
                   <option data-phrase="contains" value="contains"></option>
                   <option value="==">equal to</option>
@@ -901,7 +901,7 @@
   <footer class="footer">
     <nav class="navbar navbar-expand navbar-dark fixed-bottom bg-dark p-0">
       <div class="d-flex flex-fill navbar-nav" id="navbar-bottom">
-        <div id="navPlayback" class="nav-item flex-fill text-center">
+        <div id="navPlayback" class="nav-item flex-fill text-center active">
           <a data-title-phrase="Playback" data-href='{"cmd": "appGoto", "options": ["Playback"]}' class="nav-link" href="#">
             <span class="material-icons">play_arrow</span><span class="footerText" data-phrase="Playing now"></span>
           </a>
@@ -1639,8 +1639,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal" data-phrase="Cancel"></button> -->
-          <button type="button" class="btn btn-secondary" data-href='{"cmd": "cancelSettings", "options": []}' data-phrase="Cancel"></button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" data-phrase="Cancel"></button>
           <button id="btnApplySettings" type="button" class="btn btn-success" data-href='{"cmd": "saveSettings", "options": [false]}' data-phrase="Apply"></button>
           <button type="button" class="btn btn-success" data-href='{"cmd": "saveSettings", "options": [true]}' data-phrase="Save"></button>
         </div>
@@ -1696,7 +1695,7 @@
                 <h4 data-phrase="Your NAS Settings"></h4>
                 <!-- <div class="mb-3">If not applicable, ignore these</div> -->
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="selectNsType" data-phrase="Type"></label>
+                  <label class="col-sm-4 col-form-label" for="selectNsType" data-phrase="Select type"></label>
                   <div class="col-sm-8">
                     <select id="selectNsType" class="form-control custom-select border-secondary">
                       <option value="0" data-phrase="None (not applicable)"></option>
@@ -1744,6 +1743,12 @@
                   <label class="col-sm-4 col-form-label" for="btnAirplay" data-phrase="AirPlay"></label>
                   <div class="col-sm-8">
                     <button id="btnAirplay" class="btn btn-secondary btn-sm material-icons" data-href='{"cmd": "toggleBtnChk", "options": []}' type="button"></button>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="btnRoon" data-phrase="Roon"></label>
+                  <div class="col-sm-8">
+                    <button id="btnRoon" class="btn btn-secondary btn-sm material-icons" data-href='{"cmd": "toggleBtnChk", "options": []}' type="button"></button>
                   </div>
                 </div>
                 <div class="form-group row">
@@ -2316,7 +2321,7 @@
               <h4 data-phrase="Your NAS settings"></h4>
               <div class="mb-3">If not applicable, press&nbsp;<a href="#" data-href='{"cmd": "nextPrev", "options": [1]}'>Next</a></div>
               <div class="form-group row">
-                <label class="col-sm-4 col-form-label" for="selectNsTypeInit" data-phrase="Type"></label>
+                <label class="col-sm-4 col-form-label" for="selectNsTypeInit" data-phrase="Select type"></label>
                 <div class="col-sm-8">
                   <select id="selectNsTypeInit" class="form-control custom-select border-secondary">
                     <option value="0" selected="selected" data-phrase="None (not applicable)"></option>

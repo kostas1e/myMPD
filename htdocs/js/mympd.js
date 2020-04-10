@@ -702,10 +702,25 @@ function appInit() {
             event.stopPropagation();
             event.preventDefault();
         }
-        else if (event.key === 'Escape') {
-            cancelSettings();
-            event.stopPropagation();
-            event.preventDefault();
+    });
+
+    document.getElementById('modalSettings').addEventListener('hidden.bs.modal', function () {
+        let setTheme = settings.theme;
+        if (settings.theme !== document.getElementById('selectTheme').value) {
+            if (settings.theme === 'theme-autodetect') {
+                setTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
+            }
+
+            Object.keys(themes).forEach(function (key) {
+                if (key === setTheme) {
+                    domCache.body.classList.add(key);
+                }
+                else {
+                    domCache.body.classList.remove(key);
+                }
+            });
+            
+            document.getElementById('selectTheme').value = settings.theme;
         }
     });
 
@@ -977,6 +992,7 @@ function appInit() {
                     appendPlayQueue('song', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
                     break;
                 case 'plist':
+                case 'smartpls':
                     // appendQueue('plist', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
                     appendPlayQueue('plist', decodeURI(event.target.parentNode.getAttribute("data-uri")), event.target.parentNode.getAttribute("data-name"));
                     break;
