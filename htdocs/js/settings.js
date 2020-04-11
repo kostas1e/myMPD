@@ -727,6 +727,7 @@ function saveSettings(closeModal) {
     }
 
     if (formOK === true) {
+        resetTheme = false;
         let selectLocale = document.getElementById('selectLocale');
         let selectTheme = document.getElementById('selectTheme');
         sendAPI("MYMPD_API_SETTINGS_SET", {

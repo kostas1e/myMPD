@@ -173,6 +173,25 @@ body.theme-maroon #modalInit img {
   filter: invert(100%);
 }
 
-#navbar-bottom > div.active {
+body.theme-maroon #navbar-bottom > div.active {
   border-bottom: 3px solid maroon;
+}
+
+body.theme-maroon .navbar-dark .navbar-nav .nav-link {
+  color: rgba(255,255,255,.5) !important;
+}
+
+body.theme-maroon .navbar-dark .navbar-nav .nav-link:focus,
+body.theme-maroon .navbar-dark .navbar-nav .nav-link:hover {
+  color: rgba(255,255,255,.75) !important;
+}
+
+body.theme-maroon .navbar-dark .navbar-nav .active > .nav-link {
+  color: #fff !important;
+}
+
+body.theme-maroon .btn-secondary:hover {
+  color: #fff;
+  background-color: #5a6268;
+  border-color: #545b62;
 }

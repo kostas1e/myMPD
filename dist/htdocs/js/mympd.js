@@ -1513,6 +1513,7 @@ var locale = navigator.language || navigator.userLanguage;
 var ligatureMore = 'menu';
 
 var appScrollPos;
+var resetTheme = true;
 
 var app = {};
 app.apps = {
@@ -2184,22 +2185,27 @@ function appInit() {
     });
 
     document.getElementById('modalSettings').addEventListener('hidden.bs.modal', function () {
-        let setTheme = settings.theme;
-        if (settings.theme !== document.getElementById('selectTheme').value) {
-            if (settings.theme === 'theme-autodetect') {
-                setTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
-            }
+        if (resetTheme === true) {
+            let setTheme = settings.theme;
+            if (settings.theme !== document.getElementById('selectTheme').value) {
+                if (settings.theme === 'theme-autodetect') {
+                    setTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
+                }
 
-            Object.keys(themes).forEach(function (key) {
-                if (key === setTheme) {
-                    domCache.body.classList.add(key);
-                }
-                else {
-                    domCache.body.classList.remove(key);
-                }
-            });
-            
-            document.getElementById('selectTheme').value = settings.theme;
+                Object.keys(themes).forEach(function (key) {
+                    if (key === setTheme) {
+                        domCache.body.classList.add(key);
+                    }
+                    else {
+                        domCache.body.classList.remove(key);
+                    }
+                });
+                
+                document.getElementById('selectTheme').value = settings.theme;
+            }
+        }
+        else {
+            resetTheme = true;
         }
     });
 
@@ -5560,6 +5566,7 @@ function saveSettings(closeModal) {
     }
 
     if (formOK === true) {
+        resetTheme = false;
         let selectLocale = document.getElementById('selectLocale');
         let selectTheme = document.getElementById('selectTheme');
         sendAPI("MYMPD_API_SETTINGS_SET", {
