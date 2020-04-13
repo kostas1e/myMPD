@@ -269,13 +269,14 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
             break;
         }
         case MG_EV_WEBSOCKET_HANDSHAKE_DONE: {
-             LOG_VERBOSE("New Websocket connection established (%d)", (intptr_t)nc->user_data);
-             sds response = jsonrpc_start_notify(sdsempty(), "welcome");
-             response = tojson_char(response, "mympdVersion", MYMPD_VERSION, false);
-             response = jsonrpc_end_notify(response);
-             mg_send_websocket_frame(nc, WEBSOCKET_OP_TEXT, response, sdslen(response));
-             sdsfree(response);
-             break;
+            LOG_VERBOSE("New Websocket connection established (%d)", (intptr_t)nc->user_data);
+            sds response = jsonrpc_start_notify(sdsempty(), "welcome");
+            // response = tojson_char(response, "mympdVersion", MYMPD_VERSION, false);
+            response = tojson_char(response, "ideonVersion", IDEON_VERSION, false);
+            response = jsonrpc_end_notify(response);
+            mg_send_websocket_frame(nc, WEBSOCKET_OP_TEXT, response, sdslen(response));
+            sdsfree(response);
+            break;
         }
         case MG_EV_HTTP_REQUEST: {
             struct http_message *hm = (struct http_message *) ev_data;

@@ -254,10 +254,28 @@ static sds get_version(sds version)
     return version;
 }
 
+static bool validate_version(const char *data)
+{
+    bool rc = validate_string_not_empty(data);
+    if (rc == true)
+    {
+        char *p_end;
+        if (strtol(data, &p_end, 10) == 0)
+        {
+            rc = false;
+        }
+    }
+    return rc;
+}
+
 sds ideon_check_for_updates(sds buffer, sds method, int request_id)
 {
     sds latest_version = get_version(sdsempty());
     sdstrim(latest_version, " \n");
+    if (validate_version(latest_version) == false)
+    {
+        sdsreplace(latest_version, sdsempty());
+    }
     bool updates_available;
     if (sdslen(latest_version) > 0)
     {
@@ -280,15 +298,18 @@ sds ideon_check_for_updates(sds buffer, sds method, int request_id)
 
 sds ideon_install_updates(sds buffer, sds method, int request_id)
 {
-    bool restart_system = syscmd("pacman -Syu");
+    bool pacman = syscmd("pacman -Syu --noconfirm");
+    bool reboot = false;
 
-    if (restart_system == true) {
-        syscmd("reboot");
+    if (pacman == true)
+    {
+        reboot = syscmd("reboot");
     }
 
     buffer = jsonrpc_start_result(buffer, method, request_id);
     buffer = sdscat(buffer, ",");
-    buffer = tojson_bool(buffer, "restartSystem", restart_system, false);
+    buffer = tojson_bool(buffer, "pacman", pacman, true);
+    buffer = tojson_bool(buffer, "reboot", reboot, false);
     buffer = jsonrpc_end_result(buffer);
     return buffer;
 }

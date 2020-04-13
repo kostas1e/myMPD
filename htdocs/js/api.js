@@ -91,6 +91,11 @@ function webSocketConnect() {
             var obj;
             try {
                 obj = JSON.parse(msg.data);
+                if (obj.method === 'welcome' && document.getElementById('currentVersion').innerText !== '') {
+                    if (obj.params.ideonVersion !== document.getElementById('currentVersion').innerText) {
+                        clearAndReload();
+                    }
+                }
                 logDebug('Websocket notification: ' + JSON.stringify(obj));
             }
             catch (error) {

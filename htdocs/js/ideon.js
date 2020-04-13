@@ -8,23 +8,23 @@ function checkForUpdates() {
 
 function parseCheck(obj) {
     document.getElementById('currentVersion').innerText = obj.result.currentVersion;
-    if (obj.result.latestVersion !== undefined) {
-        document.getElementById('latestVersion').innerText = obj.result.latestVersion;
-        document.getElementById('latestVersion').parentNode.classList.remove('hide');
-    }
-    else {
-        document.getElementById('latestVersion').parentNode.classList.add('hide');
-    }
+    document.getElementById('latestVersion').innerText = obj.result.latestVersion;
 
-    if (obj.result.updatesAvailable) {
-        document.getElementById('updateMsg').innerText = 'New version available';
-        document.getElementById('btnInstallUpdates').classList.remove('hide');
-        document.getElementById('restartMsg').classList.remove('hide');
+    if (obj.result.latestVersion !== '') {
+        if (obj.result.updatesAvailable === true) {
+            document.getElementById('lblInstallUpdates').innerText = 'New version available';
+            document.getElementById('btnInstallUpdates').classList.remove('hide');
+        }
+        else {
+            document.getElementById('lblInstallUpdates').innerText = 'System is up to date';
+            document.getElementById('btnInstallUpdates').classList.add('hide');
+        }
+        document.getElementById('updateMsg').innerText = '';
     }
     else {
-        document.getElementById('updateMsg').innerText = 'System is up to date';
+        document.getElementById('lblInstallUpdates').innerText = '';
         document.getElementById('btnInstallUpdates').classList.add('hide');
-        document.getElementById('restartMsg').classList.add('hide');
+        document.getElementById('updateMsg').innerText = 'Cannot get latest version, please try again later';
     }
 
     btnWaiting(document.getElementById('btnCheckForUpdates'), false);
@@ -33,12 +33,20 @@ function parseCheck(obj) {
 function installUpdates() {
     sendAPI("MYMPD_API_INSTALL_UPDATES", {}, parseInstall);
 
+    document.getElementById('updateMsg').innerText = 'System will automatically reboot after installation';
+
     btnWaiting(document.getElementById('btnInstallUpdates'), true);
 }
 
 function parseInstall(obj) {
-    if (!obj.result.restartSystem) {
-        document.getElementById('restartMsg').innerText = 'An error occured, please try again.';
+    if (obj.result.pacman === false) {
+        document.getElementById('updateMsg').innerText = 'Update error, please try again later';
+    }
+    else if (obj.result.reboot === false) {
+        document.getElementById('updateMsg').innerText = 'Reboot error, please reboot manually';
+    }
+    else {
+        document.getElementById('updateMsg').innerText = '';
     }
 
     btnWaiting(document.getElementById('btnInstallUpdates'), false);
