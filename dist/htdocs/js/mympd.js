@@ -981,11 +981,6 @@ function saveIdeonSettings() {
     let inputNsPassword = document.getElementById('inputNsPassword');
 
     if (selectNsTypeValue !== '0') {
-        /* if (inputNsServer.value.indexOf('/') !== 0) {
-            if (!validateHost(inputNsServer)) {
-                formOK = false;
-            }
-        } */
         if (!validateIPAddress(inputNsServer)) {
             formOK = false;
         }
@@ -1047,11 +1042,11 @@ function checkInit() {
     if (settings.init === false) {
         getServerinfo();
 
-        document.getElementById('selectLocaleInit').innerHTML = document.getElementById('selectLocale').innerHTML;
-        document.getElementById('selectThemeInit').innerHTML = document.getElementById('selectTheme').innerHTML;
-        document.getElementById('selectThemeInit').value = settings.theme;
+        document.getElementById('selectLocale1').innerHTML = document.getElementById('selectLocale').innerHTML;
+        document.getElementById('selectTheme1').innerHTML = document.getElementById('selectTheme').innerHTML;
+        document.getElementById('selectTheme1').value = settings.theme;
     
-        document.getElementById('selectThemeInit').addEventListener('change', function () {
+        document.getElementById('selectTheme1').addEventListener('change', function () {
             let value = this.options[this.selectedIndex].value;
             if (value === 'theme-autodetect') {
                 value = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
@@ -1067,31 +1062,33 @@ function checkInit() {
             });
         });
 
-        document.getElementById('selectNsTypeInit').addEventListener('change', function () {
+        document.getElementById('selectNsType1').addEventListener('change', function () {
             let value = this.options[this.selectedIndex].value;
             if (value === '0') {
-                document.getElementById('inputNsServerInit').setAttribute('disabled', 'disabled');
-                document.getElementById('inputNsShareInit').setAttribute('disabled', 'disabled');
-                document.getElementById('inputNsUsernameInit').setAttribute('disabled', 'disabled');
-                document.getElementById('inputNsPasswordInit').setAttribute('disabled', 'disabled');
-                document.getElementById('inputNsServerInit').value = '';
-                document.getElementById('inputNsShareInit').value = '';
-                document.getElementById('inputNsUsernameInit').value = '';
-                document.getElementById('inputNsPasswordInit').value = '';
-            }
-            else if (value === '1') {
-                document.getElementById('inputNsServerInit').removeAttribute('disabled');
-                document.getElementById('inputNsShareInit').removeAttribute('disabled');
-                document.getElementById('inputNsUsernameInit').setAttribute('disabled', 'disabled');
-                document.getElementById('inputNsPasswordInit').setAttribute('disabled', 'disabled');
-                document.getElementById('inputNsUsernameInit').value = '';
-                document.getElementById('inputNsPasswordInit').value = '';
+                document.getElementById('nsServerShare1').classList.add('hide');
+                document.getElementById('sambaVersion1').classList.add('hide');
+                document.getElementById('nsCredentials1').classList.add('hide');
+                document.getElementById('inputNsServer1').value = '';
+                document.getElementById('inputNsShare1').value = '';
+                document.getElementById('inputNsUsername1').value = '';
+                document.getElementById('inputNsPassword1').value = '';
             }
             else if (value === '2') {
-                document.getElementById('inputNsServerInit').removeAttribute('disabled');
-                document.getElementById('inputNsShareInit').removeAttribute('disabled');
-                document.getElementById('inputNsUsernameInit').removeAttribute('disabled');
-                document.getElementById('inputNsPasswordInit').removeAttribute('disabled');
+                document.getElementById('nsServerShare1').classList.remove('hide');
+                document.getElementById('sambaVersion1').classList.remove('hide');
+                document.getElementById('nsCredentials1').classList.remove('hide');
+            }
+            else {
+                document.getElementById('nsServerShare1').classList.remove('hide');
+                if (value === '1') {
+                    document.getElementById('sambaVersion1').classList.remove('hide');
+                }
+                else {
+                    document.getElementById('sambaVersion1').classList.add('hide');
+                }
+                document.getElementById('nsCredentials1').classList.add('hide');
+                document.getElementById('inputNsUsername1').value = '';
+                document.getElementById('inputNsPassword1').value = '';
             }
         });
 
@@ -1133,18 +1130,16 @@ function nextPrev(n) {
 function validateForm() {
     let formOK = true;
 
-    let selectNsType = document.getElementById('selectNsTypeInit');
+    let selectNsType = document.getElementById('selectNsType1');
     let selectNsTypeValue = selectNsType.options[selectNsType.selectedIndex].value;
-    let inputNsServer = document.getElementById('inputNsServerInit');
-    let inputNsShare = document.getElementById('inputNsShareInit');
-    let inputNsUsername = document.getElementById('inputNsUsernameInit');
-    let inputNsPassword = document.getElementById('inputNsPasswordInit');
+    let inputNsServer = document.getElementById('inputNsServer1');
+    let inputNsShare = document.getElementById('inputNsShare1');
+    let inputNsUsername = document.getElementById('inputNsUsername1');
+    let inputNsPassword = document.getElementById('inputNsPassword1');
 
     if (selectNsTypeValue !== '0') {
-        if (inputNsServer.value.indexOf('/') !== 0) {
-            if (!validateHost(inputNsServer)) {
-                formOK = false;
-            }
+        if (!validateIPAddress(inputNsServer)) {
+            formOK = false;
         }
         if (!validatePath(inputNsShare)) {
             formOK = false;
@@ -1160,17 +1155,19 @@ function validateForm() {
 }
 
 function saveInitSettings() {
-    let selectLocale = document.getElementById('selectLocaleInit');
-    let selectTheme = document.getElementById('selectThemeInit');
-    let selectNsType = document.getElementById('selectNsTypeInit');
+    let selectLocale = document.getElementById('selectLocale1');
+    let selectTheme = document.getElementById('selectTheme1');
+    let selectNsType = document.getElementById('selectNsType1');
+    let selectSambaVersion = document.getElementById('selectSambaVersion1');
     sendAPI("MYMPD_API_SETTINGS_SET", {
         "locale": selectLocale.options[selectLocale.selectedIndex].value,
         "theme": selectTheme.options[selectTheme.selectedIndex].value,
         "nsType": parseInt(selectNsType.options[selectNsType.selectedIndex].value),
-        "nsServer": document.getElementById('inputNsServerInit').value,
-        "nsShare": document.getElementById('inputNsShareInit').value,
-        "nsUsername": document.getElementById('inputNsUsernameInit').value,
-        "nsPassword": document.getElementById('inputNsPasswordInit').value,
+        "nsServer": document.getElementById('inputNsServer1').value,
+        "nsShare": document.getElementById('inputNsShare1').value,
+        "sambaVersion": selectSambaVersion.options[selectSambaVersion.selectedIndex].value,
+        "nsUsername": document.getElementById('inputNsUsername1').value,
+        "nsPassword": document.getElementById('inputNsPassword1').value,
         "init": true
     }, getSettings);
     modalInit.hide();
@@ -3031,7 +3028,7 @@ function appInit() {
 
     checkInit(); // first run check
     updateDBstats(); // update database stats (songs, playtime)
-    checkForUpdates(); // check for updates on launch
+    // checkForUpdates(); // check for updates on launch
 }
 
 // Init app
@@ -6150,7 +6147,7 @@ function getServerinfo() {
         if (ajaxRequest.readyState === 4) {
             let obj = JSON.parse(ajaxRequest.responseText);
             document.getElementById('wsIP').innerText = obj.result.ip;
-            document.getElementById('wsIPInit').innerText = obj.result.ip;
+            document.getElementById('wsIP1').innerText = obj.result.ip;
             document.getElementById('wsMongooseVersion').innerText = obj.result.version;
         }
     };

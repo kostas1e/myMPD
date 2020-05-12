@@ -766,10 +766,6 @@ function appInit() {
             document.getElementById('nsServerShare').classList.add('hide');
             document.getElementById('sambaVersion').classList.add('hide');
             document.getElementById('nsCredentials').classList.add('hide');
-            /* document.getElementById('inputNsServer').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNsShare').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled'); */
             document.getElementById('inputNsServer').value = '';
             document.getElementById('inputNsShare').value = '';
             document.getElementById('inputNsUsername').value = '';
@@ -779,12 +775,6 @@ function appInit() {
             document.getElementById('nsServerShare').classList.remove('hide');
             document.getElementById('sambaVersion').classList.remove('hide');
             document.getElementById('nsCredentials').classList.remove('hide');
-            /* document.getElementById('inputNsServer').removeAttribute('disabled');
-            document.getElementById('inputNsShare').removeAttribute('disabled');
-            document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNsUsername').value = '';
-            document.getElementById('inputNsPassword').value = ''; */
         }
         else {
             document.getElementById('nsServerShare').classList.remove('hide');
@@ -795,11 +785,6 @@ function appInit() {
                 document.getElementById('sambaVersion').classList.add('hide');
             }
             document.getElementById('nsCredentials').classList.add('hide');
-            /* document.getElementById('inputNsServer').removeAttribute('disabled');
-            document.getElementById('inputNsShare').removeAttribute('disabled');
-            document.getElementById('inputNsUsername').removeAttribute('disabled');
-            document.getElementById('inputNsPassword').removeAttribute('disabled'); */
-            // document.getElementById('inputNsUsername').value = 'guest';
             document.getElementById('inputNsUsername').value = '';
             document.getElementById('inputNsPassword').value = '';
         }
@@ -1511,7 +1496,7 @@ function appInit() {
 
     checkInit(); // first run check
     updateDBstats(); // update database stats (songs, playtime)
-    checkForUpdates(); // check for updates on launch
+    // checkForUpdates(); // check for updates on launch
 }
 
 // Init app

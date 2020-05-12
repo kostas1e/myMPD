@@ -1711,7 +1711,6 @@
                     <label class="col-sm-4 col-form-label" for="inputNsServer" data-phrase="NAS IP address"></label>
                     <div class="col-sm-8">
                       <input id="inputNsServer" class="form-control border-secondary" type="text" data-placeholder-phrase="NAS IP address">
-                      <!-- <div class="invalid-feedback" data-phrase="Invalid server"></div> -->
                       <div class="invalid-feedback" data-phrase="Invalid IP address"></div>
                     </div>
                   </div>
@@ -2318,17 +2317,17 @@
             <div class="tab">
               <h4 data-phrase="Select language and skin"></h4>
               <div class="form-group row">
-                <label class="col-sm-4 col-form-label" for="selectLocaleInit" data-phrase="Language"></label>
+                <label class="col-sm-4 col-form-label" for="selectLocale1" data-phrase="Language"></label>
                 <div class="col-sm-8">
-                  <select id="selectLocaleInit" class="form-control custom-select border-secondary">
+                  <select id="selectLocale1" class="form-control custom-select border-secondary">
                     <option value="default" selected="selected" data-phrase="Browser default"></option>
                   </select>
                 </div>
               </div>
               <div class="form-group row">
-                <label class="col-sm-4 col-form-label" for="selectThemeInit" data-phrase="Skin color"></label>
+                <label class="col-sm-4 col-form-label" for="selectTheme1" data-phrase="Skin color"></label>
                 <div class="col-sm-8">
-                  <select id="selectThemeInit" class="form-control custom-select border-secondary">
+                  <select id="selectTheme1" class="form-control custom-select border-secondary">
                   </select>
                 </div>
               </div>
@@ -2338,42 +2337,57 @@
               <h4 data-phrase="Your NAS settings"></h4>
               <div class="mb-3">If not applicable, press&nbsp;<a href="#" data-href='{"cmd": "nextPrev", "options": [1]}'>Next</a></div>
               <div class="form-group row">
-                <label class="col-sm-4 col-form-label" for="selectNsTypeInit" data-phrase="Select type"></label>
+                <label class="col-sm-4 col-form-label" for="selectNsType1" data-phrase="Select type"></label>
                 <div class="col-sm-8">
-                  <select id="selectNsTypeInit" class="form-control custom-select border-secondary">
+                  <select id="selectNsType1" class="form-control custom-select border-secondary">
                     <option value="0" selected="selected" data-phrase="None (not applicable)"></option>
                     <option value="1" data-phrase="Samba A (guest access)"></option>
                     <option value="2" data-phrase="Samba B (access with credentials)"></option>
+                    <option value="3" data-phrase="NFS"></option>
                   </select>
-                  <small class="form-text text-muted">Select Samba A for guest access or B for access with credentials</small>
                 </div>
               </div>
-              <div class="form-group row">
-                <label class="col-sm-4 col-form-label" for="inputNsServerInit" data-phrase="NAS IP address"></label>
-                <div class="col-sm-8">
-                  <input disabled id="inputNsServerInit" class="form-control border-secondary" type="text" data-placeholder-phrase="NAS IP address or name">
-                  <div class="invalid-feedback" data-phrase="Invalid server"></div>
+              <div id="nsServerShare1" class="hide">
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="inputNsServer1" data-phrase="NAS IP address"></label>
+                  <div class="col-sm-8">
+                    <input id="inputNsServer1" class="form-control border-secondary" type="text" data-placeholder-phrase="NAS IP address">
+                    <div class="invalid-feedback" data-phrase="Invalid IP address"></div>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="inputNsShare1" data-phrase="Path"></label>
+                  <div class="col-sm-8">
+                    <input id="inputNsShare1" class="form-control border-secondary" type="text" data-placeholder-phrase="Music folder path in NAS (e.g. /music)">
+                    <div class="invalid-feedback" data-phrase="Path must start with a leading slash"></div>
+                  </div>
                 </div>
               </div>
-              <div class="form-group row">
-                <label class="col-sm-4 col-form-label" for="inputNsShareInit" data-phrase="Path"></label>
+              <div id="sambaVersion1" class="form-group row hide">
+                <label class="col-sm-4 col-form-label" for="selectSambaVersion1" data-phrase="Select samba version"></label>
                 <div class="col-sm-8">
-                  <input disabled id="inputNsShareInit" class="form-control border-secondary" type="text" data-placeholder-phrase="Music folder path in NAS (e.g. /music)">
-                  <div class="invalid-feedback" data-phrase="Invalid directory"></div>
+                  <select id="selectSambaVersion1" class="form-control custom-select border-secondary">
+                    <option value="vers=1.0" data-phrase="1.0"></option>
+                    <option value="vers=2.0" data-phrase="2.0"></option>
+                    <option value="vers=2.1" data-phrase="2.1"></option>
+                    <option value="vers=3.0" selected="selected" data-phrase="3.0"></option>
+                  </select>
                 </div>
               </div>
-              <div class="form-group row">
-                <label class="col-sm-4 col-form-label" for="inputNsUsernameInit" data-phrase="Username"></label>
-                <div class="col-sm-8">
-                  <input disabled id="inputNsUsernameInit" class="form-control border-secondary" type="text" data-placeholder-phrase="Only for Samba B option">
-                  <div class="invalid-feedback" data-phrase="Username cannot be blank"></div>
+              <div id="nsCredentials1" class="hide">
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="inputNsUsername1" data-phrase="Username"></label>
+                  <div class="col-sm-8">
+                    <input id="inputNsUsername1" class="form-control border-secondary" type="text" data-placeholder-phrase="Username">
+                    <div class="invalid-feedback" data-phrase="Username cannot be blank"></div>
+                  </div>
                 </div>
-              </div>
-              <div class="form-group row">
-                <label class="col-sm-4 col-form-label" for="inputNsPasswordInit" data-phrase="Password"></label>
-                <div class="col-sm-8">
-                  <input disabled id="inputNsPasswordInit" class="form-control border-secondary" type="password" data-placeholder-phrase="Only for Samba B option">
-                  <div class="invalid-feedback" data-phrase="Password cannot be blank"></div>
+                <div class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="inputNsPassword1" data-phrase="Password"></label>
+                  <div class="col-sm-8">
+                    <input id="inputNsPassword1" class="form-control border-secondary" type="password" data-placeholder-phrase="Password">
+                    <div class="invalid-feedback" data-phrase="Password cannot be blank"></div>
+                  </div>
                 </div>
               </div>
               <small>Changes here will cause a system reboot</small>
@@ -2382,7 +2396,7 @@
             <div class="tab">
               <h4 data-phrase="Operating Info"></h4>
               <ul>
-                <li>Use this IP address : <span id="wsIPInit"></span> to launch the Ideon app on any browser, including mobile devices</li>
+                <li>Use this IP address : <span id="wsIP1"></span> to launch the Ideon app on any browser, including mobile devices</li>
                 <li>For extra convenience add the Ideon app using your browser's <i>add to home screen</i> feature</li>
                 <li>Your device's IP address can be found any time in: menu->about</li>
               </ul>

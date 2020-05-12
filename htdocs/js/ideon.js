@@ -67,21 +67,13 @@ function parseIdeonSettings() {
         document.getElementById('nsServerShare').classList.add('hide');
         document.getElementById('sambaVersion').classList.add('hide');
         document.getElementById('nsCredentials').classList.add('hide');
-        /* document.getElementById('inputNsServer').setAttribute('disabled', 'disabled');
-        document.getElementById('inputNsShare').setAttribute('disabled', 'disabled');
-        document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
-        document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled'); */
     }
     else if (settings.nsType === 2) {
         document.getElementById('nsServerShare').classList.remove('hide');
         document.getElementById('sambaVersion').classList.remove('hide');
         document.getElementById('nsCredentials').classList.remove('hide');
-        /* document.getElementById('inputNsServer').removeAttribute('disabled');
-        document.getElementById('inputNsShare').removeAttribute('disabled');
-        document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
-        document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled'); */
     }
-    else { // 1 or 3
+    else {
         document.getElementById('nsServerShare').classList.remove('hide');
         if (settings.nsType === 1) {
             document.getElementById('sambaVersion').classList.remove('hide');
@@ -90,10 +82,6 @@ function parseIdeonSettings() {
             document.getElementById('sambaVersion').classList.add('hide');
         }
         document.getElementById('nsCredentials').classList.add('hide');
-        /* document.getElementById('inputNsServer').removeAttribute('disabled');
-        document.getElementById('inputNsShare').removeAttribute('disabled');
-        document.getElementById('inputNsUsername').removeAttribute('disabled');
-        document.getElementById('inputNsPassword').removeAttribute('disabled'); */
     }
 
     toggleBtnChk('btnAirplay', settings.airplay);
@@ -116,11 +104,6 @@ function saveIdeonSettings() {
     let inputNsPassword = document.getElementById('inputNsPassword');
 
     if (selectNsTypeValue !== '0') {
-        /* if (inputNsServer.value.indexOf('/') !== 0) {
-            if (!validateHost(inputNsServer)) {
-                formOK = false;
-            }
-        } */
         if (!validateIPAddress(inputNsServer)) {
             formOK = false;
         }
