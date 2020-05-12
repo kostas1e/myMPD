@@ -46,7 +46,7 @@ function validatePath(el) {
         el.classList.add('is-invalid');
         return false;
     }
-    else if (el.value.match(/^\/[/.\w-]+$/) !== null) {
+    else if (el.value.match(/^\/[\/.\w-]+$/) !== null) {
         el.classList.remove('is-invalid');
         return true;
     }
@@ -117,6 +117,17 @@ function validateStream(el) {
 
 function validateHost(el) {
     if (el.value.match(/^([\w-.]+)$/) !== null) {
+        el.classList.remove('is-invalid');
+        return true;
+    }
+    else {
+        el.classList.add('is-invalid');
+        return false;
+    }
+}
+
+function validateIPAddress(el) {
+    if (el.value.match(/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/) !== null) {
         el.classList.remove('is-invalid');
         return true;
     }

@@ -793,3 +793,10 @@ div#playDropdown .row {
 #tabPlaybackSettings .btn-group {
     float: right !important;
 }
+
+.warningIcon {
+  float: left;
+  font-size: 3rem;
+  margin-right: 1.25rem;
+  margin-bottom: 1.25rem;
+}

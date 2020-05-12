@@ -59,26 +59,41 @@ function parseIdeonSettings() {
     document.getElementById('selectNsType').value = settings.nsType;
     document.getElementById('inputNsServer').value = settings.nsServer;
     document.getElementById('inputNsShare').value = settings.nsShare;
+    document.getElementById('selectSambaVersion').value = settings.sambaVersion;
     document.getElementById('inputNsUsername').value = settings.nsUsername;
     document.getElementById('inputNsPassword').value = settings.nsPassword;
 
     if (settings.nsType === 0) {
-        document.getElementById('inputNsServer').setAttribute('disabled', 'disabled');
+        document.getElementById('nsServerShare').classList.add('hide');
+        document.getElementById('sambaVersion').classList.add('hide');
+        document.getElementById('nsCredentials').classList.add('hide');
+        /* document.getElementById('inputNsServer').setAttribute('disabled', 'disabled');
         document.getElementById('inputNsShare').setAttribute('disabled', 'disabled');
         document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
-        document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
-    }
-    else if (settings.nsType === 1) {
-        document.getElementById('inputNsServer').removeAttribute('disabled');
-        document.getElementById('inputNsShare').removeAttribute('disabled');
-        document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
-        document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
+        document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled'); */
     }
     else if (settings.nsType === 2) {
-        document.getElementById('inputNsServer').removeAttribute('disabled');
+        document.getElementById('nsServerShare').classList.remove('hide');
+        document.getElementById('sambaVersion').classList.remove('hide');
+        document.getElementById('nsCredentials').classList.remove('hide');
+        /* document.getElementById('inputNsServer').removeAttribute('disabled');
+        document.getElementById('inputNsShare').removeAttribute('disabled');
+        document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
+        document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled'); */
+    }
+    else { // 1 or 3
+        document.getElementById('nsServerShare').classList.remove('hide');
+        if (settings.nsType === 1) {
+            document.getElementById('sambaVersion').classList.remove('hide');
+        }
+        else {
+            document.getElementById('sambaVersion').classList.add('hide');
+        }
+        document.getElementById('nsCredentials').classList.add('hide');
+        /* document.getElementById('inputNsServer').removeAttribute('disabled');
         document.getElementById('inputNsShare').removeAttribute('disabled');
         document.getElementById('inputNsUsername').removeAttribute('disabled');
-        document.getElementById('inputNsPassword').removeAttribute('disabled');
+        document.getElementById('inputNsPassword').removeAttribute('disabled'); */
     }
 
     toggleBtnChk('btnAirplay', settings.airplay);
@@ -101,17 +116,19 @@ function saveIdeonSettings() {
     let inputNsPassword = document.getElementById('inputNsPassword');
 
     if (selectNsTypeValue !== '0') {
-        if (inputNsServer.value.indexOf('/') !== 0) {
+        /* if (inputNsServer.value.indexOf('/') !== 0) {
             if (!validateHost(inputNsServer)) {
                 formOK = false;
             }
+        } */
+        if (!validateIPAddress(inputNsServer)) {
+            formOK = false;
         }
         if (!validatePath(inputNsShare)) {
             formOK = false;
         }
     }
     if (selectNsTypeValue === '2') {
-
         if (!validateNotBlank(inputNsUsername) || !validateNotBlank(inputNsPassword)) {
             formOK = false;
         }
@@ -127,6 +144,7 @@ function saveIdeonSettings() {
 
     if (formOK === true) {
         let selectMixerType = document.getElementById('selectMixerType');
+        let selectSambaVersion = document.getElementById('selectSambaVersion');
         let selectTidalAudioquality = document.getElementById('selectTidalAudioquality');
         sendAPI("MYMPD_API_SETTINGS_SET", {
             "mixerType": selectMixerType.options[selectMixerType.selectedIndex].value,
@@ -134,6 +152,7 @@ function saveIdeonSettings() {
             "nsType": parseInt(selectNsTypeValue),
             "nsServer": inputNsServer.value,
             "nsShare": inputNsShare.value,
+            "sambaVersion": selectSambaVersion.options[selectSambaVersion.selectedIndex].value,
             "nsUsername": inputNsUsername.value,
             "nsPassword": inputNsPassword.value,
             "airplay": (document.getElementById('btnAirplay').classList.contains('active') ? true : false),
@@ -146,4 +165,13 @@ function saveIdeonSettings() {
         }, getSettings);
         modalIdeon.hide();
     }
+}
+
+function confirmReset() {
+    sendAPI("MYMPD_API_SETTINGS_RESET", {}, closeReset);
+}
+
+function closeReset() {
+    resetFlag = false;
+    modalResetSettings.hide();
 }

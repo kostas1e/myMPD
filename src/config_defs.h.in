@@ -150,6 +150,7 @@ typedef struct t_config {
     int ns_type;
     sds ns_server;
     sds ns_share;
+    sds samba_version;
     sds ns_username;
     sds ns_password;
     bool airplay;

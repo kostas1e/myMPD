@@ -879,13 +879,12 @@ function parseCheck(obj) {
         if (obj.result.updatesAvailable === true) {
             document.getElementById('lblInstallUpdates').innerText = 'New version available';
             document.getElementById('btnInstallUpdates').classList.remove('hide');
-            document.getElementById('updateMsg').innerText = 'System will automatically reboot after installation';
         }
         else {
             document.getElementById('lblInstallUpdates').innerText = 'System is up to date';
             document.getElementById('btnInstallUpdates').classList.add('hide');
-            document.getElementById('updateMsg').innerText = '';
         }
+        document.getElementById('updateMsg').innerText = '';
     }
     else {
         document.getElementById('lblInstallUpdates').innerText = '';
@@ -898,6 +897,8 @@ function parseCheck(obj) {
 
 function installUpdates() {
     sendAPI("MYMPD_API_INSTALL_UPDATES", {}, parseInstall);
+
+    document.getElementById('updateMsg').innerText = 'System will automatically reboot after installation';
 
     btnWaiting(document.getElementById('btnInstallUpdates'), true);
 }
@@ -923,26 +924,41 @@ function parseIdeonSettings() {
     document.getElementById('selectNsType').value = settings.nsType;
     document.getElementById('inputNsServer').value = settings.nsServer;
     document.getElementById('inputNsShare').value = settings.nsShare;
+    document.getElementById('selectSambaVersion').value = settings.sambaVersion;
     document.getElementById('inputNsUsername').value = settings.nsUsername;
     document.getElementById('inputNsPassword').value = settings.nsPassword;
 
     if (settings.nsType === 0) {
-        document.getElementById('inputNsServer').setAttribute('disabled', 'disabled');
+        document.getElementById('nsServerShare').classList.add('hide');
+        document.getElementById('sambaVersion').classList.add('hide');
+        document.getElementById('nsCredentials').classList.add('hide');
+        /* document.getElementById('inputNsServer').setAttribute('disabled', 'disabled');
         document.getElementById('inputNsShare').setAttribute('disabled', 'disabled');
         document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
-        document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
-    }
-    else if (settings.nsType === 1) {
-        document.getElementById('inputNsServer').removeAttribute('disabled');
-        document.getElementById('inputNsShare').removeAttribute('disabled');
-        document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
-        document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
+        document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled'); */
     }
     else if (settings.nsType === 2) {
-        document.getElementById('inputNsServer').removeAttribute('disabled');
+        document.getElementById('nsServerShare').classList.remove('hide');
+        document.getElementById('sambaVersion').classList.remove('hide');
+        document.getElementById('nsCredentials').classList.remove('hide');
+        /* document.getElementById('inputNsServer').removeAttribute('disabled');
+        document.getElementById('inputNsShare').removeAttribute('disabled');
+        document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
+        document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled'); */
+    }
+    else { // 1 or 3
+        document.getElementById('nsServerShare').classList.remove('hide');
+        if (settings.nsType === 1) {
+            document.getElementById('sambaVersion').classList.remove('hide');
+        }
+        else {
+            document.getElementById('sambaVersion').classList.add('hide');
+        }
+        document.getElementById('nsCredentials').classList.add('hide');
+        /* document.getElementById('inputNsServer').removeAttribute('disabled');
         document.getElementById('inputNsShare').removeAttribute('disabled');
         document.getElementById('inputNsUsername').removeAttribute('disabled');
-        document.getElementById('inputNsPassword').removeAttribute('disabled');
+        document.getElementById('inputNsPassword').removeAttribute('disabled'); */
     }
 
     toggleBtnChk('btnAirplay', settings.airplay);
@@ -965,17 +981,19 @@ function saveIdeonSettings() {
     let inputNsPassword = document.getElementById('inputNsPassword');
 
     if (selectNsTypeValue !== '0') {
-        if (inputNsServer.value.indexOf('/') !== 0) {
+        /* if (inputNsServer.value.indexOf('/') !== 0) {
             if (!validateHost(inputNsServer)) {
                 formOK = false;
             }
+        } */
+        if (!validateIPAddress(inputNsServer)) {
+            formOK = false;
         }
         if (!validatePath(inputNsShare)) {
             formOK = false;
         }
     }
     if (selectNsTypeValue === '2') {
-
         if (!validateNotBlank(inputNsUsername) || !validateNotBlank(inputNsPassword)) {
             formOK = false;
         }
@@ -991,6 +1009,7 @@ function saveIdeonSettings() {
 
     if (formOK === true) {
         let selectMixerType = document.getElementById('selectMixerType');
+        let selectSambaVersion = document.getElementById('selectSambaVersion');
         let selectTidalAudioquality = document.getElementById('selectTidalAudioquality');
         sendAPI("MYMPD_API_SETTINGS_SET", {
             "mixerType": selectMixerType.options[selectMixerType.selectedIndex].value,
@@ -998,6 +1017,7 @@ function saveIdeonSettings() {
             "nsType": parseInt(selectNsTypeValue),
             "nsServer": inputNsServer.value,
             "nsShare": inputNsShare.value,
+            "sambaVersion": selectSambaVersion.options[selectSambaVersion.selectedIndex].value,
             "nsUsername": inputNsUsername.value,
             "nsPassword": inputNsPassword.value,
             "airplay": (document.getElementById('btnAirplay').classList.contains('active') ? true : false),
@@ -1010,6 +1030,15 @@ function saveIdeonSettings() {
         }, getSettings);
         modalIdeon.hide();
     }
+}
+
+function confirmReset() {
+    sendAPI("MYMPD_API_SETTINGS_RESET", {}, closeReset);
+}
+
+function closeReset() {
+    resetFlag = false;
+    modalResetSettings.hide();
 }
 
 var currentTab;
@@ -1525,7 +1554,8 @@ var locale = navigator.language || navigator.userLanguage;
 var ligatureMore = 'menu';
 
 var appScrollPos;
-var resetTheme = true;
+// var resetTheme = true;
+var resetFlag = false;
 
 var app = {};
 app.apps = {
@@ -1625,6 +1655,7 @@ var modalAlbumDetails = new Modal(document.getElementById('modalAlbumDetails'));
 var modalArtistDetails = new Modal(document.getElementById('modalArtistDetails'));
 var modalIdeon = new Modal(document.getElementById('modalIdeon'));
 var modalInit = new Modal(document.getElementById('modalInit'));
+var modalResetSettings = new Modal(document.getElementById('modalResetSettings'));
 
 var dropdownMainMenu;
 var dropdownVolumeMenu = new Dropdown(document.getElementById('volumeMenu'));
@@ -2182,22 +2213,28 @@ function appInit() {
     document.getElementById('modalSettings').addEventListener('shown.bs.modal', function () {
         this.focus();
         // document.getElementById('resetSettingsMsg').classList.add('hide');
-        getSettings();
+        if (resetFlag === false) {
+            getSettings();
+        }
+        else {
+            resetFlag = false;
+        }
         document.getElementById('inputCrossfade').classList.remove('is-invalid');
         document.getElementById('inputMixrampdb').classList.remove('is-invalid');
         document.getElementById('inputMixrampdelay').classList.remove('is-invalid');
+        // resetTheme = true;
     });
 
     document.getElementById('modalSettings').addEventListener('keydown', function (event) {
         if (event.key === 'Enter') {
-            saveSettings(true);
+            saveSettings(false);
             event.stopPropagation();
             event.preventDefault();
         }
     });
 
     document.getElementById('modalSettings').addEventListener('hidden.bs.modal', function () {
-        if (resetTheme === true) {
+        /* if (resetTheme === true) {
             let setTheme = settings.theme;
             if (settings.theme !== document.getElementById('selectTheme').value) {
                 if (settings.theme === 'theme-autodetect') {
@@ -2215,10 +2252,15 @@ function appInit() {
                 
                 document.getElementById('selectTheme').value = settings.theme;
             }
+        } */
+
+        if (resetFlag === true) {
+            modalResetSettings.show();
         }
-        else {
-            resetTheme = true;
-        }
+    });
+
+    document.getElementById('modalResetSettings').addEventListener('hidden.bs.modal', function() {
+        modalSettings.show();
     });
 
     document.getElementById('modalIdeon').addEventListener('shown.bs.modal', function () {
@@ -2241,28 +2283,45 @@ function appInit() {
     document.getElementById('selectNsType').addEventListener('change', function () {
         let value = this.options[this.selectedIndex].value;
         if (value === '0') {
-            document.getElementById('inputNsServer').setAttribute('disabled', 'disabled');
+            document.getElementById('nsServerShare').classList.add('hide');
+            document.getElementById('sambaVersion').classList.add('hide');
+            document.getElementById('nsCredentials').classList.add('hide');
+            /* document.getElementById('inputNsServer').setAttribute('disabled', 'disabled');
             document.getElementById('inputNsShare').setAttribute('disabled', 'disabled');
             document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
+            document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled'); */
             document.getElementById('inputNsServer').value = '';
             document.getElementById('inputNsShare').value = '';
             document.getElementById('inputNsUsername').value = '';
             document.getElementById('inputNsPassword').value = '';
         }
-        else if (value === '1') {
-            document.getElementById('inputNsServer').removeAttribute('disabled');
+        else if (value === '2') {
+            document.getElementById('nsServerShare').classList.remove('hide');
+            document.getElementById('sambaVersion').classList.remove('hide');
+            document.getElementById('nsCredentials').classList.remove('hide');
+            /* document.getElementById('inputNsServer').removeAttribute('disabled');
             document.getElementById('inputNsShare').removeAttribute('disabled');
             document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
             document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
             document.getElementById('inputNsUsername').value = '';
-            document.getElementById('inputNsPassword').value = '';
+            document.getElementById('inputNsPassword').value = ''; */
         }
-        else if (value === '2') {
-            document.getElementById('inputNsServer').removeAttribute('disabled');
+        else {
+            document.getElementById('nsServerShare').classList.remove('hide');
+            if (value === '1') {
+                document.getElementById('sambaVersion').classList.remove('hide');
+            }
+            else {
+                document.getElementById('sambaVersion').classList.add('hide');
+            }
+            document.getElementById('nsCredentials').classList.add('hide');
+            /* document.getElementById('inputNsServer').removeAttribute('disabled');
             document.getElementById('inputNsShare').removeAttribute('disabled');
             document.getElementById('inputNsUsername').removeAttribute('disabled');
-            document.getElementById('inputNsPassword').removeAttribute('disabled');
+            document.getElementById('inputNsPassword').removeAttribute('disabled'); */
+            // document.getElementById('inputNsUsername').value = 'guest';
+            document.getElementById('inputNsUsername').value = '';
+            document.getElementById('inputNsPassword').value = '';
         }
     });
 
@@ -2897,7 +2956,7 @@ function appInit() {
         selectThemeHtml += '<option value="' + key + '">' + t(themes[key]) + '</option>';
     });
     document.getElementById('selectTheme').innerHTML = selectThemeHtml;
-
+/* 
     document.getElementById('selectTheme').addEventListener('change', function () {
         let value = this.options[this.selectedIndex].value;
         if (value === 'theme-autodetect') {
@@ -2913,7 +2972,7 @@ function appInit() {
             }
         });
     });
-
+ */
     window.addEventListener('beforeinstallprompt', function (event) {
         // Prevent Chrome 67 and earlier from automatically showing the prompt
         event.preventDefault();
@@ -2975,7 +3034,7 @@ function appInit() {
     checkForUpdates(); // check for updates on launch
 }
 
-//Init app
+// Init app
 window.onerror = function (msg, url, line) {
     logError('JavaScript error: ' + msg + ' (' + url + ': ' + line + ')');
     if (settings.loglevel >= 4) {
@@ -4930,7 +4989,7 @@ function joinSettings(obj) {
     parseSettings();
     toggleUI();
     btnWaiting(document.getElementById('btnApplySettings'), false);
-    btnWaiting(document.getElementById('btnResetSettings'), false);
+    // btnWaiting(document.getElementById('btnResetSettings'), false);
     // document.getElementById('resetSettingsMsg').classList.remove('hide');
 }
 
@@ -5450,10 +5509,13 @@ function parseMPDSettings() {
 
 //eslint-disable-next-line no-unused-vars
 function resetSettings() {
-    sendAPI("MYMPD_API_SETTINGS_RESET", {}, getSettings);
+    // sendAPI("MYMPD_API_SETTINGS_RESET", {}, getSettings);
 
-    btnWaiting(document.getElementById('btnResetSettings'), true);
+    // btnWaiting(document.getElementById('btnResetSettings'), true);
     // document.getElementById('resetSettingsMsg').classList.add('hide');
+    
+    resetFlag = true;
+    modalSettings.hide();
 }
 
 //eslint-disable-next-line no-unused-vars
@@ -5578,7 +5640,7 @@ function saveSettings(closeModal) {
     }
 
     if (formOK === true) {
-        resetTheme = false;
+        // resetTheme = false;
         let selectLocale = document.getElementById('selectLocale');
         let selectTheme = document.getElementById('selectTheme');
         sendAPI("MYMPD_API_SETTINGS_SET", {
@@ -7753,7 +7815,7 @@ function validatePath(el) {
         el.classList.add('is-invalid');
         return false;
     }
-    else if (el.value.match(/^\/[/.\w-]+$/) !== null) {
+    else if (el.value.match(/^\/[\/.\w-]+$/) !== null) {
         el.classList.remove('is-invalid');
         return true;
     }
@@ -7824,6 +7886,17 @@ function validateStream(el) {
 
 function validateHost(el) {
     if (el.value.match(/^([\w-.]+)$/) !== null) {
+        el.classList.remove('is-invalid');
+        return true;
+    }
+    else {
+        el.classList.add('is-invalid');
+        return false;
+    }
+}
+
+function validateIPAddress(el) {
+    if (el.value.match(/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/) !== null) {
         el.classList.remove('is-invalid');
         return true;
     }

@@ -290,7 +290,7 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     }
     else if (MATCH("ideon", "nstype")) {
         p_config->ns_type = strtoimax(value, &crap, 10);
-        if (p_config->ns_type < 0 || p_config->ns_type > 2) {
+        if (p_config->ns_type < 0 || p_config->ns_type > 3) {
             LOG_WARN("Invalid share type %d", p_config->ns_type);
             p_config->ns_type = 0;
         }
@@ -300,6 +300,9 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     }
     else if (MATCH("ideon", "nsshare")) {
         p_config->ns_share = sdsreplace(p_config->ns_share, value);
+    }
+    else if (MATCH("ideon", "sambaversion")) {
+        p_config->samba_version = sdsreplace(p_config->samba_version, value);
     }
     else if (MATCH("ideon", "nsusername")) {
         p_config->ns_username = sdsreplace(p_config->ns_username, value);
@@ -383,7 +386,7 @@ static void mympd_get_env(struct t_config *config) {
         "THEME_BGCOVER", "THEME_BGCOLOR", "THEME_BGCSSFILTER", "THEME_COVERGRIDSIZE",
         "THEME_COVERIMAGE", "THEME_COVERIMAGENAME", "THEME_COVERIMAGESIZE",
         "THEME_LOCALE", "THEME_HIGHLIGHTCOLOR",
-        "IDEON_MIXERTYPE", "IDEON_DOP", "IDEON_NSTYPE", "IDEON_NSSERVER", "IDEON_NSSHARE", "IDEON_NSUSERNAME", "IDEON_NSPASSWORD", "IDEON_AIRPLAY", "IDEON_ROON", "IDEON_SPOTIFY", "IDEON_INIT",
+        "IDEON_MIXERTYPE", "IDEON_DOP", "IDEON_NSTYPE", "IDEON_NSSERVER", "IDEON_NSSHARE", "IDEON_SAMBAVERSION", "IDEON_NSUSERNAME", "IDEON_NSPASSWORD", "IDEON_AIRPLAY", "IDEON_ROON", "IDEON_SPOTIFY", "IDEON_INIT",
         "TIDAL_ENABLED", "TIDAL_TOKEN", "TIDAL_USERNAME", "TIDAL_PASSWORD", "TIDAL_AUDIOQUALITY", "MYMPD_COLSSEARCHTIDAL", "MYMPD_SEARCHTIDALTAGLIST", 0};
     const char** ptr = env_vars;
     while (*ptr != 0) {
@@ -436,6 +439,7 @@ void mympd_free_config(t_config *config) {
     sdsfree(config->mixer_type);
     sdsfree(config->ns_server);
     sdsfree(config->ns_share);
+    sdsfree(config->samba_version);
     sdsfree(config->ns_username);
     sdsfree(config->ns_password);
     sdsfree(config->searchtidaltaglist);
@@ -533,6 +537,7 @@ void mympd_config_defaults(t_config *config) {
     config->ns_type = 0;
     config->ns_server = sdsempty();
     config->ns_share = sdsempty();
+    config->samba_version = sdsnew("vers=3.0");
     config->ns_username = sdsempty();
     config->ns_password = sdsempty();
     config->airplay = false;

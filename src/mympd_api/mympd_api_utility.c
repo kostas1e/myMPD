@@ -98,6 +98,7 @@ void free_mympd_state_sds(t_mympd_state *mympd_state) {
     sdsfree(mympd_state->mixer_type);
     sdsfree(mympd_state->ns_server);
     sdsfree(mympd_state->ns_share);
+    sdsfree(mympd_state->samba_version);
     sdsfree(mympd_state->ns_username);
     sdsfree(mympd_state->ns_password);
     sdsfree(mympd_state->searchtidaltaglist);

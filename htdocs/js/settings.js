@@ -79,7 +79,7 @@ function joinSettings(obj) {
     parseSettings();
     toggleUI();
     btnWaiting(document.getElementById('btnApplySettings'), false);
-    btnWaiting(document.getElementById('btnResetSettings'), false);
+    // btnWaiting(document.getElementById('btnResetSettings'), false);
     // document.getElementById('resetSettingsMsg').classList.remove('hide');
 }
 
@@ -599,10 +599,13 @@ function parseMPDSettings() {
 
 //eslint-disable-next-line no-unused-vars
 function resetSettings() {
-    sendAPI("MYMPD_API_SETTINGS_RESET", {}, getSettings);
+    // sendAPI("MYMPD_API_SETTINGS_RESET", {}, getSettings);
 
-    btnWaiting(document.getElementById('btnResetSettings'), true);
+    // btnWaiting(document.getElementById('btnResetSettings'), true);
     // document.getElementById('resetSettingsMsg').classList.add('hide');
+    
+    resetFlag = true;
+    modalSettings.hide();
 }
 
 //eslint-disable-next-line no-unused-vars
@@ -727,7 +730,7 @@ function saveSettings(closeModal) {
     }
 
     if (formOK === true) {
-        resetTheme = false;
+        // resetTheme = false;
         let selectLocale = document.getElementById('selectLocale');
         let selectTheme = document.getElementById('selectTheme');
         sendAPI("MYMPD_API_SETTINGS_SET", {

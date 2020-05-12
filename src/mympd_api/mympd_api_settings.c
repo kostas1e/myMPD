@@ -40,7 +40,7 @@ void mympd_api_settings_delete(t_config *config) {
         "max_elements_per_page",  "mpd_host", "mpd_pass", "mpd_port", "notification_page", "notification_web", "searchtaglist",
         "smartpls", "stickers", "stream_port", "stream_url", "taglist", "music_directory", "bookmarks", "bookmark_list", "covergrid_size",
         "theme", "timer", "highlight_color", "media_session", "booklet_name",
-        "mixer_type", "dop", "ns_type", "ns_server", "ns_share", "ns_username", "ns_password", "airplay", "roon", "spotify", "init",
+        "mixer_type", "dop", "ns_type", "ns_server", "ns_share", "samba_version", "ns_username", "ns_password", "airplay", "roon", "spotify", "init",
         "tidal_enabled", "cols_search_tidal", "searchtidaltaglist", "tidal_username", "tidal_password", "tidal_audioquality", 0};
     const char** ptr = state_files;
     while (*ptr != 0) {
@@ -366,11 +366,13 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
     }
     else if (strncmp(key->ptr, "nsType", key->len) == 0) {
         int ns_type = strtoimax(settingvalue, &crap, 10);
-        if (ns_type < 0 || ns_type > 2) {
+        if (ns_type < 0 || ns_type > 3) {
             sdsfree(settingname);
             sdsfree(settingvalue);
             return false;
         }
+        if (mympd_state->ns_type != ns_type)
+            *ns_changed = true;
         mympd_state->ns_type = ns_type;
         settingname = sdscat(settingname, "ns_type");
     }
@@ -385,6 +387,12 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
             *ns_changed = true;
         mympd_state->ns_share = sdsreplacelen(mympd_state->ns_share, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "ns_share");
+    }
+    else if (strncmp(key->ptr, "sambaVersion", key->len) == 0) {
+        if (sdscmp(mympd_state->samba_version, settingvalue) != 0)
+            *ns_changed = true;
+        mympd_state->samba_version = sdsreplacelen(mympd_state->samba_version, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "samba_version");
     }
     else if (strncmp(key->ptr, "nsUsername", key->len) == 0) {
         if (sdscmp(mympd_state->ns_username, settingvalue) != 0)
@@ -529,6 +537,7 @@ void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state) {
     mympd_state->ns_type = state_file_rw_int(config, "ns_type", config->ns_type, false);
     mympd_state->ns_server = state_file_rw_string(config, "ns_server", config->ns_server, false);
     mympd_state->ns_share = state_file_rw_string(config, "ns_share", config->ns_share, false);
+    mympd_state->samba_version = state_file_rw_string(config, "samba_version", config->samba_version, false);
     mympd_state->ns_username = state_file_rw_string(config, "ns_username", config->ns_username, false);
     mympd_state->ns_password = state_file_rw_string(config, "ns_password", config->ns_password, false);
     mympd_state->airplay = state_file_rw_bool(config, "airplay", config->airplay, false);
@@ -700,6 +709,7 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = tojson_long(buffer, "nsType", mympd_state->ns_type, true);
     buffer = tojson_char(buffer, "nsServer", mympd_state->ns_server, true);
     buffer = tojson_char(buffer, "nsShare", mympd_state->ns_share, true);
+    buffer = tojson_char(buffer, "sambaVersion", mympd_state->samba_version, true);
     buffer = tojson_char(buffer, "nsUsername", mympd_state->ns_username, true);
     buffer = tojson_char(buffer, "nsPassword", mympd_state->ns_password, true);
     buffer = tojson_bool(buffer, "airplay", mympd_state->airplay, true);

@@ -34,7 +34,8 @@ var locale = navigator.language || navigator.userLanguage;
 var ligatureMore = 'menu';
 
 var appScrollPos;
-var resetTheme = true;
+// var resetTheme = true;
+var resetFlag = false;
 
 var app = {};
 app.apps = {
@@ -134,6 +135,7 @@ var modalAlbumDetails = new Modal(document.getElementById('modalAlbumDetails'));
 var modalArtistDetails = new Modal(document.getElementById('modalArtistDetails'));
 var modalIdeon = new Modal(document.getElementById('modalIdeon'));
 var modalInit = new Modal(document.getElementById('modalInit'));
+var modalResetSettings = new Modal(document.getElementById('modalResetSettings'));
 
 var dropdownMainMenu;
 var dropdownVolumeMenu = new Dropdown(document.getElementById('volumeMenu'));
@@ -691,22 +693,28 @@ function appInit() {
     document.getElementById('modalSettings').addEventListener('shown.bs.modal', function () {
         this.focus();
         // document.getElementById('resetSettingsMsg').classList.add('hide');
-        getSettings();
+        if (resetFlag === false) {
+            getSettings();
+        }
+        else {
+            resetFlag = false;
+        }
         document.getElementById('inputCrossfade').classList.remove('is-invalid');
         document.getElementById('inputMixrampdb').classList.remove('is-invalid');
         document.getElementById('inputMixrampdelay').classList.remove('is-invalid');
+        // resetTheme = true;
     });
 
     document.getElementById('modalSettings').addEventListener('keydown', function (event) {
         if (event.key === 'Enter') {
-            saveSettings(true);
+            saveSettings(false);
             event.stopPropagation();
             event.preventDefault();
         }
     });
 
     document.getElementById('modalSettings').addEventListener('hidden.bs.modal', function () {
-        if (resetTheme === true) {
+        /* if (resetTheme === true) {
             let setTheme = settings.theme;
             if (settings.theme !== document.getElementById('selectTheme').value) {
                 if (settings.theme === 'theme-autodetect') {
@@ -724,10 +732,15 @@ function appInit() {
                 
                 document.getElementById('selectTheme').value = settings.theme;
             }
+        } */
+
+        if (resetFlag === true) {
+            modalResetSettings.show();
         }
-        else {
-            resetTheme = true;
-        }
+    });
+
+    document.getElementById('modalResetSettings').addEventListener('hidden.bs.modal', function() {
+        modalSettings.show();
     });
 
     document.getElementById('modalIdeon').addEventListener('shown.bs.modal', function () {
@@ -750,28 +763,45 @@ function appInit() {
     document.getElementById('selectNsType').addEventListener('change', function () {
         let value = this.options[this.selectedIndex].value;
         if (value === '0') {
-            document.getElementById('inputNsServer').setAttribute('disabled', 'disabled');
+            document.getElementById('nsServerShare').classList.add('hide');
+            document.getElementById('sambaVersion').classList.add('hide');
+            document.getElementById('nsCredentials').classList.add('hide');
+            /* document.getElementById('inputNsServer').setAttribute('disabled', 'disabled');
             document.getElementById('inputNsShare').setAttribute('disabled', 'disabled');
             document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
-            document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
+            document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled'); */
             document.getElementById('inputNsServer').value = '';
             document.getElementById('inputNsShare').value = '';
             document.getElementById('inputNsUsername').value = '';
             document.getElementById('inputNsPassword').value = '';
         }
-        else if (value === '1') {
-            document.getElementById('inputNsServer').removeAttribute('disabled');
+        else if (value === '2') {
+            document.getElementById('nsServerShare').classList.remove('hide');
+            document.getElementById('sambaVersion').classList.remove('hide');
+            document.getElementById('nsCredentials').classList.remove('hide');
+            /* document.getElementById('inputNsServer').removeAttribute('disabled');
             document.getElementById('inputNsShare').removeAttribute('disabled');
             document.getElementById('inputNsUsername').setAttribute('disabled', 'disabled');
             document.getElementById('inputNsPassword').setAttribute('disabled', 'disabled');
             document.getElementById('inputNsUsername').value = '';
-            document.getElementById('inputNsPassword').value = '';
+            document.getElementById('inputNsPassword').value = ''; */
         }
-        else if (value === '2') {
-            document.getElementById('inputNsServer').removeAttribute('disabled');
+        else {
+            document.getElementById('nsServerShare').classList.remove('hide');
+            if (value === '1') {
+                document.getElementById('sambaVersion').classList.remove('hide');
+            }
+            else {
+                document.getElementById('sambaVersion').classList.add('hide');
+            }
+            document.getElementById('nsCredentials').classList.add('hide');
+            /* document.getElementById('inputNsServer').removeAttribute('disabled');
             document.getElementById('inputNsShare').removeAttribute('disabled');
             document.getElementById('inputNsUsername').removeAttribute('disabled');
-            document.getElementById('inputNsPassword').removeAttribute('disabled');
+            document.getElementById('inputNsPassword').removeAttribute('disabled'); */
+            // document.getElementById('inputNsUsername').value = 'guest';
+            document.getElementById('inputNsUsername').value = '';
+            document.getElementById('inputNsPassword').value = '';
         }
     });
 
@@ -1406,7 +1436,7 @@ function appInit() {
         selectThemeHtml += '<option value="' + key + '">' + t(themes[key]) + '</option>';
     });
     document.getElementById('selectTheme').innerHTML = selectThemeHtml;
-
+/* 
     document.getElementById('selectTheme').addEventListener('change', function () {
         let value = this.options[this.selectedIndex].value;
         if (value === 'theme-autodetect') {
@@ -1422,7 +1452,7 @@ function appInit() {
             }
         });
     });
-
+ */
     window.addEventListener('beforeinstallprompt', function (event) {
         // Prevent Chrome 67 and earlier from automatically showing the prompt
         event.preventDefault();
@@ -1484,7 +1514,7 @@ function appInit() {
     checkForUpdates(); // check for updates on launch
 }
 
-//Init app
+// Init app
 window.onerror = function (msg, url, line) {
     logError('JavaScript error: ' + msg + ' (' + url + ': ' + line + ')');
     if (settings.loglevel >= 4) {

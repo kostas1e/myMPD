@@ -32,7 +32,7 @@ static bool syscmd(const char *cmdline)
     }
 }
 
-static int ns_set(int type, const char *server, const char *share, const char *username, const char *password)
+static int ns_set(int type, const char *server, const char *share, const char *vers, const char *username, const char *password)
 {
     /* sds tmp_file = sdsnew("/tmp/fstab.XXXXXX");
     int fd = mkstemp(tmp_file);
@@ -49,26 +49,41 @@ static int ns_set(int type, const char *server, const char *share, const char *u
     FILE *org = setmntent(org_file, "r");
     if (tmp && org)
     {
-        sds mnt_fsname = sdscatfmt(sdsempty(), "//%s%s", server, share);
-        sds mnt_dir = sdsnew("/mnt/nas-samba");
-        sds mnt_type = sdsnew("cifs");
-        sds user = sdsempty();
-        if (type == 1)
+        sds mnt_fsname = sdsempty();
+        sds mnt_dir = sdsnew("/mnt/nas-");
+        sds mnt_type = sdsempty();
+        sds credentials = sdsempty();
+        sds mnt_opts = sdsempty();
+        if (type == 1 || type == 2)
         {
-            user = sdscatfmt(user, "username=guest,password=");
+            mnt_fsname = sdscatfmt(mnt_fsname, "//%s%s", server, share);
+            mnt_dir = sdscat(mnt_dir, "samba");
+            mnt_type = sdscat(mnt_type, "cifs");
+            if (type == 1)
+            {
+                credentials = sdscat(credentials, "username=guest,password=");
+            }
+            else
+            {
+                credentials = sdscatfmt(credentials, "username=%s,password=%s", username, password);
+            }
+            mnt_opts = sdscatfmt(mnt_opts, "%s,%s,ro,uid=mpd,gid=audio,iocharset=utf8,nolock,noauto,x-systemd.automount,x-systemd.device-timeout=10s", vers, credentials);
         }
-        else if (type == 2)
+        else if (type == 3)
         {
-            user = sdscatfmt(user, "username=%s,password=%s", username, password);
+            mnt_fsname = sdscatfmt(mnt_fsname, "%s:%s", server, share);
+            mnt_dir = sdscat(mnt_dir, "nfs");
+            mnt_type = sdscat(mnt_type, "nfs");
+            mnt_opts = sdscat(mnt_opts, "ro,noauto,x-systemd.automount,x-systemd.device-timeout=10s,rsize=8192,wsize=8192");
         }
-        sds mnt_opts = sdscatfmt(sdsempty(), "vers=3.0,%s,ro,uid=mpd,gid=audio,iocharset=utf8,nolock,noauto,x-systemd.automount,x-systemd.device-timeout=10s", user);
         struct mntent n = {mnt_fsname, mnt_dir, mnt_type, mnt_opts, 0, 0};
         bool append = true;
 
         struct mntent *m;
         while ((m = getmntent(org)))
         {
-            if (strcmp(m->mnt_dir, mnt_dir) == 0)
+            // if (strcmp(m->mnt_dir, "/mnt/nas-\0") == 0)
+            if (strstr(m->mnt_dir, "/mnt/nas-") != NULL)
             {
                 append = false;
                 if (type == 0)
@@ -103,8 +118,8 @@ static int ns_set(int type, const char *server, const char *share, const char *u
         sdsfree(mnt_fsname);
         sdsfree(mnt_dir);
         sdsfree(mnt_type);
+        sdsfree(credentials);
         sdsfree(mnt_opts);
-        sdsfree(user);
     }
     else
     {
@@ -132,7 +147,8 @@ static int ns_set(int type, const char *server, const char *share, const char *u
 }
 
 int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed,
-                       bool ns_changed, bool airplay_changed, bool roon_changed, bool spotify_changed)
+                       bool ns_changed, bool airplay_changed, bool roon_changed,
+                       bool spotify_changed)
 {
     // TODO: error checking, revert to old values on fail
     bool rc = true;
@@ -140,7 +156,7 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed,
 
     if (ns_changed == true)
     {
-        dc = ns_set(mympd_state->ns_type, mympd_state->ns_server, mympd_state->ns_share, mympd_state->ns_username, mympd_state->ns_password);
+        dc = ns_set(mympd_state->ns_type, mympd_state->ns_server, mympd_state->ns_share, mympd_state->samba_version, mympd_state->ns_username, mympd_state->ns_password);
     }
 
     if (mpd_conf_changed == true)

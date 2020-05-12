@@ -933,7 +933,8 @@
             <div class="d-flex">
               <div id="mpdState" class="flex-fill text-center bg-dark p-2 mr-1">
                 <span class="material-icons text-light">cloud_done</span><br/>
-                <small data-phrase="MPD connection"></small>
+                <!-- <small data-phrase="MPD connection"></small> -->
+                <small data-phrase="Ideon server connection"></small>
               </div>
               <div id="websocketState" class="flex-fill text-center bg-dark p-2">
                 <span class="material-icons text-light">cloud_done</span><br/>
@@ -1602,7 +1603,7 @@
                   <label class="col-sm-4 col-form-label" for="btnResetSettings" data-phrase="Reset to factory default"></label>
                   <div class="col-sm-8">
                     <button type="button" id="btnResetSettings" class="btn btn-secondary btnCleanup" data-href='{"cmd": "resetSettings", "options": []}' data-phrase="Reset"></button>
-                    <small id="resetSettingsMsg" class="text-muted hide">Your settings have been reset</small>
+                    <!-- <small id="resetSettingsMsg" class="text-muted hide">Your settings have been reset</small> -->
                   </div>
                 </div>
                 <div class="form-group row">
@@ -1676,9 +1677,9 @@
                   <label class="col-sm-4 col-form-label" for="selectMixerType" data-phrase="DAC volume mode"></label>
                   <div class="col-sm-8">
                     <select id="selectMixerType" class="form-control custom-select border-secondary">
+                      <option value="disabled" data-phrase="Disabled"></option>
                       <option value="hardware" data-phrase="Hardware"></option>
                       <option value="software" data-phrase="Software"></option>
-                      <option value="disabled" data-phrase="Disabled"></option>
                     </select>
                   </div>
                 </div>
@@ -1693,7 +1694,6 @@
             <div id="tabNetworkShare" class="tab-pane">
               <form id="NetworkShareFrm">
                 <h4 data-phrase="Your NAS Settings"></h4>
-                <!-- <div class="mb-3">If not applicable, ignore these</div> -->
                 <div class="form-group row">
                   <label class="col-sm-4 col-form-label" for="selectNsType" data-phrase="Select type"></label>
                   <div class="col-sm-8">
@@ -1701,36 +1701,53 @@
                       <option value="0" data-phrase="None (not applicable)"></option>
                       <option value="1" data-phrase="Samba A (guest access)"></option>
                       <option value="2" data-phrase="Samba B (access with credentials)"></option>
+                      <option value="3" data-phrase="NFS"></option>
                     </select>
-                    <small class="form-text text-muted">Select Samba A for guest access or B for access with credentials</small>
+                    <!-- <small class="form-text text-muted">Select Samba A for guest access or B for access with credentials</small> -->
                   </div>
                 </div>
-                <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="inputNsServer" data-phrase="NAS IP address"></label>
-                  <div class="col-sm-8">
-                    <input id="inputNsServer" class="form-control border-secondary" type="text" data-placeholder-phrase="NAS IP address or name">
-                    <div class="invalid-feedback" data-phrase="Invalid server"></div>
+                <div id="nsServerShare">
+                  <div class="form-group row">
+                    <label class="col-sm-4 col-form-label" for="inputNsServer" data-phrase="NAS IP address"></label>
+                    <div class="col-sm-8">
+                      <input id="inputNsServer" class="form-control border-secondary" type="text" data-placeholder-phrase="NAS IP address">
+                      <!-- <div class="invalid-feedback" data-phrase="Invalid server"></div> -->
+                      <div class="invalid-feedback" data-phrase="Invalid IP address"></div>
+                    </div>
+                  </div>
+                  <div class="form-group row">
+                    <label class="col-sm-4 col-form-label" for="inputNsShare" data-phrase="Path"></label>
+                    <div class="col-sm-8">
+                      <input id="inputNsShare" class="form-control border-secondary" type="text" data-placeholder-phrase="Music folder path in NAS (e.g. /music)">
+                      <div class="invalid-feedback" data-phrase="Path must start with a leading slash"></div>
+                    </div>
                   </div>
                 </div>
-                <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="inputNsShare" data-phrase="Path"></label>
+                <div id="sambaVersion" class="form-group row">
+                  <label class="col-sm-4 col-form-label" for="selectSambaVersion" data-phrase="Select samba version"></label>
                   <div class="col-sm-8">
-                    <input id="inputNsShare" class="form-control border-secondary" type="text" data-placeholder-phrase="Music folder path in NAS (e.g. /music)">
-                    <div class="invalid-feedback" data-phrase="Invalid directory"></div>
+                    <select id="selectSambaVersion" class="form-control custom-select border-secondary">
+                      <option value="vers=1.0" data-phrase="1.0"></option>
+                      <option value="vers=2.0" data-phrase="2.0"></option>
+                      <option value="vers=2.1" data-phrase="2.1"></option>
+                      <option value="vers=3.0" selected="selected" data-phrase="3.0"></option>
+                    </select>
                   </div>
                 </div>
-                <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="inputNsUsername" data-phrase="Username"></label>
-                  <div class="col-sm-8">
-                    <input id="inputNsUsername" class="form-control border-secondary" type="text" data-placeholder-phrase="Only for Samba B option">
-                    <div class="invalid-feedback" data-phrase="Username cannot be blank"></div>
+                <div id="nsCredentials">
+                  <div class="form-group row">
+                    <label class="col-sm-4 col-form-label" for="inputNsUsername" data-phrase="Username"></label>
+                    <div class="col-sm-8">
+                      <input id="inputNsUsername" class="form-control border-secondary" type="text" data-placeholder-phrase="Username">
+                      <div class="invalid-feedback" data-phrase="Username cannot be blank"></div>
+                    </div>
                   </div>
-                </div>
-                <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="inputNsPassword" data-phrase="Password"></label>
-                  <div class="col-sm-8">
-                    <input id="inputNsPassword" class="form-control border-secondary" type="password" data-placeholder-phrase="Only for Samba B option">
-                    <div class="invalid-feedback" data-phrase="Password cannot be blank"></div>
+                  <div class="form-group row">
+                    <label class="col-sm-4 col-form-label" for="inputNsPassword" data-phrase="Password"></label>
+                    <div class="col-sm-8">
+                      <input id="inputNsPassword" class="form-control border-secondary" type="password" data-placeholder-phrase="Password">
+                      <div class="invalid-feedback" data-phrase="Password cannot be blank"></div>
+                    </div>
                   </div>
                 </div>
               </form>
@@ -2375,6 +2392,25 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" id="prevBtn" data-href='{"cmd": "nextPrev", "options": [-1]}' data-phrase="Previous"></button>
           <button type="button" class="btn btn-success" id="nextBtn" data-href='{"cmd": "nextPrev", "options": [1]}' data-phrase="Next"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalResetSettings" data-backdrop="static" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirm Reset</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="material-icons warningIcon">warning</div>
+          <div>Are you sure?<br>Warning! This will reset all of your settings.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal" data-phrase="No"></button>
+          <button type="button" class="btn btn-success" data-href='{"cmd": "confirmReset", "options": []}' data-phrase="Yes"></button>
         </div>
       </div>
     </div>
