@@ -23,8 +23,8 @@
 #include "mpd_client_stats.h"
 
 //private definitions
-static sds mpd_client_put_last_played_obj(t_mpd_state *mpd_state, sds buffer,
-                                          unsigned entity_count, int last_played, const char *uri, const t_tags *tagcols);
+static sds mpd_client_put_last_played_obj(t_mpd_state *mpd_state, sds buffer, 
+                                          unsigned entity_count, long last_played, const char *uri, const t_tags *tagcols);
 
 //public functions
 bool mpd_client_last_played_list_save(t_config *config, t_mpd_state *mpd_state) {
@@ -79,7 +79,7 @@ bool mpd_client_last_played_list_save(t_config *config, t_mpd_state *mpd_state) 
     return true;
 }
 
-bool mpd_client_last_played_list(t_config *config, t_mpd_state *mpd_state, const int song_id) {
+bool mpd_client_add_song_to_last_played_list(t_config *config, t_mpd_state *mpd_state, const int song_id) {
     if (song_id > -1) {
         struct mpd_song *song = mpd_run_get_queue_song_id(mpd_state->conn, song_id);
         if (song) {
@@ -89,9 +89,7 @@ bool mpd_client_last_played_list(t_config *config, t_mpd_state *mpd_state, const
                 mpd_song_free(song);
                 return true;
             }
-            else {
-                list_insert(&mpd_state->last_played, uri, time(NULL), NULL, NULL);
-            }
+            list_insert(&mpd_state->last_played, uri, time(NULL), NULL, NULL);
             mpd_song_free(song);
             //write last_played list to disc
             if (config->readonly == false) {
@@ -105,10 +103,14 @@ bool mpd_client_last_played_list(t_config *config, t_mpd_state *mpd_state, const
             }
             //notify clients
             sds buffer = jsonrpc_notify(sdsempty(), "update_lastplayed");
-            mpd_client_notify(buffer);
+            ws_notify(buffer);
             sdsfree(buffer);
-        } else {
+        }
+        else {
             LOG_ERROR("Can't get song from id %d", song_id);
+            return false;
+        }
+        if (check_error_and_recover2(mpd_state, NULL, NULL, 0, false) == false) {
             return false;
         }
     }
@@ -195,19 +197,17 @@ sds mpd_client_put_stats(t_config *config, t_mpd_state *mpd_state, sds buffer, s
     buffer = tojson_long(buffer, "artists", mpd_stats_get_number_of_artists(stats), true);
     buffer = tojson_long(buffer, "albums", mpd_stats_get_number_of_albums(stats), true);
     buffer = tojson_long(buffer, "songs", mpd_stats_get_number_of_songs(stats), true);
-    buffer = tojson_long(buffer, "playtime", mpd_stats_get_play_time(stats), true);
-    buffer = tojson_long(buffer, "uptime", mpd_stats_get_uptime(stats), true);
+    buffer = tojson_ulong(buffer, "playtime", mpd_stats_get_play_time(stats), true);
+    buffer = tojson_ulong(buffer, "uptime", mpd_stats_get_uptime(stats), true);
     buffer = tojson_long(buffer, "myMPDuptime", time(NULL) - config->startup_time, true);
-    buffer = tojson_long(buffer, "dbUpdated", mpd_stats_get_db_update_time(stats), true);
-    buffer = tojson_long(buffer, "dbPlaytime", mpd_stats_get_db_play_time(stats), true);
+    buffer = tojson_ulong(buffer, "dbUpdated", mpd_stats_get_db_update_time(stats), true);
+    buffer = tojson_ulong(buffer, "dbPlaytime", mpd_stats_get_db_play_time(stats), true);
     buffer = tojson_char(buffer, "mympdVersion", MYMPD_VERSION, true);
     buffer = tojson_char(buffer, "ideonVersion", IDEON_VERSION, true);
     buffer = tojson_char(buffer, "mpdVersion", mpd_version, true);
-    #ifdef EMBEDDED_LIBMPDCLIENT
-        sds libmympdclient_version = sdscatfmt(sdsempty(), "%i.%i.%i", LIBMYMPDCLIENT_MAJOR_VERSION, LIBMYMPDCLIENT_MINOR_VERSION, LIBMYMPDCLIENT_PATCH_VERSION);
-        buffer = tojson_char(buffer, "libmympdclientVersion", libmympdclient_version, true);
-        sdsfree(libmympdclient_version);
-    #endif
+    sds libmympdclient_version = sdscatfmt(sdsempty(), "%i.%i.%i", LIBMYMPDCLIENT_MAJOR_VERSION, LIBMYMPDCLIENT_MINOR_VERSION, LIBMYMPDCLIENT_PATCH_VERSION);
+    buffer = tojson_char(buffer, "libmympdclientVersion", libmympdclient_version, true);
+    sdsfree(libmympdclient_version);
     buffer = tojson_char(buffer, "libmpdclientVersion", libmpdclient_version, false);
     buffer = jsonrpc_end_result(buffer);
 
@@ -220,14 +220,14 @@ sds mpd_client_put_stats(t_config *config, t_mpd_state *mpd_state, sds buffer, s
 
 
 //private functions
-static sds mpd_client_put_last_played_obj(t_mpd_state *mpd_state, sds buffer,
-                                          unsigned entity_count, int last_played, const char *uri, const t_tags *tagcols)
+static sds mpd_client_put_last_played_obj(t_mpd_state *mpd_state, sds buffer, 
+                                          unsigned entity_count, long last_played, const char *uri, const t_tags *tagcols)
 {
     buffer = sdscat(buffer, "{");
     buffer = tojson_long(buffer, "Pos", entity_count, true);
     buffer = tojson_long(buffer, "LastPlayed", last_played, true);
-    if (!mpd_send_list_all_meta(mpd_state->conn, uri)) {
-        check_error_and_recover(mpd_state, NULL, NULL, 0);
+    bool rc = mpd_send_list_meta(mpd_state->conn, uri);
+    if (check_rc_error_and_recover(mpd_state, NULL, NULL, 0, false, rc, "mpd_send_list_meta") == false) {
         buffer = put_empty_song_tags(buffer, mpd_state, tagcols, uri);
     }
     else {

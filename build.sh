@@ -5,11 +5,6 @@
 # https://github.com/jcorporation/mympd
 #
 
-if [ "${EMBEDDED_LIBMPDCLIENT}" = "" ]
-then
-  export EMBEDDED_LIBMPDCLIENT="ON"
-fi
-
 if [ "${ENABLE_SSL}" = "" ]
 then
   export ENABLE_SSL="ON"
@@ -105,6 +100,7 @@ setversion() {
   DATE=$(date +"%a, %d %b %Y %H:%m:%S %z")
   sed -e "s/__VERSION__/${VERSION}/g" -e "s/__DATE__/$DATE/g" \
   	contrib/packaging/debian/changelog.in > contrib/packaging/debian/changelog
+  mv contrib/packaging/gentoo/mympd-*.ebuild "contrib/packaging/gentoo/mympd-${VERSION}.ebuild"
 }
 
 minify() {
@@ -292,8 +288,8 @@ buildrelease() {
   #set INSTALL_PREFIX and build myMPD
   export INSTALL_PREFIX="${MYMPD_INSTALL_PREFIX:-/usr}"
   cmake -DCMAKE_INSTALL_PREFIX:PATH="$INSTALL_PREFIX" -DCMAKE_BUILD_TYPE=RELEASE \
-  	-DEMBEDDED_LIBMPDCLIENT="$EMBEDDED_LIBMPDCLIENT" -DENABLE_SSL="$ENABLE_SSL" \
-  	-DENABLE_LIBID3TAG="$ENABLE_LIBID3TAG" -DENABLE_FLAC="$ENABLE_FLAC" ..
+  	-DENABLE_SSL="$ENABLE_SSL" -DENABLE_LIBID3TAG="$ENABLE_LIBID3TAG" \
+  	-DENABLE_FLAC="$ENABLE_FLAC" ..
   make
 }
 
@@ -323,9 +319,11 @@ builddebug() {
   install -d debug
   cd debug || exit 1
   cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_BUILD_TYPE=DEBUG -DMEMCHECK="$MEMCHECK" \
-  	-DEMBEDDED_LIBMPDCLIENT="$EMBEDDED_LIBMPDCLIENT" -DENABLE_SSL="$ENABLE_SSL" \
-  	-DENABLE_LIBID3TAG="$ENABLE_LIBID3TAG" -DENABLE_FLAC="$ENABLE_FLAC" ..
+  	-DENABLE_SSL="$ENABLE_SSL" -DENABLE_LIBID3TAG="$ENABLE_LIBID3TAG" -DENABLE_FLAC="$ENABLE_FLAC" \
+  	-DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
   make VERBOSE=1
+  echo "Linking compilation database"
+  sed -e 's/\t/ /g' -e 's/-fsanitize=bounds-strict//g' -e 's/-static-libasan//g' compile_commands.json > ../src/compile_commands.json
 }
 
 cleanupoldinstall() {
@@ -357,6 +355,9 @@ cleanup() {
 
   #tmp files
   find ./ -name \*~ -delete
+  
+  #compilation database
+  rm -f src/compile_commands.json
 }
 
 cleanuposc() {
@@ -381,7 +382,7 @@ cleanupdist() {
   rm -f dist/htdocs/assets/*.gz
 }
 
-check () {
+check() {
   CPPCHECKBIN=$(command -v cppcheck)
   [ "$CPPCHECKOPTS" = "" ] && CPPCHECKOPTS="--enable=warning"
   if [ "$CPPCHECKBIN" != "" ]
@@ -405,6 +406,19 @@ check () {
     $FLAWFINDERBIN $FLAWFINDEROPTS cli_tools
   else
     echo "flawfinder not found"
+  fi
+  
+  CLANGTIDYBIN=$(command -v clang-tidy)
+  if [ "$CLANGTIDYBIN" != "" ]
+  then
+    echo "Running clang-tidy, output goes to clang-tidy.out"
+    rm -f clang-tidy.out
+    cd src || exit 1
+    find ./ -name '*.c' -exec clang-tidy \
+    	--checks="*,-cert-msc51-cpp,-cert-msc32-c,-hicpp-no-assembler,-android*,-cert-env33-c,-cert-msc50-cpp,-bugprone-branch-clone,-misc-misplaced-const,-readability-non-const-parameter,-cert-msc30-c,-hicpp-signed-bitwise,-readability-magic-numbers,-readability-avoid-const-params-in-decls,-llvm-include-order,-bugprone-macro-parentheses,-modernize*,-cppcoreguidelines*,-llvm-header-guard,-clang-analyzer-optin.performance.Padding,-clang-diagnostic-embedded-directive" \
+    	-header-filter='.*' {}  \; >> ../clang-tidy.out
+  else
+    echo "clang-tidy not found"  
   fi
 }
 
@@ -591,7 +605,7 @@ installdeps() {
   then
     #alpine
     apk add gcc cmake perl openssl-dev libid3tag-dev libflac-dev \
-    	openjdk11-jre-headlesslinux-headers curl-dev
+    	openjdk11-jre-headless linux-headers curl-dev
   elif [ -f /etc/SuSE-release ]
   then
     #suse
@@ -602,8 +616,16 @@ installdeps() {
     #fedora
     yum install gcc cmake pkgconfig perl openssl-devel libid3tag-devel flac-devel \
 	java-11-openjdk-headless unzip libcurl-devel
-  else
-    echo "No supported distribution detected."
+  else 
+    echo "Unsupported distribution detected."
+    echo "You should manually install:"
+    echo " - gcc"
+    echo " - cmake"
+    echo " - perl"
+    echo " - java"
+    echo " - openssl (devel)"
+    echo " - flac (devel)"
+    echo " - libid3tag (devel)"
   fi
 }
 
@@ -681,6 +703,11 @@ purge() {
   getent group mympd > /dev/null && groupdel -f mympd
 }
 
+translate() {
+  cd src/i18n || exit 1
+  $PERLBIN ./tojson.pl pretty > ../../htdocs/js/i18n.js
+}
+
 case "$1" in
 	release)
 	  buildrelease
@@ -751,6 +778,9 @@ case "$1" in
 	  uninstall
 	  purge
 	;;
+	translate)
+	  translate
+	;;
 	*)
 	  echo "Usage: $0 <option>"
 	  echo "Version: ${VERSION}"
@@ -770,6 +800,7 @@ case "$1" in
 	  echo "                    - CPPCHECKOPTS=\"--enable=warning\""
 	  echo "                    - FLAWFINDEROPTS=\"-m3\""
 	  echo "  installdeps:    installs build and run dependencies"
+	  echo "  translate:      builds the translation file for debug builds"
 	  echo ""
 	  echo "Cleanup options:"
 	  echo "  cleanup:        cleanup source tree"
@@ -806,7 +837,6 @@ case "$1" in
 	  echo ""
 	  echo "Environment variables for building"
 	  echo "  - MYMPD_INSTALL_PREFIX=\"/usr\""
-	  echo "  - EMBEDDED_LIBMPDCLIENT=\"ON\""
 	  echo "  - ENABLE_SSL=\"ON\""
 	  echo "  - ENABLE_LIBID3TAG=\"ON\""
 	  echo "  - ENABLE_FLAC=\"ON\""

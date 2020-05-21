@@ -11,9 +11,11 @@
 #include <string.h>
 #include <signal.h>
 #include <assert.h>
+#include <unistd.h>
+
 #include <mpd/client.h>
 
-#include "../dist/src/sds/sds.h"
+#include "../disst/src/sds/sds.h"
 #include "sds_extras.h"
 #include "log.h"
 #include "list.h"
@@ -56,17 +58,15 @@ void *mpd_client_loop(void *arg_config) {
                 mpd_client_api(config, mpd_state, request);
                 break;
             }
-            else {
-                //create response struct
-                if (request->conn_id > -1) {
-                    t_work_result *response = create_result(request);
-                    response->data = jsonrpc_respond_message(response->data, request->method, request->id, "MPD disconnected", true);
-                    LOG_DEBUG("Send http response to connection %lu: %s", request->conn_id, response->data);
-                    tiny_queue_push(web_server_queue, response);
-                }
-                LOG_DEBUG("mpd_client not initialized, discarding message");
-                free_request(request);
+            //create response struct
+            if (request->conn_id > -1) {
+                t_work_result *response = create_result(request);
+                response->data = jsonrpc_respond_message(response->data, request->method, request->id, "MPD disconnected", true);
+                LOG_DEBUG("Send http response to connection %lu: %s", request->conn_id, response->data);
+                tiny_queue_push(web_server_queue, response);
             }
+            LOG_DEBUG("mpd_client not initialized, discarding message");
+            free_request(request);
         }
     }
 
@@ -170,7 +170,7 @@ static void mpd_client_parse_idle(t_config *config, t_mpd_state *mpd_state, int 
                 }
             }
             if (sdslen(buffer) > 0) {
-                mpd_client_notify(buffer);
+                ws_notify(buffer);
             }
             sdsfree(buffer);
         }
@@ -210,6 +210,10 @@ static void mpd_client_idle(t_config *config, t_mpd_state *mpd_state) {
                     free_request(request);
                 }
             }
+            if (now < mpd_state->reconnect_time) {
+                //pause 100ms to prevent high cpu usage
+                usleep(100000);
+            }
             break;
         }
         case MPD_DISCONNECTED:
@@ -238,7 +242,7 @@ static void mpd_client_idle(t_config *config, t_mpd_state *mpd_state) {
             if (mpd_state->conn == NULL) {
                 LOG_ERROR("MPD connection to failed: out-of-memory");
                 buffer = jsonrpc_notify(buffer, "mpd_disconnected");
-                mpd_client_notify(buffer);
+                ws_notify(buffer);
                 sdsfree(buffer);
                 mpd_state->conn_state = MPD_FAILURE;
                 mpd_connection_free(mpd_state->conn);
@@ -251,7 +255,7 @@ static void mpd_client_idle(t_config *config, t_mpd_state *mpd_state) {
                 buffer = jsonrpc_start_phrase_notify(buffer, "Ideon server connection error: %{error}", true);
                 buffer = tojson_char(buffer, "error", mpd_connection_get_error_message(mpd_state->conn), false);
                 buffer = jsonrpc_end_phrase(buffer);
-                mpd_client_notify(buffer);
+                ws_notify(buffer);
                 sdsfree(buffer);
                 mpd_state->conn_state = MPD_FAILURE;
                 return;
@@ -263,7 +267,7 @@ static void mpd_client_idle(t_config *config, t_mpd_state *mpd_state) {
                 buffer = jsonrpc_start_phrase_notify(buffer, "Ideon server connection error: %{error}", true);
                 buffer = tojson_char(buffer, "error", mpd_connection_get_error_message(mpd_state->conn), false);
                 buffer = jsonrpc_end_phrase(buffer);
-                mpd_client_notify(buffer);
+                ws_notify(buffer);
                 sdsfree(buffer);
                 mpd_state->conn_state = MPD_FAILURE;
                 return;
@@ -272,7 +276,7 @@ static void mpd_client_idle(t_config *config, t_mpd_state *mpd_state) {
             LOG_INFO("MPD connected");
             mpd_connection_set_timeout(mpd_state->conn, mpd_state->timeout);
             buffer = jsonrpc_notify(buffer, "mpd_connected");
-            mpd_client_notify(buffer);
+            ws_notify(buffer);
             mpd_state->conn_state = MPD_CONNECTED;
             mpd_state->reconnect_interval = 0;
             mpd_state->reconnect_time = 0;
@@ -300,7 +304,7 @@ static void mpd_client_idle(t_config *config, t_mpd_state *mpd_state) {
         case MPD_FAILURE:
             LOG_ERROR("MPD connection failed");
             buffer = jsonrpc_notify(buffer, "mpd_disconnected");
-            mpd_client_notify(buffer);
+            ws_notify(buffer);
             // fall through
         case MPD_DISCONNECT:
         case MPD_RECONNECT:
@@ -313,7 +317,7 @@ static void mpd_client_idle(t_config *config, t_mpd_state *mpd_state) {
                 mpd_state->reconnect_interval += 2;
             }
             mpd_state->reconnect_time = time(NULL) + mpd_state->reconnect_interval;
-            LOG_DEBUG("Waiting %u seconds before reconnection", mpd_state->reconnect_interval);
+            LOG_VERBOSE("Waiting %u seconds before reconnection", mpd_state->reconnect_interval);
             break;
 
         case MPD_CONNECTED:
@@ -357,7 +361,7 @@ static void mpd_client_idle(t_config *config, t_mpd_state *mpd_state) {
                     mpd_state->last_last_played_id = mpd_state->song_id;
                     
                     if (mpd_state->last_played_count > 0) {
-                        mpd_client_last_played_list(config, mpd_state, mpd_state->song_id);
+                        mpd_client_add_song_to_last_played_list(config, mpd_state, mpd_state->song_id);
                     }
                     if (mpd_state->feat_sticker == true) {
                         mpd_client_count_song_uri(mpd_state, mpd_state->song_uri, "playCount", 1);

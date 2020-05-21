@@ -25,9 +25,9 @@ var time_all = 0;
 
 var cmds = [
     {"jsonrpc":"2.0","id":0,"method":"MPD_API_QUEUE_CLEAR"},
-    {"jsonrpc":"2.0","id":0,"method":"MPD_API_DATABASE_SEARCH","params":{"offset":0,"filter":"any","searchstr":searchstr,"plist":"","cols":["Title","Album", "Artist"],"replace":false}},
+    {"jsonrpc":"2.0","id":0,"method":"MPD_API_DATABASE_SEARCH","params":{"offset":0,"filter":"any","searchstr":searchstr,"plist":"","cols":["Title","Album","Artist"],"replace":false}},
     {"jsonrpc":"2.0","id":0,"method":"MPD_API_QUEUE_ADD_TRACK","params":{"uri":"uri1"}},
-    {"jsonrpc":"2.0","id":0,"method":"MPD_API_DATABASE_SEARCH","params":{"offset":0,"filter":"any","searchstr":searchstr,"plist":"queue","cols":["Title","Album", "Artist"],"replace":false}},
+    {"jsonrpc":"2.0","id":0,"method":"MPD_API_DATABASE_SEARCH","params":{"offset":0,"filter":"any","searchstr":searchstr,"plist":"queue","cols":["Title","Album","Artist"],"replace":false}},
     {"jsonrpc":"2.0","id":0,"method":"MPD_API_QUEUE_LIST","params":{"offset":0,"cols":["Title","Album"]}},
     {"jsonrpc":"2.0","id":0,"method":"MPD_API_QUEUE_MOVE_TRACK","params":{"from":1,"to":2}},
     {"jsonrpc":"2.0","id":0,"method":"MPD_API_QUEUE_ADD_RANDOM","params":{"playlist":"Database","quantity":2, "mode":1}},
@@ -106,7 +106,14 @@ var cmds = [
     {"jsonrpc":"2.0","id":0,"method":"MYMPD_API_TIMER_LIST"},
     {"jsonrpc":"2.0","id":0,"method":"MYMPD_API_TIMER_GET","params":{"timerid":timerId}},
     {"jsonrpc":"2.0","id":0,"method":"MYMPD_API_TIMER_TOGGLE","params":{"timerid":timerId}},
-    {"jsonrpc":"2.0","id":0,"method":"MYMPD_API_TIMER_RM","params":{"timerid":timerId}}
+    {"jsonrpc":"2.0","id":0,"method":"MYMPD_API_TIMER_RM","params":{"timerid":timerId}},
+    {"jsonrpc":"2.0","id":0,"method":"MPD_API_MOUNT_MOUNT","params":{"mountUrl":"udisks:///dev/null","mountPoint":"apitest"}},
+    {"jsonrpc":"2.0","id":0,"method":"MPD_API_MOUNT_LIST"},
+    {"jsonrpc":"2.0","id":0,"method":"MPD_API_MOUNT_UNMOUNT","params":{"mountPoint":"apitest"}},
+    {"jsonrpc":"2.0","id":0,"method":"MPD_API_MOUNT_NEIGHBOR_LIST"},
+    {"jsonrpc":"2.0","id":0,"method":"MPD_API_URLHANDLERS"},
+    {"jsonrpc":"2.0","id":0,"method":"MPD_API_PLAYER_STOP"},
+    {"jsonrpc":"2.0","id":0,"method":"MPD_API_QUEUE_CROP_OR_CLEAR"}
 ];
 
 function setTest(cmd, state, response) {
@@ -143,8 +150,8 @@ function sendAPI(request) {
             if (request.params.search === 'artist1') { request.params.search = artist1; }
             if (request.params.search === 'artist2') { request.params.search = artist2; }
         }
-        if (request.params.searchstr !== undefined) {
-            if (request.params.searchstr === 'artist1') { request.params.search = artist1; }
+        if (request.params.searchstr !== undefined) { 
+            if (request.params.searchstr === 'artist1') { request.params.searchstr = artist1; }
         }
         if (request.params.trackId !== undefined) { request.params.trackId = trackId; }
         if (request.params.outputId !== undefined) { request.params.outputId = outputId; }

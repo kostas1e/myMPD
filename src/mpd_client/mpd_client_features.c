@@ -25,7 +25,7 @@
 
 //private definitions
 static void mpd_client_feature_commands(t_mpd_state *mpd_state);
-static void check_tags(sds taglist, const char *taglistname, t_tags *tagtypes, t_tags allowed_tagtypes);
+static void check_tags(sds taglist, const char *taglistname, t_tags *tagtypes, t_tags allowed_tag_types);
 static void mpd_client_feature_tags(t_mpd_state *mpd_state);
 static void mpd_client_feature_music_directory(t_mpd_state *mpd_state);
 
@@ -46,7 +46,9 @@ void mpd_client_mpd_features(t_config *config, t_mpd_state *mpd_state) {
     mpd_state->feat_mpd_readpicture = false;
     mpd_state->feat_mpd_searchwindow = false;
     mpd_state->feat_single_oneshot = false;
-
+    mpd_state->feat_mpd_mount = false;
+    mpd_state->feat_mpd_neighbor = false;
+    
     //get features
     mpd_client_feature_commands(mpd_state);
     mpd_client_feature_music_directory(mpd_state);
@@ -58,27 +60,30 @@ void mpd_client_mpd_features(t_config *config, t_mpd_state *mpd_state) {
     buffer = mpd_client_put_state(config, mpd_state, buffer, NULL, 0);
     sdsfree(buffer);
 
-    if (LIBMPDCLIENT_CHECK_VERSION(2, 10, 0) && mpd_connection_cmp_server_version(mpd_state->conn, 0, 20, 0) >= 0) {
+    if (mpd_connection_cmp_server_version(mpd_state->conn, 0, 20, 0) >= 0) {
         mpd_state->feat_mpd_searchwindow = true;
     }
     else {
-        LOG_WARN("Disabling searchwindow support, depends on mpd >= 0.20.0 and libmpdclient >= 2.10.0.");
+        LOG_WARN("Disabling searchwindow support, depends on mpd >= 0.20.0");
     }
     
-    if (LIBMPDCLIENT_CHECK_VERSION(2, 17, 0) && mpd_connection_cmp_server_version(mpd_state->conn, 0, 21, 0) >= 0) {
+    if (mpd_connection_cmp_server_version(mpd_state->conn, 0, 21, 0) >= 0) {
         mpd_state->feat_advsearch = true;
-        LOG_INFO("Enabling advanced search");
-    }
-    else {
-        LOG_WARN("Disabling advanced search, depends on mpd >= 0.21.0 and libmpdclient >= 2.17.0.");
-    }
-
-    if (LIBMPDCLIENT_CHECK_VERSION(2, 18, 0) && mpd_connection_cmp_server_version(mpd_state->conn, 0, 21, 0) >= 0) {
         mpd_state->feat_single_oneshot = true;
+        LOG_INFO("Enabling advanced search");
         LOG_INFO("Enabling single oneshot feature");
     }
     else {
-        LOG_WARN("Disabling single oneshot feature, depends on mpd >= 0.21.0 and libmpdclient >= 2.18.0.");
+        LOG_WARN("Disabling advanced search, depends on mpd >= 0.21.0");
+        LOG_WARN("Disabling single oneshot feature, depends on mpd >= 0.21.0");
+    }
+    
+    if (config->mounts == false) {
+        mpd_state->feat_mpd_mount = false;
+    }
+    else if (config->mounts == true && mpd_state->feat_mpd_mount == false) {
+        LOG_WARN("Disabling mount and neighbor support");
+        mpd_state->feat_mpd_neighbor = false;
     }
 
     //push settings to web_server_queue
@@ -99,7 +104,7 @@ void mpd_client_feature_love(t_mpd_state *mpd_state) {
     struct mpd_pair *pair;
     mpd_state->feat_love = false;
     if (mpd_state->love == true) {
-        if (mpd_send_channels(mpd_state->conn)) {
+        if (mpd_send_channels(mpd_state->conn) == true) {
             while ((pair = mpd_recv_channel_pair(mpd_state->conn)) != NULL) {
                 if (strcmp(pair->value, mpd_state->love_channel) == 0) {
                     mpd_state->feat_love = true;
@@ -107,7 +112,12 @@ void mpd_client_feature_love(t_mpd_state *mpd_state) {
                 mpd_return_pair(mpd_state->conn, pair);
             }
         }
+        else {
+            LOG_ERROR("Error in response to command: mpd_send_channels");
+        }
         mpd_response_finish(mpd_state->conn);
+        check_error_and_recover2(mpd_state, NULL, NULL, 0, false);
+
         if (mpd_state->feat_love == false) {
             LOG_WARN("Disabling featLove, channel %s not found", mpd_state->love_channel);
         }
@@ -120,7 +130,7 @@ void mpd_client_feature_love(t_mpd_state *mpd_state) {
 //private functions
 static void mpd_client_feature_commands(t_mpd_state *mpd_state) {
     struct mpd_pair *pair;
-    if (mpd_send_allowed_commands(mpd_state->conn)) {
+    if (mpd_send_allowed_commands(mpd_state->conn) == true) {
         while ((pair = mpd_recv_command_pair(mpd_state->conn)) != NULL) {
             if (strcmp(pair->value, "sticker") == 0) {
                 LOG_DEBUG("MPD supports stickers");
@@ -132,37 +142,35 @@ static void mpd_client_feature_commands(t_mpd_state *mpd_state) {
             }
             else if (strcmp(pair->value, "getfingerprint") == 0) {
                 LOG_DEBUG("MPD supports fingerprint");
-                if (LIBMPDCLIENT_CHECK_VERSION(2, 17, 0)) {
-                    mpd_state->feat_fingerprint = true;
-                }
-                else {
-                    LOG_DEBUG("libmpdclient don't support fingerprint command");
-                }
+                mpd_state->feat_fingerprint = true;
             }
             else if (strcmp(pair->value, "albumart") == 0) {
                 LOG_DEBUG("MPD supports albumart");
-                #ifdef EMBEDDED_LIBMPDCLIENT
-                    mpd_state->feat_mpd_albumart = true;
-                #else
-                    LOG_DEBUG("libmpdclient don't support albumart command");
-                #endif
+                mpd_state->feat_mpd_albumart = true;
 
             }
             else if (strcmp(pair->value, "readpicture") == 0) {
                 LOG_DEBUG("MPD supports readpicture");
-                #ifdef EMBEDDED_LIBMPDCLIENT
-                    mpd_state->feat_mpd_readpicture = true;
-                #else
-                    LOG_DEBUG("libmpdclient don't support readpicture command");
-                #endif
+                mpd_state->feat_mpd_readpicture = true;
+            }
+            else if (strcmp(pair->value, "mount") == 0) {
+                LOG_DEBUG("MPD supports mounts");
+                mpd_state->feat_mpd_mount = true;
+            }
+            else if (strcmp(pair->value, "listneighbors") == 0) {
+                LOG_DEBUG("MPD supports neighbors");
+                mpd_state->feat_mpd_neighbor = true;
             }
             mpd_return_pair(mpd_state->conn, pair);
         }
-        mpd_response_finish(mpd_state->conn);
+        
     }
     else {
-        check_error_and_recover(mpd_state, NULL, NULL, 0);
+        LOG_ERROR("Error in response to command: mpd_send_allowed_commands");
     }
+    mpd_response_finish(mpd_state->conn);
+    check_error_and_recover2(mpd_state, NULL, NULL, 0, false);
+    
     if (mpd_state->feat_sticker == false && mpd_state->stickers == true) {
         LOG_WARN("MPD don't support stickers, disabling myMPD feature");
         mpd_state->feat_sticker = false;
@@ -181,8 +189,6 @@ static void mpd_client_feature_commands(t_mpd_state *mpd_state) {
 }
 
 static void mpd_client_feature_tags(t_mpd_state *mpd_state) {
-    struct mpd_pair *pair;
-
     reset_t_tags(&mpd_state->mpd_tag_types);
     reset_t_tags(&mpd_state->mympd_tag_types);
     reset_t_tags(&mpd_state->search_tag_types);
@@ -193,17 +199,22 @@ static void mpd_client_feature_tags(t_mpd_state *mpd_state) {
     enable_all_mpd_tags(mpd_state);
 
     sds logline = sdsnew("MPD supported tags: ");
-    mpd_send_list_tag_types(mpd_state->conn);
-    while ((pair = mpd_recv_tag_type_pair(mpd_state->conn)) != NULL) {
-        enum mpd_tag_type tag = mpd_tag_name_parse(pair->value);
-        if (tag != MPD_TAG_UNKNOWN) {
-            logline = sdscatfmt(logline, "%s ", pair->value);
-            mpd_state->mpd_tag_types.tags[mpd_state->mpd_tag_types.len++] = tag;
+    if (mpd_send_list_tag_types(mpd_state->conn) == true) {
+        struct mpd_pair *pair;
+        while ((pair = mpd_recv_tag_type_pair(mpd_state->conn)) != NULL) {
+            enum mpd_tag_type tag = mpd_tag_name_parse(pair->value);
+            if (tag != MPD_TAG_UNKNOWN) {
+                logline = sdscatfmt(logline, "%s ", pair->value);
+                mpd_state->mpd_tag_types.tags[mpd_state->mpd_tag_types.len++] = tag;
+            }
+            else {
+                LOG_WARN("Unknown tag %s (libmpdclient too old)", pair->value);
+            }
+            mpd_return_pair(mpd_state->conn, pair);
         }
-        else {
-            LOG_WARN("Unknown tag %s (libmpdclient too old)", pair->value);
-        }
-        mpd_return_pair(mpd_state->conn, pair);
+    }
+    else {
+        LOG_ERROR("Error in response to command: mpd_send_list_tag_types");
     }
     mpd_response_finish(mpd_state->conn);
     check_error_and_recover2(mpd_state, NULL, NULL, 0, false);
@@ -263,7 +274,7 @@ static void mpd_client_feature_music_directory(t_mpd_state *mpd_state) {
 
     if (strncmp(mpd_state->mpd_host, "/", 1) == 0 && strncmp(mpd_state->music_directory, "auto", 4) == 0) {
         //get musicdirectory from mpd
-        if (mpd_send_command(mpd_state->conn, "config", NULL)) {
+        if (mpd_send_command(mpd_state->conn, "config", NULL) == true) {
             while ((pair = mpd_recv_pair(mpd_state->conn)) != NULL) {
                 if (strcmp(pair->name, "music_directory") == 0) {
                     if (strncmp(pair->value, "smb://", 6) != 0 && strncmp(pair->value, "nfs://", 6) != 0) {
@@ -272,8 +283,11 @@ static void mpd_client_feature_music_directory(t_mpd_state *mpd_state) {
                 }
                 mpd_return_pair(mpd_state->conn, pair);
             }
-            mpd_response_finish(mpd_state->conn);
         }
+        else {
+            LOG_ERROR("Error in response to command: config");
+        }
+        mpd_response_finish(mpd_state->conn);
         if (check_error_and_recover2(mpd_state, NULL, NULL, 0, false) == false) {
             LOG_ERROR("Can't get music_directory value from mpd");
         }
@@ -301,14 +315,9 @@ static void mpd_client_feature_music_directory(t_mpd_state *mpd_state) {
     }
 
     if (mpd_state->feat_library == false) {
-        #ifdef EMBEDDED_LIBMPDCLIENT
         if (mpd_connection_cmp_server_version(mpd_state->conn, 0, 21, 0) < 0) {
             LOG_WARN("Disabling coverimage support");
             mpd_state->feat_coverimage = false;
         }
-        #else
-        LOG_WARN("Disabling coverimage support");
-        mpd_state->feat_coverimage = false;
-        #endif
     }
 }

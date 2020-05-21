@@ -39,7 +39,7 @@ void mympd_api_settings_delete(t_config *config) {
         "last_played", "last_played_count", "locale", "localplayer", "localplayer_autoplay", "love", "love_channel", "love_message",
         "max_elements_per_page",  "mpd_host", "mpd_pass", "mpd_port", "notification_page", "notification_web", "searchtaglist",
         "smartpls", "stickers", "stream_port", "stream_url", "taglist", "music_directory", "bookmarks", "bookmark_list", "covergrid_size",
-        "theme", "timer", "highlight_color", "media_session", "booklet_name",
+        "theme", "timer", "highlight_color", "media_session", "booklet_name", "lyrics",
         "mixer_type", "dop", "ns_type", "ns_server", "ns_share", "samba_version", "ns_username", "ns_password", "airplay", "roon", "spotify", "init",
         "tidal_enabled", "cols_search_tidal", "searchtidaltaglist", "tidal_username", "tidal_password", "tidal_audioquality", 0};
     const char** ptr = state_files;
@@ -460,6 +460,10 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
         mympd_state->highlight_color = sdsreplacelen(mympd_state->highlight_color, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "highlight_color");
     }
+    else if (strncmp(key->ptr, "lyrics", key->len) == 0) {
+        mympd_state->lyrics = val->type == JSON_TYPE_TRUE ? true : false;
+        settingname = sdscat(settingname, "lyrics");
+    }
     else {
         sdsfree(settingname);
         sdsfree(settingvalue);
@@ -550,6 +554,7 @@ void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state) {
     mympd_state->tidal_password = state_file_rw_string(config, "tidal_password", config->tidal_password, false);
     mympd_state->tidal_audioquality = state_file_rw_string(config, "tidal_audioquality", config->tidal_audioquality, false);
     mympd_state->init = state_file_rw_bool(config, "init", config->init, false);
+    mympd_state->lyrics = state_file_rw_bool(config, "lyrics", config->lyrics, false);
     if (config->readonly == true) {
         mympd_state->bookmarks = false;
         mympd_state->smartpls = false;
@@ -589,11 +594,10 @@ sds state_file_rw_string(t_config *config, const char *name, const char *def_val
         FREE_PTR(line);
         return result;
     }
-    else {
-        FREE_PTR(line);
-        result = sdscat(result, def_value);
-        return result;
-    }
+    
+    FREE_PTR(line);
+    result = sdscat(result, def_value);
+    return result;
 }
 
 bool state_file_rw_bool(t_config *config, const char *name, const bool def_value, bool warn) {
@@ -623,7 +627,7 @@ bool state_file_write(t_config *config, const char *name, const char *value) {
     if (config->readonly == true) {
         return true;
     }
-    else if (!validate_string(name)) {
+    if (!validate_string(name)) {
         return false;
     }
     sds tmp_file = sdscatfmt(sdsempty(), "%s/state/%s.XXXXXX", config->varlibdir, name);
@@ -720,6 +724,7 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = tojson_char(buffer, "tidalPassword", mympd_state->tidal_password, true);
     buffer = tojson_char(buffer, "tidalAudioquality", mympd_state->tidal_audioquality, true);
     buffer = tojson_bool(buffer, "init", mympd_state->init, true);
+    buffer = tojson_bool(buffer, "featLyrics", mympd_state->lyrics, true);
     buffer = sdscatfmt(buffer, "\"colsQueueCurrent\":%s,", mympd_state->cols_queue_current);
     buffer = sdscatfmt(buffer, "\"colsSearchDatabase\":%s,", mympd_state->cols_search);
     buffer = sdscatfmt(buffer, "\"colsSearchTidal\":%s,", mympd_state->cols_search_tidal);

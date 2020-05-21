@@ -95,7 +95,7 @@ typedef struct t_mympd_state {
     bool dop;
     int ns_type;
     sds ns_server;
-    sds samba_version;
+    sds sambsa_version;
     sds ns_share;
     sds ns_username;
     sds ns_password;
@@ -109,10 +109,11 @@ typedef struct t_mympd_state {
     sds searchtidaltaglist;
     sds cols_search_tidal;
     bool init;
+    bool lyrics;
 } t_mympd_state;
 
 void free_mympd_state(t_mympd_state *mympd_state);
 void free_mympd_state_sds(t_mympd_state *mympd_state);
 void mympd_api_push_to_mpd_client(t_mympd_state *mympd_state);
-sds json_to_cols(sds cols, char *str, size_t len);
+sds json_to_cols(sds cols, char *str, size_t len, bool *error);
 #endif

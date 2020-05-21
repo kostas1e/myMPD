@@ -855,15 +855,6 @@ Hernoemen afspeellijst mislukt
 Sucessfully renamed playlist
 Afspeellijst is hernoemd
 
-Advanced search is disabled
-Geavanceerd zoeken uitgeschakeld
-
-A queue longer than 1 song in length is required to crop
-Wachtrij moet langer zijn dan 1 nummer
-
-You need to be playing to crop the playlist
-Inkorten alleen mogelijk tijdens afspelen
-
 Can not read smart playlist file
 Slimme afspeellijst kon niet worden gelezen
 
@@ -1239,9 +1230,6 @@ Verwijder afspeellijsten
 Media session support
 Mediasessie ondersteuning
 
-Not supported by libmpdclient
-Niet ondersteund door libmpdclient
-
 Playlists deleted
 Afspeellijsten verwijderd
 
@@ -1292,3 +1280,30 @@ Meldingen zijn geblokkeerd
 
 Adding timer failed
 Toevoegen timer mislukt
+
+Browse directories
+Browse bestanden
+
+Sorry, your MPD version is too old
+Sorry, je MPD-versie is te oud
+
+Mounts
+Aankoppelpunten
+
+New mount
+Nieuw aankoppelpunt
+
+Backend uri
+Backend-url
+
+Invalid backend uri
+Ongeldige backend-url
+
+Invalid mount point
+Ongeldig aankoppelpunt
+
+Mount point
+Aankoppelpunt
+
+Unmount
+Ontkoppelen

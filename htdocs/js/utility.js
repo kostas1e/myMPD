@@ -5,6 +5,11 @@
  https://github.com/jcorporation/mympd
 */
 
+function getSelectValue(selectId) {
+    let el = document.getElementById(selectId);
+    return el.options[el.selectedIndex].value;
+}
+
 function alignDropdown(el) {
     if (getXpos(el.children[0]) > domCache.body.offsetWidth * 0.66) {
         el.getElementsByClassName('dropdown-menu')[0].classList.add('dropdown-menu-right');
@@ -153,8 +158,11 @@ function addTagList(el, list) {
     for (let i = 0; i < settings[list].length; i++) {
         tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="' + settings[list][i] + '">' + t(settings[list][i]) + '</button>';
     }
-    if (el === 'covergridSortTagsList' && settings.tags.includes('Date')) {
-        tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="Date">' + t('Date') + '</button>';
+    if (el === 'covergridSortTagsList') {
+        if (settings.tags.includes('Date')) {
+            tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="Date">' + t('Date') + '</button>';
+        }
+        tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="Last-Modified">' + t('Last modified') + '</button>';
     }
     document.getElementById(el).innerHTML = tagList;
 }

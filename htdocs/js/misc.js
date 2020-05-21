@@ -119,6 +119,16 @@ function updateDBfinished(idleEvent) {
 }
 
 function _updateDBfinished(idleEvent) {
+    //spinner in mounts modal
+    let el = document.getElementById('spinnerUpdateProgress');
+    if (el) {
+        let parent = el.parentNode;
+        el.remove();
+        for (let i = 0; i < parent.children.length; i++) {
+            parent.children[i].classList.remove('hide');
+        }
+    }
+
     //update database modal
     // if (document.getElementById('modalUpdateDB').classList.contains('show')) {
         if (idleEvent === 'update_database') {

@@ -30,9 +30,9 @@ sds mpd_client_get_updatedb_state(t_mpd_state *mpd_state, sds buffer) {
     if (status == NULL) {
         buffer = check_error_and_recover_notify(mpd_state, buffer);
     }
-    int update_id = mpd_status_get_update_id(status);
-    LOG_INFO("Update database ID: %d", update_id);
-    if (update_id > 0) {
+    unsigned update_id = mpd_status_get_update_id(status);
+    LOG_INFO("Update database ID: %u", update_id);
+    if ( update_id > 0) {
         buffer = jsonrpc_start_notify(buffer, "update_started");
         buffer = tojson_long(buffer, "jobid", update_id, false);
         buffer = jsonrpc_end_notify(buffer);
@@ -81,20 +81,20 @@ sds mpd_client_put_state(t_config *config, t_mpd_state *mpd_state, sds buffer, s
     mpd_state->queue_length = mpd_status_get_queue_length(status);
     mpd_state->crossfade = mpd_status_get_crossfade(status);
 
-    const int total_time = mpd_status_get_total_time(status);
-    const int elapsed_time =  mpd_status_get_elapsed_time(status);
-    time_t uptime = time(NULL) - config->startup_time;
+    const unsigned total_time = mpd_status_get_total_time(status);
+    const unsigned elapsed_time =  mpd_status_get_elapsed_time(status);
+    unsigned uptime = time(NULL) - config->startup_time;
     if (total_time > 10 && uptime > elapsed_time) {
         time_t now = time(NULL);
         mpd_state->song_end_time = now + total_time - elapsed_time - 10;
         mpd_state->song_start_time = now - elapsed_time;
-        int half_time = total_time / 2;
-
+        unsigned half_time = total_time / 2;
+        
         if (half_time > 240) {
             mpd_state->set_song_played_time = now - elapsed_time + 240;
         }
         else {
-            mpd_state->set_song_played_time = elapsed_time < half_time ? now - elapsed_time + half_time : now;
+            mpd_state->set_song_played_time = elapsed_time < half_time ? now - (long)elapsed_time + (long)half_time : now;
         }
     }
     else {
@@ -170,8 +170,8 @@ sds mpd_client_put_volume(t_mpd_state *mpd_state, sds buffer, sds method, int re
 }
 
 sds mpd_client_put_outputs(t_mpd_state *mpd_state, sds buffer, sds method, int request_id) {
-    if (!mpd_send_outputs(mpd_state->conn)) {
-        buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
+    bool rc = mpd_send_outputs(mpd_state->conn);
+    if (check_rc_error_and_recover(mpd_state, &buffer, method, request_id, false, rc, "mpd_send_outputs") == false) {
         return buffer;
     }
 
@@ -190,6 +190,10 @@ sds mpd_client_put_outputs(t_mpd_state *mpd_state, sds buffer, sds method, int r
         buffer = sdscat(buffer, "}");
         mpd_output_free(output);
     }
+    mpd_response_finish(mpd_state->conn);
+    if (check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
+        return buffer;
+    }
 
     buffer = sdscat(buffer, "],");
     buffer = tojson_long(buffer, "numOutputs", nr, false);
@@ -201,6 +205,9 @@ sds mpd_client_put_outputs(t_mpd_state *mpd_state, sds buffer, sds method, int r
 sds mpd_client_put_current_song(t_mpd_state *mpd_state, sds buffer, sds method, int request_id) {
     struct mpd_song *song = mpd_run_current_song(mpd_state->conn);
     if (song == NULL) {
+        if (check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
+            return buffer;
+        }
         buffer = jsonrpc_respond_message(buffer, method, request_id, "No current song", false);
         return buffer;
     }
@@ -212,8 +219,6 @@ sds mpd_client_put_current_song(t_mpd_state *mpd_state, sds buffer, sds method, 
     buffer = tojson_long(buffer, "pos", mpd_song_get_pos(song), true);
     buffer = tojson_long(buffer, "currentSongId", mpd_state->song_id, true);
     buffer = put_song_tags(buffer, mpd_state, &mpd_state->mympd_tag_types, song);
-
-    mpd_response_finish(mpd_state->conn);
 
     if (mpd_state->feat_sticker) {
         t_sticker *sticker = (t_sticker *) malloc(sizeof(t_sticker));

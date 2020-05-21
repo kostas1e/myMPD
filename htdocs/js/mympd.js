@@ -12,7 +12,7 @@ var socket = null;
 var lastSong = '';
 var lastSongObj = {};
 var lastState;
-var currentSong = new Object();
+var currentSong = {};
 var playstate = '';
 var settingsLock = false;
 var settingsParsed = false;
@@ -131,6 +131,7 @@ var modalSaveSmartPlaylist = new Modal(document.getElementById('modalSaveSmartPl
 var modalDeletePlaylist = new Modal(document.getElementById('modalDeletePlaylist'));
 var modalSaveBookmark = new Modal(document.getElementById('modalSaveBookmark'));
 var modalTimer = new Modal(document.getElementById('modalTimer'));
+var modalMounts = new Modal(document.getElementById('modalMounts'));
 var modalAlbumDetails = new Modal(document.getElementById('modalAlbumDetails'));
 var modalArtistDetails = new Modal(document.getElementById('modalArtistDetails'));
 var modalIdeon = new Modal(document.getElementById('modalIdeon'));
@@ -143,6 +144,7 @@ var dropdownBookmarks = new Dropdown(document.getElementById('BrowseFilesystemBo
 var dropdownLocalPlayer = new Dropdown(document.getElementById('localPlaybackMenu'));
 var dropdownPlay = new Dropdown(document.getElementById('btnPlayDropdown'));
 var dropdownCovergridSort = new Dropdown(document.getElementById('btnCovergridSortDropdown'));
+var dropdownNeighbors = new Dropdown(document.getElementById('btnDropdownNeighbors'));
 
 var collapseDBupdate = new Collapse(document.getElementById('navDBupdate'));
 var collapseSyscmds = new Collapse(document.getElementById('navSyscmds'));
@@ -574,7 +576,26 @@ function appInit() {
     document.getElementById('volumeMenu').parentNode.addEventListener('show.bs.dropdown', function () {
         sendAPI("MPD_API_PLAYER_OUTPUT_LIST", {}, parseOutputs);
     });
-
+    
+    document.getElementById('btnDropdownNeighbors').parentNode.addEventListener('show.bs.dropdown', function () {
+        if (settings.featNeighbors === true) {
+            sendAPI("MPD_API_MOUNT_NEIGHBOR_LIST", {}, parseNeighbors, true);
+        }
+        else {
+            document.getElementById('dropdownNeighbors').children[0].innerHTML = 
+                '<div class="list-group-item"><span class="material-icons">warning</span> ' + t('Neighbors are disabled') + '</div>';
+        }
+    });
+    
+    document.getElementById('dropdownNeighbors').children[0].addEventListener('click', function (event) {
+        event.preventDefault();
+        if (event.target.nodeName === 'A') {
+            let c = event.target.getAttribute('data-value').match(/^(\w+:\/\/)(.+)$/);
+            document.getElementById('selectMountUrlhandler').value = c[1];
+            document.getElementById('inputMountUrl').value = c[2];
+        }
+    });
+    
     document.getElementById('BrowseFilesystemBookmark').parentNode.addEventListener('show.bs.dropdown', function () {
         sendAPI("MYMPD_API_BOOKMARK_LIST", { "offset": 0 }, parseBookmarks);
     });
@@ -599,6 +620,10 @@ function appInit() {
         showListTimer();
     });
 
+    document.getElementById('modalMounts').addEventListener('shown.bs.modal', function () {
+        showListMounts();
+    });
+    
     document.getElementById('modalAbout').addEventListener('shown.bs.modal', function () {
         sendAPI("MPD_API_DATABASE_STATS", {}, parseStats);
         getServerinfo();
@@ -977,7 +1002,28 @@ function appInit() {
         }
     }, false);
 
-    document.getElementById('QueueCurrentList').addEventListener('click', function (event) {
+    document.getElementById('listMountsList').addEventListener('click', function(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        if (event.target.nodeName === 'TD') {
+            if (event.target.parentNode.getAttribute('data-point') === '') {
+                return false;
+            }
+            showEditMount(decodeURI(event.target.parentNode.getAttribute('data-url')),decodeURI(event.target.parentNode.getAttribute('data-point')));
+        }
+        else if (event.target.nodeName === 'A') {
+            let action = event.target.getAttribute('data-action');
+            let mountPoint = decodeURI(event.target.parentNode.parentNode.getAttribute('data-point'));
+            if (action === 'unmount') {
+                unmountMount(mountPoint);
+            }
+            else if (action === 'update') {
+                updateMount(event.target, mountPoint);
+            }
+        }
+    }, false);
+    
+    document.getElementById('QueueCurrentList').addEventListener('click', function(event) {
         if (event.target.nodeName === 'TD') {
             sendAPI("MPD_API_PLAYER_PLAY_TRACK", { "track": event.target.parentNode.getAttribute('data-trackid') });
         }

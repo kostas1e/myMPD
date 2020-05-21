@@ -31,24 +31,22 @@ sds mpd_client_put_fingerprint(t_mpd_state *mpd_state, sds buffer, sds method, i
         buffer = jsonrpc_respond_message(buffer, method, request_id, "Invalid URI", true);
         return buffer;
     }
-
-    buffer = jsonrpc_start_result(buffer, method, request_id);
-
-    #if LIBMPDCLIENT_CHECK_VERSION(2,17,0)
+    
     char fp_buffer[8192];
     const char *fingerprint = mpd_run_getfingerprint_chromaprint(mpd_state->conn, uri, fp_buffer, sizeof(fp_buffer));
     if (fingerprint == NULL) {
-        buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
+        check_error_and_recover2(mpd_state, &buffer, method, request_id, false);
         return buffer;
     }
+    
+    buffer = jsonrpc_start_result(buffer, method, request_id);
     buffer = sdscat(buffer, ",");
     buffer = tojson_char(buffer, "fingerprint", fingerprint, false);
-    mpd_response_finish(mpd_state->conn);
-    #else
-    (void)(mpd_state);
-    (void)(uri);
-    #endif
     buffer = jsonrpc_end_result(buffer);
+    
+    mpd_response_finish(mpd_state->conn);
+    check_error_and_recover2(mpd_state, &buffer, method, request_id, false);
+    
     return buffer;
 }
 
@@ -60,25 +58,21 @@ sds mpd_client_put_songdetails(t_mpd_state *mpd_state, sds buffer, sds method, i
         return buffer;
     }
 
-    buffer = jsonrpc_start_result(buffer, method, request_id);
-    buffer = sdscat(buffer,",");
-
-    if (!mpd_send_list_all_meta(mpd_state->conn, uri)) {
-        buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
+    bool rc = mpd_send_list_meta(mpd_state->conn, uri);
+    if (check_rc_error_and_recover(mpd_state, &buffer, method, request_id, false, rc, "mpd_send_list_meta") == false) {
         return buffer;
     }
+
+    buffer = jsonrpc_start_result(buffer, method, request_id);
+    buffer = sdscat(buffer,",");
 
     struct mpd_song *song;
     if ((song = mpd_recv_song(mpd_state->conn)) != NULL) {
         buffer = put_song_tags(buffer, mpd_state, &mpd_state->mympd_tag_types, song);
         mpd_song_free(song);
     }
-    else {
-        buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
-        return buffer;
-    }
-    mpd_response_finish(mpd_state->conn);
 
+    mpd_response_finish(mpd_state->conn);
     if (check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
         return buffer;
     }
@@ -105,14 +99,14 @@ sds mpd_client_put_songdetails(t_mpd_state *mpd_state, sds buffer, sds method, i
 sds mpd_client_put_filesystem(t_config *config, t_mpd_state *mpd_state, sds buffer, sds method, int request_id,
                               const char *path, const unsigned int offset, const char *filter, const t_tags *tagcols)
 {
-    buffer = jsonrpc_start_result(buffer, method, request_id);
-    buffer = sdscat(buffer, ",\"data\":[");
-
-    if (!mpd_send_list_meta(mpd_state->conn, path)) {
-        buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
+    bool rc = mpd_send_list_meta(mpd_state->conn, path);
+    if (check_rc_error_and_recover(mpd_state, &buffer, method, request_id, false, rc, "mpd_send_list_meta") == false) {
         return buffer;
     }
-
+    
+    buffer = jsonrpc_start_result(buffer, method, request_id);
+    buffer = sdscat(buffer, ",\"data\":[");
+    
     struct mpd_entity *entity;
     unsigned entity_count = 0;
     unsigned entities_returned = 0;
@@ -208,7 +202,6 @@ sds mpd_client_put_filesystem(t_config *config, t_mpd_state *mpd_state, sds buff
     }
 
     mpd_response_finish(mpd_state->conn);
-
     if (check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
         return buffer;
     }
@@ -227,20 +220,23 @@ sds mpd_client_put_db_tag(t_mpd_state *mpd_state, sds buffer, sds method, int re
 {
     buffer = jsonrpc_start_result(buffer, method, request_id);
     buffer = sdscat(buffer, ",\"data\":[");
-
-    if (mpd_search_db_tags(mpd_state->conn, mpd_tag_name_parse(mpdtagtype)) == false) {
-        buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
+    
+    bool rc = mpd_search_db_tags(mpd_state->conn, mpd_tag_name_parse(mpdtagtype));
+    if (check_rc_error_and_recover(mpd_state, &buffer, method, request_id, false, rc, "mpd_search_db_tags") == false) {
         mpd_search_cancel(mpd_state->conn);
         return buffer;
     }
+    
     if (mpd_tag_name_parse(mpdsearchtagtype) != MPD_TAG_UNKNOWN) {
-        if (mpd_search_add_tag_constraint(mpd_state->conn, MPD_OPERATOR_DEFAULT, mpd_tag_name_parse(mpdsearchtagtype), searchstr) == false) {
-            buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
+        rc = mpd_search_add_tag_constraint(mpd_state->conn, MPD_OPERATOR_DEFAULT, mpd_tag_name_parse(mpdsearchtagtype), searchstr);
+        if (check_rc_error_and_recover(mpd_state, &buffer, method, request_id, false, rc, "mpd_search_add_tag_constraint") == false) {
             mpd_search_cancel(mpd_state->conn);
             return buffer;
         }
     }
-    if (mpd_search_commit(mpd_state->conn) == false || check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
+            
+    rc = mpd_search_commit(mpd_state->conn);
+    if (check_rc_error_and_recover(mpd_state, &buffer, method, request_id, false, rc, "mpd_search_commit") == false) {
         return buffer;
     }
 
@@ -271,6 +267,7 @@ sds mpd_client_put_db_tag(t_mpd_state *mpd_state, sds buffer, sds method, int re
         mpd_return_pair(mpd_state->conn, pair);
     }
 
+    mpd_response_finish(mpd_state->conn);
     if (check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
         return buffer;
     }
@@ -293,22 +290,23 @@ sds mpd_client_put_songs_in_album(t_mpd_state *mpd_state, sds buffer, sds method
     buffer = jsonrpc_start_result(buffer, method, request_id);
     buffer = sdscat(buffer, ",\"data\":[");
 
-    if (mpd_search_db_songs(mpd_state->conn, true) == false) {
-        buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
+    bool rc = mpd_search_db_songs(mpd_state->conn, true);
+    if (check_rc_error_and_recover(mpd_state, &buffer, method, request_id, false, rc, "mpd_search_db_songs") == false) {
+        mpd_search_cancel(mpd_state->conn);
+        return buffer;
+    }    
+    rc = mpd_search_add_tag_constraint(mpd_state->conn, MPD_OPERATOR_DEFAULT, mpd_tag_name_parse(tag), search);
+    if (check_rc_error_and_recover(mpd_state, &buffer, method, request_id, false, rc, "mpd_search_add_tag_constraint") == false) {
         mpd_search_cancel(mpd_state->conn);
         return buffer;
     }
-    if (mpd_search_add_tag_constraint(mpd_state->conn, MPD_OPERATOR_DEFAULT, mpd_tag_name_parse(tag), search) == false) {
-        buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
+    rc = mpd_search_add_tag_constraint(mpd_state->conn, MPD_OPERATOR_DEFAULT, MPD_TAG_ALBUM, album);
+    if (check_rc_error_and_recover(mpd_state, &buffer, method, request_id, false, rc, "mpd_search_add_tag_constraint") == false) {
         mpd_search_cancel(mpd_state->conn);
         return buffer;
     }
-    if (mpd_search_add_tag_constraint(mpd_state->conn, MPD_OPERATOR_DEFAULT, MPD_TAG_ALBUM, album) == false) {
-        buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
-        mpd_search_cancel(mpd_state->conn);
-        return buffer;
-    }
-    if (mpd_search_commit(mpd_state->conn) == false || check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
+    rc = mpd_search_commit(mpd_state->conn);
+    if (check_rc_error_and_recover(mpd_state, &buffer, method, request_id, false, rc, "mpd_search_commit") == false) {
         buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
         return buffer;
     }
@@ -317,7 +315,7 @@ sds mpd_client_put_songs_in_album(t_mpd_state *mpd_state, sds buffer, sds method
     struct mpd_song *first_song = NULL;
     int entity_count = 0;
     int entities_returned = 0;
-    int totalTime = 0;
+    unsigned int totalTime = 0;
 
     while ((song = mpd_recv_song(mpd_state->conn)) != NULL) {
         entity_count++;
@@ -334,7 +332,6 @@ sds mpd_client_put_songs_in_album(t_mpd_state *mpd_state, sds buffer, sds method
         totalTime += mpd_song_get_duration(song);
         mpd_song_free(song);
     }
-    mpd_response_finish(mpd_state->conn);
 
     char *albumartist = NULL;
     if (first_song != NULL) {
@@ -355,6 +352,7 @@ sds mpd_client_put_songs_in_album(t_mpd_state *mpd_state, sds buffer, sds method
         mpd_song_free(first_song);
     }
 
+    mpd_response_finish(mpd_state->conn);
     if (check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
         return buffer;
     }
@@ -368,13 +366,14 @@ sds mpd_client_put_firstsong_in_albums(t_config *config, t_mpd_state *mpd_state,
     buffer = jsonrpc_start_result(buffer, method, request_id);
     buffer = sdscat(buffer, ",\"data\":[");
 
-    if (mpd_search_db_songs(mpd_state->conn, false) == false) {
-        buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
+    bool rc = mpd_search_db_songs(mpd_state->conn, false);
+    if (check_rc_error_and_recover(mpd_state, &buffer, method, request_id, false, rc, "mpd_search_db_songs") == false) {
         mpd_search_cancel(mpd_state->conn);
         return buffer;
     }
+    
     sds expression = sdscatprintf(sdsempty(), "((Track == '%d')", config->covergridminsongs);
-    int searchstr_len = strlen(searchstr);
+    unsigned long searchstr_len = strlen(searchstr);
     if (config->regex == true && searchstr_len > 0 && searchstr_len <= 2 && strlen(tag) > 0) {
         expression = sdscatfmt(expression, " AND (%s =~ '^%s')", tag, searchstr);
     }
@@ -382,25 +381,36 @@ sds mpd_client_put_firstsong_in_albums(t_config *config, t_mpd_state *mpd_state,
         expression = sdscatfmt(expression, " AND (%s contains '%s')", tag, searchstr);
     }
     expression = sdscat(expression, ")");
-    if (mpd_search_add_expression(mpd_state->conn, expression) == false) {
-        buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
+    
+    rc = mpd_search_add_expression(mpd_state->conn, expression);
+    sdsfree(expression);
+    if (check_rc_error_and_recover(mpd_state, &buffer, method, request_id, false, rc, "mpd_search_add_expression") == false) {
         mpd_search_cancel(mpd_state->conn);
         return buffer;
     }
-    sdsfree(expression);
     if (strlen(sort) > 0) {
-        if (mpd_search_add_sort_name(mpd_state->conn, sort, sortdesc) == false) {
-            buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
-            mpd_search_cancel(mpd_state->conn);
-            return buffer;
+        enum mpd_tag_type sort_tag = mpd_tag_name_parse(sort);
+        if (sort_tag != MPD_TAG_UNKNOWN) {
+            sort_tag = get_sort_tag(sort_tag);
+            rc = mpd_search_add_sort_tag(mpd_state->conn, sort_tag, sortdesc);
+            if (check_rc_error_and_recover(mpd_state, &buffer, method, request_id, false, rc, "mpd_search_add_sort_tag") == false) {
+                mpd_search_cancel(mpd_state->conn);
+                return buffer;
+            }
+        }
+        else {
+            LOG_WARN("Unknown sort tag: %s", sort);
         }
     }
-    if (mpd_search_add_window(mpd_state->conn, offset, offset + mpd_state->max_elements_per_page) == false) {
-        buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
+    
+    rc = mpd_search_add_window(mpd_state->conn, offset, offset + mpd_state->max_elements_per_page);
+    if (check_rc_error_and_recover(mpd_state, &buffer, method, request_id, false, rc, "mpd_search_add_window") == false) {
         mpd_search_cancel(mpd_state->conn);
         return buffer;
     }
-    if (mpd_search_commit(mpd_state->conn) == false || check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
+    
+    rc = mpd_search_commit(mpd_state->conn);
+    if (check_rc_error_and_recover(mpd_state, &buffer, method, request_id, false, rc, "mpd_search_commit") == false) {
         return buffer;
     }
 
@@ -421,8 +431,8 @@ sds mpd_client_put_firstsong_in_albums(t_config *config, t_mpd_state *mpd_state,
 
         mpd_song_free(song);
     }
-    mpd_response_finish(mpd_state->conn);
 
+    mpd_response_finish(mpd_state->conn);
     if (check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
         return buffer;
     }

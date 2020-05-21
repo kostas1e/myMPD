@@ -6,6 +6,7 @@
 
 #ifndef __UTILITY_H__
 #define __UTILITY_H__
+void send_jsonrpc_notify_error(const char *message);
 sds jsonrpc_start_notify(sds buffer, const char *method);
 sds jsonrpc_end_notify(sds buffer);
 sds jsonrpc_notify(sds buffer, const char *method);
@@ -19,10 +20,10 @@ sds jsonrpc_end_phrase(sds buffer);
 sds tojson_char(sds buffer, const char *key, const char *value, bool comma);
 sds tojson_char_len(sds buffer, const char *key, const char *value, size_t len, bool comma);
 sds tojson_bool(sds buffer, const char *key, bool value, bool comma);
-sds tojson_long(sds buffer, const char *key, long value, bool comma);
+sds tojson_long(sds buffer, const char *key, long long value, bool comma);
+sds tojson_ulong(sds buffer, const char *key, unsigned long value, bool comma);
 sds tojson_float(sds buffer, const char *key, float value, bool comma);
 int testdir(const char *name, const char *dirname, bool create);
-int randrange(int n);
 bool validate_string(const char *data);
 bool validate_string_not_empty(const char *data);
 bool validate_string_not_dir(const char *data);
@@ -38,6 +39,7 @@ sds get_mime_type_by_magic_stream(sds stream);
 bool write_covercache_file(t_config *config, const char *uri, const char *mime_type, sds binary);
 bool strtobool(const char *value);
 int strip_extension(char *s);
+void ws_notify(sds message);
 
 #define FREE_PTR(PTR) do { \
     if (PTR != NULL) \

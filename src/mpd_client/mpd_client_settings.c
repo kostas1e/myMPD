@@ -26,12 +26,15 @@
 static sds print_tags_array(sds buffer, const char *tagsname, t_tags tags);
 
 //public functions
-bool mpd_api_settings_set(t_config *config, t_mpd_state *mpd_state, struct json_token *key,
-                          struct json_token *val, bool *mpd_host_changed, bool *jukebox_changed)
+bool mpd_api_settings_set(t_config *config, t_mpd_state *mpd_state, struct json_token *key, 
+                          struct json_token *val, bool *mpd_host_changed, bool *jukebox_changed,
+                          bool *check_mpd_error)
 {
     bool rc = true;
     char *crap;
     sds settingvalue = sdscatlen(sdsempty(), val->ptr, val->len);
+
+    *check_mpd_error = false;
     LOG_DEBUG("Parse setting \"%.*s\" with value \"%.*s\"", key->len, key->ptr, val->len, val->ptr);
     if (strncmp(key->ptr, "mpdPass", key->len) == 0) {
         if (strncmp(val->ptr, "dontsetpassword", val->len) != 0) {
@@ -180,62 +183,62 @@ bool mpd_api_settings_set(t_config *config, t_mpd_state *mpd_state, struct json_
     else if (strncmp(key->ptr, "random", key->len) == 0) {
         unsigned uint_buf = strtoumax(settingvalue, &crap, 10);
         rc = mpd_run_random(mpd_state->conn, uint_buf);
+        *check_mpd_error = true;
     }
     else if (strncmp(key->ptr, "repeat", key->len) == 0) {
         unsigned uint_buf = strtoumax(settingvalue, &crap, 10);
         rc = mpd_run_repeat(mpd_state->conn, uint_buf);
+        *check_mpd_error = true;
     }
     else if (strncmp(key->ptr, "consume", key->len) == 0) {
         unsigned uint_buf = strtoumax(settingvalue, &crap, 10);
         rc = mpd_run_consume(mpd_state->conn, uint_buf);
+        *check_mpd_error = true;
     }
     else if (strncmp(key->ptr, "single", key->len) == 0) {
         unsigned uint_buf = strtoumax(settingvalue, &crap, 10);
         if (mpd_state->feat_single_oneshot == true) {
-            #if LIBMPDCLIENT_CHECK_VERSION(2,18,0)
             enum mpd_single_state state;
             if (uint_buf == 0) { state = MPD_SINGLE_OFF; }
             else if (uint_buf == 1) { state = MPD_SINGLE_ON; }
             else if (uint_buf == 2) { state = MPD_SINGLE_ONESHOT; }
             else { state = MPD_SINGLE_UNKNOWN; }
             rc = mpd_run_single_state(mpd_state->conn, state);
-            #endif
         }
         else {
             rc = mpd_run_single(mpd_state->conn, uint_buf);
         }
+        *check_mpd_error = true;
     }
     else if (strncmp(key->ptr, "crossfade", key->len) == 0) {
         unsigned uint_buf = strtoumax(settingvalue, &crap, 10);
         rc = mpd_run_crossfade(mpd_state->conn, uint_buf);
+        *check_mpd_error = true;
     }
     else if (strncmp(key->ptr, "mixrampdb", key->len) == 0) {
         if (config->mixramp == true) {
             float float_buf = strtof(settingvalue, &crap);
             rc = mpd_run_mixrampdb(mpd_state->conn, float_buf);
+            *check_mpd_error = true;
         }
     }
     else if (strncmp(key->ptr, "mixrampdelay", key->len) == 0) {
         if (config->mixramp == true) {
             float float_buf = strtof(settingvalue, &crap);
             rc = mpd_run_mixrampdelay(mpd_state->conn, float_buf);
+            *check_mpd_error = true;
         }
     }
     else if (strncmp(key->ptr, "replaygain", key->len) == 0) {
-        #if LIBMPDCLIENT_CHECK_VERSION(2,18,0)
-            enum mpd_replay_gain_mode mode = mpd_parse_replay_gain_name(settingvalue);
-            if (mode == MPD_REPLAY_UNKNOWN) {
-                LOG_ERROR("Unknown replay gain mode: %s", settingvalue);
-            }
-            else {
-                rc = mpd_run_replay_gain_mode(mpd_state->conn, mode);
-            }
-        #else
-            rc = mpd_send_command(mpd_state->conn, "replay_gain_mode", settingvalue, NULL);
-            mpd_response_finish(mpd_state->conn);
-        #endif
-    }
-
+        enum mpd_replay_gain_mode mode = mpd_parse_replay_gain_name(settingvalue);
+        if (mode == MPD_REPLAY_UNKNOWN) {
+            LOG_ERROR("Unknown replay gain mode: %s", settingvalue);
+        }
+        else {
+            rc = mpd_run_replay_gain_mode(mpd_state->conn, mode);
+            *check_mpd_error = true;
+        }
+    }    
     sdsfree(settingvalue);
     return rc;
 }
@@ -247,36 +250,20 @@ sds mpd_client_put_settings(t_mpd_state *mpd_state, sds buffer, sds method, int 
         return buffer;
     }
 
-    #ifdef LIBMYMPDCLIENT
-        enum mpd_replay_gain_mode replay_gain_mode = mpd_run_replay_gain_status(mpd_state->conn);
-        if (replay_gain_mode == MPD_REPLAY_UNKNOWN) {
-            if (check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
-            return buffer;
-        }
-        const char *replaygain = mpd_parse_replay_gain_mode(replay_gain_mode);
-        }
-    #else
-        mpd_send_command(mpd_state->conn, "replay_gain_status", NULL);
+    enum mpd_replay_gain_mode replay_gain_mode = mpd_run_replay_gain_status(mpd_state->conn);
+    if (replay_gain_mode == MPD_REPLAY_UNKNOWN) {
         if (check_error_and_recover2(mpd_state, &buffer, method, request_id, false) == false) {
+            mpd_status_free(status);
             return buffer;
         }
-        struct mpd_pair *pair = mpd_recv_pair(mpd_state->conn);
-        if (pair == NULL) {
-            buffer = check_error_and_recover(mpd_state, buffer, method, request_id);
-            return buffer;
-        }
-        char *replaygain = strdup(pair->value);
-        mpd_return_pair(mpd_state->conn, pair);
-        mpd_response_finish(mpd_state->conn);
-    #endif
-
+    }
+    const char *replaygain = mpd_parse_replay_gain_mode(replay_gain_mode);
+    
     buffer = jsonrpc_start_result(buffer, method, request_id);
     buffer = sdscat(buffer, ",");
     buffer = tojson_long(buffer, "repeat", mpd_status_get_repeat(status), true);
     if (mpd_state->feat_single_oneshot == true) {
-        #if LIBMPDCLIENT_CHECK_VERSION(2,18,0)
         buffer = tojson_long(buffer, "single", mpd_status_get_single_state(status), true);
-        #endif
     }
     else {
         buffer = tojson_long(buffer, "single", mpd_status_get_single(status), true);
@@ -300,12 +287,9 @@ sds mpd_client_put_settings(t_mpd_state *mpd_state, sds buffer, sds method, int 
     buffer = tojson_bool(buffer, "featSearchwindow", mpd_state->feat_mpd_searchwindow, true);
     buffer = tojson_char(buffer, "musicDirectoryValue", mpd_state->music_directory_value, true);
     buffer = tojson_bool(buffer, "mpdConnected", true, true);
+    buffer = tojson_bool(buffer, "featMounts", mpd_state->feat_mpd_mount, true);
+    buffer = tojson_bool(buffer, "featNeighbors", mpd_state->feat_mpd_neighbor, true);
     mpd_status_free(status);
-    #ifdef LIBMYMPDCLIENT
-        //replaygain is a stack variable
-    #else
-        FREE_PTR(replaygain);
-    #endif
 
     buffer = print_tags_array(buffer, "tags", mpd_state->mympd_tag_types);
     buffer = sdscat(buffer, ",");

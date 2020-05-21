@@ -13,6 +13,7 @@
 
 #include "../dist/src/sds/sds.h"
 #include "sds_extras.h"
+#include "random.h"
 #include "list.h"
 
 //private definitions
@@ -129,7 +130,8 @@ bool list_shuffle(struct list *l) {
 
     struct list_node *current = l->head;
     while (current != NULL) {
-        pos = rand() % l->length;
+        //pos = rand() % l->length;
+        pos = randrange(0, l->length);
         list_swap_item(current, list_node_at(l, pos));
         n++;
         current = current->next;
@@ -138,15 +140,16 @@ bool list_shuffle(struct list *l) {
 }
 
 bool list_sort_by_value_i(struct list *l, bool order) {
-    int swapped;
-    struct list_node *ptr1;
-    struct list_node *lptr = NULL;
-
-    if (l->head == NULL)
+    int swapped; 
+    struct list_node *ptr1; 
+    struct list_node *lptr = NULL; 
+  
+    if (l->head == NULL) {
         return false;
-
-    do {
-        swapped = 0;
+    }
+  
+    do { 
+        swapped = 0; 
         ptr1 = l->head;
 
         while (ptr1->next != lptr)  {
@@ -167,15 +170,16 @@ bool list_sort_by_value_i(struct list *l, bool order) {
 }
 
 bool list_sort_by_value_p(struct list *l, bool order) {
-    int swapped;
-    struct list_node *ptr1;
-    struct list_node *lptr = NULL;
-
-    if (l->head == NULL)
+    int swapped; 
+    struct list_node *ptr1; 
+    struct list_node *lptr = NULL; 
+  
+    if (l->head == NULL) {
         return false;
-
-    do {
-        swapped = 0;
+    }
+  
+    do { 
+        swapped = 0; 
         ptr1 = l->head;
 
         while (ptr1->next != lptr)  {
@@ -196,15 +200,16 @@ bool list_sort_by_value_p(struct list *l, bool order) {
 }
 
 bool list_sort_by_key(struct list *l, bool order) {
-    int swapped;
-    struct list_node *ptr1;
-    struct list_node *lptr = NULL;
-
-    if (l->head == NULL)
+    int swapped; 
+    struct list_node *ptr1; 
+    struct list_node *lptr = NULL; 
+  
+    if (l->head == NULL) {
         return false;
-
-    do {
-        swapped = 0;
+    }
+  
+    do { 
+        swapped = 0; 
         ptr1 = l->head;
 
         while (ptr1->next != lptr)  {
@@ -342,7 +347,8 @@ static struct list_node *list_node_extract(struct list *l, unsigned idx) {
     if (l->head == NULL) {
         return NULL;
     }
-    struct list_node *current = l->head, **previous = &l->head;
+    struct list_node *current = l->head;
+    struct list_node **previous = &l->head;
     for (; idx > 0; idx--) {
         if (current->next == NULL) {
             return NULL;

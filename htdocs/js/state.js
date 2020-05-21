@@ -17,14 +17,7 @@ function parseStats(obj) {
     document.getElementById('mympdVersion').innerText = obj.result.mympdVersion;
     document.getElementById('mpdInfo_version').innerText = obj.result.mpdVersion;
     document.getElementById('mpdInfo_libmpdclientVersion').innerText = obj.result.libmpdclientVersion;
-    if (obj.result.libmympdclientVersion !== undefined) {
-        document.getElementById('mpdInfo_libmympdclientVersion').innerText = obj.result.libmympdclientVersion;
-        // document.getElementById('mpdInfo_libmympdclientVersion').parentNode.classList.remove('hide');
-    }
-    else {
-        document.getElementById('mpdInfo_libmympdclientVersion').parentNode.classList.add('hide');
-    }
-    document.getElementById('ideonVersion').innerText = obj.result.ideonVersion;
+    document.getElementById('mpdInfo_libmympdclientVersion').innerText = obj.result.libmympdclientVersion;
 }
 
 function getServerinfo() {
@@ -363,7 +356,10 @@ function songChange(obj) {
 
     for (let i = 0; i < settings.colsPlayback.length; i++) {
         let c = document.getElementById('current' + settings.colsPlayback[i]);
-        if (c) {
+        if (c && settings.colsPlayback[i] === 'Lyrics') {
+            getLyrics(obj.result.uri, c.getElementsByTagName('p')[0]);
+        }
+        else if (c) {
             let value = obj.result[settings.colsPlayback[i]];
             if (value === undefined) {
                 value = '';
