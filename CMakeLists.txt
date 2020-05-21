@@ -152,6 +152,10 @@ file(GLOB MYMPD_SRC_FILES4 "src/web_server/*.c")
 set_property(SOURCE ${MYMPD_SRC_FILES4} PROPERTY COMPILE_FLAGS "-Wextra -pedantic -Wformat=2 -Wunused-parameter -Wshadow -Wwrite-strings \
 	-Wstrict-prototypes -Wold-style-definition -Wredundant-decls -Wnested-externs -Wmissing-include-dirs")
 
+file(GLOB MYMPD_SRC_FILES5 "src/tidal/*.c")
+set_property(SOURCE ${MYMPD_SRC_FILES5} PROPERTY COMPILE_FLAGS "-Wextra -pedantic -Wformat=2 -Wunused-parameter -Wshadow -Wwrite-strings \
+	-Wstrict-prototypes -Wold-style-definition -Wredundant-decls -Wnested-externs -Wmissing-include-dirs")
+
 #compiler flags for inih
 set_property(SOURCE dist/src/inih/ini.c PROPERTY COMPILE_FLAGS "-Wno-stringop-truncation")
 
