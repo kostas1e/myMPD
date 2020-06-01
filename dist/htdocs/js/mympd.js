@@ -303,15 +303,15 @@ function gotoBrowse(x) {
 }
 
 function parseFilesystem(obj) {
-    let list = app.current.app + (app.current.tab === 'Filesystem' ? app.current.tab : '');
-    let table = document.getElementById(app.current.app + (app.current.tab === undefined ? '' : app.current.tab) + 'List');
+    let list = app.current.app + app.current.tab;
+    let table = document.getElementById(list + 'List');
     let tbody = table.getElementsByTagName('tbody')[0];
     let colspan = settings['cols' + list].length;
     colspan--;
 
     if (obj.error) {
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
-                          '<td colspan="' + colspan + '">' + t(obj.error.message) + '</td></tr>';
+            '<td colspan="' + colspan + '">' + t(obj.error.message) + '</td></tr>';
         document.getElementById(app.current.app + (app.current.tab === undefined ? '' : app.current.tab) + 'List').classList.remove('opacity05');
         document.getElementById('cardFooterBrowse').innerText = '';
         return;
@@ -390,12 +390,12 @@ function parseFilesystem(obj) {
     }
 
     setPagination(obj.result.totalEntities, obj.result.returnedEntities);
-                    
+
     if (nrItems === 0) {
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
-                          '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
+            '<td colspan="' + colspan + '">' + t('Empty list') + '</td></tr>';
     }
-    document.getElementById(app.current.app + (app.current.tab === undefined ? '' : app.current.tab) + 'List').classList.remove('opacity05');
+    document.getElementById(list + 'List').classList.remove('opacity05');
     document.getElementById('cardFooterBrowse').innerText = t('Num entries', obj.result.totalEntities);
 
     scrollToPosY(appScrollPos);
@@ -592,7 +592,7 @@ function addAllFromBrowseFilesystem() {
 
 function addAllFromBrowseDatabasePlist(plist) {
     if (app.current.search.length >= 2) {
-        sendAPI("MPD_API_DATABASE_SEARCH", {"plist": plist, "filter": app.current.view, "searchstr": app.current.search, "offset": 0, "cols": settings.colsSearch, "replace": false});
+        sendAPI("MPD_API_DATABASE_SEARCH", { "plist": plist, "filter": app.current.view, "searchstr": app.current.search, "offset": 0, "cols": settings.colsSearchDatabase, "replace": false });
     }
 }
 
@@ -758,14 +758,22 @@ function getCovergridTitleList(id) {
     }
     cardBody.style.width = width + 'px';
     cardBody.parentNode.style.width = width + 'px';
+    let albumArtist = decodeURI(card.getAttribute('data-albumartist'));
+    if (albumArtist === 'Unknown artist') {
+        albumArtist = '';
+    }
     sendAPI("MPD_API_DATABASE_TAG_ALBUM_TITLE_LIST", {
         "album": decodeURI(card.getAttribute('data-album')),
-        "search": decodeURI(card.getAttribute('data-albumartist')),
+        // "search": decodeURI(card.getAttribute('data-albumartist')),
+        "search": albumArtist,
         "tag": "AlbumArtist", "cols": settings.colsBrowseDatabase
     }, parseCovergridTitleList);
 }
 
 function parseCovergridTitleList(obj) {
+    if (obj.result.AlbumArtist === '-') {
+        obj.result.AlbumArtist = 'Unknown artist';
+    }
     let id = genId('covergrid' + obj.result.Album + obj.result.AlbumArtist);
     let cardBody = document.getElementById(id);
 
@@ -856,9 +864,9 @@ function setGridImage(changes, observer) {
     });
 }
 
-function closeCover(id = undefined) {
-    if (openCoverId !== undefined) {
-        let cardBody = document.getElementById(openCoverId);
+function closeCover(id) {
+    let cardBody = document.getElementById(openCoverId);
+    if (cardBody !== null) {
         let uri = decodeURI(cardBody.parentNode.getAttribute('data-uri'));
         showGridImage(cardBody, uri);
     }
@@ -1431,7 +1439,14 @@ function execSyscmd(cmd) {
 
 //eslint-disable-next-line no-unused-vars
 function clearCovercache() {
-    sendAPI("MYMPD_API_COVERCACHE_CLEAR", {});
+    sendAPI("MYMPD_API_COVERCACHE_CLEAR", {}, msgCovercache);
+}
+
+function msgCovercache() {
+    document.getElementById('msgClearCovercache').classList.remove('hide');
+    setTimeout(function () {
+        document.getElementById('msgClearCovercache').classList.add('hide');
+    }, 3000);
 }
 
 //eslint-disable-next-line no-unused-vars
@@ -1441,13 +1456,13 @@ function cropCovercache() {
 
 //eslint-disable-next-line no-unused-vars
 function updateDB(uri, showModal) {
-    sendAPI("MPD_API_DATABASE_UPDATE", {"uri": uri});
+    sendAPI("MPD_API_DATABASE_UPDATE", { "uri": uri });
     updateDBstarted(showModal);
 }
 
 //eslint-disable-next-line no-unused-vars
 function rescanDB(uri, showModal) {
-    sendAPI("MPD_API_DATABASE_RESCAN", {"uri": uri});
+    sendAPI("MPD_API_DATABASE_RESCAN", { "uri": uri });
     updateDBstarted(showModal);
 }
 
@@ -1470,6 +1485,7 @@ function updateDBfinished(idleEvent) {
         _updateDBfinished(idleEvent);
     }
     else {
+        showNotification(t('Database update started'), '', '', 'success');
         //on small databases the modal opens after the finish event
         setTimeout(function() {
             _updateDBfinished(idleEvent);
@@ -1489,7 +1505,7 @@ function _updateDBfinished(idleEvent) {
     }
 
     //update database modal
-    if (document.getElementById('modalUpdateDB').classList.contains('show')) {
+    // if (document.getElementById('modalUpdateDB').classList.contains('show')) {
         if (idleEvent === 'update_database') {
             document.getElementById('updateDBfinished').innerText = t('Database successfully updated');
         }
@@ -1504,11 +1520,6 @@ function _updateDBfinished(idleEvent) {
         document.getElementById('updateDBfooter').classList.remove('hide');
     // }
     modalUpdateDB.show();
-
-    //general notification
-    if (idleEvent === 'update_database') {
-        showNotification(t('Database successfully updated'), '', '', 'success');
-    }
 
     //general notification
     if (idleEvent === 'update_database') {
@@ -1780,6 +1791,11 @@ var modalDeletePlaylist = new Modal(document.getElementById('modalDeletePlaylist
 var modalSaveBookmark = new Modal(document.getElementById('modalSaveBookmark'));
 var modalTimer = new Modal(document.getElementById('modalTimer'));
 var modalMounts = new Modal(document.getElementById('modalMounts'));
+var modalAlbumDetails = new Modal(document.getElementById('modalAlbumDetails'));
+var modalArtistDetails = new Modal(document.getElementById('modalArtistDetails'));
+var modalIdeon = new Modal(document.getElementById('modalIdeon'));
+var modalInit = new Modal(document.getElementById('modalInit'));
+var modalResetSettings = new Modal(document.getElementById('modalResetSettings'));
 
 var dropdownMainMenu;
 var dropdownVolumeMenu = new Dropdown(document.getElementById('volumeMenu'));
@@ -1956,7 +1972,7 @@ function appRoute() {
         }
     }
     else if (app.current.app === 'Browse' && app.current.tab === 'Filesystem') {
-        sendAPI("MPD_API_DATABASE_FILESYSTEM_LIST", {"offset": app.current.page, "path": (app.current.search ? app.current.search : "/"), "filter": app.current.filter, "cols": settings.colsBrowseFilesystem}, parseFilesystem, true);
+        sendAPI("MPD_API_DATABASE_FILESYSTEM_LIST", { "offset": app.current.page, "path": (app.current.search ? app.current.search : "/"), "filter": app.current.filter, "cols": settings.colsBrowseFilesystem }, parseFilesystem, true);
         // Don't add all songs from root
         if (app.current.search) {
             document.getElementById('BrowseFilesystemAddAllSongs').removeAttribute('disabled');
@@ -3272,7 +3288,7 @@ function showNotification(notificationTitle, notificationText, notificationHtml,
     if (settings.notificationWeb === true) {
         let notification = new Notification(notificationTitle, { icon: 'assets/favicon.ico', body: notificationText });
         setTimeout(notification.close.bind(notification), 3000);
-    } 
+    }
     if (settings.notificationPage === true || notificationType === 'danger') {
         let alertBox;
         if (!document.getElementById('alertBox')) {
@@ -4364,8 +4380,8 @@ function showMenuTd(el) {
             (type === 'plist' || type === 'smartpls' ? addMenuItem({ "cmd": "playlistDetails", "options": [uri] }, t('View playlist')) : '') +
             (type === 'dir' && settings.featBookmarks && app.current.tab !== 'Covergrid' ? addMenuItem({ "cmd": "showBookmarkSave", "options": [-1, name, uri, type] }, t('Add bookmark')) : '');
         if (app.current.tab === 'Filesystem') {
-            menu += (type === 'dir' ? addMenuItem({"cmd": "updateDB", "options": [dirname(uri), true]}, t('Update directory')) : '') +
-                (type === 'dir' ? addMenuItem({"cmd": "rescanDB", "options": [dirname(uri), true]}, t('Rescan directory')) : '');
+            menu += (type === 'dir' ? addMenuItem({ "cmd": "updateDB", "options": [dirname(uri), true] }, t('Update directory')) : '') +
+                (type === 'dir' ? addMenuItem({ "cmd": "rescanDB", "options": [dirname(uri), true] }, t('Rescan directory')) : '');
         }
         if (app.current.app === 'Search') {
             //songs must be arragend in one album per folder
@@ -4433,6 +4449,9 @@ function showMenuTd(el) {
         (app.current.app === 'Playback' && el.nodeName === 'DIV')) {
         let album = decodeURI(el.parentNode.getAttribute('data-album'));
         let albumArtist = decodeURI(el.parentNode.getAttribute('data-albumartist'));
+        if (albumArtist === 'Unknown artist') {
+            albumArtist = ''
+        }
         let expression = '((Album == \'' + album + '\') AND (AlbumArtist == \'' + albumArtist + '\'))';
         let id = el.parentNode.getElementsByClassName('card-body')[0].getAttribute('id');
         menu += (el.classList.contains('card-footer') ? addMenuItem({ "cmd": "getCovergridTitleList", "options": [id] }, t('Show songs')) : '') +
@@ -5625,11 +5644,10 @@ function parseMPDSettings() {
     else {
         let pbtl = '';
         for (let i = 0; i < settings.colsPlayback.length; i++) {
-            pbtl += '<div id="current' + settings.colsPlayback[i]  + '" data-tag="' + settings.colsPlayback[i] + '" ' +
-                    (settings.colsPlayback[i] === 'Lyrics' ? '' : 'data-name="' + (lastSongObj[settings.colsPlayback[i]] ? encodeURI(lastSongObj[settings.colsPlayback[i]]) : '') + '"') +
-                    '>' +
-                    '<small>' + t(settings.colsPlayback[i]) + '</small>' +
-                    '<p';
+            pbtl += '<div id="current' + settings.colsPlayback[i] + '" data-tag="' + settings.colsPlayback[i] + '" ' +
+                (settings.colsPlayback[i] === 'Lyrics' ? '' : 'data-name="' + (lastSongObj[settings.colsPlayback[i]] ? encodeURI(lastSongObj[settings.colsPlayback[i]]) : '') + '"') + '>' +
+                '<small>' + t(settings.colsPlayback[i]) + ': </small>' +
+                '<span';
             if (settings.browsetags.includes(settings.colsPlayback[i])) {
                 pbtl += ' class="clickable"';
             }
@@ -7160,7 +7178,7 @@ function setColTags(table) {
         tags.push('Fileformat');
         tags.push('LastModified');
         if (settings.featLyrics === true) {
-            tags.push('Lyrics');
+            tags.push('Lyrics'); // co
         }
     }
     if (table === 'SearchTidal') {
@@ -7504,11 +7522,11 @@ function parseListTimer(obj) {
     for (let i = 0; i < obj.result.returnedEntities; i++) {
         let row = document.createElement('tr');
         row.setAttribute('data-id', obj.result.data[i].timerid);
-        let tds = '<td>' + e(obj.result.data[i].name) + '</td>' +
-                  '<td><button name="enabled" class="btn btn-secondary btn-xs clickable material-icons material-icons-small' +
-                  (obj.result.data[i].enabled === true ? ' active' : '') + '">' +
-                  (obj.result.data[i].enabled === true ? 'check' : 'radio_button_unchecked') + '</button></td>' +
-                  '<td>' + zeroPad(obj.result.data[i].startHour, 2) + ':' + zeroPad(obj.result.data[i].startMinute,2) + ' ' + t('on') + ' ';
+        let tds = '<td>' + obj.result.data[i].name + '</td>' +
+            '<td><button name="enabled" class="btn btn-secondary btn-xs clickable material-icons material-icons-small' +
+            (obj.result.data[i].enabled === true ? ' active' : '') + '">' +
+            (obj.result.data[i].enabled === true ? 'check' : 'radio_button_unchecked') + '</button></td>' +
+            '<td>' + zeroPad(obj.result.data[i].startHour, 2) + ':' + zeroPad(obj.result.data[i].startMinute, 2) + ' ' + t('on') + ' ';
         let days = [];
         for (let j = 0; j < 7; j++) {
             if (obj.result.data[i].weekdays[j] === true) {

@@ -164,7 +164,9 @@ static sds request(sds buffer, const char *method, sds uri)
     sds url = sdscatfmt(sdsnew(TIDALHIFI_API), "%s&sessionId=%s&countryCode=%s", uri, session_id, country_code);
     curl_easy_setopt(tidalhandle, CURLOPT_URL, url);
     if (strcmp(method, "GET") == 0)
+    {
         curl_easy_setopt(tidalhandle, CURLOPT_HTTPGET, 1L);
+    }
 
     CURLcode res = curl_easy_perform(tidalhandle);
     LOG_DEBUG("%s %s", method, url);
@@ -673,7 +675,9 @@ sds tidal_search(sds buffer, sds method, int request_id, const char *query,
             res = request(res, "GET", url); // raw items
 
             if (offset == 0 && (strcmp(type, "any") == 0))
+            {
                 buffer = parse_tophit(buffer, res, &r1);
+            }
             sds items = parse_tracks(sdsempty(), res, &t2);
             r2 = number_of_items(limit, offset, t2);
             if (r2)

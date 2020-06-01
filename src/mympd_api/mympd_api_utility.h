@@ -95,7 +95,7 @@ typedef struct t_mympd_state {
     bool dop;
     int ns_type;
     sds ns_server;
-    sds sambsa_version;
+    sds samba_version;
     sds ns_share;
     sds ns_username;
     sds ns_password;

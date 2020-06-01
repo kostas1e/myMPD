@@ -190,6 +190,9 @@ function showMenuTd(el) {
         (app.current.app === 'Playback' && el.nodeName === 'DIV')) {
         let album = decodeURI(el.parentNode.getAttribute('data-album'));
         let albumArtist = decodeURI(el.parentNode.getAttribute('data-albumartist'));
+        if (albumArtist === 'Unknown artist') {
+            albumArtist = ''
+        }
         let expression = '((Album == \'' + album + '\') AND (AlbumArtist == \'' + albumArtist + '\'))';
         let id = el.parentNode.getElementsByClassName('card-body')[0].getAttribute('id');
         menu += (el.classList.contains('card-footer') ? addMenuItem({ "cmd": "getCovergridTitleList", "options": [id] }, t('Show songs')) : '') +

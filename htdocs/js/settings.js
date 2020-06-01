@@ -539,7 +539,7 @@ function parseMPDSettings() {
         let pbtl = '';
         for (let i = 0; i < settings.colsPlayback.length; i++) {
             pbtl += '<div id="current' + settings.colsPlayback[i] + '" data-tag="' + settings.colsPlayback[i] + '" ' +
-                (settings.colsPlayback[i] === 'Lyrics' ? '' : 'data-name="' + (lastSongObj[settings.colsPlayback[i]] ? encodeURI(lastSongObj[settings.colsPlayback[i]]) : '') + '">') +
+                (settings.colsPlayback[i] === 'Lyrics' ? '' : 'data-name="' + (lastSongObj[settings.colsPlayback[i]] ? encodeURI(lastSongObj[settings.colsPlayback[i]]) : '') + '"') + '>' +
                 '<small>' + t(settings.colsPlayback[i]) + ': </small>' +
                 '<span';
             if (settings.browsetags.includes(settings.colsPlayback[i])) {

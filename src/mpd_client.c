@@ -15,7 +15,7 @@
 
 #include <mpd/client.h>
 
-#include "../disst/src/sds/sds.h"
+#include "../dist/src/sds/sds.h"
 #include "sds_extras.h"
 #include "log.h"
 #include "list.h"

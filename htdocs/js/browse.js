@@ -471,14 +471,22 @@ function getCovergridTitleList(id) {
     }
     cardBody.style.width = width + 'px';
     cardBody.parentNode.style.width = width + 'px';
+    let albumArtist = decodeURI(card.getAttribute('data-albumartist'));
+    if (albumArtist === 'Unknown artist') {
+        albumArtist = '';
+    }
     sendAPI("MPD_API_DATABASE_TAG_ALBUM_TITLE_LIST", {
         "album": decodeURI(card.getAttribute('data-album')),
-        "search": decodeURI(card.getAttribute('data-albumartist')),
+        // "search": decodeURI(card.getAttribute('data-albumartist')),
+        "search": albumArtist,
         "tag": "AlbumArtist", "cols": settings.colsBrowseDatabase
     }, parseCovergridTitleList);
 }
 
 function parseCovergridTitleList(obj) {
+    if (obj.result.AlbumArtist === '-') {
+        obj.result.AlbumArtist = 'Unknown artist';
+    }
     let id = genId('covergrid' + obj.result.Album + obj.result.AlbumArtist);
     let cardBody = document.getElementById(id);
 
@@ -569,9 +577,9 @@ function setGridImage(changes, observer) {
     });
 }
 
-function closeCover(id = undefined) {
-    if (openCoverId !== undefined) {
-        let cardBody = document.getElementById(openCoverId);
+function closeCover(id) {
+    let cardBody = document.getElementById(openCoverId);
+    if (cardBody !== null) {
         let uri = decodeURI(cardBody.parentNode.getAttribute('data-uri'));
         showGridImage(cardBody, uri);
     }

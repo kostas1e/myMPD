@@ -443,8 +443,8 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
                 }
             }
             break;
-        case MPD_API_PLAYLIST_ADD_ALL_TRACKS:
-            je = json_scanf(request->data, sdslen(request->data), "{params: {plist:%Q, uris:%Q}}", &p_charbuf1, &p_charbuf2);
+        case MPD_API_PLAYLIST_ADD_ALL_TRACKS: // tidal only
+            /* je = json_scanf(request->data, sdslen(request->data), "{params: {plist:%Q, uris:%Q}}", &p_charbuf1, &p_charbuf2);
             if (je == 2) {
                 if (mpd_command_list_begin(mpd_state->conn, false)) {
                     int count;
@@ -458,7 +458,7 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
                     sdsfreesplitres(tokens, count);
                 }
                 response->data = respond_with_mpd_error_or_ok(mpd_state, response->data, request->method, request->id);
-            }
+            } */
             break;
         case MPD_API_PLAYLIST_CLEAR:
             je = json_scanf(request->data, sdslen(request->data), "{params: {uri: %Q}}", &p_charbuf1);
@@ -525,7 +525,7 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
             }
             break;
         case MPD_API_QUEUE_ADD_ALL_TRACKS: // tidal only
-            je = json_scanf(request->data, sdslen(request->data), "{params: {uris:%Q}}", &p_charbuf1);
+            /* je = json_scanf(request->data, sdslen(request->data), "{params: {uris:%Q}}", &p_charbuf1);
             if (je == 1) {
                 if (mpd_command_list_begin(mpd_state->conn, false)) {
                     int count;
@@ -539,7 +539,7 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
                     sdsfreesplitres(tokens, count);
                 }
                 response->data = respond_with_mpd_error_or_ok(mpd_state, response->data, request->method, request->id);
-            }
+            } */
             break;
         case MPD_API_QUEUE_ADD_PLAY_TRACK:
             je = json_scanf(request->data, sdslen(request->data), "{params: {uri:%Q}}", &p_charbuf1);
@@ -568,7 +568,7 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
                         }
                     }
                 }
-                response->data = respond_with_mpd_error_or_ok(mpd_state, response->data, request->method, request->id);
+                response->data = respond_with_mpd_error_or_ok(mpd_state, response->data, request->method, request->id, (status == NULL ? false : true), "mpd_run_status");
             }
             break;
         case MPD_API_QUEUE_REPLACE_PLAYLIST:
@@ -611,7 +611,7 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
                         }
                     }
                 }
-                response->data = respond_with_mpd_error_or_ok(mpd_state, response->data, request->method, request->id);
+                response->data = respond_with_mpd_error_or_ok(mpd_state, response->data, request->method, request->id, (status == NULL ? false : true), "mpd_run_status");
             }
             break;
         case MPD_API_QUEUE_SAVE:

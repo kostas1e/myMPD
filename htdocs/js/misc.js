@@ -71,12 +71,19 @@ function execSyscmd(cmd) {
 
 //eslint-disable-next-line no-unused-vars
 function clearCovercache() {
-    sendAPI("MYMPD_API_COVERCACHE_CLEAR", {});
+    sendAPI("MYMPD_API_COVERCACHE_CLEAR", {}, msgCovercache);
 }
 
 //eslint-disable-next-line no-unused-vars
 function cropCovercache() {
-    sendAPI("MYMPD_API_COVERCACHE_CROP", {});
+    sendAPI("MYMPD_API_COVERCACHE_CROP", {}, msgCovercache);
+}
+
+function msgCovercache() {
+    document.getElementById('msgClearCovercache').classList.remove('hide');
+    setTimeout(function () {
+        document.getElementById('msgClearCovercache').classList.add('hide');
+    }, 3000);
 }
 
 //eslint-disable-next-line no-unused-vars
