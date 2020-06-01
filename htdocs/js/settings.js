@@ -892,7 +892,7 @@ function filterCols(x) {
         tags.push('Fileformat');
         tags.push('LastModified');
         if (settings.featLyrics === true) {
-            tags.push('Lyrics');
+            // tags.push('Lyrics');
         }
     }
     let cols = [];

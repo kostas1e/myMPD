@@ -340,7 +340,7 @@ function setColTags(table) {
         tags.push('Fileformat');
         tags.push('LastModified');
         if (settings.featLyrics === true) {
-            tags.push('Lyrics'); // co
+            // tags.push('Lyrics');
         }
     }
     if (table === 'SearchTidal') {

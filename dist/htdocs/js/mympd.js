@@ -1442,16 +1442,16 @@ function clearCovercache() {
     sendAPI("MYMPD_API_COVERCACHE_CLEAR", {}, msgCovercache);
 }
 
+//eslint-disable-next-line no-unused-vars
+function cropCovercache() {
+    sendAPI("MYMPD_API_COVERCACHE_CROP", {}, msgCovercache);
+}
+
 function msgCovercache() {
     document.getElementById('msgClearCovercache').classList.remove('hide');
     setTimeout(function () {
         document.getElementById('msgClearCovercache').classList.add('hide');
     }, 3000);
-}
-
-//eslint-disable-next-line no-unused-vars
-function cropCovercache() {
-    sendAPI("MYMPD_API_COVERCACHE_CROP", {});
 }
 
 //eslint-disable-next-line no-unused-vars
@@ -5998,7 +5998,7 @@ function filterCols(x) {
         tags.push('Fileformat');
         tags.push('LastModified');
         if (settings.featLyrics === true) {
-            tags.push('Lyrics');
+            // tags.push('Lyrics');
         }
     }
     let cols = [];
@@ -7178,7 +7178,7 @@ function setColTags(table) {
         tags.push('Fileformat');
         tags.push('LastModified');
         if (settings.featLyrics === true) {
-            tags.push('Lyrics'); // co
+            // tags.push('Lyrics');
         }
     }
     if (table === 'SearchTidal') {
