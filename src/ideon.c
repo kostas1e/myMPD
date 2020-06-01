@@ -248,6 +248,7 @@ static sds get_version(sds version)
         curl_easy_setopt(curl_handle, CURLOPT_URL, IDEONAUDIO_REPO);
         curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_callback);
         curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
+        curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
 
         CURLcode res = curl_easy_perform(curl_handle);
         if (res != CURLE_OK)
