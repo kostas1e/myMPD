@@ -15,6 +15,7 @@ function parseStats(obj) {
     document.getElementById('mpdstats_mympd_uptime').innerText = beautifyDuration(obj.result.myMPDuptime);
     document.getElementById('mpdstats_dbUpdated').innerText = localeDate(obj.result.dbUpdated);
     document.getElementById('mympdVersion').innerText = obj.result.mympdVersion;
+    document.getElementById('ideonVersion').innerText = obj.result.ideonVersion;
     document.getElementById('mpdInfo_version').innerText = obj.result.mpdVersion;
     document.getElementById('mpdInfo_libmpdclientVersion').innerText = obj.result.libmpdclientVersion;
     document.getElementById('mpdInfo_libmympdclientVersion').innerText = obj.result.libmympdclientVersion;

@@ -483,7 +483,6 @@ void mympd_config_defaults(t_config *config) {
     config->browsetaglist = sdsnew("Artist, Album, AlbumArtist, Genre");
     config->smartpls = true;
     config->smartpls_sort = sdsempty();
-    // config->smartpls_prefix = sdsnew("myMPDsmart");
     config->smartpls_prefix = sdsnew("ideonSmart");
     config->smartpls_interval = 14400;
     config->generate_pls_tags = sdsnew("Genre");
@@ -521,7 +520,8 @@ void mympd_config_defaults(t_config *config) {
     config->coverimage_name = sdsnew("folder, cover");
     config->coverimage_size = 250;
     config->covergrid_size = 200;
-    config->locale = sdsnew("default");
+    // config->locale = sdsnew("default");
+    config->locale = sdsnew("en-US");
     config->startup_time = time(NULL);
     config->readonly = false;
     config->bookmarks = true;
@@ -559,7 +559,7 @@ void mympd_config_defaults(t_config *config) {
     config->tidal_audioquality = sdsnew("HIGH");
     config->searchtidaltaglist = sdsnew("Artist,Album,Title");
     config->cols_search_tidal = sdsnew("[\"Type\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
-    config->init = false;
+    config->init = false; // true
 }
 
 bool mympd_dump_config(void) {

@@ -3,10 +3,10 @@
 var currentTab;
 
 function checkInit() {
-    if (settings.init === false) {
+    if (settings.init !== true) {
         getServerinfo();
 
-        document.getElementById('selectLocale1').innerHTML = document.getElementById('selectLocale').innerHTML;
+        // document.getElementById('selectLocale1').innerHTML = document.getElementById('selectLocale').innerHTML;
         document.getElementById('selectTheme1').innerHTML = document.getElementById('selectTheme').innerHTML;
         document.getElementById('selectTheme1').value = settings.theme;
     
@@ -119,12 +119,12 @@ function validateForm() {
 }
 
 function saveInitSettings() {
-    let selectLocale = document.getElementById('selectLocale1');
+    // let selectLocale = document.getElementById('selectLocale1');
     let selectTheme = document.getElementById('selectTheme1');
     let selectNsType = document.getElementById('selectNsType1');
     let selectSambaVersion = document.getElementById('selectSambaVersion1');
     sendAPI("MYMPD_API_SETTINGS_SET", {
-        "locale": selectLocale.options[selectLocale.selectedIndex].value,
+        // "locale": selectLocale.options[selectLocale.selectedIndex].value,
         "theme": selectTheme.options[selectTheme.selectedIndex].value,
         "nsType": parseInt(selectNsType.options[selectNsType.selectedIndex].value),
         "nsServer": document.getElementById('inputNsServer1').value,

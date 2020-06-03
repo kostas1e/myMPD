@@ -1035,10 +1035,10 @@ function closeReset() {
 var currentTab;
 
 function checkInit() {
-    if (settings.init === false) {
+    if (settings.init !== true) {
         getServerinfo();
 
-        document.getElementById('selectLocale1').innerHTML = document.getElementById('selectLocale').innerHTML;
+        // document.getElementById('selectLocale1').innerHTML = document.getElementById('selectLocale').innerHTML;
         document.getElementById('selectTheme1').innerHTML = document.getElementById('selectTheme').innerHTML;
         document.getElementById('selectTheme1').value = settings.theme;
     
@@ -1151,12 +1151,12 @@ function validateForm() {
 }
 
 function saveInitSettings() {
-    let selectLocale = document.getElementById('selectLocale1');
+    // let selectLocale = document.getElementById('selectLocale1');
     let selectTheme = document.getElementById('selectTheme1');
     let selectNsType = document.getElementById('selectNsType1');
     let selectSambaVersion = document.getElementById('selectSambaVersion1');
     sendAPI("MYMPD_API_SETTINGS_SET", {
-        "locale": selectLocale.options[selectLocale.selectedIndex].value,
+        // "locale": selectLocale.options[selectLocale.selectedIndex].value,
         "theme": selectTheme.options[selectTheme.selectedIndex].value,
         "nsType": parseInt(selectNsType.options[selectNsType.selectedIndex].value),
         "nsServer": document.getElementById('inputNsServer1').value,
@@ -1437,20 +1437,30 @@ function execSyscmd(cmd) {
     sendAPI("MYMPD_API_SYSCMD", { "cmd": cmd });
 }
 
+var timeoutID;
+
 //eslint-disable-next-line no-unused-vars
 function clearCovercache() {
-    sendAPI("MYMPD_API_COVERCACHE_CLEAR", {}, msgCovercache);
+    sendAPI("MYMPD_API_COVERCACHE_CLEAR", {}, msgCovercacheShow);
+    msgCovercacheHide();
 }
 
 //eslint-disable-next-line no-unused-vars
 function cropCovercache() {
-    sendAPI("MYMPD_API_COVERCACHE_CROP", {}, msgCovercache);
+    sendAPI("MYMPD_API_COVERCACHE_CROP", {}, msgCovercacheShow);
+    msgCovercacheHide();
 }
 
-function msgCovercache() {
-    document.getElementById('msgClearCovercache').classList.remove('hide');
-    setTimeout(function () {
-        document.getElementById('msgClearCovercache').classList.add('hide');
+function msgCovercacheHide() {
+    document.getElementById('msgClearCovercache').classList.add('hide');
+    clearTimeout(timeoutID);
+}
+
+function msgCovercacheShow() {
+    let ecl = document.getElementById('msgClearCovercache').classList;
+    ecl.remove('hide');
+    timeoutID = setTimeout(function () {
+        ecl.classList.add('hide');
     }, 3000);
 }
 
@@ -1688,7 +1698,8 @@ var websocketTimer = null;
 var appInited = false;
 var subdir = '';
 var uiEnabled = true;
-var locale = navigator.language || navigator.userLanguage;
+// var locale = navigator.language || navigator.userLanguage;
+var locale = 'en-US'
 
 var ligatureMore = 'menu';
 
@@ -2419,12 +2430,19 @@ function appInit() {
         } */
 
         if (resetFlag === true) {
+            // resetFlag = false;
             modalResetSettings.show();
         }
     });
 
     document.getElementById('modalResetSettings').addEventListener('hidden.bs.modal', function() {
-        modalSettings.show();
+        // if (resetFlag === false) {
+            modalSettings.show();
+        // }
+        // else {
+            // resetFlag = false;
+            // location.reload();
+        // }
     });
 
     document.getElementById('modalIdeon').addEventListener('shown.bs.modal', function () {
@@ -3680,9 +3698,13 @@ function parseCovergridAlbum(obj) {
 }
 
 function getCovergridTitle(tr) {
+    let albumArtist = decodeURI(tr.getAttribute('data-albumartist'));
+    if (albumArtist === 'Unknown artist') {
+        albumArtist = '';
+    }
     sendAPI("MPD_API_DATABASE_TAG_ALBUM_TITLE_LIST", {
         "album": decodeURI(tr.getAttribute('data-album')),
-        "search": decodeURI(tr.getAttribute('data-albumartist')),
+        "search": albumArtist,
         "tag": "AlbumArtist", "cols": settings.colsBrowseDatabase
     }, parseCovergridTitle);
 }
@@ -5997,9 +6019,9 @@ function filterCols(x) {
         tags.push('Filetype');
         tags.push('Fileformat');
         tags.push('LastModified');
-        if (settings.featLyrics === true) {
+        // if (settings.featLyrics === true) {
             // tags.push('Lyrics');
-        }
+        // }
     }
     let cols = [];
     for (let i = 0; i < settings[x].length; i++) {
@@ -6386,6 +6408,7 @@ function parseStats(obj) {
     document.getElementById('mpdstats_mympd_uptime').innerText = beautifyDuration(obj.result.myMPDuptime);
     document.getElementById('mpdstats_dbUpdated').innerText = localeDate(obj.result.dbUpdated);
     document.getElementById('mympdVersion').innerText = obj.result.mympdVersion;
+    document.getElementById('ideonVersion').innerText = obj.result.ideonVersion;
     document.getElementById('mpdInfo_version').innerText = obj.result.mpdVersion;
     document.getElementById('mpdInfo_libmpdclientVersion').innerText = obj.result.libmpdclientVersion;
     document.getElementById('mpdInfo_libmympdclientVersion').innerText = obj.result.libmympdclientVersion;
@@ -7177,9 +7200,9 @@ function setColTags(table) {
         tags.push('Filetype');
         tags.push('Fileformat');
         tags.push('LastModified');
-        if (settings.featLyrics === true) {
+        // if (settings.featLyrics === true) {
             // tags.push('Lyrics');
-        }
+        // }
     }
     if (table === 'SearchTidal') {
         tags = settings.searchtidaltags.slice();

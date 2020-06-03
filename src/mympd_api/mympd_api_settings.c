@@ -40,7 +40,7 @@ void mympd_api_settings_delete(t_config *config) {
         "max_elements_per_page",  "mpd_host", "mpd_pass", "mpd_port", "notification_page", "notification_web", "searchtaglist",
         "smartpls", "stickers", "stream_port", "stream_url", "taglist", "music_directory", "bookmarks", "bookmark_list", "covergrid_size",
         "theme", "timer", "highlight_color", "media_session", "booklet_name", "lyrics",
-        "mixer_type", "dop", "ns_type", "ns_server", "ns_share", "samba_version", "ns_username", "ns_password", "airplay", "roon", "spotify", "init",
+        "mixer_type", "dop", "ns_type", "ns_server", "ns_share", "samba_version", "ns_username", "ns_password", "airplay", "roon", "spotify", //"init",
         "tidal_enabled", "cols_search_tidal", "searchtidaltaglist", "tidal_username", "tidal_password", "tidal_audioquality", 0};
     const char** ptr = state_files;
     while (*ptr != 0) {

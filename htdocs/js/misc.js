@@ -69,20 +69,30 @@ function execSyscmd(cmd) {
     sendAPI("MYMPD_API_SYSCMD", { "cmd": cmd });
 }
 
+var timeoutID;
+
 //eslint-disable-next-line no-unused-vars
 function clearCovercache() {
-    sendAPI("MYMPD_API_COVERCACHE_CLEAR", {}, msgCovercache);
+    sendAPI("MYMPD_API_COVERCACHE_CLEAR", {}, msgCovercacheShow);
+    msgCovercacheHide();
 }
 
 //eslint-disable-next-line no-unused-vars
 function cropCovercache() {
-    sendAPI("MYMPD_API_COVERCACHE_CROP", {}, msgCovercache);
+    sendAPI("MYMPD_API_COVERCACHE_CROP", {}, msgCovercacheShow);
+    msgCovercacheHide();
 }
 
-function msgCovercache() {
-    document.getElementById('msgClearCovercache').classList.remove('hide');
-    setTimeout(function () {
-        document.getElementById('msgClearCovercache').classList.add('hide');
+function msgCovercacheHide() {
+    document.getElementById('msgClearCovercache').classList.add('hide');
+    clearTimeout(timeoutID);
+}
+
+function msgCovercacheShow() {
+    let ecl = document.getElementById('msgClearCovercache').classList;
+    ecl.remove('hide');
+    timeoutID = setTimeout(function () {
+        ecl.classList.add('hide');
     }, 3000);
 }
 

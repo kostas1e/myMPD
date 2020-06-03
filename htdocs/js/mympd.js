@@ -29,7 +29,8 @@ var websocketTimer = null;
 var appInited = false;
 var subdir = '';
 var uiEnabled = true;
-var locale = navigator.language || navigator.userLanguage;
+// var locale = navigator.language || navigator.userLanguage;
+var locale = 'en-US'
 
 var ligatureMore = 'menu';
 
@@ -760,12 +761,19 @@ function appInit() {
         } */
 
         if (resetFlag === true) {
+            // resetFlag = false;
             modalResetSettings.show();
         }
     });
 
     document.getElementById('modalResetSettings').addEventListener('hidden.bs.modal', function() {
-        modalSettings.show();
+        // if (resetFlag === false) {
+            modalSettings.show();
+        // }
+        // else {
+            // resetFlag = false;
+            // location.reload();
+        // }
     });
 
     document.getElementById('modalIdeon').addEventListener('shown.bs.modal', function () {

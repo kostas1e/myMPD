@@ -339,9 +339,9 @@ function setColTags(table) {
         tags.push('Filetype');
         tags.push('Fileformat');
         tags.push('LastModified');
-        if (settings.featLyrics === true) {
+        // if (settings.featLyrics === true) {
             // tags.push('Lyrics');
-        }
+        // }
     }
     if (table === 'SearchTidal') {
         tags = settings.searchtidaltags.slice();

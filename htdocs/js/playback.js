@@ -198,9 +198,13 @@ function parseCovergridAlbum(obj) {
 }
 
 function getCovergridTitle(tr) {
+    let albumArtist = decodeURI(tr.getAttribute('data-albumartist'));
+    if (albumArtist === 'Unknown artist') {
+        albumArtist = '';
+    }
     sendAPI("MPD_API_DATABASE_TAG_ALBUM_TITLE_LIST", {
         "album": decodeURI(tr.getAttribute('data-album')),
-        "search": decodeURI(tr.getAttribute('data-albumartist')),
+        "search": albumArtist,
         "tag": "AlbumArtist", "cols": settings.colsBrowseDatabase
     }, parseCovergridTitle);
 }
