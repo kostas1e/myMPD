@@ -118,12 +118,11 @@ function webSocketConnect() {
             var obj;
             try {
                 obj = JSON.parse(msg.data);
-                if (obj.method === 'welcome' && document.getElementById('currentVersion').innerText !== '') {
-                    if (obj.params.ideonVersion !== document.getElementById('currentVersion').innerText) {
-                        clearAndReload();
-                    }
-                }
                 logDebug('Websocket notification: ' + JSON.stringify(obj));
+                let currentVersion = document.getElementById('currentVersion').innerText;
+                if (obj.method === 'welcome' && currentVersion !== '' && obj.params.ideonVersion !== currentVersion) {
+                    clearAndReload();
+                }
             }
             catch (error) {
                 logError('Invalid JSON data received: ' + msg.data);
