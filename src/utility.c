@@ -353,8 +353,8 @@ sds get_extension_from_filename(const char *filename) {
         return sdsempty();
     }
     sds extension = sdsnew(ext);
-        sdstolower(extension);
-        return extension;
+    sdstolower(extension);
+    return extension;
 }
 
 sds get_mime_type_by_ext(const char *filename) {

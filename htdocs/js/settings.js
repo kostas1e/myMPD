@@ -584,10 +584,11 @@ function parseMPDSettings() {
         app.apps.Search.tabs.Database.state = '0/any/Title/';
         // app.apps.Search.tabs.Tidal.views.All.state = '0/any/Title/';
     }
-
-    if (settings.featPlaylists) {
-        playlistEl = 'selectJukeboxPlaylist';
-        sendAPI("MPD_API_PLAYLIST_LIST", { "offset": 0, "filter": "-" }, getAllPlaylists);
+    
+    if (settings.featPlaylists === true) {
+        sendAPI("MPD_API_PLAYLIST_LIST_ALL", {"offset": 0, "filter": "-"}, function(obj) {
+            getAllPlaylists(obj, 'selectJukeboxPlaylist', settings.jukeboxPlaylist);
+        });
     }
     else {
         document.getElementById('selectJukeboxPlaylist').innerHTML = '<option value="Database">' + t('Database') + '</option>';

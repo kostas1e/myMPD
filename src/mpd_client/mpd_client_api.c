@@ -114,11 +114,12 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
                     mpd_client_mpd_features(config, mpd_state);
 
                     if (jukebox_changed == true) {
+                        LOG_DEBUG("Jukebox options changed, clearing jukebox queue");
                         list_free(&mpd_state->jukebox_queue);
                     }
                     if (mpd_state->jukebox_mode != JUKEBOX_OFF) {
                         //enable jukebox
-                        mpd_client_jukebox(config, mpd_state);
+                        mpd_client_jukebox(config, mpd_state, 0);
                     }
                 }
                 response->data = jsonrpc_respond_ok(response->data, request->method, request->id);
@@ -414,8 +415,11 @@ void mpd_client_api(t_config *config, t_mpd_state *mpd_state, void *arg_request)
         case MPD_API_PLAYLIST_LIST:
             je = json_scanf(request->data, sdslen(request->data), "{params: {offset: %u, filter: %Q}}", &uint_buf1, &p_charbuf1);
             if (je == 2) {
-                response->data = mpd_client_put_playlists(config, mpd_state, response->data, request->method, request->id, uint_buf1, p_charbuf1);
+                response->data = mpd_client_put_playlists(config, mpd_state, response->data, request->method, request->id, uint_buf1, p_charbuf1, true);
             }
+            break;
+        case MPD_API_PLAYLIST_LIST_ALL:
+            response->data = mpd_client_put_playlists(config, mpd_state, response->data, request->method, request->id, 0, "-", false);
             break;
         case MPD_API_PLAYLIST_CONTENT_LIST: {
             t_tags *tagcols = (t_tags *)malloc(sizeof(t_tags));
