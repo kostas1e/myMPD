@@ -315,18 +315,11 @@ sds ideon_check_for_updates(sds buffer, sds method, int request_id)
 
 sds ideon_install_updates(sds buffer, sds method, int request_id)
 {
-    bool pacman = syscmd("pacman -Syu --noconfirm");
-    bool reboot = false;
-
-    if (pacman == true)
-    {
-        reboot = syscmd("reboot");
-    }
+    bool service = syscmd("systemctl start ideon_update");
 
     buffer = jsonrpc_start_result(buffer, method, request_id);
     buffer = sdscat(buffer, ",");
-    buffer = tojson_bool(buffer, "pacman", pacman, true);
-    buffer = tojson_bool(buffer, "reboot", reboot, false);
+    buffer = tojson_bool(buffer, "service", service, false);
     buffer = jsonrpc_end_result(buffer);
     return buffer;
 }

@@ -911,17 +911,10 @@ function installUpdates() {
 }
 
 function parseInstall(obj) {
-    if (obj.result.pacman === false) {
+    if (obj.result.service === false) {
         document.getElementById('updateMsg').innerText = 'Update error, please try again later';
+        btnWaiting(document.getElementById('btnInstallUpdates'), false);
     }
-    else if (obj.result.reboot === false) {
-        document.getElementById('updateMsg').innerText = 'Reboot error, please reboot manually';
-    }
-    else {
-        document.getElementById('updateMsg').innerText = '';
-    }
-
-    btnWaiting(document.getElementById('btnInstallUpdates'), false);
 }
 
 function parseIdeonSettings() {
