@@ -5,14 +5,32 @@
  https://github.com/jcorporation/mympd
 */
 
-async function localplayerPlay() {
-    let localPlayer = document.getElementById('localPlayer');
-    if (localPlayer.paused) {
+//eslint-disable-next-line no-unused-vars
+function openFullscreen() {
+    let elem = document.documentElement;
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    }
+    else if (elem.mozRequestFullScreen) { /* Firefox */
+        elem.mozRequestFullScreen();
+    }
+    else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+        elem.webkitRequestFullscreen();
+    }
+    else if (elem.msRequestFullscreen) { /* IE/Edge */
+        elem.msRequestFullscreen();
+    }
+}
+
+function setViewport(store) {
+    let viewport = document.querySelector("meta[name=viewport]");
+    viewport.setAttribute('content', 'width=device-width, initial-scale=' + scale + ', maximum-scale=' + scale);
+    if (store === true) {
         try {
-            await localPlayer.play();
-        } 
+            localStorage.setItem('scale-ratio', scale);
+        }
         catch(err) {
-            showNotification(t('Local playback'), t('Can not start playing'), '', 'danger');
+            logError('Can not save scale-ratio in localStorage: ' + err.message);
         }
     }
 }
@@ -43,6 +61,9 @@ function seekRelative(offset) {
 function clickPlay() {
     if (playstate !== 'play') {
         sendAPI("MPD_API_PLAYER_PLAY", {});
+    }
+    else if (settings.footerStop === true) {
+        sendAPI("MPD_API_PLAYER_STOP", {});
     }
     else {
         sendAPI("MPD_API_PLAYER_PAUSE", {});
@@ -150,4 +171,94 @@ function _updateDBfinished(idleEvent) {
     else if (idleEvent === 'update_finished') {
         showNotification(t('Database update finished'), '', '', 'success');
     }
+}
+
+//eslint-disable-next-line no-unused-vars
+function zoomPicture(el) {
+    if (el.classList.contains('booklet')) {
+        window.open(el.getAttribute('data-href'));
+        return;
+    }
+    
+    if (el.classList.contains('carousel')) {
+        let imgSrc = el.getAttribute('data-images');
+        let images;
+        if (imgSrc !== null) {
+            images = el.getAttribute('data-images').split(';;');
+        }
+        else if (lastSongObj.images) {
+            images = lastSongObj.images.slice();
+        }
+        else {
+            return;
+        }
+        
+        //add uri to image list to get embedded albumart
+        let a_images = [];
+        if (el.getAttribute('data-uri')) {
+            a_images = [ subdir + '/albumart/' + el.getAttribute('data-uri') ];
+        }
+        //add all but coverfiles to image list
+        if (settings.publish === true) {
+            for (let i = 0; i < images.length; i++) {
+                if (isCoverfile(images[i]) === false) {
+                    a_images.push(subdir + '/browse/music/' + images[i]);
+                }
+            }
+        }
+        const imgEl = document.getElementById('modalPictureImg');
+        imgEl.style.paddingTop = 0;
+        createImgCarousel(imgEl, 'picsCarousel', a_images);
+        document.getElementById('modalPictureZoom').classList.add('hide');
+        modalPicture.show();
+        return;
+    }
+    
+    if (el.style.backgroundImage !== '') {
+        const imgEl = document.getElementById('modalPictureImg');
+        imgEl.innerHTML = '';
+        imgEl.style.paddingTop = '100%';
+        imgEl.style.backgroundImage = el.style.backgroundImage;
+        document.getElementById('modalPictureZoom').classList.remove('hide');
+        modalPicture.show();
+    }
+}
+
+//eslint-disable-next-line no-unused-vars
+function zoomZoomPicture() {
+    window.open(document.getElementById('modalPictureImg').style.backgroundImage.match(/^url\(["']?([^"']*)["']?\)/)[1]);
+}
+
+
+function createImgCarousel(imgEl, name, images) {
+    let carousel = '<div id="' + name + '" class="carousel slide" data-ride="carousel">' +
+        '<ol class="carousel-indicators">';
+    for (let i = 0; i < images.length; i++) {
+        carousel += '<li data-target="#' + name + '" data-slide-to="' + i + '"' +
+            (i === 0 ? ' class="active"' : '') + '></li>';
+    }
+    carousel += '</ol>' +
+        '<div class="carousel-inner" role="listbox">';
+    for (let i = 0; i < images.length; i++) {
+        carousel += '<div class="carousel-item' + (i === 0 ? ' active' : '') + '"><div></div></div>';
+    }
+    carousel += '</div>' +
+        '<a class="carousel-control-prev" href="#' + name + '" data-slide="prev">' +
+            '<span class="carousel-control-prev-icon"></span>' +
+        '</a>' +
+        '<a class="carousel-control-next" href="#' + name + '" data-slide="next">' +
+            '<span class="carousel-control-next-icon"></span>' +
+        '</a>' +
+        '</div>';
+    imgEl.innerHTML = carousel;
+    let carouselItems = imgEl.getElementsByClassName('carousel-item');
+    for (let i = 0; i < carouselItems.length; i++) {
+        carouselItems[i].children[0].style.backgroundImage = 'url("' + encodeURI(images[i]) + '")';
+    }
+    let myCarousel = document.getElementById(name);
+    //eslint-disable-next-line no-undef, no-unused-vars
+    let myCarouselInit = new BSN.Carousel(myCarousel, {
+        interval: false,
+        pause: false
+    });
 }

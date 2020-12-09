@@ -4,6 +4,7 @@
  https://github.com/jcorporation/mympd
 */
 
+#include "errno.h"
 #include "../../dist/src/sds/sds.h"
 #include "../sds_extras.h"
 #include "../../dist/src/mongoose/mongoose.h"
@@ -155,6 +156,8 @@ bool serve_embedded_files(struct mg_connection *nc, sds uri, struct http_message
         {"/assets/MaterialIcons-Regular.woff2", 35, "font/woff2", false, MaterialIcons_Regular_woff2_data, MaterialIcons_Regular_woff2_size},
         {"/assets/coverimage-stream.svg", 29, "image/svg+xml", true, coverimage_stream_svg_data, coverimage_stream_svg_size},
         {"/assets/coverimage-loading.svg", 30, "image/svg+xml", true, coverimage_loading_svg_data, coverimage_loading_svg_size},
+        {"/assets/coverimage-booklet.svg", 30, "image/svg+xml", true, coverimage_booklet_svg_data, coverimage_booklet_svg_size},
+        {"/assets/coverimage-mympd.svg", 28, "image/svg+xml", true, coverimage_mympd_svg_data, coverimage_mympd_svg_size},
         {"/assets/favicon.ico", 19, "image/vnd.microsoft.icon", false, favicon_ico_data, favicon_ico_size},
         {"/assets/appicon-192.png", 23, "image/png", false, appicon_192_png_data, appicon_192_png_size},
         {"/assets/appicon-512.png", 23, "image/png", false, appicon_512_png_data, appicon_512_png_size},
@@ -176,7 +179,7 @@ bool serve_embedded_files(struct mg_connection *nc, sds uri, struct http_message
     }
     sdsfree(uri_decoded);
     
-    if (p != NULL && p->uri != NULL) {
+    if (p->uri != NULL) {
         //respond with error if browser don't support compression and asset is compressed
         if (p->compressed == true) {
             struct mg_str *header_encoding = mg_get_http_header(hm, "Accept-Encoding");
@@ -197,7 +200,6 @@ bool serve_embedded_files(struct mg_connection *nc, sds uri, struct http_message
                  );
         //send data
         mg_send(nc, p->data, p->size);
-//        mg_send(nc, "\r\n", 2);
         return true;
     }
     else {

@@ -11,11 +11,11 @@ var keymap = {
     " ": {"cmd": "clickPlay", "options": [], "desc": "Toggle play / pause", "key": "space_bar"},
     "s": {"cmd": "clickStop", "options": [], "desc": "Stop playing"},
     "-": {"cmd": "volumeStep", "options": ["down"], "desc": "Volume down"},
-    "+": {"cmd": "VolumeStep", "options": ["up"], "desc": "Volume up"},
+    "+": {"cmd": "volumeStep", "options": ["up"], "desc": "Volume up"},
     "c": {"cmd": "sendAPI", "options": [{"cmd": "MPD_API_QUEUE_CLEAR"}], "desc": "Clear queue"},
-    "u": {"cmd": "updateDB", "options": [], "desc": "Update database"},
-    "r": {"cmd": "rescanDB", "options": [], "desc": "Rescan database"},
-    "p": {"cmd": "updateSmartPlaylists", "options": [], "desc": "Update smart playlists", "req": "featSmartpls"},
+    "u": {"cmd": "updateDB", "options": ["", true], "desc": "Update database"},
+    "r": {"cmd": "rescanDB", "options": ["", true], "desc": "Rescan database"},
+    "p": {"cmd": "updateSmartPlaylists", "options": [false], "desc": "Update smart playlists", "req": "featSmartpls"},
     "a": {"cmd": "showAddToPlaylist", "options": ["stream", ""], "desc": "Add stream"},
     "t": {"cmd": "openModal", "options": ["modalSettings"], "desc": "Open settings"},
     "i": {"cmd": "clickTitle", "options": [], "desc": "Open song details"},
@@ -26,8 +26,7 @@ var keymap = {
     "3": {"cmd": "appGoto", "options": ["Browse", "Database"], "desc": "Goto browse database", "req": "featTags"},
     "4": {"cmd": "appGoto", "options": ["Browse", "Playlists"], "desc": "Goto browse playlists", "req": "featPlaylists"},
     "5": {"cmd": "appGoto", "options": ["Browse", "Filesystem"], "desc": "Goto browse filesystem"},
-    "6": {"cmd": "appGoto", "options": ["Browse", "Covergrid"], "desc": "Goto browse covergrid", "req": "featTags"},
-    "7": {"cmd": "appGoto", "options": ["Search"], "desc": "Goto search"},
+    "6": {"cmd": "appGoto", "options": ["Search"], "desc": "Goto search"},
     "m": {"cmd": "openDropdown", "options": ["dropdownMainMenu"], "desc": "Open main menu"},
     "v": {"cmd": "openDropdown", "options": ["dropdownVolumeMenu"], "desc": "Open volume menu"},
     "S": {"cmd": "sendAPI", "options": [{"cmd": "MPD_API_QUEUE_SHUFFLE"}], "desc": "Shuffle queue"},
@@ -38,5 +37,6 @@ var keymap = {
     "q": {"cmd": "queueSelectedItem", "options": [true], "desc": "Append item to queue"},
     "Q": {"cmd": "queueSelectedItem", "options": [false], "desc": "Replace queue with item"},
     "d": {"cmd": "dequeueSelectedItem", "options": [], "desc": "Remove item from queue"},
-    "x": {"cmd": "addSelectedItemToPlaylist", "options": [], "desc": "Append item to playlist"}
+    "x": {"cmd": "addSelectedItemToPlaylist", "options": [], "desc": "Append item to playlist"},
+    "F": {"cmd": "openFullscreen", "options": [], "desc": "Open fullscreen"}
 };

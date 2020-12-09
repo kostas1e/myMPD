@@ -7,15 +7,19 @@
 
 function e(x) {
     if (isNaN(x)) {
-        return x.replace(/([<>"])/g, function(m0, m1) {
+        return x.replace(/([<>"'])/g, function(m0, m1) {
             if (m1 === '<') return '&lt;';
             else if (m1 === '>') return '&gt;';
             else if (m1 === '"') return '&quot;';
+            else if (m1 === '\'') return '&apos;';
+        }).replace(/\\u(003C|003E|0022|0027)/gi, function(m0, m1) {
+            if (m1 === '003C') return '&lt;';
+            else if (m1 === '003E') return '&gt;';
+            else if (m1 === '0022') return '&quot;';
+            else if (m1 === '0027') return '&apos;';
         });
     }
-    else {
-        return x;
-    }
+    return x;
 }
 
 function t(phrase, number, data) {
@@ -92,6 +96,7 @@ function beautifySongDuration(x) {
         minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
 }
 
+//eslint-disable-next-line no-unused-vars
 function gtPage(phrase, returnedEntities, totalEntities) {
     if (totalEntities > -1) {
         return t(phrase, totalEntities);
@@ -105,7 +110,10 @@ function gtPage(phrase, returnedEntities, totalEntities) {
 }
 
 function i18nHtml(root) {
-    let attributes = [['data-phrase', 'innerText'], ['data-title-phrase', 'title'], ['data-placeholder-phrase', 'placeholder']];
+    let attributes = [['data-phrase', 'innerText'], 
+        ['data-title-phrase', 'title'], 
+        ['data-placeholder-phrase', 'placeholder']
+    ];
     for (let i = 0; i < attributes.length; i++) {
         let els = root.querySelectorAll('[' + attributes[i][0] + ']');
         let elsLen = els.length;

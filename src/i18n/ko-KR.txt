@@ -39,6 +39,9 @@ Local playback
 Connecting to stream...
 스트리밍에 연결 중...
 
+Error loading stream
+스트리밍 읽기 오류
+
 JavaScript is disabled
 자바스크립트 사용 안 함
 
@@ -465,8 +468,11 @@ Local playback
 URI
 주소
 
-Port
-포트
+HTTPS Port
+HTTPS 포트
+
+HTTP Port
+HTTP 포트
 
 Statistics
 통계
@@ -702,9 +708,6 @@ Goto browse playlists
 Goto browse filesystem
 파일 시스템 열기로 가기
 
-Goto browse covergrid
-음반 표지 격자 보기로 가기
-
 Goto search
 찾기로 가기
 
@@ -722,9 +725,6 @@ Focus search
 
 myMPD installed as app
 myMPD가 앱으로 설치됨
-
-Can not start playing
-연주를 시작할 수 없음
 
 MPD disconnected
 MPD 연결 끊어짐
@@ -791,9 +791,6 @@ Edit playlist
 
 Update smart playlist
 스마트 연주목록 업데이트
-
-Delete playlist
-연주목록 지우기
 
 Remove
 지우기
@@ -1029,9 +1026,6 @@ MPD가 음반 표지를 찾을 수 없음
 Descending
 내림차순
 
-Covergrid
-음반 표지 격자
-
 Sort by
 정렬
 
@@ -1058,9 +1052,6 @@ Unknown artist
 
 Unknown album
 모르는 음반
-
-Show songs
-곡 보기
 
 JavaScript error
 자바스크립트 오류
@@ -1248,26 +1239,8 @@ Info
 Error
 오류
 
-MPD connected
-MPD 연결됨
-
-Websocket connected
-웹소켓 연결됨
-
-Websocket disconnected
-웹소켓 연결 안 됨
-
-Websocket is disconnected
-웹소켓 연결 안 됨
-
-Websocket connection
-웹소켓 연결
-
 Auto
 자동
-
-Connection state
-연결 상태
 
 Booklet
 책자
@@ -1329,3 +1302,350 @@ No lyrics found
 Invalid column
 잘못된 열
 
+Force smart playlist update
+스마트 연주목록 강제 업데이트
+
+Force update
+강제 업데이트
+
+No search tag defined and advanced search is disabled
+검색 태그가 없고 정의되지 않고 고급 검색을 사용 안 함
+
+Smart playlists are disabled
+스마트 연주목록 사용 안 함
+
+Smart playlists update started
+스마트 연주목록 업데이트 시작
+
+Filling jukebox queue failed, disabling jukebox
+뮤직박스 순서를 채울 수 없어 사용 안 함
+
+Playlist to small, disabling jukebox unique constraints temporarily
+연주목록이 작아서, 임시로 뮤직박스의 하나 제한 사용 안 함
+
+Sticker cache is NULL
+Sticker 캐시가 없음
+
+Can't create mympd_script thread
+mympd_script 스레드를 만들 수 없음
+
+Error executing script %{script}: Memory allocation error
+스크립트 %{script} 실행 오류: 메모리 할당 오류
+
+Error executing script %{script}: Syntax error during precompilation
+스크립트 %{script} 실행 오류: 전처리 컴파일 문법 오류
+
+Error executing script %{script}: Error in garbage collector
+스크립트 %{script} 실행 오류: 가비지 수집 오류
+
+Error executing script %{script}: Can not open or read script file
+스크립트 %{script} 실행 오류: 스크립트 파일을 열거나 읽을 수 없음
+
+Error executing script %{script}: Runtime error
+스크립트 %{script} 실행 오류: 런타임 오류
+
+Error executing script %{script}: Error while running the message handler
+스크립트 %{script} 실행 오류: 메시지 처리 실행 오류
+
+Error executing script %{script}
+스크립트 %{script} 실행 오류
+
+Invalid script name
+잘못된 스크립트 이름
+
+No mpd state for script execution submitted
+스크립트 실행을 위한 MPD 상태 없음
+
+Script
+스크립트
+
+Script %{script} executed successfully
+스크립트 %{script} 실행 성공
+
+Scripting is disabled
+스크립트 사용 안 함
+
+Scripts
+스크립트
+
+Invalid script API request
+잘못된 스크립트 API 요청
+
+Remote scripting is disabled
+원격 스크립트 사용 안 함
+
+Arguments
+변수
+
+Can not open scriptfile
+스크립트 파일을 열 수 없음
+
+Could not delete script
+스크립트를 지울 수 없음
+
+Could not save script
+스크립트를 저장할 수 없음
+
+Execute
+실행
+
+Execute script
+스크립트 실행
+
+Invalid scale ratio
+잘못된 크기 비율
+
+Invalid script argument
+잘못된 스크립트 변수
+
+Invalid script order
+잘못된 스크립트 순서
+
+New script
+새 스크립트
+
+No action selected
+기능 선택 안 됨
+
+Scale ratio
+크기 비율
+
+Script arguments
+스크립트 변수
+
+Script name
+스크립트 이름
+
+Sort order of the script, 0 disables listing in main menu
+스크립트 분류 순서, 0은 주 메뉴에 안 보임
+
+Editing scripts is disabled
+스크립트 편집 사용 안 함
+
+Fullscreen
+전체 화면
+
+Open fullscreen
+전체 화면 열기
+
+Could not save trigger
+트리거를 저장할 수 없음
+
+Could not delete trigger
+트리거를 지울 수 없음
+
+Current partition
+현재 파티션
+
+Event
+이벤트
+
+Invalid partition name
+잘못된 파티션 이름
+
+Invalid trigger name
+잘못된 트리거 이름
+
+Move an output to this partition
+출력을 이 파티션으로 옮김
+
+New partition
+새 파티션
+
+New trigger
+새 트리거
+
+No outputs
+출력 없음
+
+Output
+출력
+
+Partition
+파티션
+
+Partition name
+파티션 이름
+
+Partitions
+파티션
+
+Switch to
+바꿈
+
+Trigger
+트리거
+
+Trigger name
+트리거 이름
+
+Trigger not found
+트리거를 찾을 수 없음
+
+current
+현재
+
+Edit attributes
+속성 수정
+
+Output attributes
+출력 속성
+
+Plugin
+플러그인
+
+Show attributes
+속성 보기
+
+State
+상태
+
+disabled
+사용 안 함
+
+enabled
+사용함
+
+No mixed content,  MPD stream must be served over https:
+혼합된 컨텐트는 안되며, MPD 스트리밍 서비스는 https:를 통해야 합니다.
+
+Details
+상세
+
+Port
+포트
+
+Websocket is disconnected
+웹소켓 연결 안 됨
+
+Goto playing song
+연주 곡으로 가기
+
+Download booklet
+책자 내려받기
+
+Zoom
+확대
+
+Disc 1
+디스크 1
+
+Disc
+디스크
+
+Can not delete home icon
+홈 아이콘을 지울 수 없음
+
+Can not save home icon
+홈 아이콘을 저장할 수 없음
+
+Home
+홈
+
+Add to homescreen
+홈 화면에 추가
+
+Can not get home icon
+홈 화면을 가져올 수 없음
+
+Can not move home icon
+홈 화면을 옮길 수 없음
+
+Delete home icon
+홈 화면 지움
+
+Duplicate home icon
+홈 화면 복사
+
+Edit home icon
+홈 화면 수정
+
+Ligature
+연결
+
+Options
+옵션
+
+Picture
+그림
+
+Homescreen welcome
+홈 아이콘을 아직 추가하지 않았습니다. 보기, 연주목록, 스크립트를 추가할 수 있습니다.
+
+Can not open directory pics
+디렉터리 그림을 열 수 없음
+
+Ligature overview
+연결 미리보기
+
+Use ligature
+연결 사용
+
+Add and play playlist
+연주목록에 추가하고 연주하기
+
+Goto view
+보기로 가기
+
+View
+보기
+
+Could not remove song from jukebox queue
+뮤직박스 순서의 곡을 지울 수 없음
+
+Reset to default
+기본값으로 설정
+
+Execute Script
+스크립트 실행
+
+App
+앱
+
+Tab
+탭
+
+Offset
+오프셋
+
+Filter
+필터
+
+Sort
+정렬
+
+Tag
+태그
+
+Columns
+열
+
+Display tags
+태그 표시
+
+Next
+다음
+
+Outputs
+출력
+
+Playback settings
+연주 설정
+
+Previous
+이전
+
+Select view
+보기 선택
+
+Show cover
+커버 보기
+
+Toggle play
+연주 토글
+
+myMPD menu
+myMPD 메뉴
+
+Invalid volume level
+잘못된 음량 수준

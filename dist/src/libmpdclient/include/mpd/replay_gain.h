@@ -85,9 +85,12 @@ mpd_parse_replay_gain_name(const char *name);
  * Looks up the name of the specified replay gain mode.
  *
  * @return the name, or NULL if the replay gain mode is not valid
+ *
+ * @since libmpdclient 2.19.
  */
+mpd_pure
 const char *
-mpd_parse_replay_gain_mode(enum mpd_replay_gain_mode mode);
+mpd_lookup_replay_gain_mode(enum mpd_replay_gain_mode mode);
 
 /**
  * Queries the current state of replay gain mode on MPD.
@@ -134,7 +137,7 @@ mpd_send_replay_gain_mode(struct mpd_connection *connection,
  * Shortcut for mpd_send_replay_gain_mode() and mpd_response_finish().
  *
  * @param connection the connection to MPD
- * @mode mode the desired replay gain mode
+ * @param mode mode the desired replay gain mode
  * @return true on success, false on error
  *
  * @since MPD 0.16, libmpdclient 2.19.

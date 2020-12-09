@@ -4,12 +4,12 @@
 # (c) 2018-2020 Juergen Mang <mail@jcgames.de>
 
 Name:           mympd
-Version:        6.4.2
+Version:        6.8.3
 Release:        0 
 License:        GPL-2.0-or-later
 Group:          Productivity/Multimedia/Sound/Players
-Summary:        Standalone web mpd client
-Url:            https://github.com/jcorporation/myMPD
+Summary:        A standalone and mobile friendly web-based MPD client.
+Url:            https://jcorporation.github.io/myMPD/
 Source:         mympd-%{version}.tar.gz
 BuildRequires:  gcc
 BuildRequires:  cmake
@@ -18,12 +18,15 @@ BuildRequires:  pkgconfig
 BuildRequires:  openssl-devel
 BuildRequires:  libid3tag-devel
 BuildRequires:	flac-devel
+BuildRequires:  lua-devel
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 %global debug_package %{nil}
 
 %description 
-myMPD is a standalone and mobile friendly web mpdclient.
+myMPD is a standalone and lightweight web-based MPD client. 
+It's tuned for minimal resource usage and requires only very few dependencies.
+Therefore myMPD is ideal for raspberry pis and similar devices.
 
 %prep 
 %setup -q -n %{name}-%{version}
@@ -42,6 +45,9 @@ make install DESTDIR=%{buildroot}
 echo "Checking status of mympd system user and group"
 getent group mympd > /dev/null || groupadd -r mympd
 getent passwd mympd > /dev/null || useradd -r -g mympd -s /bin/false -d /var/lib/mympd mympd
+echo "myMPD installed"
+echo "Modify /etc/mympd.conf to suit your needs or use the"
+echo "mympd-config tool to generate a valid mympd.conf automatically."
 true
 
 %postun
@@ -55,9 +61,10 @@ fi
 %doc README.md LICENSE
 /usr/bin/mympd
 /usr/bin/mympd-config
+/usr/bin/mympd-script
 /usr/lib/systemd/system/mympd.service
 %config(noreplace) /etc/mympd.conf
 
 %changelog
-* Wed Jun 03 2020 Juergen Mang <mail@jcgames.de> 6.4.2-0
+* Sun Nov 29 2020 Juergen Mang <mail@jcgames.de> 6.8.3-0
 - Version from master

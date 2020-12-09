@@ -4,6 +4,7 @@
  https://github.com/jcorporation/mympd
 */
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -27,22 +28,38 @@
 #include "mympd_api_timer_handlers.h"
 #include "mympd_api_settings.h"
 
+//private definitions
+static sds state_file_rw_string(t_config *config, const char *name, const char *def_value, bool warn);
+static bool state_file_rw_bool(t_config *config, const char *name, const bool def_value, bool warn);
+static int state_file_rw_int(t_config *config, const char *name, const int def_value, bool warn);
+static bool state_file_write(t_config *config, const char *name, const char *value);
+static sds default_navbar_icons(t_config *config);
+static sds read_navbar_icons(t_config *config);
+
+//public functions
 void mympd_api_settings_delete(t_config *config) {
     if (config->readonly == true) {
         return;
     }
     const char* state_files[]={"auto_play", "bg_color", "bg_cover", "bg_css_filter", "browsetaglist", "cols_browse_database",
         "cols_browse_filesystem", "cols_browse_playlists_detail", "cols_playback", "cols_queue_current", "cols_queue_last_played",
-        "cols_search", "coverimage", "coverimage_name", "coverimage_size", "jukebox_mode", "jukebox_playlist", "jukebox_queue_length",
+        "cols_search", "cols_queue_jukebox", "coverimage", "coverimage_name", "coverimage_size", "jukebox_mode", "jukebox_playlist", "jukebox_queue_length",
         "jukebox_unique_tag", "jukebox_last_played", "generate_pls_tags", "smartpls_sort", "smartpls_prefix", "smartpls_interval",
-        "last_played", "last_played_count", "locale", "localplayer", "localplayer_autoplay", "love", "love_channel", "love_message",
+        "last_played", "last_played_count", "locale", "localplayer", "love", "love_channel", "love_message",
         "max_elements_per_page",  "mpd_host", "mpd_pass", "mpd_port", "notification_page", "notification_web", "searchtaglist",
-        "smartpls", "stickers", "stream_port", "stream_url", "taglist", "music_directory", "bookmarks", "bookmark_list", "covergrid_size", 
-        "theme", "timer", "highlight_color", "media_session", "booklet_name", "lyrics", 0};
+        "smartpls", "stickers", "stream_port", "stream_url", "taglist", "music_directory", "bookmarks", "bookmark_list", "coverimage_size_small", 
+        "theme", "timer", "highlight_color", "media_session", "booklet_name", "lyrics", "home_list", "navbar_icons", 0};
     const char** ptr = state_files;
     while (*ptr != 0) {
         sds filename = sdscatfmt(sdsempty(), "%s/state/%s", config->varlibdir, *ptr);
-        unlink(filename);
+        int rc = unlink(filename);
+        if (rc != 0 && rc != ENOENT) {
+            LOG_ERROR("Error removing file \"%s\": %s", filename, strerror(errno));
+        }
+        else if (rc != 0) {
+            //ignore error
+            LOG_DEBUG("Error removing file \"%s\": %s", filename, strerror(errno));
+        }
         sdsfree(filename);
         ++ptr;
     }
@@ -74,6 +91,7 @@ bool mympd_api_connection_save(t_config *config, t_mympd_state *mympd_state, str
     else if (strncmp(key->ptr, "musicDirectory", key->len) == 0) {
         mympd_state->music_directory = sdsreplacelen(mympd_state->music_directory, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "music_directory");
+        strip_slash(mympd_state->music_directory);
     }
     else {
         sdsfree(settingname);
@@ -101,7 +119,7 @@ bool mympd_api_cols_save(t_config *config, t_mympd_state *mympd_state, const cha
         mympd_state->cols_search = sdsreplace(mympd_state->cols_search, cols);
         tablename = sdsreplace(tablename, "cols_search");
     }
-    else if (strcmp(table, "colsBrowseDatabase") == 0) {
+    else if (strcmp(table, "colsBrowseDatabaseDetail") == 0) {
         mympd_state->cols_browse_database = sdsreplace(mympd_state->cols_browse_database, cols);
         tablename = sdsreplace(tablename, "cols_browse_database");
     }
@@ -116,6 +134,10 @@ bool mympd_api_cols_save(t_config *config, t_mympd_state *mympd_state, const cha
     else if (strcmp(table, "colsPlayback") == 0) {
         mympd_state->cols_playback = sdsreplace(mympd_state->cols_playback, cols);
         tablename = sdsreplace(tablename, "cols_playback");
+    }
+    else if (strcmp(table, "colsQueueJukebox") == 0) {
+        mympd_state->cols_queue_jukebox = sdsreplace(mympd_state->cols_queue_jukebox, cols);
+        tablename = sdsreplace(tablename, "cols_queue_jukebox");
     }
     else {
         sdsfree(tablename);
@@ -152,10 +174,6 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
         mympd_state->auto_play = val->type == JSON_TYPE_TRUE ? true : false;
         settingname = sdscat(settingname, "auto_play");
     }
-    else if (strncmp(key->ptr, "localplayerAutoplay", key->len) == 0) {
-        mympd_state->localplayer_autoplay = val->type == JSON_TYPE_TRUE ? true : false;
-        settingname = sdscat(settingname, "localplayer_autoplay");
-    }
     else if (strncmp(key->ptr, "coverimage", key->len) == 0) {
         mympd_state->coverimage = val->type == JSON_TYPE_TRUE ? true : false;
         settingname = sdscat(settingname, "coverimage");
@@ -175,9 +193,9 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
         mympd_state->coverimage_size = strtoimax(settingvalue, &crap, 10);
         settingname = sdscat(settingname, "coverimage_size");
     }
-    else if (strncmp(key->ptr, "covergridSize", key->len) == 0) {
-        mympd_state->covergrid_size = strtoimax(settingvalue, &crap, 10);
-        settingname = sdscat(settingname, "covergrid_size");
+    else if (strncmp(key->ptr, "coverimageSizeSmall", key->len) == 0) {
+        mympd_state->coverimage_size_small = strtoimax(settingvalue, &crap, 10);
+        settingname = sdscat(settingname, "coverimage_size_small");
     }
     else if (strncmp(key->ptr, "bookletName", key->len) == 0) {
         mympd_state->booklet_name = sdsreplacelen(mympd_state->booklet_name, settingvalue, sdslen(settingvalue));
@@ -398,8 +416,8 @@ void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state) {
     mympd_state->cols_browse_filesystem = state_file_rw_string(config, "cols_browse_filesystem", config->cols_browse_filesystem, false);
     mympd_state->cols_playback = state_file_rw_string(config, "cols_playback", config->cols_playback, false);
     mympd_state->cols_queue_last_played = state_file_rw_string(config, "cols_queue_last_played", config->cols_queue_last_played, false);
+    mympd_state->cols_queue_jukebox = state_file_rw_string(config, "cols_queue_jukebox", config->cols_queue_jukebox, false);
     mympd_state->localplayer = state_file_rw_bool(config, "localplayer", config->localplayer, false);
-    mympd_state->localplayer_autoplay = state_file_rw_bool(config, "localplayer_autoplay", config->localplayer_autoplay, false);
     mympd_state->stream_port = state_file_rw_int(config, "stream_port", config->stream_port, false);
     mympd_state->stream_url = state_file_rw_string(config, "stream_url", config->stream_url, false);
     mympd_state->bg_cover = state_file_rw_bool(config, "bg_cover", config->bg_cover, false);
@@ -408,7 +426,7 @@ void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state) {
     mympd_state->coverimage = state_file_rw_bool(config, "coverimage", config->coverimage, false);
     mympd_state->coverimage_name = state_file_rw_string(config, "coverimage_name", config->coverimage_name, false);
     mympd_state->coverimage_size = state_file_rw_int(config, "coverimage_size", config->coverimage_size, false);
-    mympd_state->covergrid_size = state_file_rw_int(config, "covergrid_size", config->covergrid_size, false);
+    mympd_state->coverimage_size_small = state_file_rw_int(config, "coverimage_size_small", config->coverimage_size_small, false);
     mympd_state->locale = state_file_rw_string(config, "locale", config->locale, false);
     mympd_state->music_directory = state_file_rw_string(config, "music_directory", config->music_directory, false);
     mympd_state->bookmarks = state_file_rw_bool(config, "bookmarks", config->bookmarks, false);
@@ -421,100 +439,11 @@ void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state) {
         mympd_state->bookmarks = false;
         mympd_state->smartpls = false;
     }
+    strip_slash(mympd_state->music_directory);
+    mympd_state->navbar_icons = read_navbar_icons(config);
 }
 
-sds state_file_rw_string(t_config *config, const char *name, const char *def_value, bool warn) {
-    char *line = NULL;
-    size_t n = 0;
-    ssize_t read;
-    
-    sds result = sdsempty();
-    
-    if (!validate_string(name)) {
-        return result;
-    }
-    
-    sds cfg_file = sdscatfmt(sdsempty(), "%s/state/%s", config->varlibdir, name);
-    FILE *fp = fopen(cfg_file, "r");
-    sdsfree(cfg_file);
-    if (fp == NULL) {
-        if (warn == true) {
-            LOG_WARN("Can't open %s", cfg_file);
-        }
-        state_file_write(config, name, def_value);
-        result = sdscat(result, def_value);
-        return result;
-    }
-    read = getline(&line, &n, fp);
-    if (read > 0) {
-        LOG_DEBUG("State %s: %s", name, line);
-    }
-    fclose(fp);
-    if (read > 0) {
-        result = sdscat(result, line);
-        sdstrim(result, " \n\r");
-        FREE_PTR(line);
-        return result;
-    }
-    
-    FREE_PTR(line);
-    result = sdscat(result, def_value);
-    return result;
-}
-
-bool state_file_rw_bool(t_config *config, const char *name, const bool def_value, bool warn) {
-    bool value = def_value;
-    sds line = state_file_rw_string(config, name, def_value == true ? "true" : "false", warn);
-    if (sdslen(line) > 0) {
-        value = strtobool(line);
-        sdsfree(line);
-    }
-    return value;
-}
-
-int state_file_rw_int(t_config *config, const char *name, const int def_value, bool warn) {
-    char *crap = NULL;
-    int value = def_value;
-    sds def_value_str = sdsfromlonglong(def_value);
-    sds line = state_file_rw_string(config, name, def_value_str, warn);
-    sdsfree(def_value_str);
-    if (sdslen(line) > 0) {
-        value = strtoimax(line, &crap, 10);
-        sdsfree(line);
-    }
-    return value;
-}
-
-bool state_file_write(t_config *config, const char *name, const char *value) {
-    if (config->readonly == true) {
-        return true;
-    }
-    if (!validate_string(name)) {
-        return false;
-    }
-    sds tmp_file = sdscatfmt(sdsempty(), "%s/state/%s.XXXXXX", config->varlibdir, name);
-    int fd = mkstemp(tmp_file);
-    if (fd < 0) {
-        LOG_ERROR("Can't open %s for write", tmp_file);
-        sdsfree(tmp_file);
-        return false;
-    }
-    FILE *fp = fdopen(fd, "w");
-    fputs(value, fp);
-    fclose(fp);
-    sds cfg_file = sdscatfmt(sdsempty(), "%s/state/%s", config->varlibdir, name);
-    if (rename(tmp_file, cfg_file) == -1) {
-        LOG_ERROR("Renaming file from %s to %s failed", tmp_file, cfg_file);
-        sdsfree(tmp_file);
-        sdsfree(cfg_file);
-        return false;
-    }
-    sdsfree(tmp_file);
-    sdsfree(cfg_file);
-    return true;
-}
-
-sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buffer, sds method, int request_id) {
+sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buffer, sds method, long request_id) {
     buffer = jsonrpc_start_result(buffer, method, request_id);
     buffer = sdscat(buffer, ",");
     buffer = tojson_char(buffer, "mpdHost", mympd_state->mpd_host, true);
@@ -533,7 +462,7 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = tojson_bool(buffer, "coverimage", mympd_state->coverimage, true);
     buffer = tojson_char(buffer, "coverimageName", mympd_state->coverimage_name, true);
     buffer = tojson_long(buffer, "coverimageSize", mympd_state->coverimage_size, true);
-    buffer = tojson_long(buffer, "covergridSize", mympd_state->covergrid_size, true);
+    buffer = tojson_long(buffer, "coverimageSizeSmall", mympd_state->coverimage_size_small, true);
     buffer = tojson_bool(buffer, "featMixramp", config->mixramp, true);
     buffer = tojson_long(buffer, "maxElementsPerPage", mympd_state->max_elements_per_page, true);
     buffer = tojson_bool(buffer, "notificationWeb", mympd_state->notification_web, true);
@@ -550,7 +479,6 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = tojson_char(buffer, "bgCssFilter", mympd_state->bg_css_filter, true);
     buffer = tojson_long(buffer, "loglevel", loglevel, true);
     buffer = tojson_char(buffer, "locale", mympd_state->locale, true);
-    buffer = tojson_bool(buffer, "localplayerAutoplay", mympd_state->localplayer_autoplay, true);
     buffer = tojson_bool(buffer, "stickers", mympd_state->stickers, true);
     buffer = tojson_bool(buffer, "smartpls", mympd_state->smartpls, true);
     buffer = tojson_char(buffer, "smartplsSort", mympd_state->smartpls_sort, true);
@@ -571,13 +499,21 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = tojson_bool(buffer, "featStickerCache", config->sticker_cache, true);
     buffer = tojson_char(buffer, "bookletName", mympd_state->booklet_name, true);
     buffer = tojson_bool(buffer, "featLyrics", mympd_state->lyrics, true);
+    buffer = tojson_bool(buffer, "featScripting", config->scripting, true);
+    buffer = tojson_bool(buffer, "featScripteditor", config->scripteditor, true);
+    buffer = tojson_bool(buffer, "footerStop", config->footer_stop, true);
+    buffer = tojson_bool(buffer, "featHome", config->home, true);
+    buffer = tojson_long(buffer, "volumeMin", config->volume_min, true);
+    buffer = tojson_long(buffer, "volumeMax", config->volume_max, true);
     buffer = sdscatfmt(buffer, "\"colsQueueCurrent\":%s,", mympd_state->cols_queue_current);
     buffer = sdscatfmt(buffer, "\"colsSearch\":%s,", mympd_state->cols_search);
-    buffer = sdscatfmt(buffer, "\"colsBrowseDatabase\":%s,", mympd_state->cols_browse_database);
+    buffer = sdscatfmt(buffer, "\"colsBrowseDatabaseDetail\":%s,", mympd_state->cols_browse_database);
     buffer = sdscatfmt(buffer, "\"colsBrowsePlaylistsDetail\":%s,", mympd_state->cols_browse_playlists_detail);
     buffer = sdscatfmt(buffer, "\"colsBrowseFilesystem\":%s,", mympd_state->cols_browse_filesystem);
     buffer = sdscatfmt(buffer, "\"colsPlayback\":%s,", mympd_state->cols_playback);
-    buffer = sdscatfmt(buffer, "\"colsQueueLastPlayed\":%s", mympd_state->cols_queue_last_played);
+    buffer = sdscatfmt(buffer, "\"colsQueueLastPlayed\":%s,", mympd_state->cols_queue_last_played);
+    buffer = sdscatfmt(buffer, "\"colsQueueJukebox\":%s,", mympd_state->cols_queue_jukebox);
+    buffer = sdscatfmt(buffer, "\"navbarIcons\":%s", mympd_state->navbar_icons);
 
     if (config->syscmds == true) {
         buffer = sdscat(buffer, ",\"syscmdList\":[");
@@ -592,7 +528,154 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
         }
         buffer = sdscat(buffer, "]");
     }
-
+    
     buffer = jsonrpc_end_result(buffer);
+    return buffer;
+}
+
+//privat functions
+static sds state_file_rw_string(t_config *config, const char *name, const char *def_value, bool warn) {
+    char *line = NULL;
+    size_t n = 0;
+    ssize_t read;
+    
+    sds result = sdsempty();
+    
+    if (!validate_string(name)) {
+        return result;
+    }
+    
+    sds cfg_file = sdscatfmt(sdsempty(), "%s/state/%s", config->varlibdir, name);
+    FILE *fp = fopen(cfg_file, "r");
+    if (fp == NULL) {
+        if (warn == true) {
+            LOG_WARN("Can not open file \"%s\": %s", cfg_file, strerror(errno));
+        }
+        else if (errno != ENOENT) {
+            LOG_ERROR("Can not open file \"%s\": %s", cfg_file, strerror(errno));
+        }
+        state_file_write(config, name, def_value);
+        result = sdscat(result, def_value);
+        sdsfree(cfg_file);
+        return result;
+    }
+    sdsfree(cfg_file);
+    read = getline(&line, &n, fp);
+    if (read > 0) {
+        LOG_DEBUG("State %s: %s", name, line);
+    }
+    fclose(fp);
+    if (read > 0) {
+        result = sdscat(result, line);
+        sdstrim(result, " \n\r");
+        FREE_PTR(line);
+        return result;
+    }
+    
+    FREE_PTR(line);
+    result = sdscat(result, def_value);
+    return result;
+}
+
+static bool state_file_rw_bool(t_config *config, const char *name, const bool def_value, bool warn) {
+    bool value = def_value;
+    sds line = state_file_rw_string(config, name, def_value == true ? "true" : "false", warn);
+    if (sdslen(line) > 0) {
+        value = strtobool(line);
+        sdsfree(line);
+    }
+    return value;
+}
+
+static int state_file_rw_int(t_config *config, const char *name, const int def_value, bool warn) {
+    char *crap = NULL;
+    int value = def_value;
+    sds def_value_str = sdsfromlonglong(def_value);
+    sds line = state_file_rw_string(config, name, def_value_str, warn);
+    sdsfree(def_value_str);
+    if (sdslen(line) > 0) {
+        value = strtoimax(line, &crap, 10);
+        sdsfree(line);
+    }
+    return value;
+}
+
+static bool state_file_write(t_config *config, const char *name, const char *value) {
+    if (config->readonly == true) {
+        return true;
+    }
+    if (!validate_string(name)) {
+        return false;
+    }
+    sds tmp_file = sdscatfmt(sdsempty(), "%s/state/%s.XXXXXX", config->varlibdir, name);
+    int fd = mkstemp(tmp_file);
+    if (fd < 0) {
+        LOG_ERROR("Can not open file \"%s\" for write: %s", tmp_file, strerror(errno));
+        sdsfree(tmp_file);
+        return false;
+    }
+    FILE *fp = fdopen(fd, "w");
+    int rc = fputs(value, fp);
+    if (rc == EOF) {
+        LOG_ERROR("Can not write to file \"%s\"", tmp_file);
+    }
+    fclose(fp);
+    sds cfg_file = sdscatfmt(sdsempty(), "%s/state/%s", config->varlibdir, name);
+    if (rename(tmp_file, cfg_file) == -1) {
+        LOG_ERROR("Renaming file from \"%s\" to \"%s\" failed: %s", tmp_file, cfg_file, strerror(errno));
+        sdsfree(tmp_file);
+        sdsfree(cfg_file);
+        return false;
+    }
+    sdsfree(tmp_file);
+    sdsfree(cfg_file);
+    return true;
+}
+
+static sds default_navbar_icons(t_config *config) {
+    LOG_INFO("Writing default navbar_icons");
+    sds file_name = sdscatfmt(sdsempty(), "%s/state/navbar_icons", config->varlibdir);
+    sds buffer = sdsnew(NAVBAR_ICONS);
+    FILE *fp = fopen(file_name, "w");
+    if (fp == NULL) {
+        LOG_ERROR("Can not open file \"%s\" for write: %s", file_name, strerror(errno));
+        sdsfree(file_name);
+        return buffer;
+    }
+    int rc = fputs(buffer, fp);
+    if (rc == EOF) {
+        LOG_ERROR("Can not write to file \"%s\"", file_name);
+    }
+    fclose(fp);
+    sdsfree(file_name);
+    return buffer;
+}
+
+static sds read_navbar_icons(t_config *config) {
+    sds file_name = sdscatfmt(sdsempty(), "%s/state/navbar_icons", config->varlibdir);
+    sds buffer = sdsempty();
+    FILE *fp = fopen(file_name, "r");
+    if (fp == NULL) {
+        if (errno != ENOENT) {
+            LOG_ERROR("Can not open file \"%s\": %s", file_name, strerror(errno));
+        }
+        buffer = default_navbar_icons(config);
+        sdsfree(file_name);
+        return buffer;
+    }
+    sdsfree(file_name);
+    char *line = NULL;
+    char *crap = NULL;
+    size_t n = 0;
+    ssize_t read;
+    while ((read = getline(&line, &n, fp)) > 0) {
+        strtok_r(line, "\n", &crap);
+        buffer = sdscat(buffer, line);
+    }
+    FREE_PTR(line);
+    fclose(fp);
+    if (sdslen(buffer) == 0) {
+        buffer = default_navbar_icons(config);
+    }
     return buffer;
 }

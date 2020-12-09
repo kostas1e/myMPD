@@ -25,7 +25,6 @@
 
 void mympd_api_push_to_mpd_client(t_mympd_state *mympd_state) {
     t_work_request *request = create_request(-1, 0, MYMPD_API_SETTINGS_SET, "MYMPD_API_SETTINGS_SET", "");
-
     request->data = sdscat(request->data, "{\"jsonrpc\":\"2.0\",\"id\":0,\"method\":\"MYMPD_API_SETTINGS_SET\",\"params\":{");
     request->data = tojson_long(request->data, "jukeboxMode", mympd_state->jukebox_mode, true);
     request->data = tojson_char(request->data, "jukeboxPlaylist", mympd_state->jukebox_playlist, true);
@@ -55,13 +54,27 @@ void mympd_api_push_to_mpd_client(t_mympd_state *mympd_state) {
     request->data = tojson_long(request->data, "maxElementsPerPage", mympd_state->max_elements_per_page, true);
     request->data = tojson_char(request->data, "musicDirectory", mympd_state->music_directory, false);
     request->data = sdscat(request->data, "}}");
+    tiny_queue_push(mpd_client_queue, request, 0);
 
-    tiny_queue_push(mpd_client_queue, request);
+    t_work_request *request2 = create_request(-1, 0, MYMPD_API_SETTINGS_SET, "MYMPD_API_SETTINGS_SET", "");
+    request2->data = sdscat(request2->data, "{\"jsonrpc\":\"2.0\",\"id\":0,\"method\":\"MYMPD_API_SETTINGS_SET\",\"params\":{");
+    request2->data = tojson_char(request2->data, "taglist", mympd_state->taglist, true);
+    request2->data = tojson_bool(request2->data, "smartpls", mympd_state->smartpls, true);
+    request2->data = tojson_char(request2->data, "smartplsSort", mympd_state->smartpls_sort, true);
+    request2->data = tojson_char(request2->data, "smartplsPrefix", mympd_state->smartpls_prefix, true);
+    request2->data = tojson_long(request2->data, "smartplsInterval", mympd_state->smartpls_interval, true);
+    request2->data = tojson_char(request2->data, "generatePlsTags", mympd_state->generate_pls_tags, true);
+    request2->data = tojson_char(request2->data, "mpdHost", mympd_state->mpd_host, true);
+    request2->data = tojson_char(request2->data, "mpdPass", mympd_state->mpd_pass, true);
+    request2->data = tojson_long(request2->data, "mpdPort", mympd_state->mpd_port, false);
+    request2->data = sdscat(request2->data, "}}");
+    tiny_queue_push(mpd_worker_queue, request2, 0);
 }
 
 void free_mympd_state(t_mympd_state *mympd_state) {
     free_mympd_state_sds(mympd_state);
     truncate_timerlist(&mympd_state->timer_list);
+    list_free(&mympd_state->home_list);
     FREE_PTR(mympd_state);
 }
 
@@ -83,6 +96,7 @@ void free_mympd_state_sds(t_mympd_state *mympd_state) {
     sdsfree(mympd_state->cols_browse_filesystem);
     sdsfree(mympd_state->cols_playback);
     sdsfree(mympd_state->cols_queue_last_played);
+    sdsfree(mympd_state->cols_queue_jukebox);
     sdsfree(mympd_state->stream_url);
     sdsfree(mympd_state->bg_color);
     sdsfree(mympd_state->bg_css_filter);
@@ -94,6 +108,7 @@ void free_mympd_state_sds(t_mympd_state *mympd_state) {
     sdsfree(mympd_state->smartpls_sort);
     sdsfree(mympd_state->smartpls_prefix);
     sdsfree(mympd_state->booklet_name);
+    sdsfree(mympd_state->navbar_icons);
 }
 
 static const char *mympd_cols[]={"Pos", "Duration", "Type", "LastPlayed", "Filename", "Filetype", "Fileformat", "LastModified", "Lyrics", 0};

@@ -5,31 +5,36 @@
  https://github.com/jcorporation/mympd
 */
 
-function search(x) {
+function doSearch(x) {
     if (settings.featAdvsearch) {
         let expression = '(';
         let crumbs = domCache.searchCrumb.children;
         for (let i = 0; i < crumbs.length; i++) {
             expression += '(' + decodeURI(crumbs[i].getAttribute('data-filter')) + ')';
-            if (x !== '') expression += ' AND ';
+            if (x !== '') {
+                expression += ' AND ';
+            }
         }
         if (x !== '') {
             let match = document.getElementById('searchMatch');
             expression += '(' + app.current.filter + ' ' + match.options[match.selectedIndex].value + ' \'' + x +'\'))';
         }
-        else
+        else {
             expression += ')';
-        if (expression.length <= 2)
+        }
+        if (expression.length <= 2) {
             expression = '';
-        appGoto('Search', undefined, undefined, '0/' + app.current.filter + '/' + app.current.sort + '/' + encodeURI(expression));
+        }
+        appGoto('Search', undefined, undefined, '0', app.current.filter, app.current.sort, '-', expression);
     }
-    else
-        appGoto('Search', undefined, undefined, '0/' + app.current.filter + '/' + app.current.sort + '/' + x);
+    else {
+        appGoto('Search', undefined, undefined, '0', app.current.filter, app.current.sort, '-', x);
+    }
 }
 
 function parseSearch(obj) {
-    document.getElementById('panel-heading-search').innerText = gtPage('Num songs', obj.result.returnedEntities, obj.result.totalEntities);
-    document.getElementById('cardFooterSearch').innerText = gtPage('Num songs', obj.result.returnedEntities, obj.result.totalEntities);
+    //document.getElementById('panel-heading-search').innerText = gtPage('Num songs', obj.result.returnedEntities, obj.result.totalEntities);
+    //document.getElementById('cardFooterSearch').innerText = gtPage('Num songs', obj.result.returnedEntities, obj.result.totalEntities);
     
     if (obj.result.returnedEntities > 0) {
         document.getElementById('searchAddAllSongs').removeAttribute('disabled');

@@ -4,7 +4,7 @@
  https://github.com/jcorporation/mympd
 */
 
-var CACHE = 'myMPD-cache-v6.4.2';
+var CACHE = 'myMPD-cache-v6.8.3';
 var subdir = self.location.pathname.replace('/sw.js', '').replace(/\/$/, '');
 var urlsToCache = [
     subdir + '/',
@@ -23,8 +23,9 @@ var ignoreRequests = new RegExp('(' + [
   subdir + '/api',
   subdir + '/ca.crt',
   subdir + '/ws',
-  subdir + '/library/(.*)',
+  subdir + '/tagpics/(.*)',
   subdir + '/albumart/(.*)',
+  subdir + '/browse/(.*)',
   subdir + '/lyrics/(.*)'].join('(/?)|\\') + ')$')
 
 self.addEventListener('install', function(event) {
@@ -42,6 +43,9 @@ self.addEventListener('install', function(event) {
 self.addEventListener('fetch', function(event) {
     if (event.request.url.match('^http://')) {
         return false;
+    }
+    if (event.request.destination === 'audio') {
+        return false;    
     }
     if (ignoreRequests.test(event.request.url)) {
         return false;

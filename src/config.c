@@ -6,6 +6,7 @@
 
 #define _GNU_SOURCE
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
@@ -45,9 +46,11 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     }
     else if (MATCH("mpd", "musicdirectory")) {
         p_config->music_directory = sdsreplace(p_config->music_directory, value);
+        strip_slash(p_config->music_directory);
     }
     else if (MATCH("mpd", "playlistdirectory")) {
         p_config->playlist_directory = sdsreplace(p_config->playlist_directory, value);
+        strip_slash(p_config->playlist_directory);
     }
     else if (MATCH("mpd", "regex")) {
         p_config->regex = strtobool(value);
@@ -58,6 +61,9 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
 #ifdef ENABLE_SSL
     else if (MATCH("webserver", "ssl")) {
         p_config->ssl = strtobool(value);
+    }
+    else if (MATCH("webserver", "redirect")) {
+        p_config->redirect = strtobool(value);
     }
     else if (MATCH("webserver", "sslport")) {
         p_config->ssl_port = sdsreplace(p_config->ssl_port, value);
@@ -76,6 +82,14 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     }
     else if (MATCH("webserver", "sslsan")) {
         p_config->ssl_san = sdsreplace(p_config->ssl_san, value);
+    }
+#endif
+    else if (MATCH("webserver", "acl")) {
+        p_config->acl = sdsreplace(p_config->acl, value);
+    }
+#ifdef ENABLE_LUA
+    else if (MATCH("webserver", "scriptacl")) {
+        p_config->scriptacl = sdsreplace(p_config->scriptacl, value);
     }
 #endif
     else if (MATCH("webserver", "publish")) {
@@ -215,11 +229,11 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     else if (MATCH("mympd", "colsqueuelastplayed")) {
         p_config->cols_queue_last_played = sdsreplace(p_config->cols_queue_last_played, value);
     }
+    else if (MATCH("mympd", "colsqueuejukebox")) {
+        p_config->cols_queue_jukebox = sdsreplace(p_config->cols_queue_jukebox, value);
+    }
     else if (MATCH("mympd", "localplayer")) {
         p_config->localplayer = strtobool(value);
-    }
-    else if (MATCH("mympd", "localplayerautoplay")) {
-        p_config->localplayer_autoplay = strtobool(value);
     }
     else if (MATCH("mympd", "streamport")) {
         p_config->stream_port = strtoimax(value, &crap, 10);
@@ -245,6 +259,35 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     else if (MATCH("mympd", "lyrics")) {
         p_config->lyrics = strtobool(value);
     }
+    #ifdef ENABLE_LUA
+    else if (MATCH("mympd", "scripting")) {
+        p_config->scripting = strtobool(value);
+    }
+    else if (MATCH("mympd", "remotescripting")) {
+        p_config->remotescripting = strtobool(value);
+    }
+    else if (MATCH("mympd", "lualibs")) {
+        p_config->lualibs = sdsreplace(p_config->lualibs, value);
+    }
+    else if (MATCH("mympd", "scripteditor")) {
+        p_config->scripteditor = strtobool(value);
+    }
+    #endif
+    else if (MATCH("mympd", "partitions")) {
+        p_config->partitions = strtobool(value);
+    }
+    else if (MATCH("mympd", "footerstop")) {
+        p_config->footer_stop = strtobool(value);
+    }
+    else if (MATCH("mympd", "home")) {
+        p_config->home = strtobool(value);
+    }
+    else if (MATCH("mympd", "volumemin")) {
+        p_config->volume_min = strtoumax(value, &crap, 10);
+    }
+    else if (MATCH("mympd", "volumemax")) {
+        p_config->volume_max = strtoumax(value, &crap, 10);
+    }
     else if (MATCH("theme", "theme")) {
         p_config->theme = sdsreplace(p_config->theme, value);
     }
@@ -269,8 +312,8 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     else if (MATCH("theme", "coverimagesize")) {
         p_config->coverimage_size = strtoimax(value, &crap, 10);
     }
-    else if (MATCH("theme", "covergridsize")) {
-        p_config->covergrid_size = strtoimax(value, &crap, 10);
+    else if (MATCH("theme", "coverimagesizesmall")) {
+        p_config->coverimage_size_small = strtoimax(value, &crap, 10);
     }
     else if (MATCH("theme", "locale")) {
         p_config->locale = sdsreplace(p_config->locale, value);
@@ -308,10 +351,13 @@ static void mympd_parse_env(struct t_config *config, const char *envvar) {
 static void mympd_get_env(struct t_config *config) {
     const char *env_vars[]={"MPD_HOST", "MPD_PORT", "MPD_PASS", "MPD_MUSICDIRECTORY",
         "MPD_PLAYLISTDIRECTORY", "MPD_REGEX", "WEBSERVER_WEBPORT", "WEBSERVER_PUBLISH",
-        "WEBSERVER_WEBDAV",
+        "WEBSERVER_WEBDAV", "WEBSERVER_ACL", 
+      #ifdef ENABLE_LUA
+        "WEBSERVER_SCRIPTACL",
+      #endif
       #ifdef ENABLE_SSL
         "WEBSERVER_SSL", "WEBSERVER_SSLPORT", "WEBSERVER_SSLCERT", "WEBSERVER_SSLKEY",
-        "WEBSERVER_SSLSAN", 
+        "WEBSERVER_SSLSAN", "WEBSERVER_REDIRECT", 
       #endif
         "MYMPD_LOGLEVEL", "MYMPD_USER", "MYMPD_VARLIBDIR", "MYMPD_MIXRAMP", "MYMPD_STICKERS", 
         "MYMPD_STICKERCACHE", "MYMPD_TAGLIST", "MYMPD_GENERATE_PLS_TAGS",
@@ -325,11 +371,15 @@ static void mympd_get_env(struct t_config *config) {
         "MYMPD_JUKEBOXUNIQUETAG", "MYMPD_COLSQUEUECURRENT","MYMPD_COLSSEARCH", 
         "MYMPD_COLSBROWSEDATABASE", "MYMPD_COLSBROWSEPLAYLISTDETAIL",
         "MYMPD_COLSBROWSEFILESYSTEM", "MYMPD_COLSPLAYBACK", "MYMPD_COLSQUEUELASTPLAYED",
-        "MYMPD_LOCALPLAYER", "MYMPD_LOCALPLAYERAUTOPLAY", "MYMPD_STREAMPORT",
+        "MYMPD_LOCALPLAYER", "MYMPD_STREAMPORT", "MYMPD_HOME", "MYMPOD_COLSQUEUEJUKEBOX",
         "MYMPD_STREAMURL", "MYMPD_VOLUMESTEP", "MYMPD_COVERCACHEKEEPDAYS", "MYMPD_COVERCACHE",
-        "MYMPD_COVERCACHEAVOID", "MYMPD_LYRICS",
+        "MYMPD_COVERCACHEAVOID", "MYMPD_LYRICS", "MYMPD_PARTITIONS", "MYMPD_FOOTERSTOP",
+        "MYMPD_VOLUMEMIN", "MYMPD_VOLUMEMAX",
+      #ifdef ENABLE_LUA
+        "MYMPD_SCRIPTING", "MYMPD_REMOTESCRIPTING", "MYMPD_LUALIBS", "MYMPD_SCRIPTEDITOR",
+      #endif
         "THEME_THEME", "THEME_CUSTOMPLACEHOLDERIMAGES",
-        "THEME_BGCOVER", "THEME_BGCOLOR", "THEME_BGCSSFILTER", "THEME_COVERGRIDSIZE",
+        "THEME_BGCOVER", "THEME_BGCOLOR", "THEME_BGCSSFILTER", "THEME_COVERIMAGESIZESMALL",
         "THEME_COVERIMAGE", "THEME_COVERIMAGENAME", "THEME_COVERIMAGESIZE",
         "THEME_LOCALE", "THEME_HIGHLIGHTCOLOR", 0};
     const char** ptr = env_vars;
@@ -368,6 +418,7 @@ void mympd_free_config(t_config *config) {
     sdsfree(config->cols_browse_playlists_detail);
     sdsfree(config->cols_browse_filesystem);
     sdsfree(config->cols_playback);
+    sdsfree(config->cols_queue_jukebox);
     sdsfree(config->stream_url);
     sdsfree(config->bg_color);
     sdsfree(config->bg_css_filter);
@@ -379,6 +430,9 @@ void mympd_free_config(t_config *config) {
     sdsfree(config->smartpls_sort);
     sdsfree(config->smartpls_prefix);
     sdsfree(config->booklet_name);
+    sdsfree(config->acl);
+    sdsfree(config->scriptacl);
+    sdsfree(config->lualibs);
     list_free(&config->syscmd_list);
     FREE_PTR(config);
 }
@@ -397,13 +451,14 @@ void mympd_config_defaults(t_config *config) {
     config->ssl_key = sdsnew(VARLIB_PATH"/ssl/server.key");
     config->ssl_san = sdsempty();
     config->custom_cert = false;
+    config->redirect = true;
 #endif
     config->user = sdsnew("mympd");
     config->chroot = false;
     config->varlibdir = sdsnew(VARLIB_PATH);
     config->stickers = true;
     config->mixramp = false;
-    config->taglist = sdsnew("Artist, Album, AlbumArtist, Title, Track, Genre, Date");
+    config->taglist = sdsnew("Artist, Album, AlbumArtist, Title, Track, Genre, Date, Disc");
     config->searchtaglist = sdsnew("Artist, Album, AlbumArtist, Title, Genre");
     config->browsetaglist = sdsnew("Artist, Album, AlbumArtist, Genre");
     config->smartpls = true;
@@ -412,14 +467,14 @@ void mympd_config_defaults(t_config *config) {
     config->smartpls_interval = 14400;
     config->generate_pls_tags = sdsnew("Genre");
     config->max_elements_per_page = 100;
-    config->last_played_count = 20;
+    config->last_played_count = 200;
     config->syscmds = false;
     config->loglevel = 2;
     config->love = false;
     config->love_channel = sdsempty();
     config->love_message = sdsnew("love");
     config->notification_web = false;
-    config->notification_page = false;
+    config->notification_page = true;
     config->media_session = true;
     config->auto_play = false;
     config->jukebox_mode = JUKEBOX_OFF;
@@ -434,27 +489,27 @@ void mympd_config_defaults(t_config *config) {
     config->cols_browse_playlists_detail = sdsnew("[\"Pos\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
     config->cols_browse_filesystem = sdsnew("[\"Type\",\"Title\",\"Artist\",\"Album\",\"Duration\"]");
     config->cols_playback = sdsnew("[\"Artist\",\"Album\"]");
+    config->cols_queue_jukebox = sdsnew("[\"Pos\",\"Title\",\"Artist\",\"Album\"]");
     config->localplayer = false;
-    config->localplayer_autoplay = false;
-    config->stream_port = 8000;
+    config->stream_port = 8443;
     config->stream_url = sdsempty();
-    config->bg_cover = false;
-    config->bg_color = sdsnew("#888");
-    config->bg_css_filter = sdsnew("blur(5px)");
+    config->bg_cover = true;
+    config->bg_color = sdsnew("#ccc");
+    config->bg_css_filter = sdsnew("grayscale(100%) opacity(5%)");
     config->coverimage = true;
     config->coverimage_name = sdsnew("folder, cover");
     config->coverimage_size = 250;
-    config->covergrid_size = 200;
+    config->coverimage_size_small = 175;
     config->locale = sdsnew("default");
     config->startup_time = time(NULL);
     config->readonly = false;
-    config->bookmarks = true;
+    config->bookmarks = false;
     config->volume_step = 5;
-    config->publish = false;
+    config->publish = true;
     config->webdav = false;
     config->covercache_keep_days = 7;
     config->covercache = true;
-    config->theme = sdsnew("theme-default");
+    config->theme = sdsnew("theme-dark");
     config->highlight_color = sdsnew("#28a745");
     config->custom_placeholder_images = false;
     config->regex = true;
@@ -464,6 +519,17 @@ void mympd_config_defaults(t_config *config) {
     config->booklet_name = sdsnew("booklet.pdf");
     config->mounts = true;
     config->lyrics = true;
+    config->scripting = true;
+    config->remotescripting = false;
+    config->acl = sdsempty();
+    config->scriptacl = sdsnew("-0.0.0.0/0,+127.0.0.0/8");
+    config->lualibs = sdsnew("base, string, utf8, table, math, mympd");
+    config->scripteditor = true;
+    config->partitions = false;
+    config->footer_stop = false;
+    config->home = true;
+    config->volume_min = 0;
+    config->volume_max = 100;
     list_init(&config->syscmd_list);
 }
 
@@ -475,7 +541,7 @@ bool mympd_dump_config(void) {
     sds tmp_file = sdscat(sdsempty(), "/tmp/mympd.conf.XXXXXX");
     int fd = mkstemp(tmp_file);
     if (fd < 0) {
-        LOG_ERROR("Can't open %s for write", tmp_file);
+        LOG_ERROR("Can not open file \"%s\" for write: %s", tmp_file, strerror(errno));
         sdsfree(tmp_file);
         return false;
     }
@@ -497,25 +563,37 @@ bool mympd_dump_config(void) {
     
     fprintf(fp, "[webserver]\n"
         "webport = %s\n"
-    #ifdef ENABLE_SSL
+      #ifdef ENABLE_SSL
         "ssl = %s\n"
         "sslport = %s\n"
         "sslcert = %s\n"
         "sslkey = %s\n"
         "sslsan = %s\n"
-    #endif
+        "redirect = %s\n"
+      #endif
         "publish = %s\n"
-        "webdav = %s\n\n",
+        "webdav = %s\n"
+        "acl = %s\n"
+      #ifdef ENABLE_LUA
+        "scriptacl = %s\n"
+      #endif
+        "\n",
         p_config->webport,
-    #ifdef ENABLE_SSL
+      #ifdef ENABLE_SSL
         (p_config->ssl == true ? "true" : "false"),
         p_config->ssl_port,
         p_config->ssl_cert,
         p_config->ssl_key,
         p_config->ssl_san,
-    #endif
+        (p_config->redirect == true ? "true" : "false" ),
+      #endif
         (p_config->publish == true ? "true" : "false"),
-        (p_config->webdav == true ? "true" : "false")
+        (p_config->webdav == true ? "true" : "false"),
+        p_config->acl
+      #ifdef ENABLE_LUA
+        ,
+        p_config->scriptacl
+      #endif  
     );
 
     fprintf(fp, "[mympd]\n"
@@ -538,6 +616,12 @@ bool mympd_dump_config(void) {
         "covercachekeepdays = %d\n"
         "covercache = %s\n"
         "syscmds = %s\n"
+    #ifdef ENABLE_LUA
+        "scripting = %s\n"
+        "remotescripting = %s\n"
+        "lualibs = %s\n"
+        "scripteditor = %s\n"
+    #endif
         "timer = %s\n"
         "lastplayedcount = %d\n"
         "loglevel = %d\n"
@@ -560,8 +644,8 @@ bool mympd_dump_config(void) {
         "colsbrowseplaylistsdetail = %s\n"
         "colsbrowsefilesystem = %s\n"
         "colsplayback = %s\n"
+        "colsqueuejukebox = %s\n"
         "localplayer = %s\n"
-        "localplayerautoplay = %s\n"
         "streamport = %d\n"
         "#streamuri = %s\n"
         "readonly = %s\n"
@@ -569,7 +653,13 @@ bool mympd_dump_config(void) {
         "covergridminsongs = %d\n"
         "bookletname = %s\n"
         "mounts = %s\n"
-        "lyrics = %s\n\n",
+        "lyrics = %s\n"
+        "partitions = %s\n"
+        "footerstop = %s\n"
+        "home = %s\n"
+        "volumemine = %u\n"
+        "volumemax = %u\n"
+        "\n",
         p_config->user,
         (p_config->chroot == true ? "true" : "false"),
         p_config->varlibdir,
@@ -589,6 +679,12 @@ bool mympd_dump_config(void) {
         p_config->covercache_keep_days,
         (p_config->covercache == true ? "true" : "false"),
         (p_config->syscmds == true ? "true" : "false"),
+    #ifdef ENABLE_LUA
+        (p_config->scripting == true ? "true" : "false"),
+        (p_config->remotescripting == true ? "true" : "false"),
+        p_config->lualibs,
+        (p_config->scripteditor == true ? "true" : "false"),
+    #endif
         (p_config->timer == true ? "true" : "false"),
         p_config->last_played_count,
         p_config->loglevel,
@@ -611,8 +707,8 @@ bool mympd_dump_config(void) {
         p_config->cols_browse_playlists_detail,
         p_config->cols_browse_filesystem,
         p_config->cols_playback,
+        p_config->cols_queue_jukebox,
         (p_config->localplayer == true ? "true" : "false"),
-        (p_config->localplayer_autoplay == true ? "true" : "false"),
         p_config->stream_port,
         p_config->stream_url,
         (p_config->readonly == true ? "true" : "false"),
@@ -620,7 +716,13 @@ bool mympd_dump_config(void) {
         p_config->covergridminsongs,
         p_config->booklet_name,
         (p_config->mounts == true ? "true" : "false"),
-        (p_config->lyrics == true ? "true" : "false")
+        (p_config->lyrics == true ? "true" : "false"),
+        (p_config->partitions == true ? "true" : "false"),
+        (p_config->footer_stop == true ? "true" : "false"),
+        (p_config->home == true ? "true" : "false"),
+        p_config->volume_min,
+        p_config->volume_max
+        
     );
 
     fprintf(fp, "[theme]\n"
@@ -631,7 +733,7 @@ bool mympd_dump_config(void) {
         "coverimage = %s\n"
         "coverimagename = %s\n"
         "coverimagesize = %d\n"
-        "covergridsize = %d\n"
+        "coverimagesizesmall = %d\n"
         "locale = %s\n"
         "customplaceholderimages = %s\n"
         "highlightcolor = %s\n\n",
@@ -642,7 +744,7 @@ bool mympd_dump_config(void) {
         (p_config->coverimage == true ? "true" : "false"),
         p_config->coverimage_name,
         p_config->coverimage_size,
-        p_config->covergrid_size,
+        p_config->coverimage_size_small,
         p_config->locale,
         (p_config->custom_placeholder_images == true ? "true" : "false"),
         p_config->highlight_color
@@ -654,7 +756,7 @@ bool mympd_dump_config(void) {
     sds conf_file = sdscat(sdsempty(), "/tmp/mympd.conf");
     int rc = rename(tmp_file, conf_file);
     if (rc == -1) {
-        LOG_ERROR("Renaming file from %s to %s failed", tmp_file, conf_file);
+        LOG_ERROR("Renaming file from %s to %s failed: %s", tmp_file, conf_file, strerror(errno));
     }
     sdsfree(tmp_file);
     sdsfree(conf_file);
@@ -698,6 +800,15 @@ bool mympd_read_config(t_config *config, sds configfile) {
     if (config->chroot == true && config->syscmds == true) {
         LOG_INFO("Chroot enabled, disabling syscmds");
         config->syscmds = false;
+    }
+    
+    if (config->scripting == false && config->remotescripting == true) {
+        LOG_INFO("Scripting disabled, disabling remote scripting");
+        config->remotescripting = false;
+    }
+    if (config->scripting == false && config->scripteditor == true) {
+        LOG_INFO("Scripting disabled, disabling scripteditor");
+        config->scripteditor = false;
     }
     return true;
 }

@@ -8,23 +8,36 @@
 function focusTable(rownr, table) {
     if (table === undefined) {
         table = document.getElementById(app.current.app + (app.current.tab !== undefined ? app.current.tab : '') + (app.current.view !== undefined ? app.current.view : '') + 'List');
-        //support for BrowseDatabaseAlbum list
-        if (table === null) {
-            table = document.getElementById(app.current.app + app.current.tab + 'TagList');
-        }
-        //support for BrowseDatabaseAlbum cards
-        if (app.current.app === 'Browse' && app.current.tab === 'Database' && 
-            !document.getElementById('BrowseDatabaseAlbumList').classList.contains('hide'))
-        {
-            table = document.getElementById('BrowseDatabaseAlbumList').getElementsByTagName('table')[0];
-        }
     }
 
-    if (app.current.app === 'Browse' && app.current.tab === 'Covergrid' &&
-            table.getElementsByTagName('tbody').length === 0) 
-    {
-        table = document.getElementsByClassName('card-grid')[0];
-        table.focus();        
+    if (app.current.app === 'Browse' && app.current.tab === 'Database' && app.current.view === 'List') {
+        const tables = document.getElementsByClassName('card-grid');
+        if (tables.length === 0 ) {
+            return; 
+        }
+        table = tables[0];
+        for (let i = 0; i < tables.length; i++) {
+            if (tables[i].classList.contains('selected')) {
+                table = tables[i];
+                break;
+            }
+        }
+        table.focus();
+        return;
+    }
+    else if (app.current.app === 'Home') {
+        const tables = document.getElementsByClassName('home-icons');
+        if (tables.length === 0 ) {
+            return; 
+        }
+        table = tables[0];
+        for (let i = 0; i < tables.length; i++) {
+            if (tables[i].classList.contains('selected')) {
+                table = tables[i];
+                break;
+            }
+        }
+        table.focus();
         return;
     }
 
@@ -33,6 +46,9 @@ function focusTable(rownr, table) {
         if (rownr === undefined) {
             if (sel.length === 0) {
                 let row = table.getElementsByTagName('tbody')[0].rows[0];
+                if (row.classList.contains('not-clickable')) {
+                    row = table.getElementsByTagName('tbody')[0].rows[1];
+                }
                 row.focus();
                 row.classList.add('selected');
             }
@@ -75,12 +91,26 @@ function scrollFocusIntoView() {
     let el = document.activeElement;
     let posY = el.getBoundingClientRect().top;
     let height = el.offsetHeight;
-    
-    if (posY < 74) {
-        window.scrollBy(0, - 74);
+    let headerHeight = el.parentNode.parentNode.offsetTop;
+    if (window.innerHeight > window.innerWidth) {
+        headerHeight += domCache.header.offsetHeight;
     }
-    else if (posY + height > window.innerHeight - 74) {
-        window.scrollBy(0, 74);
+    let footerHeight = domCache.footer.offsetHeight;
+    let parentHeight = window.innerHeight - headerHeight - footerHeight;
+    let treshold = height / 2;
+    //console.log('posY: ' + posY);
+    //console.log('height: ' + height);
+    //console.log('treshold: ' + treshold);
+    //console.log('parentHeight: ' + parentHeight);
+    //console.log('headerHeight:' + headerHeight);
+    //console.log('footerHeight:' + footerHeight);
+    if (posY <= headerHeight + treshold) {
+        //console.log('0, - height');
+        window.scrollBy(0, - height);
+    }
+    else if (posY + height > parentHeight - treshold) {
+        //console.log('0, height');
+        window.scrollBy(0, height);
     }
 }
 
@@ -91,10 +121,16 @@ function navigateTable(table, keyCode) {
         let handled = false;
         if (keyCode === 'ArrowDown') {
             next = cur.nextElementSibling;
+            if (next.classList.contains('not-clickable')) {
+                next = next.nextElementSibling;
+            }
             handled = true;
         }
         else if (keyCode === 'ArrowUp') {
             next = cur.previousElementSibling;
+            if (next.classList.contains('not-clickable')) {
+                next = next.previousElementSibling;
+            }
             handled = true;
         }
         else if (keyCode === ' ') {
@@ -113,29 +149,6 @@ function navigateTable(table, keyCode) {
             cur.classList.remove('selected');
             handled = true;
         }
-        //only for BrowseDatabaseAlbum cards
-        else if (app.current.app === 'Browse' && app.current.tab === 'Database' && 
-                 !document.getElementById('BrowseDatabaseAlbumList').classList.contains('hide') &&
-                 (keyCode === 'n' || keyCode === 'p')) {
-            let tablesHtml = document.getElementById('BrowseDatabaseAlbumList').getElementsByTagName('table');
-            let tables = Array.prototype.slice.call(tablesHtml);
-            let idx = document.activeElement.nodeName === 'TR' ? tables.indexOf(document.activeElement.parentNode.parentNode)
-                                                              : tables.indexOf(document.activeElement);
-            idx = event.key === 'p' ? (idx > 1 ? idx - 1 : 0)
-                                   : event.key === 'n' ? ( idx < tables.length - 1 ? ( document.activeElement.nodeName === 'TR' ? idx + 1 : idx )
-                                                                                  : idx)
-                                                      : idx;
-            
-            if (tables[idx].getElementsByTagName('tbody')[0].rows.length > 0) {
-                next = tables[idx].getElementsByTagName('tbody')[0].rows[0];
-            }
-            else {
-                //Titlelist not loaded yet, scroll table into view
-                tables[idx].focus();
-                scrollFocusIntoView();
-            }
-            handled = true;
-        }
         if (handled === true) {
             event.preventDefault();
             event.stopPropagation();
@@ -150,7 +163,7 @@ function navigateTable(table, keyCode) {
 }
 
 function dragAndDropTable(table) {
-    let tableBody=document.getElementById(table).getElementsByTagName('tbody')[0];
+    let tableBody = document.getElementById(table).getElementsByTagName('tbody')[0];
     tableBody.addEventListener('dragstart', function(event) {
         if (event.target.nodeName === 'TR') {
             event.target.classList.add('opacity05');
@@ -323,7 +336,7 @@ function setColTags(table) {
         tags.push('Title');
     }
     tags.push('Duration');
-    if (table === 'QueueCurrent' || table === 'BrowsePlaylistsDetail' || table === 'QueueLastPlayed') {
+    if (table === 'QueueCurrent' || table === 'BrowsePlaylistsDetail' || table === 'QueueLastPlayed' || table === 'QueueJukebox') {
         tags.push('Pos');
     }
     if (table === 'BrowseFilesystem') {
@@ -331,6 +344,9 @@ function setColTags(table) {
     }
     if (table === 'QueueLastPlayed') {
         tags.push('LastPlayed');
+    }
+    if (table === 'Search') {
+        tags.push('LastModified');
     }
     if (table === 'Playback') {
         tags.push('Filetype');
@@ -348,7 +364,6 @@ function setColTags(table) {
 function setColsChecklist(table) {
     let tagChks = '';
     let tags = setColTags(table);
-    
     for (let i = 0; i < tags.length; i++) {
         if (table === 'Playback' && tags[i] === 'Title') {
             continue;
@@ -363,14 +378,14 @@ function setColsChecklist(table) {
     return tagChks;
 }
 
-function setCols(table, className) {
+function setCols(table) {
     let colsChkList = document.getElementById(table + 'ColsDropdown');
     if (colsChkList) {
         colsChkList.firstChild.innerHTML = setColsChecklist(table);
     }
     let sort = app.current.sort;
     
-    if (table === 'Search' && app.apps.Search.state === '0/any/Title/') {
+    if (table === 'Search' && app.apps.Search.sort === 'Title') {
         if (settings.tags.includes('Title')) {
             sort = 'Title';
         }
@@ -401,22 +416,14 @@ function setCols(table, className) {
             }
             heading += '</th>';
         }
-        if (settings.featTags === true && table !== 'BrowseDatabase') {
-            heading += '<th data-col="Action"><a href="#" class="text-secondary align-middle material-icons material-icons-small">settings</a></th>';
+        if (settings.featTags === true) {
+            heading += '<th data-col="Action"><a data-title-phrase="' +t('Columns') + '" href="#" class="text-secondary align-middle material-icons material-icons-small">settings</a></th>';
         }
         else {
             heading += '<th></th>';
         }
 
-        if (className === undefined) {
-            document.getElementById(table + 'List').getElementsByTagName('tr')[0].innerHTML = heading;
-        }
-        else {
-            let tbls = document.querySelectorAll(className);
-            for (let i = 0; i < tbls.length; i++) {
-                tbls[i].getElementsByTagName('tr')[0].innerHTML = heading;
-            }
-        }
+        document.getElementById(table + 'List').getElementsByTagName('tr')[0].innerHTML = heading;
     }
 }
 

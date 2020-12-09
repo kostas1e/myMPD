@@ -13,7 +13,9 @@ function parsePlaylists(obj) {
         document.getElementById('playlistContentBtns').classList.add('hide');
         document.getElementById('smartPlaylistContentBtns').classList.add('hide');
         document.getElementById('btnAddSmartpls').parentNode.classList.remove('hide');
-    } else {
+        document.getElementById('BrowseNavPlaylists').parentNode.classList.remove('hide');
+    }
+    else {
         if (obj.result.uri.indexOf('.') > -1 || obj.result.smartpls === true) {
             document.getElementById('BrowsePlaylistsDetailList').setAttribute('data-ro', 'true')
             document.getElementById('playlistContentBtns').classList.add('hide');
@@ -31,6 +33,7 @@ function parsePlaylists(obj) {
         document.getElementById('BrowsePlaylistsAllList').classList.add('hide');
         document.getElementById('btnBrowsePlaylistsAll').parentNode.classList.remove('hide');
         document.getElementById('btnAddSmartpls').parentNode.classList.add('hide');
+        document.getElementById('BrowseNavPlaylists').parentNode.classList.add('hide');
     }
             
     let nrItems = obj.result.returnedEntities;
@@ -58,7 +61,7 @@ function parsePlaylists(obj) {
                 tbody.append(row);
             }
         }
-        document.getElementById('cardFooterBrowse').innerText = gtPage('Num playlists', obj.result.returnedEntities, obj.result.totalEntities);
+        //document.getElementById('cardFooterBrowse').innerText = gtPage('Num playlists', obj.result.returnedEntities, obj.result.totalEntities);
     }
     else if (app.current.view === 'Detail') {
         for (let i = 0; i < nrItems; i++) {
@@ -88,7 +91,7 @@ function parsePlaylists(obj) {
                 tbody.append(row);
             }
         }
-        document.getElementById('cardFooterBrowse').innerText = gtPage('Num songs', obj.result.returnedEntities, obj.result.totalEntities);
+        //document.getElementById('cardFooterBrowse').innerText = gtPage('Num songs', obj.result.returnedEntities, obj.result.totalEntities);
     }
     let trLen = tr.length - 1;
     for (let i = trLen; i >= nrItems; i --) {
@@ -103,12 +106,12 @@ function parsePlaylists(obj) {
     
     if (nrItems === 0) {
         if (app.current.view === 'All') {
-            tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
+            tbody.innerHTML = '<tr class="not-clickable"><td><span class="material-icons">error_outline</span></td>' +
                               '<td colspan="3">' + t('No playlists found') + '</td></tr>';
         }
         else {
-            tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
-                              '<td colspan="' + (settings.colsBrowsePlaylistsDetail.length - 1) + '">' + t('Empty playlist') + '</td></tr>';
+            tbody.innerHTML = '<tr class="not-clickable"><td><span class="material-icons">error_outline</span></td>' +
+                              '<td colspan="' + settings.colsBrowsePlaylistsDetail.length + '">' + t('Empty playlist') + '</td></tr>';
         }
     }
             
@@ -118,7 +121,7 @@ function parsePlaylists(obj) {
 //eslint-disable-next-line no-unused-vars
 function playlistDetails(uri) {
     document.getElementById('BrowsePlaylistsAllList').classList.add('opacity05');
-    appGoto('Browse', 'Playlists', 'Detail', '0/-/-/' + uri);
+    appGoto('Browse', 'Playlists', 'Detail', '0', uri, '-', '-', '');
 }
 
 //eslint-disable-next-line no-unused-vars
@@ -170,8 +173,8 @@ function getAllPlaylists(obj, playlistSelect, playlistValue) {
 }
 
 //eslint-disable-next-line no-unused-vars
-function updateSmartPlaylists() {
-    sendAPI("MPD_API_SMARTPLS_UPDATE_ALL", {});
+function updateSmartPlaylists(force) {
+    sendAPI("MPDWORKER_API_SMARTPLS_UPDATE_ALL", {"force":force});
 }
 
 //eslint-disable-next-line no-unused-vars
@@ -362,7 +365,7 @@ function showAddToPlaylist(uri, searchstr) {
     }
     modalAddToPlaylist.show();
     if (settings.featPlaylists) {
-        sendAPI("MPD_API_PLAYLIST_LIST_ALL", {"offset": 0, "filter": "-"}, function(obj) {
+        sendAPI("MPD_API_PLAYLIST_LIST_ALL", {"searchstr": ""}, function(obj) {
             getAllPlaylists(obj, 'addToPlaylistPlaylist');
         });
     }
@@ -422,7 +425,7 @@ function showRenamePlaylist(from) {
 function renamePlaylist() {
     let from = document.getElementById('renamePlaylistFrom').value;
     let to = document.getElementById('renamePlaylistTo').value;
-    if (to !== from && validatePlname(to) === true && validatePlname(from) === true) {
+    if (to !== from && validatePlname(to) === true) {
         sendAPI("MPD_API_PLAYLIST_RENAME", {"from": from, "to": to});
         modalRenamePlaylist.hide();
     }
@@ -438,13 +441,13 @@ function showSmartPlaylist(playlist) {
 
 //eslint-disable-next-line no-unused-vars
 function updateSmartPlaylist(playlist) {
-    sendAPI("MPD_API_SMARTPLS_UPDATE", {"playlist": playlist});
+    sendAPI("MPDWORKER_API_SMARTPLS_UPDATE", {"playlist": playlist});
 }
 
 //eslint-disable-next-line no-unused-vars
 function updateSmartPlaylistClick() {
     let uri = document.getElementById('BrowsePlaylistsDetailList').getAttribute('data-uri');
-    sendAPI("MPD_API_SMARTPLS_UPDATE", {"playlist": uri});
+    sendAPI("MPDWORKER_API_SMARTPLS_UPDATE", {"playlist": uri});
     document.getElementById('BrowsePlaylistsDetailList').classList.add('opacity05');    
 }
 

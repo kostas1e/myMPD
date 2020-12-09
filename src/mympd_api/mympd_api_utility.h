@@ -12,10 +12,12 @@ struct t_timer_definition {
     int start_hour;
     int start_minute;
     sds action;
+    sds subaction;
     int volume;
     sds playlist;
-    bool weekdays[7];
     unsigned jukebox_mode;
+    bool weekdays[7];
+    struct list arguments;
 };
 
 typedef void (*time_handler)(struct t_timer_definition *definition, void *user_data);
@@ -72,6 +74,7 @@ typedef struct t_mympd_state {
     sds cols_browse_filesystem;
     sds cols_playback;
     sds cols_queue_last_played;
+    sds cols_queue_jukebox;
     bool localplayer;
     bool localplayer_autoplay;
     int stream_port;
@@ -82,7 +85,7 @@ typedef struct t_mympd_state {
     bool coverimage;
     sds coverimage_name;
     int coverimage_size;
-    int covergrid_size;
+    int coverimage_size_small;
     sds locale;
     sds music_directory;
     sds theme;
@@ -92,6 +95,8 @@ typedef struct t_mympd_state {
     sds booklet_name;
     struct t_timer_list timer_list;
     bool lyrics;
+    struct list home_list;
+    sds navbar_icons;
 } t_mympd_state;
 
 void free_mympd_state(t_mympd_state *mympd_state);
