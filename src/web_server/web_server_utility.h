@@ -7,27 +7,28 @@
 #ifndef __WEB_SERVER_UTILITY_H__
 #define __WEB_SERVER_UTILITY_H__
 
-#define EXTRA_HEADERS_DIR "Content-Security-Policy: default-src 'none'; "\
-                          "style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; "\
-                          "connect-src 'self' ws: wss:; manifest-src 'self'; "\
-                          "media-src *; frame-ancestors 'none'; base-uri 'none';\r\n"\
-                          "X-Content-Type-Options: nosniff\r\n"\
-                          "X-XSS-Protection: 1; mode=block\r\n"\
+#define EXTRA_HEADERS_DIR "Content-Security-Policy: default-src 'none'; "                                                                \
+                          "style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; " \
+                          "connect-src 'self' ws: wss:; manifest-src 'self'; "                                                           \
+                          "media-src *; frame-ancestors *; base-uri 'none';\r\n"                                                         \
+                          "X-Content-Type-Options: nosniff\r\n"                                                                          \
+                          "X-XSS-Protection: 1; mode=block\r\n"                                                                          \
                           "X-Frame-Options: deny"
 
-#define EXTRA_HEADERS "Content-Security-Policy: default-src 'none'; "\
-                      "style-src 'self'; font-src 'self'; script-src 'self'; img-src 'self' data:; "\
-                      "connect-src 'self' ws: wss:; manifest-src 'self'; "\
-                      "media-src *; frame-ancestors 'none'; base-uri 'none';\r\n"\
-                      "X-Content-Type-Options: nosniff\r\n"\
-                      "X-XSS-Protection: 1; mode=block\r\n"\
+#define EXTRA_HEADERS "Content-Security-Policy: default-src 'none'; "                                \
+                      "style-src 'self'; font-src 'self'; script-src 'self'; img-src 'self' data:; " \
+                      "connect-src 'self' ws: wss:; manifest-src 'self'; "                           \
+                      "media-src *; frame-ancestors *; base-uri 'none';\r\n"                         \
+                      "X-Content-Type-Options: nosniff\r\n"                                          \
+                      "X-XSS-Protection: 1; mode=block\r\n"                                          \
                       "X-Frame-Options: deny"
 
 #define EXTRA_HEADERS_CACHE "Cache-Control: max-age=604800"
 
 #define CUSTOM_MIME_TYPES ".html=text/html; charset=utf-8,.manifest=application/manifest+json,.woff2=application/font-woff"
 
-typedef struct t_mg_user_data {
+typedef struct t_mg_user_data
+{
     void *config; //pointer to mympd config
     sds browse_document_root;
     sds music_directory;

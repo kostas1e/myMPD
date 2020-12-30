@@ -80,10 +80,6 @@ function parseIdeonSettings() {
     toggleBtnChk('btnAirplay', settings.airplay);
     toggleBtnChk('btnRoon', settings.roon);
     toggleBtnChk('btnSpotify', settings.spotify);
-    toggleBtnChkCollapse('btnTidalEnabled', 'collapseTidal', settings.tidalEnabled);
-    document.getElementById('inputTidalUsername').value = settings.tidalUsername;
-    document.getElementById('inputTidalPassword').value = settings.tidalPassword;
-    document.getElementById('selectTidalAudioquality').value = settings.tidalAudioquality;
 }
 
 function saveIdeonSettings() {
@@ -110,18 +106,9 @@ function saveIdeonSettings() {
         }
     }
 
-    let inputTidalUsername = document.getElementById('inputTidalUsername');
-    let inputTidalPassword = document.getElementById('inputTidalPassword');
-    if (document.getElementById('btnTidalEnabled').classList.contains('active')) {
-        if (!validateNotBlank(inputTidalUsername) || !validateNotBlank(inputTidalPassword)) {
-            formOK = false;
-        }
-    }
-
     if (formOK === true) {
         let selectMixerType = document.getElementById('selectMixerType');
         let selectSambaVersion = document.getElementById('selectSambaVersion');
-        let selectTidalAudioquality = document.getElementById('selectTidalAudioquality');
         sendAPI("MYMPD_API_SETTINGS_SET", {
             "mixerType": selectMixerType.options[selectMixerType.selectedIndex].value,
             "dop": (document.getElementById('btnDop').classList.contains('active') ? true : false),
@@ -133,11 +120,7 @@ function saveIdeonSettings() {
             "nsPassword": inputNsPassword.value,
             "airplay": (document.getElementById('btnAirplay').classList.contains('active') ? true : false),
             "roon": (document.getElementById('btnRoon').classList.contains('active') ? true : false),
-            "spotify": (document.getElementById('btnSpotify').classList.contains('active') ? true : false),
-            "tidalEnabled": (document.getElementById('btnTidalEnabled').classList.contains('active') ? true : false),
-            "tidalUsername": inputTidalUsername.value,
-            "tidalPassword": inputTidalPassword.value,
-            "tidalAudioquality": selectTidalAudioquality.options[selectTidalAudioquality.selectedIndex].value
+            "spotify": (document.getElementById('btnSpotify').classList.contains('active') ? true : false)
         }, getSettings);
         modalIdeon.hide();
     }

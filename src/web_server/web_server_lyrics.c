@@ -26,11 +26,11 @@
 
 //optional includes
 #ifdef ENABLE_LIBID3TAG
-    #include <id3tag.h>
+#include <id3tag.h>
 #endif
 
 #ifdef ENABLE_FLAC
-    #include <FLAC/metadata.h>
+#include <FLAC/metadata.h>
 #endif
 
 //privat definitions
@@ -42,16 +42,19 @@ static bool handle_lyricsextract_flac(const char *media_file, sds *text, bool is
 
 //returns true if lyrics are served
 //returns false if waiting for mpd_client to handle request - not implemented yet
-bool handle_lyrics(struct mg_connection *nc, struct http_message *hm, t_mg_user_data *mg_user_data, t_config *config, int conn_id) {
+bool handle_lyrics(struct mg_connection *nc, struct http_message *hm, t_mg_user_data *mg_user_data, t_config *config, int conn_id)
+{
     //decode uri
     sds uri_decoded = sdsurldecode(sdsempty(), hm->uri.p, (int)hm->uri.len, 0);
-    if (sdslen(uri_decoded) == 0) {
+    if (sdslen(uri_decoded) == 0)
+    {
         LOG_ERROR("Failed to decode uri");
         serve_plaintext(nc, "Failed to decode uri");
         sdsfree(uri_decoded);
         return true;
     }
-    if (validate_uri(uri_decoded) == false) {
+    if (validate_uri(uri_decoded) == false)
+    {
         LOG_ERROR("Invalid URI: %s", uri_decoded);
         serve_plaintext(nc, "Invalid URI");
         sdsfree(uri_decoded);
@@ -71,8 +74,9 @@ bool handle_lyrics(struct mg_connection *nc, struct http_message *hm, t_mg_user_
         strip_extension(uricpy);
         sds lyricsfile = sdscatfmt(sdsempty(), "%s/%s.txt", mg_user_data->music_directory, uricpy);
         FREE_PTR(uricpy);
-        
-        if (access(lyricsfile, F_OK ) == 0) { /* Flawfinder: ignore */
+
+        if (access(lyricsfile, F_OK) == 0)
+        { /* Flawfinder: ignore */
             LOG_DEBUG("Serving file %s (text/plain)", lyricsfile);
             mg_http_serve_file(nc, hm, lyricsfile, mg_mk_str("text/plain"), mg_mk_str(EXTRA_HEADERS_CACHE));
             sdsfree(uri_decoded);
@@ -84,7 +88,8 @@ bool handle_lyrics(struct mg_connection *nc, struct http_message *hm, t_mg_user_
         LOG_DEBUG("No lyrics file found in music directory");
         //try to extract lyrics from media file
         bool rc = handle_lyricsextract(nc, mediafile);
-        if (rc == true) {
+        if (rc == true)
+        {
             sdsfree(uri_decoded);
             sdsfree(mediafile);
             return true;
@@ -95,27 +100,32 @@ bool handle_lyrics(struct mg_connection *nc, struct http_message *hm, t_mg_user_
     sdsfree(uri_decoded);
     serve_plaintext(nc, "No lyrics found");
 
-    (void) config;    
-    (void) conn_id;
+    (void)config;
+    (void)conn_id;
     return true;
 }
 
 //privat functions
-static bool handle_lyricsextract(struct mg_connection *nc, const char *media_file) {
+static bool handle_lyricsextract(struct mg_connection *nc, const char *media_file)
+{
     bool rc = false;
     sds text = sdsempty();
     sds mime_type_media_file = get_mime_type_by_ext(media_file);
-    if (strcmp(mime_type_media_file, "audio/mpeg") == 0) {
+    if (strcmp(mime_type_media_file, "audio/mpeg") == 0)
+    {
         rc = handle_lyricsextract_id3(media_file, &text);
     }
-    else if (strcmp(mime_type_media_file, "audio/ogg") == 0) {
+    else if (strcmp(mime_type_media_file, "audio/ogg") == 0)
+    {
         rc = handle_lyricsextract_flac(media_file, &text, true);
     }
-    else if (strcmp(mime_type_media_file, "audio/flac") == 0) {
+    else if (strcmp(mime_type_media_file, "audio/flac") == 0)
+    {
         rc = handle_lyricsextract_flac(media_file, &text, false);
     }
     sdsfree(mime_type_media_file);
-    if (rc == true) {
+    if (rc == true)
+    {
         sds header = sdscatfmt(sdsempty(), "Content-Type: text/plain\r\n");
         header = sdscat(header, EXTRA_HEADERS_CACHE);
         mg_send_head(nc, 200, sdslen(text), header);
@@ -126,54 +136,63 @@ static bool handle_lyricsextract(struct mg_connection *nc, const char *media_fil
     return rc;
 }
 
-static bool handle_lyricsextract_id3(const char *media_file, sds *text) {
+static bool handle_lyricsextract_id3(const char *media_file, sds *text)
+{
     bool rc = false;
-    #ifdef ENABLE_LIBID3TAG
+#ifdef ENABLE_LIBID3TAG
     LOG_DEBUG("Exctracting lyrics from %s", media_file);
     struct id3_file *file_struct = id3_file_open(media_file, ID3_FILE_MODE_READONLY);
-    if (file_struct == NULL) {
+    if (file_struct == NULL)
+    {
         LOG_ERROR("Can't parse id3_file: %s", media_file);
         return false;
     }
     struct id3_tag *tags = id3_file_tag(file_struct);
-    if (tags == NULL) {
+    if (tags == NULL)
+    {
         LOG_ERROR("Can't read id3 tags from file: %s", media_file);
         return false;
     }
     struct id3_frame *frame = id3_tag_findframe(tags, "USLT", 0);
-    if (frame != NULL) {
+    if (frame != NULL)
+    {
         const id3_ucs4_t *ulst_u = id3_field_getfullstring(&frame->fields[3]);
-        if (ulst_u != NULL) {
+        if (ulst_u != NULL)
+        {
             id3_utf8_t *ulst = id3_ucs4_utf8duplicate(ulst_u);
             *text = sdscat(*text, (char *)ulst);
             FREE_PTR(ulst);
             LOG_DEBUG("Lyrics successfully extracted");
-            rc = true;        
+            rc = true;
         }
-        else {
+        else
+        {
             LOG_DEBUG("Can not read embedded lyrics");
         }
     }
-    else {
+    else
+    {
         LOG_DEBUG("No embedded lyrics detected");
     }
     id3_file_close(file_struct);
-    #else
-    (void) media_file;
-    (void) text;
-    #endif
+#else
+    (void)media_file;
+    (void)text;
+#endif
     return rc;
 }
 
-static bool handle_lyricsextract_flac(const char *media_file, sds *text, bool is_ogg) {
+static bool handle_lyricsextract_flac(const char *media_file, sds *text, bool is_ogg)
+{
     bool rc = false;
-    #ifdef ENABLE_FLAC
+#ifdef ENABLE_FLAC
     LOG_DEBUG("Exctracting lyrics from %s", media_file);
     FLAC__StreamMetadata *metadata = NULL;
 
     FLAC__Metadata_Chain *chain = FLAC__metadata_chain_new();
-    
-    if(! (is_ogg? FLAC__metadata_chain_read_ogg(chain, media_file) : FLAC__metadata_chain_read(chain, media_file)) ) {
+
+    if (!(is_ogg ? FLAC__metadata_chain_read_ogg(chain, media_file) : FLAC__metadata_chain_read(chain, media_file)))
+    {
         LOG_DEBUG("%s: ERROR: reading metadata", media_file);
         FLAC__metadata_chain_delete(chain);
         return false;
@@ -182,51 +201,61 @@ static bool handle_lyricsextract_flac(const char *media_file, sds *text, bool is
     FLAC__Metadata_Iterator *iterator = FLAC__metadata_iterator_new();
     FLAC__metadata_iterator_init(iterator, chain);
     assert(iterator);
-    
+
     int field_num = 0;
-    do {
+    do
+    {
         FLAC__StreamMetadata *block = FLAC__metadata_iterator_get_block(iterator);
-        if (block->type == FLAC__METADATA_TYPE_VORBIS_COMMENT) {
+        if (block->type == FLAC__METADATA_TYPE_VORBIS_COMMENT)
+        {
             field_num = FLAC__metadata_object_vorbiscomment_find_entry_from(block, 0, "LYRICS");
-            if (field_num == -1) {
+            if (field_num == -1)
+            {
                 field_num = FLAC__metadata_object_vorbiscomment_find_entry_from(block, 0, "UNSYNCEDLYRICS");
             }
-            if (field_num > -1) {
+            if (field_num > -1)
+            {
                 metadata = block;
             }
         }
     } while (FLAC__metadata_iterator_next(iterator) && metadata == NULL);
-    
-    if (metadata == NULL) {
+
+    if (metadata == NULL)
+    {
         LOG_DEBUG("No embedded lyrics detected");
     }
-    else {
+    else
+    {
         FLAC__StreamMetadata_VorbisComment *vc = &metadata->data.vorbis_comment;
         FLAC__StreamMetadata_VorbisComment_Entry *field = &vc->comments[field_num++];
 
         char *field_value = memchr(field->entry, '=', field->length);
-        if (field_value != NULL) {
-            if (strlen(field_value) > 1) {
+        if (field_value != NULL)
+        {
+            if (strlen(field_value) > 1)
+            {
                 field_value++;
                 *text = sdscat(*text, field_value);
                 LOG_DEBUG("Lyrics successfully extracted");
                 rc = true;
             }
-            else {
+            else
+            {
                 LOG_DEBUG("Empty lyrics");
                 rc = true;
             }
         }
-        else {
+        else
+        {
             LOG_DEBUG("Invalid vorbis comment");
         }
     }
     FLAC__metadata_iterator_delete(iterator);
     FLAC__metadata_chain_delete(chain);
-    #else
-    (void) media_file;
-    (void) text;
-    (void) is_ogg;
-    #endif
+#else
+    (void)media_file;
+    (void)text;
+    (void)is_ogg;
+#endif
     return rc;
 }

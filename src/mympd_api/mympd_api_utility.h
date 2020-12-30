@@ -6,21 +6,25 @@
 
 #ifndef __MYMPD_API_UTILITY_H
 #define __MYMPD_API_UTILITY_H
-struct t_timer_definition {
+struct t_timer_definition
+{
     sds name;
     bool enabled;
     int start_hour;
     int start_minute;
     sds action;
+    sds subaction;
     int volume;
     sds playlist;
-    bool weekdays[7];
     unsigned jukebox_mode;
+    bool weekdays[7];
+    struct list arguments;
 };
 
 typedef void (*time_handler)(struct t_timer_definition *definition, void *user_data);
 
-struct t_timer_node {
+struct t_timer_node
+{
     int fd;
     time_handler callback;
     struct t_timer_definition *definition;
@@ -31,14 +35,16 @@ struct t_timer_node {
     struct t_timer_node *next;
 };
 
-struct t_timer_list {
+struct t_timer_list
+{
     int length;
     int last_id;
     int active;
     struct t_timer_node *list;
 };
 
-typedef struct t_mympd_state {
+typedef struct t_mympd_state
+{
     sds mpd_host;
     int mpd_port;
     sds mpd_pass;
@@ -72,6 +78,7 @@ typedef struct t_mympd_state {
     sds cols_browse_filesystem;
     sds cols_playback;
     sds cols_queue_last_played;
+    sds cols_queue_jukebox;
     bool localplayer;
     bool localplayer_autoplay;
     int stream_port;
@@ -82,7 +89,7 @@ typedef struct t_mympd_state {
     bool coverimage;
     sds coverimage_name;
     int coverimage_size;
-    int covergrid_size;
+    int coverimage_size_small;
     sds locale;
     sds music_directory;
     sds theme;
@@ -91,6 +98,9 @@ typedef struct t_mympd_state {
     bool timer;
     sds booklet_name;
     struct t_timer_list timer_list;
+    bool lyrics;
+    struct list home_list;
+    sds navbar_icons;
     sds mixer_type;
     bool dop;
     int ns_type;
@@ -102,14 +112,7 @@ typedef struct t_mympd_state {
     bool airplay;
     bool roon;
     bool spotify;
-    bool tidal_enabled;
-    sds tidal_username;
-    sds tidal_password;
-    sds tidal_audioquality;
-    sds searchtidaltaglist;
-    sds cols_search_tidal;
     bool init;
-    bool lyrics;
 } t_mympd_state;
 
 void free_mympd_state(t_mympd_state *mympd_state);

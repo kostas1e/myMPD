@@ -12,10 +12,20 @@ function parseUpdateQueue(obj) {
             domCache.btnsPlay[i].innerText = 'play_arrow';
         }
         playstate = 'stop';
+        domCache.progressBar.style.transition = 'none';
+        domCache.progressBar.style.width = '0px';
+        setTimeout(function () {
+            domCache.progressBar.style.transition = progressBarTransition;
+        }, 10);
     }
     else if (obj.result.state === 2) {
         for (let i = 0; i < domCache.btnsPlayLen; i++) {
-            domCache.btnsPlay[i].innerText = 'pause';
+            if (settings.footerStop === true) {
+                domCache.btnsPlay[i].innerText = 'stop';
+            }
+            else {
+                domCache.btnsPlay[i].innerText = 'pause';
+            }
         }
         playstate = 'play';
     }
@@ -59,15 +69,20 @@ function parseUpdateQueue(obj) {
 
 function getQueue() {
     if (app.current.search.length >= 2) {
-        sendAPI("MPD_API_QUEUE_SEARCH", { "filter": app.current.filter, "offset": app.current.page, "searchstr": app.current.search, "cols": settings.colsQueueCurrent }, parseQueue);
+        sendAPI("MPD_API_QUEUE_SEARCH", { "filter": app.current.filter, "offset": app.current.page, "searchstr": app.current.search, "cols": settings.colsQueueCurrent }, parseQueue, false);
     }
     else {
-        sendAPI("MPD_API_QUEUE_LIST", { "offset": app.current.page, "cols": settings.colsQueueCurrent }, parseQueue);
+        sendAPI("MPD_API_QUEUE_LIST", { "offset": app.current.page, "cols": settings.colsQueueCurrent }, parseQueue, false);
     }
 }
 
 function parseQueue(obj) {
-    if (obj.result.totalTime && obj.result.totalTime > 0 && obj.result.totalEntities <= settings.maxElementsPerPage) {
+    if (obj.result.offset < app.current.page) {
+        gotoPage(obj.result.offset);
+        return;
+    }
+/*
+    if (obj.result.totalTime && obj.result.totalTime > 0 && obj.result.totalEntities <= settings.maxElementsPerPage ) {
         document.getElementById('cardFooterQueue').innerText = t('Num songs', obj.result.totalEntities) + ' – ' + beautifyDuration(obj.result.totalTime);
     }
     else if (obj.result.totalEntities > 0) {
@@ -76,7 +91,13 @@ function parseQueue(obj) {
     else {
         document.getElementById('cardFooterQueue').innerText = '';
     }
-    document.getElementById('panel-heading-queue').innerText = document.getElementById('cardFooterQueue').innerText;
+*/
+    if (obj.result.totalEntities > settings.maxElementsPerPage) {
+        document.getElementById('btnQueueGotoPlayingSong').parentNode.classList.remove('hide');
+    }
+    else {
+        document.getElementById('btnQueueGotoPlayingSong').parentNode.classList.add('hide');
+    }
 
     let nrItems = obj.result.returnedEntities;
     let table = document.getElementById('QueueCurrentList');
@@ -97,7 +118,7 @@ function parseQueue(obj) {
         row.setAttribute('data-uri', obj.result.data[i].uri);
         row.setAttribute('tabindex', 0);
         let tds = '';
-        tds += '<td data-col="Img"><img class="covergrid-header mr-0"/></td>';
+        tds += '<td data-col="Img"><img class="covergrid-header mr-0"/></td>'; //wip queue img
         for (let c = 0; c < settings.colsQueueCurrent.length; c++) {
             tds += '<td data-col="' + settings.colsQueueCurrent[c] + '">' + e(obj.result.data[i][settings.colsQueueCurrent[c]]) + '</td>';
         }
@@ -145,21 +166,21 @@ function parseQueue(obj) {
     setPagination(obj.result.totalEntities, obj.result.returnedEntities);
     document.getElementById('QueueCurrentList').classList.remove('opacity05');
 
-    scrollToPosY(appScrollPos);
+    scrollToPosY(app.current.scrollPos);
 }
 
 function setRowImage(changes, observer) {
     changes.forEach(change => {
         if (change.intersectionRatio > 0) {
             observer.unobserve(change.target);
-            let uri = change.target.getAttribute('data-uri');
+            const uri = change.target.getAttribute('data-uri');
             change.target.firstChild.firstChild.src = subdir + '/albumart/' + uri;
         }
     });
 }
 
 function parseLastPlayed(obj) {
-    document.getElementById('cardFooterQueue').innerText = t('Num songs', obj.result.totalEntities);
+    //document.getElementById('cardFooterQueue').innerText = t('Num songs', obj.result.totalEntities);
     let nrItems = obj.result.returnedEntities;
     let table = document.getElementById('QueueLastPlayedList');
     let navigate = document.activeElement.parentNode.parentNode === table ? true : false;
@@ -239,24 +260,6 @@ function dequeueSelectedItem() {
     }
 }
 
-function appendPlayQueue(type, uri, name) {
-    switch (type) {
-        case 'song':
-            sendAPI("MPD_API_QUEUE_ADD_PLAY_TRACK", { "uri": uri });
-            showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
-            break;
-        case 'dir':
-            sendAPI("MPD_API_QUEUE_ADD_PLAY_DIR", { "uri": uri });
-            showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
-            break;
-        case 'plist':
-        case 'smartpls':
-            sendAPI("MPD_API_QUEUE_ADD_PLAY_PLAYLIST", { "plist": uri });
-            showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
-            break;
-    }
-}
-
 function appendQueue(type, uri, name) {
     switch (type) {
         case 'song':
@@ -279,6 +282,24 @@ function appendAfterQueue(type, uri, to, name) {
             sendAPI("MPD_API_QUEUE_ADD_TRACK_AFTER", { "uri": uri, "to": to });
             to++;
             showNotification(t('%{name} added to queue position %{to}', { "name": name, "to": to }), '', '', 'success');
+            break;
+    }
+}
+
+function appendPlayQueue(type, uri, name) {
+    switch (type) {
+        case 'song':
+            sendAPI("MPD_API_QUEUE_ADD_TRACK_PLAY", { "uri": uri });
+            showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
+            break;
+        case 'dir':
+            sendAPI("MPD_API_QUEUE_ADD_DIR_PLAY", { "uri": uri });
+            showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
+            break;
+        case 'plist':
+        case 'smartpls':
+            sendAPI("MPD_API_QUEUE_ADD_PLAYLIST_PLAY", { "plist": uri });
+            showNotification(t('%{name} added to queue', { "name": name }), '', '', 'success');
             break;
     }
 }
@@ -346,4 +367,11 @@ function delQueueSong(mode, start, end) {
     else if (mode === 'single') {
         sendAPI("MPD_API_QUEUE_RM_TRACK", { "track": start });
     }
+}
+
+//eslint-disable-next-line no-unused-vars
+function gotoPlayingSong() {
+    let page = lastState.songPos < settings.maxElementsPerPage ? 0 : Math.floor(lastState.songPos / settings.maxElementsPerPage) * settings.maxElementsPerPage;
+    console.log(page);
+    gotoPage(page);
 }

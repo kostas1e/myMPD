@@ -4,6 +4,9 @@
  https://github.com/jcorporation/mympd
 */
 
+#define _GNU_SOURCE
+
+#include <errno.h>
 #include <string.h>
 #include <limits.h>
 #include <stdio.h>
@@ -14,6 +17,8 @@
 #include <sys/stat.h>
 #include <ctype.h>
 #include <signal.h>
+#include <time.h>
+#include <libgen.h>
 
 #include "../dist/src/sds/sds.h"
 #include "sds_extras.h"
@@ -25,68 +30,96 @@
 #include "global.h"
 #include "utility.h"
 
-void send_jsonrpc_notify_error(const char *message) {
+void send_jsonrpc_notify_info(const char *message)
+{
+    sds buffer = jsonrpc_start_notify(sdsempty(), "info");
+    buffer = tojson_char(buffer, "message", message, false);
+    buffer = jsonrpc_end_notify(buffer);
+    ws_notify(buffer);
+    sdsfree(buffer);
+}
+
+void send_jsonrpc_notify_warn(const char *message)
+{
+    sds buffer = jsonrpc_start_notify(sdsempty(), "warn");
+    buffer = tojson_char(buffer, "message", message, false);
+    buffer = jsonrpc_end_notify(buffer);
+    ws_notify(buffer);
+    sdsfree(buffer);
+}
+
+void send_jsonrpc_notify_error(const char *message)
+{
     sds buffer = jsonrpc_start_notify(sdsempty(), "error");
     buffer = tojson_char(buffer, "message", message, false);
     buffer = jsonrpc_end_notify(buffer);
     ws_notify(buffer);
+    sdsfree(buffer);
 }
 
-void ws_notify(sds message) {
+void ws_notify(sds message)
+{
     LOG_DEBUG("Push websocket notify to queue: %s", message);
     t_work_result *response = create_result_new(0, 0, 0, "");
     response->data = sdsreplace(response->data, message);
-    tiny_queue_push(web_server_queue, response);
+    tiny_queue_push(web_server_queue, response, 0);
 }
 
-
-sds jsonrpc_start_notify(sds buffer, const char *method) {
+sds jsonrpc_start_notify(sds buffer, const char *method)
+{
     buffer = sdscrop(buffer);
-    buffer = sdscatfmt(buffer, "{\"jsonrpc\":\"2.0\",\"method\":");
+    buffer = sdscat(buffer, "{\"jsonrpc\":\"2.0\",\"method\":");
     buffer = sdscatjson(buffer, method, strlen(method)); /* Flawfinder: ignore */
     buffer = sdscat(buffer, ",\"params\":{");
     return buffer;
 }
 
-sds jsonrpc_end_notify(sds buffer) {
+sds jsonrpc_end_notify(sds buffer)
+{
     buffer = sdscat(buffer, "}}");
     return buffer;
 }
 
-sds jsonrpc_notify(sds buffer, const char *method) {
+sds jsonrpc_notify(sds buffer, const char *method)
+{
     buffer = sdscrop(buffer);
-    buffer = sdscatfmt(buffer, "{\"jsonrpc\":\"2.0\",\"method\":");
+    buffer = sdscat(buffer, "{\"jsonrpc\":\"2.0\",\"method\":");
     buffer = sdscatjson(buffer, method, strlen(method)); /* Flawfinder: ignore */
     buffer = sdscat(buffer, ",\"params\":{}}");
     return buffer;
 }
 
-sds jsonrpc_start_result(sds buffer, const char *method, int id) {
+sds jsonrpc_start_result(sds buffer, const char *method, long id)
+{
     buffer = sdscrop(buffer);
-    buffer = sdscatprintf(buffer, "{\"jsonrpc\":\"2.0\",\"id\":%d,\"result\":{\"method\":", id);
+    buffer = sdscatprintf(buffer, "{\"jsonrpc\":\"2.0\",\"id\":%ld,\"result\":{\"method\":", id);
     buffer = sdscatjson(buffer, method, strlen(method)); /* Flawfinder: ignore */
     return buffer;
 }
 
-sds jsonrpc_end_result(sds buffer) {
-    buffer = sdscatfmt(buffer, "}}");
+sds jsonrpc_end_result(sds buffer)
+{
+    buffer = sdscat(buffer, "}}");
     return buffer;
 }
 
-sds jsonrpc_respond_ok(sds buffer, const char *method, int id) {
+sds jsonrpc_respond_ok(sds buffer, const char *method, long id)
+{
     buffer = sdscrop(buffer);
-    buffer = sdscatprintf(buffer, "{\"jsonrpc\":\"2.0\",\"id\":%d,\"result\":{\"method\":", id);
+    buffer = sdscatprintf(buffer, "{\"jsonrpc\":\"2.0\",\"id\":%ld,\"result\":{\"method\":", id);
     buffer = sdscatjson(buffer, method, strlen(method)); /* Flawfinder: ignore */
     buffer = sdscat(buffer, ",\"message\":\"ok\"}}");
     return buffer;
 }
 
-sds jsonrpc_respond_message(sds buffer, const char *method, int id, const char *message, bool error) {
+sds jsonrpc_respond_message(sds buffer, const char *method, long id, const char *message, bool error)
+{
     buffer = sdscrop(buffer);
-    buffer = sdscatprintf(buffer, "{\"jsonrpc\":\"2.0\",\"id\":%d,\"%s\":{\"method\":",
-        id, (error == true ? "error" : "result"));
+    buffer = sdscatprintf(buffer, "{\"jsonrpc\":\"2.0\",\"id\":%ld,\"%s\":{\"method\":",
+                          id, (error == true ? "error" : "result"));
     buffer = sdscatjson(buffer, method, strlen(method)); /* Flawfinder: ignore */
-    if (error == true) {
+    if (error == true)
+    {
         buffer = sdscat(buffer, ",\"code\": -32000");
     }
     buffer = sdscat(buffer, ",\"message\":");
@@ -95,12 +128,14 @@ sds jsonrpc_respond_message(sds buffer, const char *method, int id, const char *
     return buffer;
 }
 
-sds jsonrpc_start_phrase(sds buffer, const char *method, int id, const char *message, bool error) {
+sds jsonrpc_start_phrase(sds buffer, const char *method, long id, const char *message, bool error)
+{
     buffer = sdscrop(buffer);
-    buffer = sdscatprintf(buffer, "{\"jsonrpc\":\"2.0\",\"id\":%d,\"%s\":{\"method\":",
-        id, (error == true ? "error" : "result"));
+    buffer = sdscatprintf(buffer, "{\"jsonrpc\":\"2.0\",\"id\":%ld,\"%s\":{\"method\":",
+                          id, (error == true ? "error" : "result"));
     buffer = sdscatjson(buffer, method, strlen(method)); /* Flawfinder: ignore */
-    if (error == true) {
+    if (error == true)
+    {
         buffer = sdscat(buffer, ",\"code\": -32000");
     }
     buffer = sdscat(buffer, ",\"message\":");
@@ -109,16 +144,19 @@ sds jsonrpc_start_phrase(sds buffer, const char *method, int id, const char *mes
     return buffer;
 }
 
-sds jsonrpc_end_phrase(sds buffer) {
+sds jsonrpc_end_phrase(sds buffer)
+{
     buffer = sdscat(buffer, "}}}");
     return buffer;
 }
 
-sds jsonrpc_start_phrase_notify(sds buffer, const char *message, bool error) {
+sds jsonrpc_start_phrase_notify(sds buffer, const char *message, bool error)
+{
     buffer = sdscrop(buffer);
     buffer = sdscatfmt(buffer, "{\"jsonrpc\":\"2.0\",\"%s\":{",
-        (error == true ? "error" : "result"));
-    if (error == true) {
+                       (error == true ? "error" : "result"));
+    if (error == true)
+    {
         buffer = sdscat(buffer, "\"code\": -32000,");
     }
     buffer = sdscat(buffer, "\"message\":");
@@ -127,78 +165,98 @@ sds jsonrpc_start_phrase_notify(sds buffer, const char *message, bool error) {
     return buffer;
 }
 
-sds tojson_char(sds buffer, const char *key, const char *value, bool comma) {
+sds tojson_char(sds buffer, const char *key, const char *value, bool comma)
+{
     buffer = sdscatfmt(buffer, "\"%s\":", key);
-    if (value != NULL) {
+    if (value != NULL)
+    {
         buffer = sdscatjson(buffer, value, strlen(value)); /* Flawfinder: ignore */
     }
-    else {
+    else
+    {
         buffer = sdscat(buffer, "\"\"");
     }
-    if (comma) {
+    if (comma)
+    {
         buffer = sdscat(buffer, ",");
     }
     return buffer;
 }
 
-sds tojson_char_len(sds buffer, const char *key, const char *value, size_t len, bool comma) {
+sds tojson_char_len(sds buffer, const char *key, const char *value, size_t len, bool comma)
+{
     buffer = sdscatfmt(buffer, "\"%s\":", key);
-    if (value != NULL) {
+    if (value != NULL)
+    {
         buffer = sdscatjson(buffer, value, len);
     }
-    else {
+    else
+    {
         buffer = sdscat(buffer, "\"\"");
     }
-    if (comma) {
+    if (comma)
+    {
         buffer = sdscat(buffer, ",");
     }
     return buffer;
 }
 
-sds tojson_bool(sds buffer, const char *key, bool value, bool comma) {
+sds tojson_bool(sds buffer, const char *key, bool value, bool comma)
+{
     buffer = sdscatfmt(buffer, "\"%s\":%s", key, value == true ? "true" : "false");
-    if (comma) {
+    if (comma)
+    {
         buffer = sdscat(buffer, ",");
     }
     return buffer;
 }
 
-sds tojson_long(sds buffer, const char *key, long long value, bool comma) {
+sds tojson_long(sds buffer, const char *key, long long value, bool comma)
+{
     buffer = sdscatprintf(buffer, "\"%s\":%lld", key, value);
-    if (comma) {
+    if (comma)
+    {
         buffer = sdscat(buffer, ",");
     }
     return buffer;
 }
 
-sds tojson_ulong(sds buffer, const char *key, unsigned long value, bool comma) {
+sds tojson_ulong(sds buffer, const char *key, unsigned long value, bool comma)
+{
     buffer = sdscatprintf(buffer, "\"%s\":%lu", key, value);
-    if (comma) {
+    if (comma)
+    {
         buffer = sdscat(buffer, ",");
     }
     return buffer;
 }
 
-sds tojson_float(sds buffer, const char *key, float value, bool comma) {
+sds tojson_double(sds buffer, const char *key, double value, bool comma)
+{
     buffer = sdscatprintf(buffer, "\"%s\":%f", key, value);
-    if (comma) {
+    if (comma)
+    {
         buffer = sdscat(buffer, ",");
     }
     return buffer;
 }
 
-int testdir(const char *name, const char *dirname, bool create) {
-    DIR* dir = opendir(dirname);
-    if (dir) {
+int testdir(const char *name, const char *dirname, bool create)
+{
+    DIR *dir = opendir(dirname);
+    if (dir != NULL)
+    {
         closedir(dir);
         LOG_INFO("%s: \"%s\"", name, dirname);
         //directory exists
         return 0;
     }
 
-    if (create == true) {
-        if (mkdir(dirname, 0700) != 0) {
-            LOG_ERROR("%s: creating \"%s\" failed", name, dirname);
+    if (create == true)
+    {
+        if (mkdir(dirname, 0700) != 0)
+        {
+            LOG_ERROR("%s: creating \"%s\" failed: %s", name, dirname, strerror(errno));
             //directory not exists and creating it failed
             return 2;
         }
@@ -212,144 +270,181 @@ int testdir(const char *name, const char *dirname, bool create) {
     return 3;
 }
 
+void strip_slash(sds s)
+{
+    int len = sdslen(s);
+    if (len > 1 && s[len - 1] == '/')
+    {
+        sdsrange(s, 0, len - 2);
+    }
+}
 
-
-int strip_extension(char *s) {
-    for (ssize_t i = strlen(s) - 1 ; i > 0; i--) {
-        if (s[i] == '.') {
+int strip_extension(char *s)
+{
+    for (ssize_t i = strlen(s) - 1; i > 0; i--)
+    {
+        if (s[i] == '.')
+        {
             s[i] = '\0';
             return i;
         }
-        if (s[i] == '/') {
+        if (s[i] == '/')
+        {
             return -1;
         }
     }
     return -1;
 }
 
-bool validate_string(const char *data) {
+bool validate_string(const char *data)
+{
     if (strchr(data, '/') != NULL || strchr(data, '\n') != NULL || strchr(data, '\r') != NULL ||
         strchr(data, '\t') != NULL ||
-        strchr(data, '"') != NULL || strchr(data, '\'') != NULL || strchr(data, '\\') != NULL) {
+        strchr(data, '"') != NULL || strchr(data, '\'') != NULL || strchr(data, '\\') != NULL)
+    {
         return false;
     }
     return true;
 }
 
-bool validate_string_not_empty(const char *data) {
-    if (data == NULL) {
+bool validate_string_not_empty(const char *data)
+{
+    if (data == NULL)
+    {
         return false;
     }
-    if (strlen(data) == 0) {
+    if (strlen(data) == 0)
+    {
         return false;
     }
     return validate_string(data);
 }
 
-bool validate_string_not_dir(const char *data) {
+bool validate_string_not_dir(const char *data)
+{
     bool rc = validate_string_not_empty(data);
-    if (rc == true) {
-        if (strcmp(data, ".") == 0 || strcmp(data, "..") == 0) {
+    if (rc == true)
+    {
+        if (strcmp(data, ".") == 0 || strcmp(data, "..") == 0)
+        {
             rc = false;
         }
     }
     return rc;
 }
 
-bool validate_uri(const char *data) {
-    if (strstr(data, "/../") != NULL) {
+bool validate_uri(const char *data)
+{
+    if (strstr(data, "/../") != NULL)
+    {
         return false;
     }
     return true;
 }
 
-bool validate_songuri(const char *data) {
-    if (data == NULL) {
+bool validate_songuri(const char *data)
+{
+    if (data == NULL)
+    {
         return false;
     }
-    if (strlen(data) == 0) {
+    if (strlen(data) == 0)
+    {
         return false;
     }
-    if (strcmp(data, "/") == 0) {
+    if (strcmp(data, "/") == 0)
+    {
         return false;
     }
-    if (strchr(data, '.') == NULL) {
+    if (strchr(data, '.') == NULL)
+    {
         return false;
     }
     return true;
 }
 
-int replacechar(char *str, const char orig, const char rep) {
+int replacechar(char *str, const char orig, const char rep)
+{
     char *ix = str;
     int n = 0;
-    while ((ix = strchr(ix, orig)) != NULL) {
+    while ((ix = strchr(ix, orig)) != NULL)
+    {
         *ix++ = rep;
         n++;
     }
     return n;
 }
 
-bool strtobool(const char *value) {
+bool strtobool(const char *value)
+{
     return strncmp(value, "true", 4) == 0 ? true : false;
 }
 
-int uri_to_filename(char *str) {
+int uri_to_filename(char *str)
+{
     int n = replacechar(str, '/', '_');
-    n+= replacechar(str, '.', '_');
-    n+= replacechar(str, ':', '_');
+    n += replacechar(str, '.', '_');
+    n += replacechar(str, ':', '_');
     return n;
 }
 
 const struct mime_type_entry image_files[] = {
-    {"png",  "image/png"},
-    {"jpg",  "image/jpeg"},
+    {"png", "image/png"},
+    {"jpg", "image/jpeg"},
     {"jpeg", "image/jpeg"},
-    {"svg",  "image/svg+xml"},
+    {"svg", "image/svg+xml"},
     {"webp", "image/webp"},
     {"tiff", "image/tiff"},
-    {"bmp",  "image/x-ms-bmp"},
-    {NULL,   "application/octet-stream"}
-};
+    {"bmp", "image/x-ms-bmp"},
+    {NULL, "application/octet-stream"}};
 
-sds find_image_file(sds basefilename) {
+sds find_image_file(sds basefilename)
+{
     const struct mime_type_entry *p = NULL;
-    for (p = image_files; p->extension != NULL; p++) {
+    for (p = image_files; p->extension != NULL; p++)
+    {
         sds testfilename = sdscatfmt(sdsempty(), "%s.%s", basefilename, p->extension);
-        if (access(testfilename, F_OK) == 0) { /* Flawfinder: ignore */
+        if (access(testfilename, F_OK) == 0)
+        { /* Flawfinder: ignore */
             sdsfree(testfilename);
             break;
         }
         sdsfree(testfilename);
     }
-    if (p->extension != NULL) {
+    if (p->extension != NULL)
+    {
         basefilename = sdscatfmt(basefilename, ".%s", p->extension);
     }
-    else {
+    else
+    {
         basefilename = sdscrop(basefilename);
     }
     return basefilename;
 }
 
 const struct mime_type_entry media_files[] = {
-    {"mp3",  "audio/mpeg"},
+    {"mp3", "audio/mpeg"},
     {"flac", "audio/flac"},
-    {"oga",  "audio/ogg"},
-    {"ogg",  "audio/ogg"},
-    {"opus",  "audio/ogg"},
-    {"spx",  "audio/ogg"},
-    {NULL,   "application/octet-stream"}
-};
+    {"oga", "audio/ogg"},
+    {"ogg", "audio/ogg"},
+    {"opus", "audio/ogg"},
+    {"spx", "audio/ogg"},
+    {NULL, "application/octet-stream"}};
 
-sds get_extension_from_filename(const char *filename) {
+sds get_extension_from_filename(const char *filename)
+{
     const char *ext = strrchr(filename, '.');
-    if (ext == NULL) {
+    if (ext == NULL)
+    {
         return sdsempty();
     }
-    if (strlen(ext) > 1) {
+    if (strlen(ext) > 1)
+    {
         //trim starting dot
         ext++;
     }
-    else {
+    else
+    {
         return sdsempty();
     }
     sds extension = sdsnew(ext);
@@ -357,19 +452,25 @@ sds get_extension_from_filename(const char *filename) {
     return extension;
 }
 
-sds get_mime_type_by_ext(const char *filename) {
+sds get_mime_type_by_ext(const char *filename)
+{
     sds ext = get_extension_from_filename(filename);
-    
+
     const struct mime_type_entry *p = NULL;
-    for (p = image_files; p->extension != NULL; p++) {
-        if (strcmp(ext, p->extension) == 0) {
+    for (p = image_files; p->extension != NULL; p++)
+    {
+        if (strcmp(ext, p->extension) == 0)
+        {
             break;
         }
     }
-    if (p->extension == NULL) {
+    if (p->extension == NULL)
+    {
         p = NULL;
-        for (p = media_files; p->extension != NULL; p++) {
-            if (strcmp(ext, p->extension) == 0) {
+        for (p = media_files; p->extension != NULL; p++)
+        {
+            if (strcmp(ext, p->extension) == 0)
+            {
                 break;
             }
         }
@@ -379,10 +480,13 @@ sds get_mime_type_by_ext(const char *filename) {
     return mime_type;
 }
 
-sds get_ext_by_mime_type(const char *mime_type) {
+sds get_ext_by_mime_type(const char *mime_type)
+{
     const struct mime_type_entry *p = NULL;
-    for (p = image_files; p->extension != NULL; p++) {
-        if (strcmp(mime_type, p->mime_type) == 0) {
+    for (p = image_files; p->extension != NULL; p++)
+    {
+        if (strcmp(mime_type, p->mime_type) == 0)
+        {
             break;
         }
     }
@@ -391,22 +495,23 @@ sds get_ext_by_mime_type(const char *mime_type) {
 }
 
 const struct magic_byte_entry magic_bytes[] = {
-    {"89504E470D0A1A0A",  "image/png"},
-    {"FFD8FFDB",  "image/jpeg"},
-    {"FFD8FFE0",  "image/jpeg"},
+    {"89504E470D0A1A0A", "image/png"},
+    {"FFD8FFDB", "image/jpeg"},
+    {"FFD8FFE0", "image/jpeg"},
     {"FFD8FFEE", "image/jpeg"},
     {"FFD8FFE1", "image/jpeg"},
     {"49492A00", "image/tiff"},
     {"4D4D002A", "image/tiff"},
-    {"424D",  "image/x-ms-bmp"},
+    {"424D", "image/x-ms-bmp"},
     {"52494646", "image/webp"},
-    {NULL,   "application/octet-stream"}
-};
+    {NULL, "application/octet-stream"}};
 
-sds get_mime_type_by_magic(const char *filename) {
+sds get_mime_type_by_magic(const char *filename)
+{
     FILE *fp = fopen(filename, "rb");
-    if (fp == NULL) {
-        LOG_ERROR("Can't open %s", filename);
+    if (fp == NULL)
+    {
+        LOG_ERROR("Can not open file \"%s\"", filename, strerror(errno));
         return sdsempty();
     }
     unsigned char binary_buffer[8];
@@ -419,16 +524,19 @@ sds get_mime_type_by_magic(const char *filename) {
     return mime_type;
 }
 
-sds get_mime_type_by_magic_stream(sds stream) {
+sds get_mime_type_by_magic_stream(sds stream)
+{
     sds hex_buffer = sdsempty();
     size_t len = sdslen(stream) < 8 ? sdslen(stream) : 8;
-    for (size_t i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++)
+    {
         hex_buffer = sdscatprintf(hex_buffer, "%02X", stream[i]);
     }
-    LOG_DEBUG("First bytes in file: %s", hex_buffer);
     const struct magic_byte_entry *p = NULL;
-    for (p = magic_bytes; p->magic_bytes != NULL; p++) {
-        if (strncmp(hex_buffer, p->magic_bytes, strlen(p->magic_bytes)) == 0) {
+    for (p = magic_bytes; p->magic_bytes != NULL; p++)
+    {
+        if (strncmp(hex_buffer, p->magic_bytes, strlen(p->magic_bytes)) == 0)
+        {
             LOG_DEBUG("Matched magic bytes for mime_type: %s", p->mime_type);
             break;
         }
@@ -438,24 +546,40 @@ sds get_mime_type_by_magic_stream(sds stream) {
     return mime_type;
 }
 
-bool write_covercache_file(t_config *config, const char *uri, const char *mime_type, sds binary) {
+bool is_streamuri(const char *uri)
+{
+    if (uri == NULL || strcasestr(uri, "://") != NULL)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool write_covercache_file(t_config *config, const char *uri, const char *mime_type, sds binary)
+{
     bool rc = false;
     sds filename = sdsnew(uri);
     uri_to_filename(filename);
     sds tmp_file = sdscatfmt(sdsempty(), "%s/covercache/%s.XXXXXX", config->varlibdir, filename);
     int fd = mkstemp(tmp_file);
-    if (fd < 0) {
-        LOG_ERROR("Can't write covercachefile: %s", tmp_file);
+    if (fd < 0)
+    {
+        LOG_ERROR("Can not write open file \"%s\" for write: %s", tmp_file, strerror(errno));
     }
-    else {
+    else
+    {
         FILE *fp = fdopen(fd, "w");
         fwrite(binary, 1, sdslen(binary), fp);
         fclose(fp);
         sds ext = get_ext_by_mime_type(mime_type);
         sds cover_file = sdscatfmt(sdsempty(), "%s/covercache/%s.%s", config->varlibdir, filename, ext);
-        if (rename(tmp_file, cover_file) == -1) {
-            LOG_ERROR("Rename file from %s to %s failed", tmp_file, cover_file);
-            unlink(tmp_file);
+        if (rename(tmp_file, cover_file) == -1)
+        {
+            LOG_ERROR("Rename file from \"%s\" to \"%s\" failed: %s", tmp_file, cover_file, strerror(errno));
+            if (unlink(tmp_file) != 0)
+            {
+                LOG_ERROR("Error removing file \"%s\": %s", tmp_file, strerror(errno));
+            }
         }
         sdsfree(ext);
         sdsfree(cover_file);
@@ -464,4 +588,45 @@ bool write_covercache_file(t_config *config, const char *uri, const char *mime_t
     sdsfree(tmp_file);
     sdsfree(filename);
     return rc;
+}
+
+void my_usleep(time_t usec)
+{
+    struct timespec ts = {
+        .tv_sec = (usec / 1000) / 1000,
+        .tv_nsec = (usec % 1000000000L) * 1000};
+    nanosleep(&ts, NULL);
+}
+
+unsigned long substractUnsigned(unsigned long num1, unsigned long num2)
+{
+    if (num1 > num2)
+    {
+        return num1 - num2;
+    }
+    return 0;
+}
+
+char *basename_uri(char *uri)
+{
+    if (strstr(uri, "://") == NULL)
+    {
+        //filename
+        char *b = basename(uri);
+        return b;
+    }
+    else
+    {
+        //uri
+        char *b = uri;
+        for (size_t i = 0; i < strlen(b); i++)
+        {
+            if (b[i] == '#' || b[i] == '?')
+            {
+                b[i] = '\0';
+                return b;
+            }
+        }
+        return b;
+    }
 }

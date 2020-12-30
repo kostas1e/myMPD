@@ -1,12 +1,3 @@
-body.theme-light .navbar-dark .navbar-brand {
-  color: rgba(0, 0, 0, 0.9);
-}
-
-body.theme-light .navbar-dark .navbar-brand:hover,
-body.theme-light .navbar-dark .navbar-brand:focus {
-  color: rgba(0, 0, 0, 0.9);
-}
-
 body.theme-light .navbar-dark .navbar-nav .nav-link {
   color: rgba(0, 0, 0, 0.5);
 }
@@ -114,6 +105,12 @@ body.theme-light .show > .btn-secondary.dropdown-toggle:focus {
   box-shadow: none;
 }
 
+body.theme-light .btn-dark {
+  color: #212529;
+  background-color: #f8f9fa;
+  border-color: #f8f9fa;
+}
+
 body.theme-light .badge-secondary {
   color: #212529;
   background-color: #e8eaea;
@@ -146,6 +143,10 @@ body.theme-light .bg-lite-dark {
 
 body.theme-light .form-control[readonly] {
   background-color: #fff;
+}
+
+body.theme-light #navbar-main div.active {
+  background-color: #e8eaea;
 }
 
 body.theme-light #mainMenu img {

@@ -9,13 +9,13 @@ function checkInit() {
         // document.getElementById('selectLocale1').innerHTML = document.getElementById('selectLocale').innerHTML;
         document.getElementById('selectTheme1').innerHTML = document.getElementById('selectTheme').innerHTML;
         document.getElementById('selectTheme1').value = settings.theme;
-    
+
         document.getElementById('selectTheme1').addEventListener('change', function () {
             let value = this.options[this.selectedIndex].value;
             if (value === 'theme-autodetect') {
                 value = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
             }
-    
+
             Object.keys(themes).forEach(function (key) {
                 if (key === value) {
                     domCache.body.classList.add(key);

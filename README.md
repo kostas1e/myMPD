@@ -1,111 +1,79 @@
-myMPD
-=====
+![image](https://jcorporation.github.io/assets/mympd-logo-schriftzug.svg)
 
-myMPD is a lightweight MPD web client that runs without a dedicated webserver or interpreter. 
-It's tuned for minimal resource usage and requires only very few dependencies.
+myMPD is a standalone and lightweight web-based MPD client. It's tuned for minimal resource usage and requires only very few dependencies. Therefore myMPD is ideal for raspberry pis and similar devices.
 
-myMPD is a fork of ympd (https://github.com/notandy/ympd).
-This fork provides a reworked ui based on Bootstrap 4, a modernized backend and many new features while having the same small footprint as ympd.
+The backend ist written in C and has no dependencies to external databases or webservers. The configuration is stored in plain text files and all the data is pulled on demand from MPD. The MPD database is the only source of truth for myMPD.
 
-- <a href="https://jcorporation.github.io/myMPD/">Homepage</a>
+The frontend is mobile friendly, written as a PWA and offers on all devices the same functionality. It communicates over AJAX and websockets using the json-rpc 2 protocol.
 
-**Design principles**
- - Keep it small and simple
- - Uses only mpd as source of truth
- - Mobile first UI
- - Keep security in mind
+myMPD also integrates extended features like an advanced jukebox mode, timers, triggers and smart playlists. With the integrated lua interpreter myMPD functions can also be scripted.
 
-**Features**
- - Control mpd functions (play, pause, etc.)
- - Set mpd options (repeat, random, etc.)
- - MPD mount and neighbors support
- - Browse mpd database by tags
- - Albumart grid
- - Browse filesystem
- - Queue management
- - Playlist management
- - Advanced search
- - Jukebox mode (add's random songs to queue)
- - Smart playlists and saved searches
- - Play statistics and song voting
- - Local albumart support: embedded and image per folder
- - Local lyrics (textfile per song or embedded)
- - Local booklet support (per album folder)
- - HTTP stream support
- - Local playback of mpd http stream (html5 audio api)
- - Timers
- - Scrobbler integration
- - Embedded Webserver (mongoose)
- - Localized user interface
- - Themeing
- - Publishing of mpd and myMPD directories via http and webdav
- - Progressiv Web App enabled
- - Support of Media Session API
+## Features
+
+- Control mpd functions (play, pause, etc.)
+- Set mpd options (repeat, random, etc.)
+- MPD mount and neighbors support
+- MPD partition support
+- MPD output attributes
+- Browse mpd database by tags (gridview)
+- Browse filesystem
+- Queue management
+- Playlist management
+- Advanced search
+- Jukebox mode
+- Customizable home screen and navigation bar
+- [Smart playlists and saved searches](https://github.com/jcorporation/myMPD/wiki/Smart-playlists)
+- Play statistics and song voting
+- [Local albumart support: embedded and image per folder](https://github.com/jcorporation/myMPD/wiki/Albumart)
+- [Local lyrics (textfile per song or embedded)](https://github.com/jcorporation/myMPD/wiki/Lyrics)
+- Local booklet support (per album folder)
+- HTTP stream support
+- [Local playback of mpd http stream](https://github.com/jcorporation/myMPD/wiki/Local-playback)
+- Timers and Triggers
+- [System commands](https://github.com/jcorporation/myMPD/wiki/System-Commands)
+- [Lua scripting](https://github.com/jcorporation/myMPD/wiki/Scripting)
+- Scrobbler integration
+- Embedded Webserver (mongoose)
+- [Localized user interface](https://github.com/jcorporation/myMPD/wiki/Translating)
+- Themeing
+- [Publishing of mpd and myMPD directories via http and webdav](https://github.com/jcorporation/myMPD/wiki/Publishing-directories)
+- Progressiv Web App enabled
+- Support of Media Session API
 
 myMPD is in active development. If you like myMPD, you can help to improve it (no programming skills are required).
-  - <a href="https://github.com/jcorporation/myMPD/issues/167">Help to improve myMPD</a>
 
-To use all myMPD functions you should use the latest stable MPD version (0.21.x). myMPD already supports function of MPD 0.22.x (e.g. the readpicture command).
+- [Help to improve myMPD](https://github.com/jcorporation/myMPD/issues/167)
 
-Screenshots
------------
+To use all myMPD functions you should use the latest stable MPD version (0.22.x).
 
-![image](https://jcorporation.github.io/myMPD/assets/myMDPv6.0.0.gif)
+## Screenshots
 
-UI Components
--------------
- - <a href="https://getbootstrap.com/">Bootstrap 4</a>
- - <a href="https://material.io/tools/icons/">Material Design Icons</a>
- - <a href="http://thednp.github.io/bootstrap.native/">Bootstrap Native</a>
+![image](https://jcorporation.github.io/assets/myMDPv6.8.3.gif)
 
-Backend
--------
- - <a href="https://github.com/cesanta/mongoose">Mongoose</a> (web server)
- - <a href="https://github.com/cesanta/frozen">Frozen</a> (json parsing)
- - <a href="https://github.com/benhoyt/inih">inih</a> (config file parsing)
- - <a href="https://github.com/graphitemaster/incbin">incbin</a> (embedding assets)
- - <a href="https://github.com/antirez/sds">sds</a> (safe string handling)
- - <a href="https://github.com/antirez/rax">rax</a> (radix tree implementation)
- - <a href="https://github.com/MersenneTwister-Lab/TinyMT">TinyMT</a> (prng)
- - <a href="https://github.com/jcorporation/libmpdclient/tree/libmympdclient">libmpdclient2</a> (mpd communication)
+## Installation
 
-Dependencies
-------------
- - OpenSSL >= 1.1.0 (optional): for https support
- - libid3tag (optional): to extract embedded albumart
- - libflac (optional): to extract embedded albumart
+myMPD should run on all current linux distributions. There are four ways to install myMPD:
 
-Build Dependencies
-------------------
- - cmake 2.6
- - libasan3: for debug builds only
- - Java: to minify files
- - Perl: to create translation files
+1. Use a linux distribution that delivers a myMPD package - the easiest way: [Distributions with myMPD](https://github.com/jcorporation/myMPD/wiki/Distributions-with-myMPD)
+2. Use a prebuild package: [Prebuild-Packages](https://github.com/jcorporation/myMPD/wiki/Prebuild-Packages)
+3. Use the docker image: [Docker](https://github.com/jcorporation/myMPD/wiki/Docker)
+4. Use the ``build.sh`` script to compile myMPD: [Building myMPD](https://github.com/jcorporation/myMPD/wiki/Building-myMPD)
 
-Quick Build Instructions
------------------------
-1. Get myMPD tarball from https://github.com/jcorporation/myMPD/releases/latest
-2. Extract myMPD tarball and change path to this directory
-3. Install dependencies (as root): ``./build.sh installdeps``
-4. Build myMPD: ``./build.sh release``
-5. Install myMPD (as root): ``./build.sh install``
+## Run
 
-Run
----
-Adapt the configuration file ``/etc/mympd.conf`` to your needs (``/etc/webapps/mympd/mympd.conf`` for Archlinux) or use the <a href="https://github.com/jcorporation/myMPD/wiki/mympd-config">mympd-config</a> tool to generate automatically a valid mympd.conf
+Adapt the configuration file `/etc/mympd.conf` to your needs (`/etc/webapps/mympd/mympd.conf` for Archlinux) or use the [mympd-config](https://github.com/jcorporation/myMPD/wiki/mympd-config) tool to generate automatically a valid `mympd.conf`. myMPD can be customized in many aspects, see the [configuration page](https://github.com/jcorporation/myMPD/wiki/Configuration) in the wiki for reference.
+
 
 ``
 Usage: ./mympd [/etc/mympd.conf]
 ``
 
-The ``./build.sh`` script installs a startup script for systemd, openrc (Alpine Linux) or sysVinit.
+## Wiki
 
+For further information on installation and configuration, see the [myMPD wiki](https://github.com/jcorporation/myMPD/wiki)
 
-Wiki
-----
-For further information on installation and configuration, see the myMPD wiki: https://github.com/jcorporation/myMPD/wiki
+## Copyright
 
-Copyright
----------
+2018-2020 Juergen Mang <mail@jcgames.de>
 
-myMPD: 2018-2020 <mail@jcgames.de>
+myMPD is a fork of [ympd](https://github.com/notandy/ympd).

@@ -61,20 +61,32 @@ function sendAPI(method, params, callback, onerror) {
 
 function webSocketConnect() {
     if (socket !== null && socket.readyState === WebSocket.OPEN) {
-        logInfo("Socket already connected");
+        logInfo('Socket already connected');
         websocketConnected = true;
+        socketRetry = 0;
         return;
     }
     else if (socket !== null && socket.readyState === WebSocket.CONNECTING) {
-        logInfo("Socket connection in progress");
+        logInfo('Socket connection in progress');
         websocketConnected = false;
+        socketRetry++;
+        if (socketRetry > 20) {
+            logError('Socket connection timed out');
+            webSocketClose();
+            setTimeout(function () {
+                webSocketConnect();
+            }, 1000);
+            socketRetry = 0;
+        }
         return;
     }
     else {
         websocketConnected = false;
     }
+
     let wsUrl = getWsUrl();
     socket = new WebSocket(wsUrl);
+    socketRetry = 0;
     logInfo('Connecting to ' + wsUrl);
 
     try {
@@ -102,10 +114,19 @@ function webSocketConnect() {
                 return;
             }
 
+            if (obj.error) {
+                showNotification(t(obj.error.message, obj.error.data), '', '', 'danger');
+                return;
+            }
+            else if (obj.result) {
+                showNotification(t(obj.result.message, obj.result.data), '', '', 'success');
+                return;
+            }
+
             switch (obj.method) {
                 case 'welcome':
                     websocketConnected = true;
-                    showNotification(t('Connected to Ideon client') + ': ' + wsUrl, '', '', 'success');
+                    showNotification(t('Connected to Ideon software'), wsUrl, '', 'success');
                     appRoute();
                     sendAPI("MPD_API_PLAYER_STATE", {}, parseState, true);
                     break;
@@ -120,7 +141,7 @@ function webSocketConnect() {
                     getSettings(true);
                     break;
                 case 'mpd_connected':
-                    showNotification(t('Connected to Ideon server'), '', '', 'success');
+                    showNotification(t('Connected to Streamer'), '', '', 'success');
                     sendAPI("MPD_API_PLAYER_STATE", {}, parseState);
                     getSettings(true);
                     break;
@@ -129,7 +150,7 @@ function webSocketConnect() {
                         getQueue();
                     }
                     else if (app.current.app === 'Playback') {
-                        getQueueMini(obj.params.songPos, true);
+                        getQueueMini(obj.params.songPos);
                     }
                     obj.result = obj.params;
                     parseUpdateQueue(obj);
@@ -155,10 +176,10 @@ function webSocketConnect() {
                     break;
                 case 'update_stored_playlist':
                     if (app.current.app === 'Browse' && app.current.tab === 'Playlists' && app.current.view === 'All') {
-                        sendAPI("MPD_API_PLAYLIST_LIST", { "offset": app.current.page, "filter": app.current.filter }, parsePlaylists);
+                        sendAPI("MPD_API_PLAYLIST_LIST", { "offset": app.current.page, "searchstr": app.current.search }, parsePlaylists);
                     }
                     else if (app.current.app === 'Browse' && app.current.tab === 'Playlists' && app.current.view === 'Detail') {
-                        sendAPI("MPD_API_PLAYLIST_CONTENT_LIST", { "offset": app.current.page, "filter": app.current.filter, "uri": app.current.search, "cols": settings.colsBrowsePlaylistsDetail }, parsePlaylists);
+                        sendAPI("MPD_API_PLAYLIST_CONTENT_LIST", { "offset": app.current.page, "searchstr": app.current.search, "uri": app.current.filter, "cols": settings.colsBrowsePlaylistsDetail }, parsePlaylists);
                     }
                     break;
                 case 'update_lastplayed':
@@ -166,9 +187,24 @@ function webSocketConnect() {
                         sendAPI("MPD_API_QUEUE_LAST_PLAYED", { "offset": app.current.page, "cols": settings.colsQueueLastPlayed }, parseLastPlayed);
                     }
                     break;
+                case 'update_jukebox':
+                    if (app.current.app === 'Queue' && app.current.tab === 'Jukebox') {
+                        sendAPI("MPD_API_JUKEBOX_LIST", { "offset": app.current.page, "cols": settings.colsQueueJukebox }, parseJukeboxList);
+                    }
+                    break;
                 case 'error':
                     if (document.getElementById('alertMpdState').classList.contains('hide')) {
                         showNotification(t(obj.params.message), '', '', 'danger');
+                    }
+                    break;
+                case 'warn':
+                    if (document.getElementById('alertMpdState').classList.contains('hide')) {
+                        showNotification(t(obj.params.message), '', '', 'warning');
+                    }
+                    break;
+                case 'info':
+                    if (document.getElementById('alertMpdState').classList.contains('hide')) {
+                        showNotification(t(obj.params.message), '', '', 'success');
                     }
                     break;
                 default:
@@ -204,6 +240,19 @@ function webSocketConnect() {
     } catch (error) {
         logError(error);
     }
+}
+
+function webSocketClose() {
+    if (websocketTimer !== null) {
+        clearTimeout(websocketTimer);
+        websocketTimer = null;
+    }
+    if (socket !== null) {
+        socket.onclose = function () { }; // disable onclose handler first
+        socket.close();
+        socket = null;
+    }
+    websocketConnected = false;
 }
 
 function getWsUrl() {

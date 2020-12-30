@@ -4,9 +4,13 @@
  https://github.com/jcorporation/mympd
 */
 
+*:focus {
+    outline: none;
+}
+
 :root {
   --mympd-coverimagesize: 250px;
-  --mympd-covergridsize: 200px;
+  --mympd-coverimagesizesmall: 175px;
   --mympd-highlightcolor: #28a745;
 }
 
@@ -14,12 +18,21 @@
   color: var(--mympd-highlightcolor, #28a745) !important;
 }
 
-#highlightColorPreview, #bgColorPreview {
+.highlight-bg {
+  background-color: var(--mympd-highlightcolor, #28a745) !important;
+}
+
+#navbar-main div.active {
+  border-radius: 0.25rem;
+}
+
+#highlightColorPreview,
+#bgColorPreview {
   cursor: default;
 }
 
 #splashScreen {
-  background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(52,58,64,1) 100%);
+  background: linear-gradient(0deg, rgba(0, 0, 0, 1) 0%, rgba(52, 58, 64, 1) 100%);
   width: 100vw;
   height: 100vh;
   z-index: 2000;
@@ -33,6 +46,12 @@
   font-size: 4rem;
   text-align: center;
   margin-top: 25vh;
+}
+
+#splashScreenLogo img {
+  filter: invert(100%);
+  height: 5rem;
+  vertical-align: text-bottom !important;
 }
 
 .splashScreenIcon {
@@ -63,13 +82,17 @@ html {
 }
 
 body {
-  min-height: 100vH;
-  padding-top: 4rem;
+  min-height: 100vh;
+  padding-top: 3rem;
   padding-bottom: 4rem;
   background-color: #888;
 }
 
-.breakAll, td[data-col=Title] {
+main {
+  padding-top: 0.5rem;
+}
+
+.breakAll {
   word-break: break-word;
 }
 
@@ -78,48 +101,144 @@ td[data-col=Action] {
 }
 
 .albumartbg {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    background-position: center center;
-    background-size: cover;
-    top: 3.5rem;
-    filter: blur(5px);
-    transition: opacity 1s;
-    z-index: -9;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background-position: center center;
+  background-size: cover;
+  filter: blur(5px);
+  transition: opacity 1s;
+  z-index: -9;
 }
 
 .coverbg {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-position: center center;
-    background-size: cover;
-    top: 0;
-    left: 0;
-    transition: opacity 1s;
-    z-index: 3;
-}
-
-main {
-  padding-top: 1rem;
-}
-
-footer {
   position: absolute;
-  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background-position: center center;
+  background-size: cover;
+  top: 0;
+  left: 0;
+  transition: opacity 1s;
+  z-index: 3;
 }
 
-.footerText, #badgeQueueItems {
-  margin-left: 0.5rem;
+.badge {
+  font-size: 65%;
+  vertical-align: top;
+  margin-left: 0 !important;
+}
+
+#navQueue > a {
+  padding-right: 1rem;
+}
+
+@media only screen and (orientation: landscape) {
+  nav#header {
+    height: 100vw;
+    width: 4rem;
+    flex-flow: column;
+/*    padding-top: 0.6rem */
+    padding-top: 1.2rem;
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 6.5rem;
+    justify-content: normal !important;
+  }
+  body {
+    padding-top: 0;
+    padding-left: 4rem;
+  }
+  main {
+    padding-top: 0;
+  }
+  #headerLeft {
+    margin-bottom: 2rem;
+  }
+  .navText {
+    display: none;
+  }
+  #navbar-main > div {
+    margin-bottom: 0.6rem;
+  }
+  #navbar-main {
+    flex-direction: column !important;
+  }
+  #navQueue > a {
+    padding-right: 0 !important;
+    padding-left: 0.5rem !important;
+  }
+}
+
+@media only screen and (max-width: 700px) {
+  .navText {
+    display: none;
+  }
+  #counter {
+    display: none;
+  }
+  .ml-5 {
+    margin-left: 1rem !important;
+  }
+}
+
+@media only screen and (max-height: 380px) and (orientation: landscape) {
+  #navbar-main > div {
+    margin-bottom: 0;
+  }
+}
+
+div#footerCover {
+  width: 4rem;
+  height: 4rem;
+  background-size: cover;
+  flex-shrink: 0;
+  position: relative;
+}
+
+span#footerTitle {
+  height: 2rem;
+}
+
+div#footerInfo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+div#footerProgress {
+  height: 1rem;
+  background-color: transparent;
+  border-radius: 0;
+}
+
+div#footerProgress:hover div#footerProgressBar {
+  border-top: 0.4rem solid var(--mympd-highlightcolor, #28a745);
+  border-bottom: 0.4rem solid var(--mympd-highlightcolor, #28a745);
+}
+
+div#footerProgressBar {
+  height: 0.4rem;
+  width: 0;
+  margin-bottom: -0.6rem;
+  transition: none;
+}
+
+.navText {
+  margin-left: 0.5rem !important;
+}
+
+.navTextQueue {
+  margin-right: 0.5rem;
+}
+
+#badgeQueueItems {
+  margin-left: -2px !important;
+  margin-top: -4px !important;
 }
 
 button {
   overflow: hidden;
-}
-
-.cardBodyPlayback {
-  padding-bottom: 0;
 }
 
 #BrowseBreadrumb {
@@ -135,18 +254,28 @@ button {
   white-space: nowrap;
 }
 
-@media only screen and (max-width: 384px) {
-  #btnStop {
-    display: none;
+#mainMenu::after {
+  display: none !important;
+}
+
+@media only screen and (max-width: 440px) {
+  #volumeMenu::after,
+  #localPlaybackMenu::after {
+    display: none !important;
   }
 }
 
-@media only screen and (max-width: 576px) {
-  img.header-logo {
-    display: none !important;
+@media only screen and (max-width: 400px) {
+  #btnPrev, 
+  #btnPlay {
+    padding-right: 4px !important;
   }
-  .footerText {
-    display: none;
+  #btnNext,
+  #btnPlay {
+    padding-left: 4px !important;
+  }
+  #footerPlaying {
+    display: none !important;
   }
 }
 
@@ -154,17 +283,6 @@ button {
   .modal-lg {
     max-width: calc(100vw - 5rem) !important;
   }
-}
-
-@media only screen and (max-width: 768px) {
-  #headerTitle, #headerCover {
-    display: none !important;
-  }
-}
-
-#headerTitle {
-  text-overflow: ellipsis;
-  display: inline;
 }
 
 .clickable {
@@ -176,8 +294,14 @@ button {
   background-color: inherit !important;
 }
 
-[data-col=Pos], [data-col=Type], [data-col=Track] {
-  width: 2rem;
+.not-clickable-nobg {
+  cursor: default !important;
+}
+
+[data-col=Pos],
+[data-col=Type],
+[data-col=Track] {
+  max-width: 5rem;
   min-width: min-content;
   /* @alternate */
   min-width: -moz-min-content;
@@ -196,16 +320,11 @@ tr > th {
   text-overflow: ellipsis;
 }
 
-small {
-  color: #aaa;
-}
-
 .card {
-  min-height: 300px;
-}
-
-.cardFooterPlayback {
-  padding: 0;
+  word-break: break-word;
+  background-color: transparent !important;
+  border: none;
+  margin-bottom: 2rem;
 }
 
 .album-cover {
@@ -213,7 +332,7 @@ small {
   border: 1px solid black;
   border-radius: 5px;
   overflow: hidden;
-  max-width:100%;
+  max-width: 100%;
   width: var(--mympd-coverimagesize, 250px);
   height: var(--mympd-coverimagesize, 250px);
   background-color: #eee;
@@ -224,12 +343,63 @@ small {
   z-index: 1;
 }
 
-.card-grid {
-  width: var(--mympd-covergridsize, 200px);
+.album-cover-small {
+  background-size: cover;
+  border: 1px solid black;
+  border-radius: 5px;
+  overflow: hidden;
+  max-width: 100%;
+  width: var(--mympd-coverimagesizesmall, 175px);
+  height: var(--mympd-coverimagesizesmall, 175px);
+  background-color: #eee;
+  float: left;
+  margin-bottom: 1.25rem;
+  margin-right: 1.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.home-icons {
+  width: 8rem;
   min-height: 0 !important;
   margin-bottom: 1.25rem;
   overflow: hidden;
-  transition: width 0.5s, height 0.5s;
+  max-width: 100%;
+  text-align: center;
+  padding-top: 0.8rem;
+  border-radius: 0;
+}
+
+.home-icons .card-body {
+  font-size: 2rem;
+  height: 4rem;
+  width: 4rem;
+  padding-bottom:0;
+  background-size: cover;
+  background-position: center center;
+  background-color: var(--mympd-highlightcolor, #28a745);
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  padding-top: 1rem;
+  padding-left:0;
+  padding-right:0;
+}
+
+.home-icons .card-footer {
+  border-top: none;
+  background-color: transparent;
+}
+
+.dragover-icon {
+  border-left: 1px solid var(--mympd-highlightcolor, #28a745);
+}
+
+.card-grid {
+  width: var(--mympd-coverimagesizesmall, 175px);
+  min-height: 0 !important;
+  margin-bottom: 1.25rem;
+  overflow: hidden;
   max-width: 100%;
 }
 
@@ -239,31 +409,26 @@ small {
   text-overflow: ellipsis;
 }
 
+.card-grid:focus,
+.home-icons:focus {
+  border-width: 1px;
+  border-style: solid;
+  border-color:var(--mympd-highlightcolor, #28a745) !important;
+}
+
 .album-cover-grid {
   background-size: cover;
   overflow: hidden;
   background-color: #eee;
-  width: var(--mympd-covergridsize, 200px);
-  height: var(--mympd-covergridsize, 200px);
+  width: var(--mympd-coverimagesizesmall, 175px);
+  height: var(--mympd-coverimagesizesmall, 175px);
   max-width: 100%;
-  padding: 0 0.5rem;
-}
-
-a.card-img-left {
-  overflow: hidden;
-  display: block;
-  border-radius: 5px;
-  background-size: cover;
-  margin-bottom: 5px;
-  cursor: pointer;
-  width: var(--mympd-coverimagesize, 250px);
-  height: var(--mympd-coverimagesize, 250px);
-  max-width: 100%;
+  padding: 0.5rem;
 }
 
 .album-cover-loading {
-  background-image: url("../assets/coverimage-loading.svg");
-  /* background-size: cover; */
+/*  background-image: url("../assets/coverimage-loading.svg");*/
+  background-image: url("../assets/coverimage-mympd.svg");
 }
 
 .album-cover-songdetails {
@@ -297,11 +462,12 @@ a.card-img-left {
 
 .card-toolbar {
   margin-bottom: 0.8rem;
-  margin-right: -0.5rem
+  margin-right: -0.5rem;
 }
 
-.card-toolbar > div, .card-toolbar > form {
-  margin-bottom: 0.2rem;
+.card-toolbar > div,
+.card-toolbar > form {
+  margin-bottom: 0.6rem;
 }
 
 @font-face {
@@ -315,7 +481,7 @@ a.card-img-left {
   font-family: 'Material Icons';
   font-weight: normal;
   font-style: normal;
-  font-size: 1.4rem;  /* Preferred icon size */
+  font-size: 1.4rem;
   line-height: 1;
   text-transform: none;
   letter-spacing: normal;
@@ -338,26 +504,33 @@ a.card-img-left {
 }
 
 .material-icons-left {
-  font-size: 1rem;
+ /* font-size: 1rem; */
   margin-left: -1em;
-  vertical-align:middle;
+ /* vertical-align: middle; */
 }
 
 .material-icons-small {
   font-size: 1rem;
 }
 
+.material-icons-lg {
+  font-size: 2.4rem;
+}
+
+/*
 .material-icons-small-left {
   font-size: 1rem;
   margin-left: -1em;
 }
+*/
 
 .btn-sm-big-icon {
   font-size: 1.4rem !important;
   padding: 0.05rem 0.25rem !important;
 }
 
-.color-darkgrey, .color-darkgrey:hover {
+.color-darkgrey,
+.color-darkgrey:hover {
   color: #6c757d !important;
 }
 
@@ -373,29 +546,15 @@ a.card-img-left {
   min-width: 8rem;
 }
 
-.progressBarPlay {
-  font-size: 1.8rem;
-}
-
-#counter {
-  cursor: text;
-}
-
 #volumeBar {
   margin-top: 2px;
   width: 160px;
 }
 
 .title-icon {
-  float:left;
-  margin-right:5px;
-  font-size:1.8rem;
-}
-
-.header-logo {
-  font-size: 2rem;
   float: left;
   margin-right: 5px;
+  font-size: 1.8rem;
 }
 
 .letters > button {
@@ -423,8 +582,8 @@ button.active-fg-red {
 }
 
 div#alertBox {
-  position:fixed;
-  bottom: 4rem;
+  position: fixed;
+  bottom: 6rem;
   right: 1rem;
   width: 80%;
   max-width: 400px;
@@ -438,12 +597,12 @@ div.alertBoxActive {
 }
 
 .popover-content {
-  padding-top:4px;
-  padding-bottom:4px;
+  padding-top: 4px;
+  padding-bottom: 4px;
 }
 
 .opacity05 {
-  opacity:0.5;
+  opacity: 0.5;
 }
 
 caption {
@@ -454,11 +613,11 @@ caption {
 }
 
 .dragover > td {
-  border-top:2px solid var(--mympd-highlightcolor, #28a745);
+  border-top: 2px solid var(--mympd-highlightcolor, #28a745);
 }
 
 .dragover-th {
-  border-left:2px solid var(--mympd-highlightcolor, #28a745);
+  border-left: 2px solid var(--mympd-highlightcolor, #28a745);
 }
 
 [draggable] {
@@ -492,21 +651,7 @@ caption {
   float: none;
 }
 
-#BrowseDatabaseAlbumListCaption {
-  margin-left: 15px;
-  margin-right: 15px;
-  width: 100%;
-}
-
-#BrowseDatabaseAlbumListCaption h2 {
-  display: inline;
-}
-
-#BrowseDatabaseAlbumListCaption small {
-  padding-top: 0.8rem;
-}
-
-#menu-dbupdate, .menu-indent {
+.menu-indent {
   padding-left: 1rem;
 }
 
@@ -520,8 +665,9 @@ div.key {
   line-height: 2rem;
 }
 
-ol#searchCrumb {
- padding: .5rem;
+ol#searchCrumb,
+ol#searchDatabaseCrumb {
+  padding: 0.5rem;
 }
 
 .nodropdown::after {
@@ -530,6 +676,22 @@ ol#searchCrumb {
 
 .dropdown-header-lx {
   font-size: 1.2rem;
+}
+
+#mainMenu img {
+  /* width: 2.5rem;
+  height: 2.5rem;
+  font-size: 2.5rem;
+  margin-right: 5px; */
+  height: 1.25rem;
+  filter: invert(100%);
+}
+
+.connected,
+.connected:focus,
+.connected:hover
+ {
+  color: var(--mympd-highlightcolor, #28a745) !important;
 }
 
 #mainMenuDropdown {
@@ -555,24 +717,44 @@ textarea.small {
   box-shadow: none !important;
 }
 
-.btn-light:not(:disabled):not(.disabled):active, .btn-light:not(:disabled):not(.disabled).active,
+.btn-dark:not(:disabled):not(.disabled):active:focus,
+.btn-dark:not(:disabled):not(.disabled).active:focus,
+.show > .btn-dark.dropdown-toggle:focus {
+  box-shadow: none !important;
+}
+
+.btn-light:not(:disabled):not(.disabled):active,
+.btn-light:not(:disabled):not(.disabled).active,
 .show > .btn-light.dropdown-toggle,
-.btn-secondary:not(:disabled):not(.disabled):active, .btn-secondary:not(:disabled):not(.disabled).active,
+.btn-secondary:not(:disabled):not(.disabled):active,
+.btn-secondary:not(:disabled):not(.disabled).active,
 .show > .btn-secondary.dropdown-toggle {
   color: #fff;
   background-color: var(--mympd-highlightcolor, #28a745) !important;
   border-color: var(--mympd-highlightcolor, #28a745) !important;
 }
 
-.btn-light:focus, .btn-light.focus,
-.btn-secondary:focus, .btn-secondary.focus {
+.btn-dark:not(:disabled):not(.disabled):active,
+.btn-dark:not(:disabled):not(.disabled).active,
+.show > .btn-dark.dropdown-toggle {
+    color: #fff;
+    background-color: var(--mympd-highlightcolor, #28a745) !important;
+    border-color: var(--mympd-highlightcolor, #28a745) !important;
+}
+
+.btn-light:focus,
+.btn-light.focus,
+.btn-secondary:focus,
+.btn-secondary.focus {
   color: #fff;
   box-shadow: none;
 }
 
-.btn-light:not(:disabled):not(.disabled):active:focus, .btn-light:not(:disabled):not(.disabled).active:focus,
+.btn-light:not(:disabled):not(.disabled):active:focus,
+.btn-light:not(:disabled):not(.disabled).active:focus,
 .show > .btn-light.dropdown-toggle:focus,
-.btn-secondary:not(:disabled):not(.disabled):active:focus, .btn-secondary:not(:disabled):not(.disabled).active:focus,
+.btn-secondary:not(:disabled):not(.disabled):active:focus,
+.btn-secondary:not(:disabled):not(.disabled).active:focus,
 .show > .btn-secondary.dropdown-toggle:focus {
   box-shadow: none !important;
 }
@@ -582,7 +764,8 @@ textarea.small {
   box-shadow: none;
 }
 
-.btn-xs, .btn-group-xs > .btn {
+.btn-xs,
+.btn-group-xs > .btn {
   padding: 0.12rem;
   border-radius: 0.2rem;
 }
@@ -592,7 +775,7 @@ textarea.small {
   max-width: none;
 }
 
-img.covergrid-header {
+img.database-header {
   width: 50px;
   height: 50px;
   display: block;
@@ -600,32 +783,12 @@ img.covergrid-header {
   margin-right: 1rem;
 }
 
-div.covergrid-header {
+div.database-header {
   padding: 0.37rem 0.75rem !important;
 }
 
-@media (min-width: 576px) {
-  .container {
-    max-width: none;
-  }
-}
-
-@media (min-width: 768px) {
-  .container {
-    max-width: 960px;
-  }
-}
-
-@media (min-width: 992px) {
-  .container {
-    max-width: 960px;
-  }
-}
-
-@media (min-width: 1200px) {
-  .container {
-    max-width: 1140px;
-  }
+.container {
+  max-width: none;
 }
 
 div#playDropdown .row {
@@ -637,7 +800,8 @@ div#playDropdown .row {
   background-color: #494f56 !important;
 }
 
-.btn:focus, .btn.focus {
+.btn:focus,
+.btn.focus {
   box-shadow: none;
 }
 
@@ -660,7 +824,9 @@ div#playDropdown .row {
   border-color: var(--mympd-highlightcolor, #28a745) !important;
 }
 
-.text-success, a.text-success:hover, a.text-success:focus {
+.text-success,
+a.text-success:hover,
+a.text-success:focus {
   color: var(--mympd-highlightcolor, #28a745) !important;
 }
 
@@ -668,20 +834,8 @@ div#playDropdown .row {
   white-space: nowrap;
 }
 
-.playback-toolbar {
-  margin-top: -0.25rem;
-}
-
-#navState > a::after {
-  display: none;
-}
-
-#stateDropup {
-  min-width: 20rem;
-}
-
 #logOverview {
-  max-height: 70vH;
+  max-height: 50vh;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -690,13 +844,20 @@ div#playDropdown .row {
   font-size: 0.8rem;
 }
 
+#top-alerts {
+  position: fixed;
+  width: 100%;
+  z-index: 1000;
+  top: 0;
+}
+
 .top-alert {
   border-radius: 0;
   border-left: none;
   border-right: none;
-  padding-top: 0;
+  padding-top: 0.3rem;
   padding-bottom: 0.1rem;
-  margin-top: -0.3rem;
+  margin-bottom: 0;
 }
 
 #lyricsText {
@@ -724,65 +885,148 @@ div#playDropdown .row {
   max-height: none;
 }
 
-#splashScreenLogo img {
-  filter: invert(100%);
-  height: 77px;
-  vertical-align: text-bottom !important;
+.col {
+  min-width: unset;
 }
 
-#mainMenu img {
-  height: 30px;
-  margin-right: 5px;
-  filter: invert(100%);
+.toast-header {
+  border-bottom-color: rgba(0, 0, 0, 0.125);
 }
 
-#headerCover {
+/*resize coverimage in playback card*/
+@media only screen and (min-width: 768px) and (min-height: 35rem) {
+  #currentCover {
+    width: 20rem;
+    height: 20rem;
+  }
+}
+
+@media only screen and (min-width: 992px) and (min-height: 43rem) {
+  #currentCover {
+    width: 26rem;
+    height: 26rem;
+  }
+}
+
+.disabled {
+  pointer-events: none;
+  cursor: not-available;
+}
+
+.btn-warning {
+  background-color: #ffc107 !important;
+}
+
+div#footerProgressPos {
+  display: none;
+  position: absolute;
+  bottom: 6rem;
+  left: 0;
+}
+
+#navbar-main div.active {
+  border-radius: 0.25rem;
+  background-color: #1d2124;
+}
+
+div.active #badgeQueueItems {
+  filter: brightness(80%);
+}
+
+.btn .badge {
+  top: -2px;
+  left: 7px;
+}
+
+div.BrowseDatabaseCardsContainer,
+div.HomeContainer {
+  padding-right: 5px;
+  padding-left: 5px;
+}
+
+div.BrowseDatabaseCardsContainer .col,
+div.HomeContainer .col {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.btn.disabled,
+.btn:disabled {
+  cursor: default;
+  opacity: 0.50;
+}
+
+div#modalPictureImg {
+  background-position: center center;
+  background-size: cover;
+  padding-top: 100%;
+  width: 100%;
+}
+
+div#BrowseFilesystemImages {
+  height: calc(var(--mympd-coverimagesizesmall, 175px) + 1rem);
+  margin-bottom: 1rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+}
+
+div#BrowseFilesystemImages > div {
+  height: var(--mympd-coverimagesizesmall, 175px);
+  width: var(--mympd-coverimagesizesmall, 175px);
+  background-position: center center;
+  background-size: cover;
   display: inline-block;
-  width: 42px;
-  height: 42px;
+  margin-right: 1rem;
+  cursor: pointer;
 }
 
-#cardPlayback > div.card-header {
-  height: 54px !important;
+div#homeIconPreview {
+  background-position: center center;
+  background-size: cover;
+  width: 4rem;
+  height: 4rem; 
+  font-size: 2rem;
+  padding-bottom:0;
+  text-align: center;
+  padding-top: 1rem;
+  float:left;
+  margin-right: 2rem;
 }
 
-#cardHeaderBrowse {
-  min-height: 54px;
+div.album-grid-mouseover {
+  background-color: rgba(0, 0, 0, 0.5);  
+  color: white;
+  width: 3rem;
+  height: 3rem;
+  padding: 0.3rem;
+  font-size: 2.4rem;
+}
+/* 
+#cardQueueMiniList tr > td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+ 
+#BrowseDatabaseAlbumListCaption {
+  margin-left: 15px;
+  margin-right: 15px;
+  width: 100%;
 }
 
-#cardQueueMini {
-  height: 377px;
+#BrowseDatabaseAlbumListCaption h2 {
+  display: inline;
 }
 
-#cardFooterQueueMini {
-  height: 49px;
-}
-
-#BrowseCovergridBox {
-  overflow-y: auto;
-}
-
-[data-col=Img] {
-  width: 50px;
+#BrowseDatabaseAlbumListCaption small {
+  padding-top: 0.8rem;
 }
 
 @media only screen and (max-width: 576px) {
   .btnText {
     display: none !important;
   }
-}
-
-#QueueCurrentList td {
-  vertical-align: middle;
-}
-
-.tab {
-  display: none;
-}
-
-#modalInit img {
-  height: 30px;
-  margin-right: 5px;
 }
 
 #cardHeaderBrowse > ul, #cardHeaderQueue > ul {
@@ -799,14 +1043,59 @@ div#playDropdown .row {
   vertical-align: middle;
 }
 
-.cardFooterPlayback .btnPlay, #btnPlayDropdown, #counter {
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
 #tabPlaybackSettings .btn, #tabGeneralSettings .btn, #tabInterfaceSettings .btn,
 #tabPlaybackSettings .btn-group {
     float: right !important;
+}
+*/
+#cardQueueMini {
+  /* height: 378px; */
+  height: 23.6rem;
+}
+
+#cardFooterQueueMini {
+  /* height: 49px; */
+  height: 3rem;
+}
+
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Chrome/Safari/Opera */
+  -khtml-user-select: none; /* Konqueror */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently not supported by any browser */
+  cursor: default;
+}
+
+.scrollable {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.tab {
+  display: none;
+}
+
+[data-col=Img] {
+  width: 50px;
+}
+
+img.covergrid-header {
+  width: 50px;
+  height: 50px;
+  display: block;
+  float: left;
+  margin-right: 1rem;
+}
+
+#QueueCurrentList td {
+  vertical-align: middle;
+}
+
+#modalInit img {
+  height: 30px;
+  margin-right: 5px;
 }
 
 .warningIcon {

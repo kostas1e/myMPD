@@ -1,25 +1,7 @@
-/* myMPD
-   (c) 2018-2020 Juergen Mang <mail@jcgames.de>
-   This project's homepage is: https://github.com/jcorporation/mympd
-
-   myMPD ist fork of:
-
-   ympd
-   (c) 2013-2014 Andrew Karpow <andy@ndyk.de>
-   This project's homepage is: http://www.ympd.org
-
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; version 2 of the License.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License along
-   with this program; if not, write to the Free Software Foundation, Inc.,
-   Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+/*
+ SPDX-License-Identifier: GPL-2.0-or-later
+ myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ https://github.com/jcorporation/mympd
 */
 
 #ifndef __CONFIG_STRUCT_H__
@@ -37,6 +19,9 @@
 //openssl
 #cmakedefine ENABLE_SSL
 
+//lua
+#cmakedefine ENABLE_LUA
+
 //myMPD version from cmake
 #define MYMPD_VERSION_MAJOR ${CPACK_PACKAGE_VERSION_MAJOR}
 #define MYMPD_VERSION_MINOR ${CPACK_PACKAGE_VERSION_MINOR}
@@ -53,6 +38,14 @@
 #define DOC_ROOT "${ASSETS_PATH}"
 #define ETC_PATH "${ETC_PATH}"
 #define VARLIB_PATH "${VARLIB_PATH}"
+#define LUALIBS_PATH "${LUALIBS_PATH}"
+
+//default navbar icons
+#define NAVBAR_ICONS "[{\"ligature\":\"home\",\"title\":\"Home\",\"options\":[\"Home\"],\"badge\":\"\"},"\
+    "{\"ligature\":\"equalizer\",\"title\":\"Playback\",\"options\":[\"Playback\"],\"badge\":\"\"},"\
+    "{\"ligature\":\"queue_music\",\"title\":\"Queue\",\"options\":[\"Queue\"],\"badge\":\"<span id=\\\"badgeQueueItems\\\" class=\\\"badge badge-secondary\\\"></span>\"},"\
+    "{\"ligature\":\"library_music\",\"title\":\"Library\",\"options\":[\"Browse\"],\"badge\":\"\"},"\
+    "{\"ligature\":\"search\",\"title\":\"Search\",\"options\":[\"Search\"],\"badge\":\"\"}]"
 
 enum jukebox_modes {
     JUKEBOX_OFF,
@@ -73,6 +66,7 @@ typedef struct t_config {
     sds ssl_key;
     bool custom_cert;
     sds ssl_san;
+    bool redirect;
 #endif
     sds user;
     bool stickers;
@@ -111,8 +105,8 @@ typedef struct t_config {
     sds cols_browse_filesystem;
     sds cols_playback;
     sds cols_queue_last_played;
+    sds cols_queue_jukebox;
     bool localplayer;
-    bool localplayer_autoplay;
     int stream_port;
     sds stream_url;
     bool bg_cover;
@@ -121,7 +115,7 @@ typedef struct t_config {
     bool coverimage;
     sds coverimage_name;
     int coverimage_size;
-    int covergrid_size;
+    int coverimage_size_small;
     sds locale;
     time_t startup_time;
     bool readonly;
@@ -142,8 +136,20 @@ typedef struct t_config {
     sds booklet_name;
     bool mounts;
     bool lyrics;
+    bool scripting;
+    bool remotescripting;
+    sds acl;
+    sds scriptacl;
+    sds lualibs;
+    bool scripteditor;
+    bool partitions;
+    bool footer_stop;
+    bool home;
+    unsigned volume_min;
+    unsigned volume_max;
     //system commands
     struct list syscmd_list;
+    //ideon
     sds mixer_type;
     bool dop;
     int ns_type;
@@ -155,13 +161,6 @@ typedef struct t_config {
     bool airplay;
     bool roon;
     bool spotify;
-    bool tidal_enabled;
-    sds searchtidaltaglist;
-    sds cols_search_tidal;
-    sds tidal_token;
-    sds tidal_username;
-    sds tidal_password;
-    sds tidal_audioquality;
     bool init;
 } t_config;
 

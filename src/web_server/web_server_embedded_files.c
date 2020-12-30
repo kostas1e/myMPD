@@ -4,7 +4,7 @@
  https://github.com/jcorporation/mympd
 */
 
-#define INCBIN_PREFIX 
+#define INCBIN_PREFIX
 #define INCBIN_STYLE INCBIN_STYLE_SNAKE
 #include "../../dist/src/incbin/incbin.h"
 
@@ -15,6 +15,8 @@ INCBIN(index_html, "../dist/htdocs/index.html.gz");
 INCBIN(coverimage_notavailable_svg, "../dist/htdocs/assets/coverimage-notavailable.svg.gz");
 INCBIN(coverimage_stream_svg, "../dist/htdocs/assets/coverimage-stream.svg.gz");
 INCBIN(coverimage_loading_svg, "../dist/htdocs/assets/coverimage-loading.svg.gz");
+INCBIN(coverimage_booklet_svg, "../dist/htdocs/assets/coverimage-booklet.svg.gz");
+INCBIN(coverimage_mympd_svg, "../dist/htdocs/assets/coverimage-mympd.svg.gz");
 INCBIN(combined_css, "../dist/htdocs/css/combined.css.gz");
 INCBIN(combined_js, "../dist/htdocs/js/combined.js.gz");
 //uncompressed assets

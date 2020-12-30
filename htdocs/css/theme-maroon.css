@@ -5,10 +5,10 @@ body.theme-maroon .modal-header {
   color: #f8f9fa;
 }
 
-body.theme-maroon .btn {
+/* body.theme-maroon .btn {
   background-color: #800000;
   color: #f8f9fa;
-}
+} */
 
 body.theme-maroon .btn-light {
   border-color: #800000;
@@ -173,9 +173,9 @@ body.theme-maroon #modalInit img {
   filter: invert(100%);
 }
 
-body.theme-maroon #navbar-bottom > div.active {
+/* body.theme-maroon #navbar-bottom > div.active {
   border-bottom: 3px solid maroon;
-}
+} */
 
 body.theme-maroon .navbar-dark .navbar-nav .nav-link {
   color: rgba(255,255,255,.5) !important;

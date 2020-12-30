@@ -7,19 +7,19 @@
 
 //eslint-disable-next-line no-unused-vars
 function unmountMount(mountPoint) {
-    sendAPI("MPD_API_MOUNT_UNMOUNT", {"mountPoint": mountPoint}, showListMounts);
+    sendAPI("MPD_API_MOUNT_UNMOUNT", { "mountPoint": mountPoint }, showListMounts);
 }
 
 //eslint-disable-next-line no-unused-vars
 function mountMount() {
     let formOK = true;
     document.getElementById('errorMount').classList.add('hide');
-    
+
     if (formOK === true) {
         sendAPI("MPD_API_MOUNT_MOUNT", {
             "mountUrl": getSelectValue('selectMountUrlhandler') + document.getElementById('inputMountUrl').value,
             "mountPoint": document.getElementById('inputMountPoint').value,
-            }, showListMounts, true);
+        }, showListMounts, true);
     }
 }
 
@@ -33,7 +33,7 @@ function updateMount(el, uri) {
     spinner.setAttribute('id', 'spinnerUpdateProgress');
     spinner.classList.add('spinner-border', 'spinner-border-sm');
     el.parentNode.insertBefore(spinner, el);
-    updateDB(uri, false);    
+    updateDB(uri, false);
 }
 
 //eslint-disable-next-line no-unused-vars
@@ -76,7 +76,7 @@ function showListMounts(obj) {
 function parseListMounts(obj) {
     let tbody = document.getElementById('listMounts').getElementsByTagName('tbody')[0];
     let tr = tbody.getElementsByTagName('tr');
-    
+
     let activeRow = 0;
     for (let i = 0; i < obj.result.returnedEntities; i++) {
         let row = document.createElement('tr');
@@ -86,12 +86,12 @@ function parseListMounts(obj) {
             row.classList.add('not-clickable');
         }
         let tds = '<td>' + (obj.result.data[i].mountPoint === '' ? '<span class="material-icons">home</span>' : e(obj.result.data[i].mountPoint)) + '</td>' +
-                  '<td>' + e(obj.result.data[i].mountUrl) + '</td>';
+            '<td>' + e(obj.result.data[i].mountUrl) + '</td>';
         if (obj.result.data[i].mountPoint !== '') {
-            tds += '<td data-col="Action">' + 
-                   '<a href="#" title="' + t('Unmount') + '" data-action="unmount" class="material-icons color-darkgrey">delete</a>' +
-                   '<a href="#" title="' + t('Update') + '" data-action="update"class="material-icons color-darkgrey">refresh</a>' +
-                   '</td>';
+            tds += '<td data-col="Action">' +
+                '<a href="#" title="' + t('Unmount') + '" data-action="unmount" class="material-icons color-darkgrey">delete</a>' +
+                '<a href="#" title="' + t('Update') + '" data-action="update"class="material-icons color-darkgrey">refresh</a>' +
+                '</td>';
         }
         else {
             tds += '<td>&nbsp;</td>';
@@ -105,14 +105,14 @@ function parseListMounts(obj) {
         }
     }
     let trLen = tr.length - 1;
-    for (let i = trLen; i >= obj.result.returnedEntities; i --) {
+    for (let i = trLen; i >= obj.result.returnedEntities; i--) {
         tr[i].remove();
     }
 
     if (obj.result.returnedEntities === 0) {
         tbody.innerHTML = '<tr><td><span class="material-icons">error_outline</span></td>' +
-                          '<td colspan="4">' + t('Empty list') + '</td></tr>';
-    }     
+            '<td colspan="4">' + t('Empty list') + '</td></tr>';
+    }
 }
 
 function parseNeighbors(obj) {
@@ -122,9 +122,12 @@ function parseNeighbors(obj) {
     }
     else {
         for (let i = 0; i < obj.result.returnedEntities; i++) {
-            list += '<a href="#" class="list-group-item list-group-item-action" data-value="' + obj.result.data[i].uri + '">' + 
-                    obj.result.data[i].uri + '<br/><small>' + obj.result.data[i].displayName + '</small></a>';
-        }    
+            list += '<a href="#" class="list-group-item list-group-item-action" data-value="' + obj.result.data[i].uri + '">' +
+                obj.result.data[i].uri + '<br/><small>' + obj.result.data[i].displayName + '</small></a>';
+        }
+        if (obj.result.returnedEntities === 0) {
+            list = '<div class="list-group-item"><span class="material-icons">error_outline</span>&nbsp;' + t('Empty list') + '</div>';
+        }
     }
     document.getElementById('dropdownNeighbors').children[0].innerHTML = list;
 }

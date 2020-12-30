@@ -5,17 +5,47 @@
  https://github.com/jcorporation/mympd
 */
 
-function getSelectValue(selectId) {
+function removeIsInvalid(el) {
+    let els = el.querySelectorAll('.is-invalid');
+    for (let i = 0; i < els.length; i++) {
+        els[i].classList.remove('is-invalid');
+    }
+}
+
+function getSelectValue(el) {
+    if (typeof el === 'string') {
+        el = document.getElementById(el);
+    }
+    if (el && el.selectedIndex >= 0) {
+        return el.options[el.selectedIndex].value;
+    }
+    return undefined;
+}
+
+function getSelectedOptionAttribute(selectId, attribute) {
     let el = document.getElementById(selectId);
-    return el.options[el.selectedIndex].value;
+    if (el && el.selectedIndex >= 0) {
+        return el.options[el.selectedIndex].getAttribute(attribute);
+    }
+    return undefined;
 }
 
 function alignDropdown(el) {
-    if (getXpos(el.children[0]) > domCache.body.offsetWidth * 0.66) {
-        el.getElementsByClassName('dropdown-menu')[0].classList.add('dropdown-menu-right');
+    const x = getXpos(el.children[0]);
+
+    if (x < domCache.body.offsetWidth * 0.66) {
+        if (el.id === 'navState') {
+            el.classList.remove('dropdown');
+            el.classList.add('dropright');
+        }
+        else {
+            el.getElementsByClassName('dropdown-menu')[0].classList.remove('dropdown-menu-right');
+        }
     }
     else {
-        el.getElementsByClassName('dropdown-menu')[0].classList.remove('dropdown-menu-right');
+        el.getElementsByClassName('dropdown-menu')[0].classList.add('dropdown-menu-right');
+        el.classList.add('dropdown');
+        el.classList.remove('dropright');
     }
 }
 
@@ -37,8 +67,13 @@ function dirname(uri) {
     return uri.replace(/\/[^/]*$/, '');
 }
 
-function basename(uri) {
-    return uri.split('/').reverse()[0];
+function basename(uri, removeQuery) {
+    if (removeQuery === true) {
+        return uri.split('/').reverse()[0].split(/[?#]/)[0];
+    }
+    else {
+        return uri.split('/').reverse()[0];
+    }
 }
 
 function filetype(uri) {
@@ -46,9 +81,6 @@ function filetype(uri) {
         return '';
     }
     let ext = uri.split('.').pop().toUpperCase();
-    if (uri.startsWith('tidal://')) {
-        ext = ext.slice(0, ext.indexOf('?'));
-    }
     switch (ext) {
         case 'MP3': return ext + ' - MPEG-1 Audio Layer III';
         case 'FLAC': return ext + ' - Free Lossless Audio Codec';
@@ -61,7 +93,6 @@ function filetype(uri) {
         case 'MP4': return ext + ' - MPEG-4';
         case 'APE': return ext + ' - Monkey Audio ';
         case 'WMA': return ext + ' - Windows Media Audio';
-        case 'M4A': return ext + ' - MPEG-4 Audio';
         default: return ext;
     }
 }
@@ -74,58 +105,9 @@ function scrollToPosY(pos) {
     document.body.scrollTop = pos; // For Safari
     document.documentElement.scrollTop = pos; // For Chrome, Firefox, IE and Opera
 
-    if (app.current.app === 'Playback') {
-        document.getElementById('BrowseCovergridBox').scrollTop = 0;
+    if (app.current.app === 'Playback' && app.current.view === 'List' && pos == 0) {
+        document.getElementById('viewListDatabaseBox').scrollTop = 0;
     }
-}
-
-function doSetFilterLetter(x) {
-    let af = document.getElementById(x + 'Letters').getElementsByClassName('active')[0];
-    if (af) {
-        af.classList.remove('active');
-    }
-    let filter = app.current.filter;
-    if (filter === '0') {
-        filter = '#';
-    }
-
-    document.getElementById(x).innerHTML = '<span class="material-icons">filter_list</span>' + (filter !== '-' ? ' ' + filter : '');
-
-    if (filter !== '-') {
-        let btns = document.getElementById(x + 'Letters').getElementsByTagName('button');
-        let btnsLen = btns.length;
-        for (let i = 0; i < btnsLen; i++) {
-            if (btns[i].innerText === filter) {
-                btns[i].classList.add('active');
-                break;
-            }
-        }
-    }
-}
-
-function addFilterLetter(x) {
-    let filter = '<button class="mr-1 mb-1 btn btn-sm btn-secondary material-icons material-icons-small">delete</button>' +
-        '<button class="mr-1 mb-1 btn btn-sm btn-secondary">#</button>';
-    for (let i = 65; i <= 90; i++) {
-        filter += '<button class="mr-1 mb-1 btn-sm btn btn-secondary">' + String.fromCharCode(i) + '</button>';
-    }
-
-    let letters = document.getElementById(x);
-    letters.innerHTML = filter;
-
-    letters.addEventListener('click', function (event) {
-        switch (event.target.innerText) {
-            case 'delete':
-                filter = '-';
-                break;
-            case '#':
-                filter = '0';
-                break;
-            default:
-                filter = event.target.innerText;
-        }
-        appGoto(app.current.app, app.current.tab, app.current.view, '0/' + filter + '/' + app.current.sort + '/' + app.current.search);
-    }, false);
 }
 
 function selectTag(btnsEl, desc, setTo) {
@@ -152,13 +134,25 @@ function addTagList(el, list) {
         }
         tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="filename">' + t('Filename') + '</button>';
     }
-    else if (list === 'searchtidaltags') {
-        tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="any">' + t('Any Tag') + '</button>';
-    }
     for (let i = 0; i < settings[list].length; i++) {
         tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="' + settings[list][i] + '">' + t(settings[list][i]) + '</button>';
     }
-    if (el === 'covergridSortTagsList') {
+    if (el === 'BrowseNavFilesystemDropdown' || el === 'BrowseNavPlaylistsDropdown') {
+        if (settings.featTags === true && settings.featAdvsearch === true) {
+            tagList = '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="Database">' + t('Database') + '</button>';
+        }
+        else {
+            tagList = '';
+        }
+    }
+    if (el === 'BrowseDatabaseByTagDropdown' || el === 'BrowseNavFilesystemDropdown' || el === 'BrowseNavPlaylistsDropdown') {
+        if (el === 'BrowseDatabaseByTagDropdown') {
+            tagList += '<div class="dropdown-divider"></div>';
+        }
+        tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block' + (el === 'BrowseNavPlaylistsDropdown' ? ' active' : '') + '" data-tag="Playlists">' + t('Playlists') + '</button>' +
+            '<button type="button" class="btn btn-secondary btn-sm btn-block' + (el === 'BrowseNavFilesystemDropdown' ? ' active' : '') + '" data-tag="Filesystem">' + t('Filesystem') + '</button>'
+    }
+    else if (el === 'databaseSortTagsList') {
         if (settings.tags.includes('Date')) {
             tagList += '<button type="button" class="btn btn-secondary btn-sm btn-block" data-tag="Date">' + t('Date') + '</button>';
         }
@@ -203,11 +197,8 @@ function focusSearch() {
     if (app.current.app === 'Queue') {
         document.getElementById('searchqueuestr').focus();
     }
-    else if (app.current.app === 'Search' && app.current.tab === 'Database') {
+    else if (app.current.app === 'Search') {
         domCache.searchstr.focus();
-    }
-    else if (app.current.app === 'Search' && app.current.tab === 'Tidal') {
-        domCache.searchtidalstr.focus();
     }
     else {
         appGoto('Search');
@@ -352,9 +343,9 @@ function toggleBtnChkCollapse(btn, collapse, state) {
     }
 }
 
-function setPagination(total, returned, limit = settings.maxElementsPerPage) {
-    let cat = app.current.app === 'Playback' ? 'BrowseCovergrid' : app.current.app + app.current.tab;
-    let totalPages = Math.ceil(total / limit);
+function setPagination(total, returned) {
+    let cat = (app.current.app === 'Playback' ? 'Browse' : app.current.app) + (app.current.tab === undefined ? '' : app.current.tab);
+    let totalPages = Math.ceil(total / settings.maxElementsPerPage);
     if (totalPages === 0) {
         totalPages = 1;
     }
@@ -366,12 +357,12 @@ function setPagination(total, returned, limit = settings.maxElementsPerPage) {
         let pages = p[i].children[1].children[1];
         let next = p[i].children[2];
 
-        page.innerText = (app.current.page / limit + 1) + ' / ' + totalPages;
+        page.innerText = (app.current.page / settings.maxElementsPerPage + 1) + ' / ' + totalPages;
         if (totalPages > 1) {
             page.removeAttribute('disabled');
             let pl = '';
             for (let j = 0; j < totalPages; j++) {
-                pl += '<button data-page="' + (j * limit) + '" type="button" class="mr-1 mb-1 btn-sm btn btn-secondary">' +
+                pl += '<button data-page="' + (j * settings.maxElementsPerPage) + '" type="button" class="mr-1 mb-1 btn-sm btn btn-secondary">' +
                     (j + 1) + '</button>';
             }
             pages.innerHTML = pl;
@@ -379,7 +370,7 @@ function setPagination(total, returned, limit = settings.maxElementsPerPage) {
         }
         else if (total === -1) {
             page.setAttribute('disabled', 'disabled');
-            page.innerText = (app.current.page / limit + 1);
+            page.innerText = (app.current.page / settings.maxElementsPerPage + 1);
             page.classList.add('nodropdown');
         }
         else {
@@ -387,7 +378,7 @@ function setPagination(total, returned, limit = settings.maxElementsPerPage) {
             page.classList.add('nodropdown');
         }
 
-        if (total > app.current.page + limit || total === -1 && returned >= limit) {
+        if (total > app.current.page + settings.maxElementsPerPage || total === -1 && returned >= settings.maxElementsPerPage) {
             next.removeAttribute('disabled');
             p[i].classList.remove('hide');
             document.getElementById(cat + 'ButtonsBottom').classList.remove('hide');
@@ -414,7 +405,9 @@ function genId(x) {
 }
 
 function parseCmd(event, href) {
-    event.preventDefault();
+    if (event !== null) {
+        event.preventDefault();
+    }
     let cmd = href;
     if (typeof (href) === 'string') {
         cmd = JSON.parse(href);
@@ -429,6 +422,7 @@ function parseCmd(event, href) {
             case 'toggleBtnChk':
             case 'toggleBtnGroup':
             case 'toggleBtnGroupCollapse':
+            case 'zoomPicture':
             case 'setPlaySettings':
                 window[cmd.cmd](event.target, ...cmd.options);
                 break;
@@ -445,34 +439,24 @@ function parseCmd(event, href) {
 }
 
 function gotoPage(x) {
+    console.log(app.current.page);
     document.getElementById('card' + app.current.app).scrollIntoView();
-    if (app.current.app === 'Playback') {
-        document.getElementById('BrowseCovergridBox').scrollTop = 0;
+    if (app.current.app === 'Playback' && app.current.view === 'List') {
+        document.getElementById('viewListDatabaseBox').scrollTop = 0;
     }
-
-    let offset;
-    if (app.current.tab === 'Tidal' && app.current.view === 'All') {
-        offset = 10;
-    }
-    else if (app.current.tab === 'Tidal' && app.current.view === 'Artist') {
-        offset = 50;
-    }
-    else {
-        offset = settings.maxElementsPerPage;
-    }
-
     switch (x) {
         case 'next':
-            app.current.page += offset;
+            app.current.page = parseInt(app.current.page) + parseInt(settings.maxElementsPerPage);
             break;
         case 'prev':
-            app.current.page -= offset;
-            if (app.current.page < 0)
+            app.current.page = parseInt(app.current.page) - parseInt(settings.maxElementsPerPage);
+            if (app.current.page < 0) {
                 app.current.page = 0;
+            }
             break;
         default:
             app.current.page = x;
     }
-    setAppState(app.current.page, app.current.filter, app.current.sort, app.current.search);
-    appGoto(app.current.app, app.current.tab, app.current.view, app.current.page + '/' + app.current.filter + '/' + app.current.sort + '/' + app.current.search);
+    // setAppState(app.current.page, app.current.filter, app.current.sort, app.current.tag, app.current.search);
+    appGoto(app.current.app, app.current.tab, app.current.view, app.current.page, app.current.filter, app.current.sort, app.current.tag, app.current.search);
 }

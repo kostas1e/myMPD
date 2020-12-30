@@ -11,11 +11,37 @@
 #include "log.h"
 #include "mympd_api/mympd_api_utility.h"
 #include "sds_extras.h"
-#include "tidal.h"
 #include "utility.h"
 #include "ideon.h"
 
 #define IDEONAUDIO_REPO "https://ideonaudio.com/repo/ideonOS/system/web_version"
+
+struct memory_struct
+{
+    char *memory;
+    size_t size;
+};
+
+static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+    size_t realsize = size * nmemb;
+    struct memory_struct *mem = (struct memory_struct *)userp;
+
+    char *ptr = realloc(mem->memory, mem->size + realsize + 1);
+    if (ptr == NULL)
+    {
+        // out of memory
+        LOG_ERROR("not enough memory (realloc returned NULL)");
+        return 0;
+    }
+
+    mem->memory = ptr;
+    memcpy(&(mem->memory[mem->size]), contents, realsize);
+    mem->size += realsize;
+    mem->memory[mem->size] = 0;
+
+    return realsize;
+}
 
 static bool syscmd(const char *cmdline)
 {
@@ -173,20 +199,6 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed,
             dc = 3;
         }
 
-        const char *tidal_enabled = mympd_state->tidal_enabled == true ? "yes" : "no";
-        conf = sdsreplace(conf, "/etc/tidal_input_plugin.conf");
-        cmdline = sdscrop(cmdline);
-        cmdline = sdscatfmt(cmdline, "sed -i 's/^enabled.*/enabled \"%s\"/;s/^username.*/username \"%S\"/;s/^password.*/password \"%S\"/;s/^audioquality.*/audioquality \"%S\"/' %S",
-                            tidal_enabled, mympd_state->tidal_username, mympd_state->tidal_password, mympd_state->tidal_audioquality, conf);
-        rc = syscmd(cmdline);
-        if (rc == true && dc == 0)
-        {
-            dc = 3;
-        }
-        if (rc == true && mympd_state->tidal_enabled == true)
-        {
-            tidal_session_manager(mympd_state->tidal_username, mympd_state->tidal_password);
-        }
         sdsfree(conf);
         sdsfree(cmdline);
     }
@@ -246,8 +258,9 @@ static sds get_version(sds version)
     if (curl_handle)
     {
         curl_easy_setopt(curl_handle, CURLOPT_URL, IDEONAUDIO_REPO);
-        curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_callback);
+        curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_memory_callback);
         curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
+        // curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
         curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0L);
 
         CURLcode res = curl_easy_perform(curl_handle);

@@ -4,12 +4,12 @@
  https://github.com/jcorporation/mympd
 */
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <errno.h>
 
 #include "../../dist/src/sds/sds.h"
 #include "../sds_extras.h"
@@ -31,43 +31,53 @@ bool mympd_api_bookmark_update(t_config *config, const int id, const char *name,
 {
     sds tmp_file = sdscatfmt(sdsempty(), "%s/state/bookmark_list.XXXXXX", config->varlibdir);
     int fd = mkstemp(tmp_file);
-    if (fd < 0 ) {
-        LOG_ERROR("Can't open %s for write", tmp_file);
+    if (fd < 0)
+    {
+        LOG_ERROR("Can not open file \"%s\" for write: %s", tmp_file, strerror(errno));
         sdsfree(tmp_file);
         return false;
     }
     FILE *fo = fdopen(fd, "w");
     int line_nr = 0;
-    char *line = NULL;
-    size_t n = 0;
-    ssize_t read;
     bool inserted = false;
     sds b_file = sdscatfmt(sdsempty(), "%s/state/bookmark_list", config->varlibdir);
     FILE *fi = fopen(b_file, "r");
-    if (fi != NULL) {
-        while ((read = getline(&line, &n, fi)) > 0) {
+    if (fi != NULL)
+    {
+        char *line = NULL;
+        size_t n = 0;
+        ssize_t read;
+        while ((read = getline(&line, &n, fi)) > 0)
+        {
             char *lname = NULL;
             char *luri = NULL;
             char *ltype = NULL;
             int lid;
             int je = json_scanf(line, read, "{id: %d, name: %Q, uri: %Q, type: %Q}", &lid, &lname, &luri, &ltype);
-            if (je == 4) {
-                if (name != NULL) {
-                    if (strcmp(name, lname) < 0) {
+            if (je == 4)
+            {
+                if (name != NULL)
+                {
+                    if (strcmp(name, lname) < 0)
+                    {
                         line_nr++;
                         bool rc = write_bookmarks_line(fo, line_nr, name, uri, type);
-                        if (rc == true) {
+                        if (rc == true)
+                        {
                             inserted = true;
                         }
                     }
                 }
-                if (lid != id) {
+                if (lid != id)
+                {
                     line_nr++;
                     write_bookmarks_line(fo, line_nr, lname, luri, ltype);
                 }
             }
-            else {
-                LOG_ERROR("Can't read bookmarks line");
+            else
+            {
+                LOG_ERROR("Can not read bookmarks line");
+                LOG_DEBUG("Errorneous line: %s", line);
             }
             FREE_PTR(lname);
             FREE_PTR(luri);
@@ -76,14 +86,16 @@ bool mympd_api_bookmark_update(t_config *config, const int id, const char *name,
         FREE_PTR(line);
         fclose(fi);
     }
-    if (inserted == false && name != NULL) {
+    if (inserted == false && name != NULL)
+    {
         line_nr++;
         write_bookmarks_line(fo, line_nr, name, uri, type);
     }
     fclose(fo);
 
-    if (rename(tmp_file, b_file) == -1) {
-        LOG_ERROR("Rename file from %s to %s failed", tmp_file, b_file);
+    if (rename(tmp_file, b_file) == -1)
+    {
+        LOG_ERROR("Rename file from \"%s\" to \"%s\" failed: %s", tmp_file, b_file, strerror(errno));
         sdsfree(tmp_file);
         sdsfree(b_file);
         return false;
@@ -93,23 +105,34 @@ bool mympd_api_bookmark_update(t_config *config, const int id, const char *name,
     return true;
 }
 
-bool mympd_api_bookmark_clear(t_config *config) {
+bool mympd_api_bookmark_clear(t_config *config)
+{
     sds b_file = sdscatfmt(sdsempty(), "%s/state/bookmark_list", config->varlibdir);
     int rc = unlink(b_file);
-    sdsfree(b_file);
-    if (rc == -1 && errno != ENOENT) {
-        return false;
+    if (rc == 0)
+    {
+        sdsfree(b_file);
+        return true;
     }
-    return true;
+    if (rc == -1 && errno != ENOENT)
+    {
+        LOG_ERROR("Error removing file \"%s\": %s", b_file, strerror(errno));
+    }
+    else
+    {
+        //ignore error
+        LOG_DEBUG("Error removing file \"%s\": %s", b_file, strerror(errno));
+    }
+    sdsfree(b_file);
+    return false;
 }
 
-sds mympd_api_bookmark_list(t_config *config, sds buffer, sds method, int request_id,
+sds mympd_api_bookmark_list(t_config *config, sds buffer, sds method, long request_id,
                             unsigned int offset)
 {
     char *line = NULL;
     char *crap = NULL;
     size_t n = 0;
-    ssize_t read;
     unsigned entity_count = 0;
     unsigned entities_returned = 0;
 
@@ -119,10 +142,12 @@ sds mympd_api_bookmark_list(t_config *config, sds buffer, sds method, int reques
     buffer = jsonrpc_start_result(buffer, method, request_id);
     buffer = sdscat(buffer, ", \"data\": [");
 
-    if (fi == NULL) {
+    if (fi == NULL)
+    {
         //create empty bookmarks file
         fi = fopen(b_file, "w");
-        if (fi == NULL) {
+        if (fi == NULL)
+        {
             LOG_ERROR("Can't open %s for write", b_file);
             buffer = sdscrop(buffer);
             buffer = jsonrpc_respond_message(buffer, method, request_id, "Failed to open bookmarks file", true);
@@ -131,11 +156,15 @@ sds mympd_api_bookmark_list(t_config *config, sds buffer, sds method, int reques
         }
         fclose(fi);
     }
-    else {
-        while ((read = getline(&line, &n, fi)) > 0) {
+    else
+    {
+        while (getline(&line, &n, fi) > 0)
+        {
             entity_count++;
-            if (entity_count > offset && entity_count <= offset + config->max_elements_per_page) {
-                if (entities_returned++) {
+            if (entity_count > offset && entity_count <= offset + config->max_elements_per_page)
+            {
+                if (entities_returned++)
+                {
                     buffer = sdscat(buffer, ",");
                 }
                 strtok_r(line, "\n", &crap);
@@ -144,7 +173,6 @@ sds mympd_api_bookmark_list(t_config *config, sds buffer, sds method, int reques
         }
         FREE_PTR(line);
         fclose(fi);
-
     }
     sdsfree(b_file);
     buffer = sdscat(buffer, "],");
@@ -167,7 +195,8 @@ static bool write_bookmarks_line(FILE *fp, int id, const char *name,
     line = sdscat(line, "}\n");
     int rc = fputs(line, fp);
     sdsfree(line);
-    if (rc > 0) {
+    if (rc > 0)
+    {
         return true;
     }
     LOG_ERROR("Can't write bookmarks line to file");
