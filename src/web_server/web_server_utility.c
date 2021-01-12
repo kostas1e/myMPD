@@ -88,8 +88,8 @@ sds *split_coverimage_names(const char *coverimage_name, sds *coverimage_names, 
 
 void send_error(struct mg_connection *nc, int code, const char *msg)
 {
-    sds errorpage = sdscatfmt(sdsempty(), "<html><head><title>myMPD error</title></head><body>"
-                                          "<h1>myMPD error</h1>"
+    sds errorpage = sdscatfmt(sdsempty(), "<html><head><title>Ideon software error</title></head><body>"
+                                          "<h1>Ideon software error</h1>"
                                           "<p>%s</p>"
                                           "</body></html>",
                               msg);

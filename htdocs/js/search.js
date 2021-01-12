@@ -70,7 +70,7 @@ function addAllFromSearchPlist(plist, searchstr, replace, play = false) {
             "sortdesc": false,
             "expression": searchstr,
             "offset": 0,
-            "cols": settings.colsSearchDatabase,
+            "cols": settings.colsSearch,
             "replace": replace,
             "play": play
         });
@@ -81,7 +81,7 @@ function addAllFromSearchPlist(plist, searchstr, replace, play = false) {
             "filter": app.current.filter,
             "searchstr": searchstr,
             "offset": 0,
-            "cols": settings.colsSearchDatabase,
+            "cols": settings.colsSearch,
             "replace": replace,
             "play": play
         });

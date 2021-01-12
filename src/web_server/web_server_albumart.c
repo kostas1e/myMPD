@@ -33,7 +33,7 @@
 #include <FLAC/metadata.h>
 #endif
 
-//privat definitions
+//private definitions
 static bool handle_coverextract(struct mg_connection *nc, t_config *config, const char *uri, const char *media_file);
 static bool handle_coverextract_id3(t_config *config, const char *uri, const char *media_file, sds *binary);
 static bool handle_coverextract_flac(t_config *config, const char *uri, const char *media_file, sds *binary, bool is_ogg);

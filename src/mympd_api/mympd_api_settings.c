@@ -535,6 +535,9 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
     {
         mympd_state->init = val->type == JSON_TYPE_TRUE ? true : false;
         settingname = sdscat(settingname, "init");
+        if (output_name_set() == true) {
+            *mpd_conf_changed = true;
+        }
     }
     else
     {
@@ -554,7 +557,7 @@ void mympd_api_settings_reset(t_config *config, t_mympd_state *mympd_state)
     free_mympd_state_sds(mympd_state);
     mympd_api_read_statefiles(config, mympd_state);
     mympd_api_push_to_mpd_client(mympd_state);
-    ideon_settings_set(mympd_state, true, true, true, true, true);
+    ideon_settings_set(mympd_state, true, true, true, true, true); //wip check changes
 }
 
 void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state)
@@ -696,6 +699,7 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = tojson_bool(buffer, "featHome", config->home, true);
     buffer = tojson_long(buffer, "volumeMin", config->volume_min, true);
     buffer = tojson_long(buffer, "volumeMax", config->volume_max, true);
+    buffer = tojson_char(buffer, "mixerType", mympd_state->mixer_type, true);
     buffer = tojson_bool(buffer, "dop", mympd_state->dop, true);
     buffer = tojson_long(buffer, "nsType", mympd_state->ns_type, true);
     buffer = tojson_char(buffer, "nsServer", mympd_state->ns_server, true);

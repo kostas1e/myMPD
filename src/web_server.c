@@ -369,7 +369,6 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
         struct http_message *hm = (struct http_message *)ev_data;
         static const struct mg_str browse_prefix = MG_MK_STR("/browse");
         static const struct mg_str albumart_prefix = MG_MK_STR("/albumart");
-        static const struct mg_str image_prefix = MG_MK_STR("/image");
         static const struct mg_str lyrics_prefix = MG_MK_STR("/lyrics");
         static const struct mg_str tagpics_prefix = MG_MK_STR("/tagpics");
         LOG_VERBOSE("HTTP request (%d): %.*s", (intptr_t)nc->user_data, (int)hm->uri.len, hm->uri.p);
@@ -495,18 +494,6 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
                 mg_serve_http(nc, hm, s_http_server_opts);
             }
         }
-        else if (mg_str_starts_with(hm->uri, image_prefix) == 1)
-        { // wip
-            sds image_file = sdscatlen(sdsempty(), hm->uri.p, (int)hm->uri.len);
-            // remove /image/ prefix
-            sdsrange(image_file, 7, -1);
-            replacechar(image_file, '/', '_');
-            sds path = sdscatfmt(sdsempty(), "%s/covercache/%s", config->varlibdir, image_file);
-            sdsfree(image_file);
-            LOG_DEBUG("Serving file %s (%s)", path, "image/jpeg");
-            mg_http_serve_file(nc, hm, path, mg_mk_str("image/jpeg"), mg_mk_str(""));
-            sdsfree(path);
-        }
         else if (mg_vcmp(&hm->uri, "/index.html") == 0)
         {
             mg_http_send_redirect(nc, 301, mg_mk_str("/"), mg_mk_str(NULL));
@@ -629,7 +616,7 @@ static bool handle_api(int conn_id, struct http_message *hm)
     else if (strncmp(cmd, "MPDWORKER_API_", 14) == 0)
     {
         tiny_queue_push(mpd_worker_queue, request, 0);
-        }
+    }
     else
     {
         tiny_queue_push(mpd_client_queue, request, 0);

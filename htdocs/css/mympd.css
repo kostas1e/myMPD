@@ -893,8 +893,8 @@ a.text-success:focus {
   border-bottom-color: rgba(0, 0, 0, 0.125);
 }
 
-/*resize coverimage in playback card*/
-@media only screen and (min-width: 768px) and (min-height: 35rem) {
+/* resize coverimage in playback card */
+/* @media only screen and (min-width: 768px) and (min-height: 35rem) {
   #currentCover {
     width: 20rem;
     height: 20rem;
@@ -906,7 +906,7 @@ a.text-success:focus {
     width: 26rem;
     height: 26rem;
   }
-}
+} */
 
 .disabled {
   pointer-events: none;

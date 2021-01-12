@@ -1,7 +1,7 @@
 "use strict";
 
 function checkForUpdates() {
-    sendAPI("MYMPD_API_CHECK_FOR_UPDATES", {}, parseCheck);
+    sendAPI("MYMPD_API_UPDATE_CHECK", {}, parseCheck);
 
     btnWaiting(document.getElementById('btnCheckForUpdates'), true);
 }
@@ -31,7 +31,7 @@ function parseCheck(obj) {
 }
 
 function installUpdates() {
-    sendAPI("MYMPD_API_INSTALL_UPDATES", {}, parseInstall);
+    sendAPI("MYMPD_API_UPDATE_INSTALL", {}, parseInstall);
 
     document.getElementById('updateMsg').innerText = 'System will automatically reboot after installation';
 

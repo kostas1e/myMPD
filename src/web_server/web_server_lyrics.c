@@ -33,7 +33,7 @@
 #include <FLAC/metadata.h>
 #endif
 
-//privat definitions
+//private definitions
 static bool handle_lyricsextract(struct mg_connection *nc, const char *media_file);
 static bool handle_lyricsextract_id3(const char *media_file, sds *text);
 static bool handle_lyricsextract_flac(const char *media_file, sds *text, bool is_ogg);

@@ -172,6 +172,10 @@ bool mpd_api_settings_set(t_config *config, t_mpd_client_state *mpd_client_state
     {
         mpd_client_state->mpd_state->taglist = sdsreplacelen(mpd_client_state->mpd_state->taglist, settingvalue, sdslen(settingvalue));
     }
+    else if (strncmp(key->ptr, "searchtaglist", key->len) == 0)
+    {
+        mpd_client_state->searchtaglist = sdsreplacelen(mpd_client_state->searchtaglist, settingvalue, sdslen(settingvalue));
+    }
     else if (strncmp(key->ptr, "browsetaglist", key->len) == 0)
     {
         mpd_client_state->browsetaglist = sdsreplacelen(mpd_client_state->browsetaglist, settingvalue, sdslen(settingvalue));

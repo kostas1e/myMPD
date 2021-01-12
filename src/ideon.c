@@ -60,14 +60,14 @@ static bool syscmd(const char *cmdline)
 
 static int ns_set(int type, const char *server, const char *share, const char *vers, const char *username, const char *password)
 {
-    /* sds tmp_file = sdsnew("/tmp/fstab.XXXXXX");
-    int fd = mkstemp(tmp_file);
-    if (fd < 0)
-    {
-        LOG_ERROR("Can't open %s for write", tmp_file);
-        sdsfree(tmp_file);
-        return false;
-    } */
+    // sds tmp_file = sdsnew("/tmp/fstab.XXXXXX");
+    // int fd = mkstemp(tmp_file);
+    // if (fd < 0)
+    // {
+    //     LOG_ERROR("Can't open %s for write", tmp_file);
+    //     sdsfree(tmp_file);
+    //     return false;
+    // }
     int me = 0;
     sds tmp_file = sdsnew("/etc/fstab.new");
     FILE *tmp = setmntent(tmp_file, "w");
@@ -177,7 +177,6 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed,
                        bool spotify_changed)
 {
     // TODO: error checking, revert to old values on fail
-    bool rc = true;
     int dc = 0;
 
     if (ns_changed == true)
@@ -193,8 +192,8 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed,
         sds conf = sdsnew("/etc/mpd.conf");
         sds cmdline = sdscatfmt(sdsempty(), "sed -i 's/^mixer_type.*/mixer_type \"%S\"/;s/^dop.*/dop \"%s\"/' %S",
                                 mympd_state->mixer_type, dop, conf);
-        rc = syscmd(cmdline);
-        if (rc == true && dc == 0)
+        syscmd(cmdline);
+        if (dc == 0) //wip
         {
             dc = 3;
         }
@@ -207,13 +206,11 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed,
     {
         if (mympd_state->airplay == true)
         {
-            syscmd("systemctl enable shairport-sync");
-            syscmd("systemctl start shairport-sync");
+            syscmd("systemctl enable shairport-sync && systemctl start shairport-sync");
         }
         else
         {
-            syscmd("systemctl stop shairport-sync");
-            syscmd("systemctl disable shairport-sync");
+            syscmd("systemctl stop shairport-sync && systemctl disable shairport-sync");
         }
     }
 
@@ -221,13 +218,11 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed,
     {
         if (mympd_state->roon == true)
         {
-            syscmd("systemctl enable roonbridge");
-            syscmd("systemctl start roonbridge");
+            syscmd("systemctl enable roonbridge && systemctl start roonbridge");
         }
         else
         {
-            syscmd("systemctl stop roonbridge");
-            syscmd("systemctl disable roonbridge");
+            syscmd("systemctl stop roonbridge && systemctl disable roonbridge");
         }
     }
 
@@ -235,20 +230,74 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed,
     {
         if (mympd_state->spotify == true)
         {
-            syscmd("systemctl enable spotifyd");
-            syscmd("systemctl start spotifyd");
+            syscmd("systemctl enable spotifyd && systemctl start spotifyd");
         }
         else
         {
-            syscmd("systemctl stop spotifyd");
-            syscmd("systemctl disable spotifyd");
+            syscmd("systemctl stop spotifyd && systemctl disable spotifyd");
         }
     }
 
     return dc;
 }
 
-static sds get_version(sds version)
+bool output_name_set(void)
+{
+    FILE *fp = popen("/usr/bin/aplay -l | grep \"card 0.*device 0\"", "r");
+    if (fp == NULL)
+    {
+        LOG_ERROR("Failed to run command");
+        return false;
+    }
+
+    char *line = NULL;
+    size_t n = 0;
+    sds name = sdsempty();
+    bool rc = false;
+    // while (getline(&line, &n, fp) > 0)
+    if (getline(&line, &n, fp) > 0)
+    {
+        // hw:0,0
+        // if (strstr(line, "card 0") != NULL && strstr(line, "device 0") != NULL)
+        // {
+            char *pch = strtok(line, "[");
+            pch = strtok(NULL, "]");
+            // name = sdscatfmt(name, "%s, ", pch);
+            pch = strtok(NULL, "[");
+            pch = strtok(NULL, "]");
+            name = sdscatfmt(name, "%s", pch);
+            // while (pch != NULL) {
+            //     pch = strtok(NULL, "[]");
+            // }
+            pch = NULL;
+            // if (pch != NULL)
+            // {
+            //     free(pch);
+            // }
+            // break;
+        // }
+    }
+    if (line != NULL)
+    {
+        free(line);
+    }
+    pclose(fp);
+
+    if (sdslen(name) > 0)
+    {
+        sds conf = sdsnew("/etc/mpd.conf");
+        // sds cmdline = sdscatfmt(sdsempty(), "sed -Ei 's/^(\\s*)name(\\s*).*/\\1name\\2\"%S\"/' %S", name, conf);
+        sds cmdline = sdscatfmt(sdsempty(), "sed -i 's/.*MY DAC.*/name \"%S\"/' %S", name, conf);
+        rc = syscmd(cmdline);
+        sdsfree(conf);
+        sdsfree(cmdline);
+    }
+
+    sdsfree(name);
+    return rc;
+}
+
+static sds web_version_get(sds version)
 {
     struct memory_struct chunk;
     chunk.memory = malloc(1);
@@ -298,9 +347,9 @@ static bool validate_version(const char *data)
     return rc;
 }
 
-sds ideon_check_for_updates(sds buffer, sds method, int request_id)
+sds ideon_update_check(sds buffer, sds method, int request_id)
 {
-    sds latest_version = get_version(sdsempty());
+    sds latest_version = web_version_get(sdsempty());
     sdstrim(latest_version, " \n");
     if (validate_version(latest_version) == false)
     {
@@ -326,7 +375,7 @@ sds ideon_check_for_updates(sds buffer, sds method, int request_id)
     return buffer;
 }
 
-sds ideon_install_updates(sds buffer, sds method, int request_id)
+sds ideon_update_install(sds buffer, sds method, int request_id)
 {
     bool service = syscmd("systemctl start ideon_update");
 

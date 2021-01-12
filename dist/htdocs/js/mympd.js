@@ -476,7 +476,7 @@ function addAllFromBrowseFilesystem() {
 
 function addAllFromBrowseDatabasePlist(plist) {
     if (app.current.search.length >= 2) {
-        sendAPI("MPD_API_DATABASE_SEARCH", { "plist": plist, "filter": app.current.view, "searchstr": app.current.search, "offset": 0, "cols": settings.colsSearchDatabase, "replace": false });
+        sendAPI("MPD_API_DATABASE_SEARCH", { "plist": plist, "filter": app.current.view, "searchstr": app.current.search, "offset": 0, "cols": settings.colsSearch, "replace": false });
     }
 }
 
@@ -1079,7 +1079,7 @@ function getHomeIconPictureList(picture) {
 }
 
 function checkForUpdates() {
-    sendAPI("MYMPD_API_CHECK_FOR_UPDATES", {}, parseCheck);
+    sendAPI("MYMPD_API_UPDATE_CHECK", {}, parseCheck);
 
     btnWaiting(document.getElementById('btnCheckForUpdates'), true);
 }
@@ -1109,7 +1109,7 @@ function parseCheck(obj) {
 }
 
 function installUpdates() {
-    sendAPI("MYMPD_API_INSTALL_UPDATES", {}, parseInstall);
+    sendAPI("MYMPD_API_UPDATE_INSTALL", {}, parseInstall);
 
     document.getElementById('updateMsg').innerText = 'System will automatically reboot after installation';
 
@@ -4076,8 +4076,8 @@ function appInit() {
     });
 
     checkInit(); // first run check
-    // updateDBstats(); // update database stats (songs, playtime)
-    // checkForUpdates(); // check for updates on launch
+    updateDBstats(); // update database stats (songs, playtime)
+    // checkForUpdates(); // check for updates on launch (add settings option)
 }
 
 // Init app
@@ -6085,7 +6085,7 @@ function addAllFromSearchPlist(plist, searchstr, replace, play = false) {
             "sortdesc": false,
             "expression": searchstr,
             "offset": 0,
-            "cols": settings.colsSearchDatabase,
+            "cols": settings.colsSearch,
             "replace": replace,
             "play": play
         });
@@ -6096,7 +6096,7 @@ function addAllFromSearchPlist(plist, searchstr, replace, play = false) {
             "filter": app.current.filter,
             "searchstr": searchstr,
             "offset": 0,
-            "cols": settings.colsSearchDatabase,
+            "cols": settings.colsSearch,
             "replace": replace,
             "play": play
         });
