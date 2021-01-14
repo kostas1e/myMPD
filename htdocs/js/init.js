@@ -1,6 +1,7 @@
 "use strict";
 
 var currentTab;
+var bgColor;
 
 function checkInit() {
     if (settings.init !== true) {
@@ -11,7 +12,7 @@ function checkInit() {
         document.getElementById('selectTheme1').value = settings.theme;
 
         document.getElementById('selectTheme1').addEventListener('change', function () {
-            let value = this.options[this.selectedIndex].value;
+            let value = getSelectValue(this);
             if (value === 'theme-autodetect') {
                 value = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
             }
@@ -24,7 +25,21 @@ function checkInit() {
                     domCache.body.classList.remove(key);
                 }
             });
-        });
+
+            if (value === 'theme-default') {
+                bgColor = '#ccc';
+            }
+            else if (value === 'theme-light') {
+                bgColor = '#fff';
+            }
+            else if (value === 'theme-dark') {
+                bgColor = '#000';
+            }
+            else if (value === 'theme-maroon') {
+                bgColor = '#800';
+            }
+            document.getElementsByTagName('body')[0].style.backgroundColor = bgColor;
+        }, false);
 
         document.getElementById('selectNsType1').addEventListener('change', function () {
             let value = this.options[this.selectedIndex].value;
@@ -54,7 +69,7 @@ function checkInit() {
                 document.getElementById('inputNsUsername1').value = '';
                 document.getElementById('inputNsPassword1').value = '';
             }
-        });
+        }, false);
 
         currentTab = 0;
         showTab(currentTab);
@@ -126,6 +141,7 @@ function saveInitSettings() {
     sendAPI("MYMPD_API_SETTINGS_SET", {
         // "locale": selectLocale.options[selectLocale.selectedIndex].value,
         "theme": selectTheme.options[selectTheme.selectedIndex].value,
+        "bgColor": bgColor,
         "nsType": parseInt(selectNsType.options[selectNsType.selectedIndex].value),
         "nsServer": document.getElementById('inputNsServer1').value,
         "nsShare": document.getElementById('inputNsShare1').value,

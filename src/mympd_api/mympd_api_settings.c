@@ -557,7 +557,7 @@ void mympd_api_settings_reset(t_config *config, t_mympd_state *mympd_state)
     free_mympd_state_sds(mympd_state);
     mympd_api_read_statefiles(config, mympd_state);
     mympd_api_push_to_mpd_client(mympd_state);
-    ideon_settings_set(mympd_state, true, true, true, true, true); //wip check changes
+    ideon_settings_set(mympd_state, true, true, true, true, true);
 }
 
 void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state)

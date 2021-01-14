@@ -118,7 +118,7 @@ function parseQueue(obj) {
         row.setAttribute('data-uri', obj.result.data[i].uri);
         row.setAttribute('tabindex', 0);
         let tds = '';
-        tds += '<td data-col="Img"><img class="covergrid-header mr-0"/></td>'; //wip queue img
+        tds += '<td data-col="Img"><img class="covergrid-header mr-0"/></td>';
         for (let c = 0; c < settings.colsQueueCurrent.length; c++) {
             tds += '<td data-col="' + settings.colsQueueCurrent[c] + '">' + e(obj.result.data[i][settings.colsQueueCurrent[c]]) + '</td>';
         }

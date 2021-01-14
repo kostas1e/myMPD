@@ -87,7 +87,7 @@ function joinSettings(obj) {
         sendAPI("MPD_API_URLHANDLERS", {}, parseUrlhandlers, false);
     }
     btnWaiting(document.getElementById('btnApplySettings'), false);
-    //wip
+
     // btnWaiting(document.getElementById('btnResetSettings'), false);
     // document.getElementById('resetSettingsMsg').classList.remove('hide');
 }

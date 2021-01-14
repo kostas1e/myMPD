@@ -10,6 +10,7 @@ function setGridPlayback() {
         document.getElementById('cardQueueMini').classList.remove('hide');
         document.getElementById('cardBrowse').classList.remove('hide');
         document.getElementById('cardBrowseDatabase').classList.remove('hide');
+        document.getElementById('searchDatabaseTagsDesc').classList.add('hide');
         // for (let i = 0; i < bts.length; i++) {
         //     bts[i].classList.add('hide');
         // }
@@ -19,6 +20,7 @@ function setGridPlayback() {
         document.getElementById('col1').classList.remove('col-md-6');
         document.getElementById('col2').classList.remove(...list);
         document.getElementById('cardQueueMini').classList.add('hide');
+        document.getElementById('searchDatabaseTagsDesc').classList.remove('hide');
         // for (let i = 0; i < bts.length; i++) {
         //     bts[i].classList.remove('hide');
         // }
@@ -27,6 +29,7 @@ function setGridPlayback() {
     }
 }
 
+// Sync playback and browse cards
 function setAppState(page, filter, sort, tag, search) {
     let card = app.current.app === 'Browse' ? 'Playback' : 'Browse';
     let state = { "page": page, "filter": filter, "sort": sort, "tag": tag, "search": search };

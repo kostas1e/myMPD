@@ -30,8 +30,6 @@ function parsePlaylists(obj) {
         document.getElementById('BrowsePlaylistsDetailList').getElementsByTagName('caption')[0].innerHTML =
             (obj.result.smartpls === true ? t('Smart playlist') : t('Playlist')) + ': ' + obj.result.uri;
         document.getElementById('BrowsePlaylistsDetailList').classList.remove('hide');
-        //wip
-        // document.getElementById('BrowsePlaylistsDetailList').classList.add('clickable');
         document.getElementById('BrowsePlaylistsAllList').classList.add('hide');
         document.getElementById('btnBrowsePlaylistsAll').parentNode.classList.remove('hide');
         document.getElementById('btnAddSmartpls').parentNode.classList.add('hide');

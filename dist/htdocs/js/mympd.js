@@ -1214,6 +1214,7 @@ function closeReset() {
 }
 
 var currentTab;
+var bgColor;
 
 function checkInit() {
     if (settings.init !== true) {
@@ -1224,7 +1225,7 @@ function checkInit() {
         document.getElementById('selectTheme1').value = settings.theme;
 
         document.getElementById('selectTheme1').addEventListener('change', function () {
-            let value = this.options[this.selectedIndex].value;
+            let value = getSelectValue(this);
             if (value === 'theme-autodetect') {
                 value = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
             }
@@ -1237,7 +1238,21 @@ function checkInit() {
                     domCache.body.classList.remove(key);
                 }
             });
-        });
+
+            if (value === 'theme-default') {
+                bgColor = '#ccc';
+            }
+            else if (value === 'theme-light') {
+                bgColor = '#fff';
+            }
+            else if (value === 'theme-dark') {
+                bgColor = '#000';
+            }
+            else if (value === 'theme-maroon') {
+                bgColor = '#800';
+            }
+            document.getElementsByTagName('body')[0].style.backgroundColor = bgColor;
+        }, false);
 
         document.getElementById('selectNsType1').addEventListener('change', function () {
             let value = this.options[this.selectedIndex].value;
@@ -1267,7 +1282,7 @@ function checkInit() {
                 document.getElementById('inputNsUsername1').value = '';
                 document.getElementById('inputNsPassword1').value = '';
             }
-        });
+        }, false);
 
         currentTab = 0;
         showTab(currentTab);
@@ -1339,6 +1354,7 @@ function saveInitSettings() {
     sendAPI("MYMPD_API_SETTINGS_SET", {
         // "locale": selectLocale.options[selectLocale.selectedIndex].value,
         "theme": selectTheme.options[selectTheme.selectedIndex].value,
+        "bgColor": bgColor,
         "nsType": parseInt(selectNsType.options[selectNsType.selectedIndex].value),
         "nsServer": document.getElementById('inputNsServer1').value,
         "nsShare": document.getElementById('inputNsShare1').value,
@@ -3023,21 +3039,20 @@ function appInit() {
         }
     });
 
-    //wip
-    // document.getElementById('modalAddToPlaylist').addEventListener('keydown', function (event) {
-    //     event.stopPropagation();
-    //     if (event.keyCode === 13) {
-    //         if (!document.getElementById('addStreamFrm').classList.contains('hide')) {
-    //             addStream();
-    //         }
-    //         else {
-    //             addToPlaylist();
-    //         }
-    //     }
-    //     else if (event.keyCode == 27) {
-    //         modalAddToPlaylist.hide();
-    //     }
-    // });
+    document.getElementById('modalAddToPlaylist').addEventListener('keydown', function (event) {
+        event.stopPropagation();
+        if (event.keyCode === 13) {
+            if (!document.getElementById('addStreamFrm').classList.contains('hide')) {
+                addStream();
+            }
+            else {
+                addToPlaylist();
+            }
+        }
+        else if (event.keyCode == 27) {
+            modalAddToPlaylist.hide();
+        }
+    });
 
     document.getElementById('inputTimerVolume').addEventListener('change', function () {
         document.getElementById('textTimerVolume').innerHTML = this.value + '&nbsp;%';
@@ -3108,15 +3123,6 @@ function appInit() {
         plName.value = '';
         plName.classList.remove('is-invalid');
     });
-
-    //wip
-    // document.getElementById('modalSettings').addEventListener('shown.bs.modal', function () {
-    //     getSettings();
-    //     document.getElementById('inputCrossfade').classList.remove('is-invalid');
-    //     document.getElementById('inputMixrampdb').classList.remove('is-invalid');
-    //     document.getElementById('inputMixrampdelay').classList.remove('is-invalid');
-    //     document.getElementById('inputScaleRatio').classList.remove('is-invalid');
-    // });
 
     document.getElementById('modalSettings').addEventListener('shown.bs.modal', function () {
         this.focus();
@@ -3564,7 +3570,6 @@ function appInit() {
         if (event.target.nodeName === 'TD') {
             sendAPI("MPD_API_PLAYER_PLAY_TRACK", { "track": event.target.parentNode.getAttribute('data-trackid') });
         }
-        //wip add menu for a
     }, false);
 
     document.getElementById('BrowseFilesystemList').addEventListener('click', function (event) {
@@ -3670,7 +3675,6 @@ function appInit() {
             appGoto(app.current.app, 'Database', 'Detail', '0', 'Album', 'AlbumArtist',
                 decodeURI(event.target.parentNode.getAttribute('data-album')),
                 decodeURI(event.target.parentNode.getAttribute('data-albumartist')));
-                //wip empty album/albumartist
         }
         else if (event.target.nodeName === 'A') {
             showMenu(event.target, event);
@@ -3679,7 +3683,6 @@ function appInit() {
 
     document.getElementById('BrowseDatabaseCards').addEventListener('keydown', function (event) {
         navigateGrid(event.target, event.key);
-        //wip playback support
     }, false);
 
     if (isMobile === false) {
@@ -4460,6 +4463,7 @@ function setGridPlayback() {
         document.getElementById('cardQueueMini').classList.remove('hide');
         document.getElementById('cardBrowse').classList.remove('hide');
         document.getElementById('cardBrowseDatabase').classList.remove('hide');
+        document.getElementById('searchDatabaseTagsDesc').classList.add('hide');
         // for (let i = 0; i < bts.length; i++) {
         //     bts[i].classList.add('hide');
         // }
@@ -4469,6 +4473,7 @@ function setGridPlayback() {
         document.getElementById('col1').classList.remove('col-md-6');
         document.getElementById('col2').classList.remove(...list);
         document.getElementById('cardQueueMini').classList.add('hide');
+        document.getElementById('searchDatabaseTagsDesc').classList.remove('hide');
         // for (let i = 0; i < bts.length; i++) {
         //     bts[i].classList.remove('hide');
         // }
@@ -4477,6 +4482,7 @@ function setGridPlayback() {
     }
 }
 
+// Sync playback and browse cards
 function setAppState(page, filter, sort, tag, search) {
     let card = app.current.app === 'Browse' ? 'Playback' : 'Browse';
     let state = { "page": page, "filter": filter, "sort": sort, "tag": tag, "search": search };
@@ -4659,8 +4665,6 @@ function parsePlaylists(obj) {
         document.getElementById('BrowsePlaylistsDetailList').getElementsByTagName('caption')[0].innerHTML =
             (obj.result.smartpls === true ? t('Smart playlist') : t('Playlist')) + ': ' + obj.result.uri;
         document.getElementById('BrowsePlaylistsDetailList').classList.remove('hide');
-        //wip
-        // document.getElementById('BrowsePlaylistsDetailList').classList.add('clickable');
         document.getElementById('BrowsePlaylistsAllList').classList.add('hide');
         document.getElementById('btnBrowsePlaylistsAll').parentNode.classList.remove('hide');
         document.getElementById('btnAddSmartpls').parentNode.classList.add('hide');
@@ -5536,7 +5540,7 @@ function parseQueue(obj) {
         row.setAttribute('data-uri', obj.result.data[i].uri);
         row.setAttribute('tabindex', 0);
         let tds = '';
-        tds += '<td data-col="Img"><img class="covergrid-header mr-0"/></td>'; //wip queue img
+        tds += '<td data-col="Img"><img class="covergrid-header mr-0"/></td>';
         for (let c = 0; c < settings.colsQueueCurrent.length; c++) {
             tds += '<td data-col="' + settings.colsQueueCurrent[c] + '">' + e(obj.result.data[i][settings.colsQueueCurrent[c]]) + '</td>';
         }
@@ -6190,7 +6194,7 @@ function joinSettings(obj) {
         sendAPI("MPD_API_URLHANDLERS", {}, parseUrlhandlers, false);
     }
     btnWaiting(document.getElementById('btnApplySettings'), false);
-    //wip
+
     // btnWaiting(document.getElementById('btnResetSettings'), false);
     // document.getElementById('resetSettingsMsg').classList.remove('hide');
 }

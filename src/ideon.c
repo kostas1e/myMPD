@@ -193,7 +193,7 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed,
         sds cmdline = sdscatfmt(sdsempty(), "sed -i 's/^mixer_type.*/mixer_type \"%S\"/;s/^dop.*/dop \"%s\"/' %S",
                                 mympd_state->mixer_type, dop, conf);
         syscmd(cmdline);
-        if (dc == 0) //wip
+        if (dc == 0)
         {
             dc = 3;
         }
