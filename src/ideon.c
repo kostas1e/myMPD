@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <curl/curl.h>
 #include <mntent.h>
+#include <pthread.h>
 
 #include "../dist/src/sds/sds.h"
 #include "list.h"
@@ -16,31 +17,181 @@
 
 #define IDEONAUDIO_REPO "https://ideonaudio.com/repo/ideonOS/system/web_version"
 
-struct memory_struct
-{
-    char *memory;
-    size_t size;
-};
+pthread_mutex_t lock;
 
-static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp)
-{
-    size_t realsize = size * nmemb;
-    struct memory_struct *mem = (struct memory_struct *)userp;
+static bool syscmd(const char *cmdline);
+static sds device_name_get(sds name);
+static bool output_name_set(const char *name);
+static int ns_set(int type, const char *server, const char *share, const char *vers, const char *username, const char *password);
+static sds web_version_get(sds version);
+static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp);
+static bool validate_version(const char *data);
 
-    char *ptr = realloc(mem->memory, mem->size + realsize + 1);
-    if (ptr == NULL)
+void ideon_init(void) // todo: change return type to bool
+{
+    if (curl_global_init(CURL_GLOBAL_ALL) != 0)
     {
-        // out of memory
-        LOG_ERROR("not enough memory (realloc returned NULL)");
-        return 0;
+        LOG_ERROR("curl global init has failed");
+    }
+    if (pthread_mutex_init(&lock, NULL) != 0)
+    {
+        LOG_ERROR("mutex init has failed");
+    }
+}
+
+void ideon_cleanup(void)
+{
+    curl_global_cleanup();
+    pthread_mutex_destroy(&lock);
+}
+
+void ideon_dc_handle(int *dc) // todo: change return type to bool
+{
+    static bool handled = false;
+
+    pthread_mutex_lock(&lock);
+
+    if (handled == true)
+    {
+        LOG_DEBUG("Handled dc %d", *dc);
+    }
+    else
+    {
+        LOG_DEBUG("Handling dc %d", *dc);
+        if (*dc != 3)
+        {
+            syscmd("reboot");
+        }
+        else
+        {
+            syscmd("systemctl restart mpd");
+        }
+    }
+    *dc = 0;
+    handled = !handled;
+
+    pthread_mutex_unlock(&lock);
+}
+
+// Compare output_name w/ device_name and set if needed
+bool ideon_output_name_set(t_mympd_state *mympd_state)
+{
+    sds device_name = device_name_get(sdsempty());
+    bool rc = false;
+    if (sdslen(device_name) > 0 && sdscmp(mympd_state->output_name, device_name) != 0)
+    {
+        mympd_state->output_name = sdsreplacelen(mympd_state->output_name, device_name, sdslen(device_name));
+        rc = output_name_set(device_name);
+    }
+    sdsfree(device_name);
+    return rc;
+}
+
+int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed,
+                       bool ns_changed, bool airplay_changed, bool roon_changed,
+                       bool spotify_changed)
+{
+    // TODO: error checking, revert to old values on fail
+    int dc = 0;
+
+    if (ns_changed == true)
+    {
+        dc = ns_set(mympd_state->ns_type, mympd_state->ns_server, mympd_state->ns_share, mympd_state->samba_version, mympd_state->ns_username, mympd_state->ns_password);
     }
 
-    mem->memory = ptr;
-    memcpy(&(mem->memory[mem->size]), contents, realsize);
-    mem->size += realsize;
-    mem->memory[mem->size] = 0;
+    if (mpd_conf_changed == true)
+    {
+        LOG_DEBUG("mpd conf changed");
 
-    return realsize;
+        const char *dop = mympd_state->dop == true ? "yes" : "no";
+        sds conf = sdsnew("/etc/mpd.conf");
+        sds cmdline = sdscatfmt(sdsempty(), "sed -i 's/^mixer_type.*/mixer_type \"%S\"/;s/^dop.*/dop \"%s\"/' %S",
+                                mympd_state->mixer_type, dop, conf);
+        if (syscmd(cmdline) == true && dc == 0)
+        {
+            dc = 3;
+        }
+
+        sdsfree(conf);
+        sdsfree(cmdline);
+    }
+
+    if (airplay_changed == true)
+    {
+        if (mympd_state->airplay == true)
+        {
+            syscmd("systemctl enable shairport-sync && systemctl start shairport-sync");
+        }
+        else
+        {
+            syscmd("systemctl stop shairport-sync && systemctl disable shairport-sync");
+        }
+    }
+
+    if (roon_changed == true)
+    {
+        if (mympd_state->roon == true)
+        {
+            syscmd("systemctl enable roonbridge && systemctl start roonbridge");
+        }
+        else
+        {
+            syscmd("systemctl stop roonbridge && systemctl disable roonbridge");
+        }
+    }
+
+    if (spotify_changed == true)
+    {
+        if (mympd_state->spotify == true)
+        {
+            syscmd("systemctl enable spotifyd && systemctl start spotifyd");
+        }
+        else
+        {
+            syscmd("systemctl stop spotifyd && systemctl disable spotifyd");
+        }
+    }
+
+    return dc;
+}
+
+sds ideon_update_check(sds buffer, sds method, int request_id)
+{
+    sds latest_version = web_version_get(sdsempty());
+    sdstrim(latest_version, " \n");
+    if (validate_version(latest_version) == false)
+    {
+        sdsreplace(latest_version, sdsempty());
+    }
+    bool update_available;
+    if (sdslen(latest_version) > 0)
+    {
+        update_available = strcmp(latest_version, IDEON_VERSION) > 0 ? true : false;
+    }
+    else
+    {
+        update_available = false;
+    }
+
+    buffer = jsonrpc_start_result(buffer, method, request_id);
+    buffer = sdscat(buffer, ",");
+    buffer = tojson_char(buffer, "currentVersion", IDEON_VERSION, true);
+    buffer = tojson_char(buffer, "latestVersion", latest_version, true);
+    buffer = tojson_bool(buffer, "updateAvailable", update_available, false);
+    buffer = jsonrpc_end_result(buffer);
+    sdsfree(latest_version);
+    return buffer;
+}
+
+sds ideon_update_install(sds buffer, sds method, int request_id)
+{
+    bool service = syscmd("systemctl start ideon_update");
+
+    buffer = jsonrpc_start_result(buffer, method, request_id);
+    buffer = sdscat(buffer, ",");
+    buffer = tojson_bool(buffer, "service", service, false);
+    buffer = jsonrpc_end_result(buffer);
+    return buffer;
 }
 
 static bool syscmd(const char *cmdline)
@@ -56,6 +207,54 @@ static bool syscmd(const char *cmdline)
         LOG_ERROR("Executing syscmd \"%s\" failed", cmdline);
         return false;
     }
+}
+
+// Get device name for hw:0,0
+static sds device_name_get(sds name)
+{
+    FILE *fp = popen("/usr/bin/aplay -l | grep \"card 0.*device 0\"", "r"); // hw:0,0
+    if (fp == NULL)
+    {
+        LOG_ERROR("Failed to get device name");
+    }
+    else
+    {
+        char *line = NULL;
+        size_t n = 0;
+        if (getline(&line, &n, fp) > 0)
+        {
+            char *pch = strtok(line, "[");
+            // pch = strtok(NULL, "]");
+            // name = sdscatfmt(name, "%s, ", pch); // card name
+            pch = strtok(NULL, "[");
+            pch = strtok(NULL, "]");
+            name = sdscatfmt(name, "%s", pch); // device name
+            pch = NULL;
+        }
+        if (line != NULL)
+        {
+            free(line);
+        }
+        pclose(fp);
+    }
+    return name;
+}
+
+// Edit mpd.conf audio_output name and restart mpd.service
+static bool output_name_set(const char *name)
+{
+    sds conf = sdsnew("/etc/mpd.conf");
+    // sds cmdline = sdscatfmt(sdsempty(), "sed -Ei 's/^(\\s*)name(\\s*).*/\\1name\\2\"%S\"/' %S", name, conf);
+    // sds cmdline = sdscatfmt(sdsempty(), "sed -i 's/.*MY DAC.*/name \"%S\"/' %S", name, conf);
+    sds cmdline = sdscatfmt(sdsempty(), "sed -i 's/^name.*/name \"%s\"/' %S", name, conf);
+    bool rc = syscmd(cmdline);
+    if (rc == true)
+    {
+        syscmd("systemctl restart mpd");
+    }
+    sdsfree(conf);
+    sdsfree(cmdline);
+    return rc;
 }
 
 static int ns_set(int type, const char *server, const char *share, const char *vers, const char *username, const char *password)
@@ -172,131 +371,6 @@ static int ns_set(int type, const char *server, const char *share, const char *v
     return me;
 }
 
-int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed,
-                       bool ns_changed, bool airplay_changed, bool roon_changed,
-                       bool spotify_changed)
-{
-    // TODO: error checking, revert to old values on fail
-    int dc = 0;
-
-    if (ns_changed == true)
-    {
-        dc = ns_set(mympd_state->ns_type, mympd_state->ns_server, mympd_state->ns_share, mympd_state->samba_version, mympd_state->ns_username, mympd_state->ns_password);
-    }
-
-    if (mpd_conf_changed == true)
-    {
-        LOG_DEBUG("mpd conf changed");
-
-        const char *dop = mympd_state->dop == true ? "yes" : "no";
-        sds conf = sdsnew("/etc/mpd.conf");
-        sds cmdline = sdscatfmt(sdsempty(), "sed -i 's/^mixer_type.*/mixer_type \"%S\"/;s/^dop.*/dop \"%s\"/' %S",
-                                mympd_state->mixer_type, dop, conf);
-        syscmd(cmdline);
-        if (dc == 0)
-        {
-            dc = 3;
-        }
-
-        sdsfree(conf);
-        sdsfree(cmdline);
-    }
-
-    if (airplay_changed == true)
-    {
-        if (mympd_state->airplay == true)
-        {
-            syscmd("systemctl enable shairport-sync && systemctl start shairport-sync");
-        }
-        else
-        {
-            syscmd("systemctl stop shairport-sync && systemctl disable shairport-sync");
-        }
-    }
-
-    if (roon_changed == true)
-    {
-        if (mympd_state->roon == true)
-        {
-            syscmd("systemctl enable roonbridge && systemctl start roonbridge");
-        }
-        else
-        {
-            syscmd("systemctl stop roonbridge && systemctl disable roonbridge");
-        }
-    }
-
-    if (spotify_changed == true)
-    {
-        if (mympd_state->spotify == true)
-        {
-            syscmd("systemctl enable spotifyd && systemctl start spotifyd");
-        }
-        else
-        {
-            syscmd("systemctl stop spotifyd && systemctl disable spotifyd");
-        }
-    }
-
-    return dc;
-}
-
-bool output_name_set(void)
-{
-    FILE *fp = popen("/usr/bin/aplay -l | grep \"card 0.*device 0\"", "r");
-    if (fp == NULL)
-    {
-        LOG_ERROR("Failed to run command");
-        return false;
-    }
-
-    char *line = NULL;
-    size_t n = 0;
-    sds name = sdsempty();
-    bool rc = false;
-    // while (getline(&line, &n, fp) > 0)
-    if (getline(&line, &n, fp) > 0)
-    {
-        // hw:0,0
-        // if (strstr(line, "card 0") != NULL && strstr(line, "device 0") != NULL)
-        // {
-            char *pch = strtok(line, "[");
-            pch = strtok(NULL, "]");
-            // name = sdscatfmt(name, "%s, ", pch);
-            pch = strtok(NULL, "[");
-            pch = strtok(NULL, "]");
-            name = sdscatfmt(name, "%s", pch);
-            // while (pch != NULL) {
-            //     pch = strtok(NULL, "[]");
-            // }
-            pch = NULL;
-            // if (pch != NULL)
-            // {
-            //     free(pch);
-            // }
-            // break;
-        // }
-    }
-    if (line != NULL)
-    {
-        free(line);
-    }
-    pclose(fp);
-
-    if (sdslen(name) > 0)
-    {
-        sds conf = sdsnew("/etc/mpd.conf");
-        // sds cmdline = sdscatfmt(sdsempty(), "sed -Ei 's/^(\\s*)name(\\s*).*/\\1name\\2\"%S\"/' %S", name, conf);
-        sds cmdline = sdscatfmt(sdsempty(), "sed -i 's/.*MY DAC.*/name \"%S\"/' %S", name, conf);
-        rc = syscmd(cmdline);
-        sdsfree(conf);
-        sdsfree(cmdline);
-    }
-
-    sdsfree(name);
-    return rc;
-}
-
 static sds web_version_get(sds version)
 {
     struct memory_struct chunk;
@@ -333,6 +407,27 @@ static sds web_version_get(sds version)
     return version;
 }
 
+static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+    size_t realsize = size * nmemb;
+    struct memory_struct *mem = (struct memory_struct *)userp;
+
+    char *ptr = realloc(mem->memory, mem->size + realsize + 1);
+    if (ptr == NULL)
+    {
+        // out of memory
+        LOG_ERROR("not enough memory (realloc returned NULL)");
+        return 0;
+    }
+
+    mem->memory = ptr;
+    memcpy(&(mem->memory[mem->size]), contents, realsize);
+    mem->size += realsize;
+    mem->memory[mem->size] = 0;
+
+    return realsize;
+}
+
 static bool validate_version(const char *data)
 {
     bool rc = validate_string_not_empty(data);
@@ -345,43 +440,4 @@ static bool validate_version(const char *data)
         }
     }
     return rc;
-}
-
-sds ideon_update_check(sds buffer, sds method, int request_id)
-{
-    sds latest_version = web_version_get(sdsempty());
-    sdstrim(latest_version, " \n");
-    if (validate_version(latest_version) == false)
-    {
-        sdsreplace(latest_version, sdsempty());
-    }
-    bool updates_available;
-    if (sdslen(latest_version) > 0)
-    {
-        updates_available = strcmp(latest_version, IDEON_VERSION) > 0 ? true : false;
-    }
-    else
-    {
-        updates_available = false;
-    }
-
-    buffer = jsonrpc_start_result(buffer, method, request_id);
-    buffer = sdscat(buffer, ",");
-    buffer = tojson_char(buffer, "currentVersion", IDEON_VERSION, true);
-    buffer = tojson_char(buffer, "latestVersion", latest_version, true);
-    buffer = tojson_bool(buffer, "updatesAvailable", updates_available, false);
-    buffer = jsonrpc_end_result(buffer);
-    sdsfree(latest_version);
-    return buffer;
-}
-
-sds ideon_update_install(sds buffer, sds method, int request_id)
-{
-    bool service = syscmd("systemctl start ideon_update");
-
-    buffer = jsonrpc_start_result(buffer, method, request_id);
-    buffer = sdscat(buffer, ",");
-    buffer = tojson_bool(buffer, "service", service, false);
-    buffer = jsonrpc_end_result(buffer);
-    return buffer;
 }

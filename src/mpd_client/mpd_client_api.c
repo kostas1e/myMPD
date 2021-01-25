@@ -313,7 +313,7 @@ void mpd_client_api(t_config *config, t_mpd_client_state *mpd_client_state, void
         sdsfree(notify_buffer);
         if (rc == true)
         {
-            if (mpd_host_changed == true || mpd_client_state->dc != 0)
+            if (mpd_host_changed == true || mpd_client_state->mpd_state->dc != 0)
             {
                 //reconnect with new settings
                 mpd_client_state->mpd_state->conn_state = MPD_DISCONNECT;

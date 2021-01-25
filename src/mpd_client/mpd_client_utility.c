@@ -157,7 +157,6 @@ void default_mpd_client_state(t_mpd_client_state *mpd_client_state)
     //mpd state
     mpd_client_state->mpd_state = (t_mpd_state *)malloc(sizeof(t_mpd_state));
     assert(mpd_client_state->mpd_state);
-    mpd_client_state->dc = 0;
     mpd_shared_default_mpd_state(mpd_client_state->mpd_state);
     //init triggers;
     list_init(&mpd_client_state->triggers);

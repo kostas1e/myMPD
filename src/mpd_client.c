@@ -42,6 +42,8 @@
 #include "mpd_client/mpd_client_timer.h"
 #include "mpd_client/mpd_client_trigger.h"
 #include "mpd_client.h"
+#include "mympd_api/mympd_api_utility.h"
+#include "ideon.h"
 
 //private definitions
 static void mpd_client_idle(t_config *config, t_mpd_client_state *mpd_client_state);
@@ -264,23 +266,8 @@ static void mpd_client_idle(t_config *config, t_mpd_client_state *mpd_client_sta
         break;
     }
     case MPD_DISCONNECTED:
-        if (mpd_client_state->dc != 0)
-        {
-            LOG_DEBUG("dc %d", mpd_client_state->dc);
-            int rc;
-            if (mpd_client_state->dc != 3)
-            {
-                rc = system("reboot");
-            }
-            else
-            {
-                rc = system("systemctl restart mpd");
-            }
-            if (rc != 0)
-            {
-                LOG_ERROR("Executing syscmd failed");
-            }
-            mpd_client_state->dc = 0;
+        if (mpd_client_state->mpd_state->dc != 0) {
+            ideon_dc_handle(&mpd_client_state->mpd_state->dc);
         }
         /* Try to connect */
         if (strncmp(mpd_client_state->mpd_state->mpd_host, "/", 1) == 0)
@@ -294,7 +281,7 @@ static void mpd_client_idle(t_config *config, t_mpd_client_state *mpd_client_sta
         mpd_client_state->mpd_state->conn = mpd_connection_new(mpd_client_state->mpd_state->mpd_host, mpd_client_state->mpd_state->mpd_port, mpd_client_state->mpd_state->timeout);
         if (mpd_client_state->mpd_state->conn == NULL)
         {
-            LOG_ERROR("MPD connection to failed: out-of-memory");
+            LOG_ERROR("MPD connection failed: out-of-memory");
             buffer = jsonrpc_notify(buffer, "mpd_disconnected");
             ws_notify(buffer);
             sdsfree(buffer);

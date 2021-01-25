@@ -51,7 +51,7 @@ void mympd_api_settings_delete(t_config *config)
                                  "last_played", "last_played_count", "locale", "localplayer", "love", "love_channel", "love_message",
                                  "max_elements_per_page", "mpd_host", "mpd_pass", "mpd_port", "notification_page", "notification_web", "searchtaglist",
                                  "smartpls", "stickers", "stream_port", "stream_url", "taglist", "music_directory", "bookmarks", "bookmark_list", "coverimage_size_small",
-                                 "mixer_type", "dop", "ns_type", "ns_server", "ns_share", "samba_version", "ns_username", "ns_password", "airplay", "roon", "spotify", //"init",
+                                 "mixer_type", "dop", "ns_type", "ns_server", "ns_share", "samba_version", "ns_username", "ns_password", "airplay", "roon", "spotify", //"init", output_name,
                                  "theme", "timer", "highlight_color", "media_session", "booklet_name", "lyrics", "home_list", "navbar_icons", 0};
     const char **ptr = state_files;
     while (*ptr != 0)
@@ -443,10 +443,21 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
         mympd_state->lyrics = val->type == JSON_TYPE_TRUE ? true : false;
         settingname = sdscat(settingname, "lyrics");
     }
+    else if (strncmp(key->ptr, "outputName", key->len) == 0)
+    {
+        if (sdscmp(mympd_state->output_name, settingvalue) != 0)
+        {
+            *mpd_conf_changed = true;
+        }
+        mympd_state->output_name = sdsreplacelen(mympd_state->output_name, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "output_name");
+    }
     else if (strncmp(key->ptr, "mixerType", key->len) == 0)
     {
         if (sdscmp(mympd_state->mixer_type, settingvalue) != 0)
+        {
             *mpd_conf_changed = true;
+        }
         mympd_state->mixer_type = sdsreplacelen(mympd_state->mixer_type, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "mixer_type");
     }
@@ -454,7 +465,9 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
     {
         if ((mympd_state->dop == true && val->type == JSON_TYPE_FALSE) ||
             (mympd_state->dop == false && val->type == JSON_TYPE_TRUE))
+        {
             *mpd_conf_changed = true;
+        }
         mympd_state->dop = val->type == JSON_TYPE_TRUE ? true : false;
         settingname = sdscat(settingname, "dop");
     }
@@ -468,42 +481,54 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
             return false;
         }
         if (mympd_state->ns_type != ns_type)
+        {
             *ns_changed = true;
+        }
         mympd_state->ns_type = ns_type;
         settingname = sdscat(settingname, "ns_type");
     }
     else if (strncmp(key->ptr, "nsServer", key->len) == 0)
     {
         if (sdscmp(mympd_state->ns_server, settingvalue) != 0)
+        {
             *ns_changed = true;
+        }
         mympd_state->ns_server = sdsreplacelen(mympd_state->ns_server, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "ns_server");
     }
     else if (strncmp(key->ptr, "nsShare", key->len) == 0)
     {
         if (sdscmp(mympd_state->ns_share, settingvalue) != 0)
+        {
             *ns_changed = true;
+        }
         mympd_state->ns_share = sdsreplacelen(mympd_state->ns_share, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "ns_share");
     }
     else if (strncmp(key->ptr, "sambaVersion", key->len) == 0)
     {
         if (sdscmp(mympd_state->samba_version, settingvalue) != 0)
+        {
             *ns_changed = true;
+        }
         mympd_state->samba_version = sdsreplacelen(mympd_state->samba_version, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "samba_version");
     }
     else if (strncmp(key->ptr, "nsUsername", key->len) == 0)
     {
         if (sdscmp(mympd_state->ns_username, settingvalue) != 0)
+        {
             *ns_changed = true;
+        }
         mympd_state->ns_username = sdsreplacelen(mympd_state->ns_username, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "ns_username");
     }
     else if (strncmp(key->ptr, "nsPassword", key->len) == 0)
     {
         if (sdscmp(mympd_state->ns_password, settingvalue) != 0)
+        {
             *ns_changed = true;
+        }
         mympd_state->ns_password = sdsreplacelen(mympd_state->ns_password, settingvalue, sdslen(settingvalue));
         settingname = sdscat(settingname, "ns_password");
     }
@@ -511,7 +536,9 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
     {
         if ((mympd_state->airplay == true && val->type == JSON_TYPE_FALSE) ||
             (mympd_state->airplay == false && val->type == JSON_TYPE_TRUE))
+        {
             *airplay_changed = true;
+        }
         mympd_state->airplay = val->type == JSON_TYPE_TRUE ? true : false;
         settingname = sdscat(settingname, "airplay");
     }
@@ -519,7 +546,9 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
     {
         if ((mympd_state->roon == true && val->type == JSON_TYPE_FALSE) ||
             (mympd_state->roon == false && val->type == JSON_TYPE_TRUE))
+        {
             *roon_changed = true;
+        }
         mympd_state->roon = val->type == JSON_TYPE_TRUE ? true : false;
         settingname = sdscat(settingname, "roon");
     }
@@ -527,7 +556,9 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
     {
         if ((mympd_state->spotify == true && val->type == JSON_TYPE_FALSE) ||
             (mympd_state->spotify == false && val->type == JSON_TYPE_TRUE))
+        {
             *spotify_changed = true;
+        }
         mympd_state->spotify = val->type == JSON_TYPE_TRUE ? true : false;
         settingname = sdscat(settingname, "spotify");
     }
@@ -535,9 +566,6 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
     {
         mympd_state->init = val->type == JSON_TYPE_TRUE ? true : false;
         settingname = sdscat(settingname, "init");
-        if (output_name_set() == true) {
-            *mpd_conf_changed = true;
-        }
     }
     else
     {
@@ -557,7 +585,7 @@ void mympd_api_settings_reset(t_config *config, t_mympd_state *mympd_state)
     free_mympd_state_sds(mympd_state);
     mympd_api_read_statefiles(config, mympd_state);
     mympd_api_push_to_mpd_client(mympd_state);
-    ideon_settings_set(mympd_state, true, true, true, true, true);
+    ideon_settings_set(mympd_state, true, true, true, true, true); // todo:
 }
 
 void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state)
@@ -615,6 +643,7 @@ void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state)
     mympd_state->highlight_color = state_file_rw_string(config, "highlight_color", config->highlight_color, false);
     mympd_state->booklet_name = state_file_rw_string(config, "booklet_name", config->booklet_name, false);
     mympd_state->lyrics = state_file_rw_bool(config, "lyrics", config->lyrics, false);
+    mympd_state->output_name = state_file_rw_string(config, "output_name", config->output_name, false);
     mympd_state->mixer_type = state_file_rw_string(config, "mixer_type", config->mixer_type, false);
     mympd_state->dop = state_file_rw_bool(config, "dop", config->dop, false);
     mympd_state->ns_type = state_file_rw_int(config, "ns_type", config->ns_type, false);
@@ -699,6 +728,7 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = tojson_bool(buffer, "featHome", config->home, true);
     buffer = tojson_long(buffer, "volumeMin", config->volume_min, true);
     buffer = tojson_long(buffer, "volumeMax", config->volume_max, true);
+    buffer = tojson_char(buffer, "outputName", mympd_state->output_name, true);
     buffer = tojson_char(buffer, "mixerType", mympd_state->mixer_type, true);
     buffer = tojson_bool(buffer, "dop", mympd_state->dop, true);
     buffer = tojson_long(buffer, "nsType", mympd_state->ns_type, true);
@@ -742,7 +772,11 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     return buffer;
 }
 
-//privat functions
+bool mympd_api_output_name_set(t_config *config, const char *name, const char *value) {
+    return state_file_write(config, name, value);
+}
+
+//private functions
 static sds state_file_rw_string(t_config *config, const char *name, const char *def_value, bool warn)
 {
     char *line = NULL;

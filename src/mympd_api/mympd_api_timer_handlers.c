@@ -22,7 +22,6 @@
 #include "mympd_api_utility.h"
 #include "mympd_api_timer.h"
 #include "mympd_api_timer_handlers.h"
-#include "../ideon.h"
 
 //timer_id 1
 void timer_handler_covercache(struct t_timer_definition *definition, void *user_data)

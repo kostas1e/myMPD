@@ -72,7 +72,7 @@ bool mpd_api_settings_set(t_config *config, t_mpd_client_state *mpd_client_state
     }
     else if (strncmp(key->ptr, "dc", key->len) == 0)
     {
-        mpd_client_state->dc = strtoimax(settingvalue, &crap, 10);
+        mpd_client_state->mpd_state->dc = strtoimax(settingvalue, &crap, 10);
     }
     else if (strncmp(key->ptr, "musicDirectory", key->len) == 0)
     {

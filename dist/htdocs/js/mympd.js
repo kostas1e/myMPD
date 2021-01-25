@@ -1078,48 +1078,48 @@ function getHomeIconPictureList(picture) {
     });
 }
 
-function checkForUpdates() {
-    sendAPI("MYMPD_API_UPDATE_CHECK", {}, parseCheck);
+function checkUpdate() {
+    sendAPI("MYMPD_API_UPDATE_CHECK", {}, parseUpdateCheck);
 
-    btnWaiting(document.getElementById('btnCheckForUpdates'), true);
+    btnWaiting(document.getElementById('btnCheckUpdate'), true);
 }
 
-function parseCheck(obj) {
+function parseUpdateCheck(obj) {
     document.getElementById('currentVersion').innerText = obj.result.currentVersion;
     document.getElementById('latestVersion').innerText = obj.result.latestVersion;
 
     if (obj.result.latestVersion !== '') {
-        if (obj.result.updatesAvailable === true) {
-            document.getElementById('lblInstallUpdates').innerText = 'New version available';
-            document.getElementById('btnInstallUpdates').classList.remove('hide');
+        if (obj.result.updateAvailable === true) {
+            document.getElementById('lblInstallUpdate').innerText = 'New version available';
+            document.getElementById('btnInstallUpdate').classList.remove('hide');
         }
         else {
-            document.getElementById('lblInstallUpdates').innerText = 'System is up to date';
-            document.getElementById('btnInstallUpdates').classList.add('hide');
+            document.getElementById('lblInstallUpdate').innerText = 'There is no update available';
+            document.getElementById('btnInstallUpdate').classList.add('hide');
         }
         document.getElementById('updateMsg').innerText = '';
     }
     else {
-        document.getElementById('lblInstallUpdates').innerText = '';
-        document.getElementById('btnInstallUpdates').classList.add('hide');
+        document.getElementById('lblInstallUpdate').innerText = '';
+        document.getElementById('btnInstallUpdate').classList.add('hide');
         document.getElementById('updateMsg').innerText = 'Cannot get latest version, please try again later';
     }
 
-    btnWaiting(document.getElementById('btnCheckForUpdates'), false);
+    btnWaiting(document.getElementById('btnCheckUpdate'), false);
 }
 
-function installUpdates() {
-    sendAPI("MYMPD_API_UPDATE_INSTALL", {}, parseInstall);
+function installUpdate() {
+    sendAPI("MYMPD_API_UPDATE_INSTALL", {}, parseUpdateInstall);
 
     document.getElementById('updateMsg').innerText = 'System will automatically reboot after installation';
 
-    btnWaiting(document.getElementById('btnInstallUpdates'), true);
+    btnWaiting(document.getElementById('btnInstallUpdate'), true);
 }
 
-function parseInstall(obj) {
+function parseUpdateInstall(obj) {
     if (obj.result.service === false) {
         document.getElementById('updateMsg').innerText = 'Update error, please try again later';
-        btnWaiting(document.getElementById('btnInstallUpdates'), false);
+        btnWaiting(document.getElementById('btnInstallUpdate'), false);
     }
 }
 
@@ -4079,8 +4079,8 @@ function appInit() {
     });
 
     checkInit(); // first run check
-    updateDBstats(); // update database stats (songs, playtime)
-    // checkForUpdates(); // check for updates on launch (add settings option)
+    // updateDBstats(); // update database stats (songs, playtime)
+    // checkUpdate(); // check for updates on launch (add settings option)
 }
 
 // Init app

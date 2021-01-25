@@ -105,7 +105,6 @@ typedef struct t_mpd_client_state
     bool sticker_cache_building;
     //mpd state
     struct t_mpd_state *mpd_state;
-    int dc;
     //triggers
     struct list triggers;
 } t_mpd_client_state;

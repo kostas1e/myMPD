@@ -101,6 +101,7 @@ typedef struct t_mympd_state
     bool lyrics;
     struct list home_list;
     sds navbar_icons;
+    sds output_name;
     sds mixer_type;
     bool dop;
     int ns_type;

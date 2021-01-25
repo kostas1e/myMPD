@@ -32,7 +32,7 @@
     <div id="splashScreenLogo">
       <!-- <span class="material-icons splashScreenIcon">play_circle_outline</span> myMPD -->
       <div class="hide">
-      <svg width="6rem" height="6rem" version="1.1" viewBox="0 0 8.4666665 8.4666669" xmlns="http://www.w3.org/2000/svg">
+      <svg width="96" height="96" version="1.1" viewBox="0 0 8.4666665 8.4666669" xmlns="http://www.w3.org/2000/svg">
         <ellipse cx="4.2333" cy="4.2333" rx="4.2333" ry="4.2333" fill="#28a745"/>
         <path d="m1.5772 4.8257h0.59026v-1.1847h-0.59026z" fill="#fff" stroke-width=".26458"/>
         <path d="m3.9382 7.195h0.59025v-5.9233h-0.59025z" fill="#fff" stroke-width=".26458"/>
@@ -52,7 +52,7 @@
         <!-- <a class="dropdown-toggle alwaysEnabled material-icons text-light" href="#" id="mainMenu" data-title-phrase="myMPD menu">play_circle_outline</a> -->
         <a class="dropdown-toggle alwaysEnabled" href="#" id="mainMenu" data-title-phrase="Ideon menu">
           <div class="hide">
-          <svg width="2.5rem" height="2.5rem" version="1.1" viewBox="0 0 8.4666665 8.4666669" xmlns="http://www.w3.org/2000/svg">
+          <svg width="40" height="40" version="1.1" viewBox="0 0 8.4666665 8.4666669" xmlns="http://www.w3.org/2000/svg">
             <ellipse id="logoBg" cx="4.2333" cy="4.2333" rx="4.2333" ry="4.2333" fill="#6c757d"/>
             <path d="m1.5772 4.8257h0.59026v-1.1847h-0.59026z" fill="#fff" stroke-width=".26458"/>
             <path d="m3.9382 7.195h0.59025v-5.9233h-0.59025z" fill="#fff" stroke-width=".26458"/>
@@ -1755,16 +1755,16 @@
                 </ul>
 
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="btnCheckForUpdates" data-phrase="Check for updates"></label>
+                  <label class="col-sm-4 col-form-label" for="btnCheckUpdate" data-phrase="Check for update"></label>
                   <div class="col-sm-8">
-                    <button type="button" id="btnCheckForUpdates" class="btn btn-secondary btnCleanup" data-href='{"cmd": "checkForUpdates", "options": []}' data-phrase="Check"></button>
+                    <button type="button" id="btnCheckUpdate" class="btn btn-secondary btnCleanup" data-href='{"cmd": "checkUpdate", "options": []}' data-phrase="Check"></button>
                   </div>
                 </div>
                 
                 <div class="form-group row">
-                  <label id="lblInstallUpdates" class="col-sm-4 col-form-label"></label>
+                  <label id="lblInstallUpdate" class="col-sm-4 col-form-label"></label>
                   <div class="col-sm-8">
-                    <button type="button" id="btnInstallUpdates" class="btn btn-secondary btnCleanup hide" data-href='{"cmd": "installUpdates", "options": []}' data-phrase="Install"></button>
+                    <button type="button" id="btnInstallUpdate" class="btn btn-secondary btnCleanup hide" data-href='{"cmd": "installUpdate", "options": []}' data-phrase="Install"></button>
                   </div>
                 </div>
                 <small id="updateMsg"></small>

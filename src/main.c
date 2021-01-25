@@ -22,7 +22,6 @@
 #include <assert.h>
 #include <inttypes.h>
 #include <mpd/client.h>
-#include <curl/curl.h>
 
 #include "../dist/src/sds/sds.h"
 #include "../dist/src/mongoose/mongoose.h"
@@ -47,6 +46,8 @@
 #include "handle_options.h"
 #include "maintenance.h"
 #include "random.h"
+#include "mympd_api/mympd_api_utility.h"
+#include "ideon.h"
 
 _Thread_local sds thread_logname;
 
@@ -509,11 +510,8 @@ int main(int argc, char **argv)
         }
     }
 
-    //curl
-    if (curl_global_init(CURL_GLOBAL_ALL) != 0) {
-        LOG_ERROR("curl_global_init");
-        // goto cleanup;
-    }
+    //curl global and mutex lock init
+    ideon_init();
 
     //Create working threads
     pthread_t mpd_client_thread;
@@ -624,7 +622,7 @@ cleanup:
     tiny_queue_free(mympd_script_queue);
     LOG_DEBUG("Expired %d entries", expired);
 
-    curl_global_cleanup();
+    ideon_cleanup();
 
     mympd_free_config(config);
     sdsfree(configfile);

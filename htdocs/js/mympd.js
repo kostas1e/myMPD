@@ -1964,8 +1964,8 @@ function appInit() {
     });
 
     checkInit(); // first run check
-    updateDBstats(); // update database stats (songs, playtime)
-    // checkForUpdates(); // check for updates on launch (add settings option)
+    // updateDBstats(); // update database stats (songs, playtime)
+    // checkUpdate(); // check for updates on launch (add settings option)
 }
 
 // Init app

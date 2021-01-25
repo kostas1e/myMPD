@@ -150,6 +150,7 @@ typedef struct t_config {
     //system commands
     struct list syscmd_list;
     //ideon
+    sds output_name;
     sds mixer_type;
     bool dop;
     int ns_type;

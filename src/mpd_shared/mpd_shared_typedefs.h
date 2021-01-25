@@ -45,6 +45,7 @@ typedef struct t_mpd_state
     sds mpd_host;
     int mpd_port;
     sds mpd_pass;
+    int dc;
     //tags
     sds taglist;
     t_tags mympd_tag_types;

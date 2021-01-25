@@ -77,7 +77,7 @@ void mpd_worker_api(t_config *config, t_mpd_worker_state *mpd_worker_state, void
         sdsfree(notify_buffer);
         if (rc == true)
         {
-            if (mpd_host_changed == true)
+            if (mpd_host_changed == true || mpd_worker_state->mpd_state->dc != 0)
             {
                 //reconnect with new settings
                 mpd_worker_state->mpd_state->conn_state = MPD_DISCONNECT;
@@ -227,6 +227,10 @@ static bool mpd_worker_api_settings_set(t_mpd_worker_state *mpd_worker_state, st
             *mpd_host_changed = true;
             mpd_worker_state->mpd_state->mpd_port = mpd_port;
         }
+    }
+    else if (strncmp(key->ptr, "dc", key->len) == 0)
+    {
+        mpd_worker_state->mpd_state->dc = strtoimax(settingvalue, &crap, 10);
     }
     else if (strncmp(key->ptr, "smartpls", key->len) == 0)
     {

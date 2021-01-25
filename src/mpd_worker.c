@@ -32,6 +32,8 @@
 #include "mpd_worker/mpd_worker_smartpls.h"
 #include "mpd_worker/mpd_worker_stickercache.h"
 #include "mpd_worker.h"
+#include "mympd_api/mympd_api_utility.h"
+#include "ideon.h"
 
 //private definitions
 static void mpd_worker_idle(t_config *config, t_mpd_worker_state *mpd_worker_state);
@@ -124,6 +126,9 @@ static void mpd_worker_idle(t_config *config, t_mpd_worker_state *mpd_worker_sta
         break;
     }
     case MPD_DISCONNECTED:
+        if (mpd_worker_state->mpd_state->dc != 0) {
+            ideon_dc_handle(&mpd_worker_state->mpd_state->dc);
+        }
         /* Try to connect */
         if (strncmp(mpd_worker_state->mpd_state->mpd_host, "/", 1) == 0)
         {
@@ -136,7 +141,7 @@ static void mpd_worker_idle(t_config *config, t_mpd_worker_state *mpd_worker_sta
         mpd_worker_state->mpd_state->conn = mpd_connection_new(mpd_worker_state->mpd_state->mpd_host, mpd_worker_state->mpd_state->mpd_port, mpd_worker_state->mpd_state->timeout);
         if (mpd_worker_state->mpd_state->conn == NULL)
         {
-            LOG_ERROR("MPD worker connection to failed: out-of-memory");
+            LOG_ERROR("MPD worker connection failed: out-of-memory");
             mpd_worker_state->mpd_state->conn_state = MPD_FAILURE;
             mpd_connection_free(mpd_worker_state->mpd_state->conn);
             return;

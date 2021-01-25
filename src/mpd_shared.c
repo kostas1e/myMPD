@@ -38,6 +38,7 @@ void mpd_shared_default_mpd_state(t_mpd_state *mpd_state)
     mpd_state->mpd_host = sdsempty();
     mpd_state->mpd_port = 0;
     mpd_state->mpd_pass = sdsempty();
+    mpd_state->dc = 0;
     mpd_state->taglist = sdsempty();
     reset_t_tags(&mpd_state->mympd_tag_types);
     reset_t_tags(&mpd_state->mpd_tag_types);
