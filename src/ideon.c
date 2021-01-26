@@ -19,9 +19,11 @@
 
 pthread_mutex_t lock;
 
-static bool syscmd(const char *cmdline);
+static bool output_name_init(void);
 static sds device_name_get(sds name);
+static sds output_name_get(sds name);
 static bool output_name_set(const char *name);
+static bool syscmd(const char *cmdline);
 static int ns_set(int type, const char *server, const char *share, const char *vers, const char *username, const char *password);
 static sds web_version_get(sds version);
 static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp);
@@ -37,6 +39,7 @@ void ideon_init(void) // todo: change return type to bool
     {
         LOG_ERROR("mutex init has failed");
     }
+    output_name_init();
 }
 
 void ideon_cleanup(void)
@@ -71,20 +74,6 @@ void ideon_dc_handle(int *dc) // todo: change return type to bool
     handled = !handled;
 
     pthread_mutex_unlock(&lock);
-}
-
-// Compare output_name w/ device_name and set if needed
-bool ideon_output_name_set(t_mympd_state *mympd_state)
-{
-    sds device_name = device_name_get(sdsempty());
-    bool rc = false;
-    if (sdslen(device_name) > 0 && sdscmp(mympd_state->output_name, device_name) != 0)
-    {
-        mympd_state->output_name = sdsreplacelen(mympd_state->output_name, device_name, sdslen(device_name));
-        rc = output_name_set(device_name);
-    }
-    sdsfree(device_name);
-    return rc;
 }
 
 int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed,
@@ -194,25 +183,27 @@ sds ideon_update_install(sds buffer, sds method, int request_id)
     return buffer;
 }
 
-static bool syscmd(const char *cmdline)
+// Compare output_name w/ device_name and set
+static bool output_name_init(void)
 {
-    LOG_DEBUG("Executing syscmd \"%s\"", cmdline);
-    const int rc = system(cmdline);
-    if (rc == 0)
-    {
-        return true;
+    bool rc = true;
+    sds device_name = device_name_get(sdsempty());
+    if (sdslen(device_name) > 0) {
+        sds output_name = output_name_get(sdsempty());
+        if (sdscmp(output_name, device_name) != 0)
+        {
+            rc = output_name_set(device_name);
+        }
+        sdsfree(output_name);
     }
-    else
-    {
-        LOG_ERROR("Executing syscmd \"%s\" failed", cmdline);
-        return false;
-    }
+    sdsfree(device_name);
+    return rc;
 }
 
-// Get device name for hw:0,0
+// Get hw:0,0 name
 static sds device_name_get(sds name)
 {
-    FILE *fp = popen("/usr/bin/aplay -l | grep \"card 0.*device 0\"", "r"); // hw:0,0
+    FILE *fp = popen("/usr/bin/aplay -l | grep \"card 0.*device 0\"", "r");
     if (fp == NULL)
     {
         LOG_ERROR("Failed to get device name");
@@ -240,12 +231,38 @@ static sds device_name_get(sds name)
     return name;
 }
 
-// Edit mpd.conf audio_output name and restart mpd.service
+// Get mpd.conf output name
+static sds output_name_get(sds name) {
+    FILE *fp = popen("grep \"^name\" /etc/mpd.conf", "r");
+    if (fp == NULL)
+    {
+        LOG_ERROR("Failed to get output name");
+    }
+    else
+    {
+        char *line = NULL;
+        size_t n = 0;
+        if (getline(&line, &n, fp) > 0)
+        {
+            char *pch = strtok(line, "\"");
+            pch = strtok(NULL, "\"");
+            name = sdscatfmt(name, "%s", pch);
+            pch = NULL;
+        }
+        if (line != NULL)
+        {
+            free(line);
+        }
+        pclose(fp);
+    }
+    return name;
+}
+
+// Edit mpd.conf output name and restart mpd.service
 static bool output_name_set(const char *name)
 {
     sds conf = sdsnew("/etc/mpd.conf");
     // sds cmdline = sdscatfmt(sdsempty(), "sed -Ei 's/^(\\s*)name(\\s*).*/\\1name\\2\"%S\"/' %S", name, conf);
-    // sds cmdline = sdscatfmt(sdsempty(), "sed -i 's/.*MY DAC.*/name \"%S\"/' %S", name, conf);
     sds cmdline = sdscatfmt(sdsempty(), "sed -i 's/^name.*/name \"%s\"/' %S", name, conf);
     bool rc = syscmd(cmdline);
     if (rc == true)
@@ -255,6 +272,21 @@ static bool output_name_set(const char *name)
     sdsfree(conf);
     sdsfree(cmdline);
     return rc;
+}
+
+static bool syscmd(const char *cmdline)
+{
+    LOG_DEBUG("Executing syscmd \"%s\"", cmdline);
+    const int rc = system(cmdline);
+    if (rc == 0)
+    {
+        return true;
+    }
+    else
+    {
+        LOG_ERROR("Executing syscmd \"%s\" failed", cmdline);
+        return false;
+    }
 }
 
 static int ns_set(int type, const char *server, const char *share, const char *vers, const char *username, const char *password)

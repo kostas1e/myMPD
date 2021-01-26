@@ -325,9 +325,6 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
         LOG_DEBUG("Adding syscmd %s: %s", name, value);
         list_push(&p_config->syscmd_list, name, 0, value, NULL);
     }
-    else if (MATCH("ideon", "outputname")) {
-        p_config->output_name = sdsreplace(p_config->output_name, value);
-    }
     else if (MATCH("ideon", "mixertype")) {
         p_config->mixer_type = sdsreplace(p_config->mixer_type, value);
     }
@@ -479,7 +476,6 @@ void mympd_free_config(t_config *config) {
     sdsfree(config->scriptacl);
     sdsfree(config->lualibs);
     list_free(&config->syscmd_list);
-    sdsfree(config->output_name);
     sdsfree(config->mixer_type);
     sdsfree(config->ns_server);
     sdsfree(config->ns_share);
@@ -583,7 +579,6 @@ void mympd_config_defaults(t_config *config) {
     config->volume_min = 0;
     config->volume_max = 100;
     list_init(&config->syscmd_list);
-    config->output_name = sdsnew("MY DAC");
     config->mixer_type = sdsnew("disabled");
     config->dop = false;
     config->ns_type = 0;

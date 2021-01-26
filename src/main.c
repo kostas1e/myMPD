@@ -510,7 +510,7 @@ int main(int argc, char **argv)
         }
     }
 
-    //curl global and mutex lock init
+    //curl global, mutex lock, output name
     ideon_init();
 
     //Create working threads

@@ -60,11 +60,6 @@ void *mympd_api_loop(void *arg_config)
     assert(mympd_state);
     mympd_api_read_statefiles(config, mympd_state);
 
-    //check output name
-    if (ideon_output_name_set(mympd_state) == true) {
-        mympd_api_output_name_set(config, "output_name", mympd_state->output_name);
-    }
-
     list_init(&mympd_state->home_list);
     if (config->home == true)
     {

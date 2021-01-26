@@ -51,7 +51,7 @@ void mympd_api_settings_delete(t_config *config)
                                  "last_played", "last_played_count", "locale", "localplayer", "love", "love_channel", "love_message",
                                  "max_elements_per_page", "mpd_host", "mpd_pass", "mpd_port", "notification_page", "notification_web", "searchtaglist",
                                  "smartpls", "stickers", "stream_port", "stream_url", "taglist", "music_directory", "bookmarks", "bookmark_list", "coverimage_size_small",
-                                 "mixer_type", "dop", "ns_type", "ns_server", "ns_share", "samba_version", "ns_username", "ns_password", "airplay", "roon", "spotify", //"init", output_name,
+                                 "mixer_type", "dop", "ns_type", "ns_server", "ns_share", "samba_version", "ns_username", "ns_password", "airplay", "roon", "spotify", //"init",
                                  "theme", "timer", "highlight_color", "media_session", "booklet_name", "lyrics", "home_list", "navbar_icons", 0};
     const char **ptr = state_files;
     while (*ptr != 0)
@@ -443,15 +443,6 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
         mympd_state->lyrics = val->type == JSON_TYPE_TRUE ? true : false;
         settingname = sdscat(settingname, "lyrics");
     }
-    else if (strncmp(key->ptr, "outputName", key->len) == 0)
-    {
-        if (sdscmp(mympd_state->output_name, settingvalue) != 0)
-        {
-            *mpd_conf_changed = true;
-        }
-        mympd_state->output_name = sdsreplacelen(mympd_state->output_name, settingvalue, sdslen(settingvalue));
-        settingname = sdscat(settingname, "output_name");
-    }
     else if (strncmp(key->ptr, "mixerType", key->len) == 0)
     {
         if (sdscmp(mympd_state->mixer_type, settingvalue) != 0)
@@ -643,7 +634,6 @@ void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state)
     mympd_state->highlight_color = state_file_rw_string(config, "highlight_color", config->highlight_color, false);
     mympd_state->booklet_name = state_file_rw_string(config, "booklet_name", config->booklet_name, false);
     mympd_state->lyrics = state_file_rw_bool(config, "lyrics", config->lyrics, false);
-    mympd_state->output_name = state_file_rw_string(config, "output_name", config->output_name, false);
     mympd_state->mixer_type = state_file_rw_string(config, "mixer_type", config->mixer_type, false);
     mympd_state->dop = state_file_rw_bool(config, "dop", config->dop, false);
     mympd_state->ns_type = state_file_rw_int(config, "ns_type", config->ns_type, false);
@@ -728,7 +718,6 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = tojson_bool(buffer, "featHome", config->home, true);
     buffer = tojson_long(buffer, "volumeMin", config->volume_min, true);
     buffer = tojson_long(buffer, "volumeMax", config->volume_max, true);
-    buffer = tojson_char(buffer, "outputName", mympd_state->output_name, true);
     buffer = tojson_char(buffer, "mixerType", mympd_state->mixer_type, true);
     buffer = tojson_bool(buffer, "dop", mympd_state->dop, true);
     buffer = tojson_long(buffer, "nsType", mympd_state->ns_type, true);
@@ -770,10 +759,6 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
 
     buffer = jsonrpc_end_result(buffer);
     return buffer;
-}
-
-bool mympd_api_output_name_set(t_config *config, const char *name, const char *value) {
-    return state_file_write(config, name, value);
 }
 
 //private functions

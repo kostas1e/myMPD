@@ -14,5 +14,4 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
                             bool *mpd_conf_changed, bool *ns_changed, bool *airplay_changed, bool *roon_changed, bool *spotify_changed);
 bool mympd_api_connection_save(t_config *config, t_mympd_state *mympd_state, struct json_token *key, struct json_token *val);
 void mympd_api_settings_delete(t_config *config);
-bool mympd_api_output_name_set(t_config *config, const char *name, const char *value);
 #endif

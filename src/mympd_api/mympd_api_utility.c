@@ -112,7 +112,6 @@ void free_mympd_state_sds(t_mympd_state *mympd_state)
     sdsfree(mympd_state->smartpls_prefix);
     sdsfree(mympd_state->booklet_name);
     sdsfree(mympd_state->navbar_icons);
-    sdsfree(mympd_state->output_name);
     sdsfree(mympd_state->mixer_type);
     sdsfree(mympd_state->ns_server);
     sdsfree(mympd_state->ns_share);
