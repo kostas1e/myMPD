@@ -87,6 +87,13 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed, bool n
     {
         dc = ns_set(mympd_state->ns_type, mympd_state->ns_server, mympd_state->ns_share, mympd_state->samba_version,
                     mympd_state->ns_username, mympd_state->ns_password);
+
+        if (dc != 0)
+        {
+            if (syscmd("mount -a") == true) {
+                dc = 0;
+            }
+        }
     }
 
     if (mpd_conf_changed == true)
