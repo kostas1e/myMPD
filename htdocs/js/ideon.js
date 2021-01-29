@@ -1,5 +1,22 @@
 "use strict";
 
+function parseServers(obj) {
+    let list = '';
+    if (obj.error) {
+        list = '<div class="list-group-item"><span class="material-icons">error_outline</span> ' + t(obj.error.message) + '</div>';
+    }
+    else {
+        for (let i = 0; i < obj.result.returnedEntities; i++) {
+            list += '<a href="#" class="list-group-item list-group-item-action" data-value="' + obj.result.data[i].server + '">' +
+                obj.result.data[i].server + '</a>';
+        }
+        if (obj.result.returnedEntities === 0) {
+            list = '<div class="list-group-item"><span class="material-icons">error_outline</span>&nbsp;' + t('Empty list') + '</div>';
+        }
+    }
+    document.getElementById('dropdownServers').children[0].innerHTML = list;
+}
+
 function checkUpdate() {
     sendAPI("MYMPD_API_UPDATE_CHECK", {}, parseUpdateCheck);
 
@@ -93,7 +110,7 @@ function saveIdeonSettings() {
     let inputNsPassword = document.getElementById('inputNsPassword');
 
     if (selectNsTypeValue !== '0') {
-        if (!validateIPAddress(inputNsServer)) {
+        if (!validateNotBlank(inputNsServer)) {
             formOK = false;
         }
         if (!validatePath(inputNsShare)) {

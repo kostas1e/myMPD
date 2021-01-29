@@ -239,6 +239,7 @@ var dropdownLocalPlayer = new BSN.Dropdown(document.getElementById('localPlaybac
 var dropdownPlay = new BSN.Dropdown(document.getElementById('btnPlayDropdown'));
 var dropdownDatabaseSort = new BSN.Dropdown(document.getElementById('btnDatabaseSortDropdown'));
 var dropdownNeighbors = new BSN.Dropdown(document.getElementById('btnDropdownNeighbors'));
+var dropdownServers = new BSN.Dropdown(document.getElementById('btnDropdownServers'));
 
 var collapseDBupdate = new BSN.Collapse(document.getElementById('navDBupdate'));
 var collapseSettings = new BSN.Collapse(document.getElementById('navSettings'));
@@ -854,6 +855,26 @@ function appInit() {
             let c = event.target.getAttribute('data-value').match(/^(\w+:\/\/)(.+)$/);
             document.getElementById('selectMountUrlhandler').value = c[1];
             document.getElementById('inputMountUrl').value = c[2];
+        }
+    });
+
+    document.getElementById('btnDropdownServers').parentNode.addEventListener('show.bs.dropdown', function () {
+        let workgroup = document.getElementById('inputNsWorkgroup').value.toLowerCase();
+        let feedback;
+        if (/^\s*$/.test(workgroup)) {
+            feedback = '<div class="list-group-item"><span class="material-icons">error_outline</span> ' + t('Workgroup not specified') + '</div>';
+        }
+        else {
+            sendAPI("MYMPD_API_NS_SERVER_LIST", { "workgroup": workgroup }, parseServers, true);
+            feedback = '<div class="list-group-item"><span class="material-icons">search</span> ' + t('Searching for servers') + '</div>';
+        }
+        document.getElementById('dropdownServers').children[0].innerHTML = feedback;
+    });
+
+    document.getElementById('dropdownServers').children[0].addEventListener('click', function (event) {
+        event.preventDefault();
+        if (event.target.nodeName === 'A') {
+            document.getElementById('inputNsServer').value = event.target.getAttribute('data-value');
         }
     });
 
@@ -1983,7 +2004,7 @@ window.onerror = function (msg, url, line) {
 };
 
 window.onresize = function () {
-    if (app.current.app === 'Playback') {    
+    if (app.current.app === 'Playback') {
         calcBoxHeight();
     }
 };

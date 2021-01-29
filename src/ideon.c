@@ -24,7 +24,8 @@ static sds device_name_get(sds name);
 static sds output_name_get(sds name);
 static bool output_name_set(const char *name);
 static bool syscmd(const char *cmdline);
-static int ns_set(int type, const char *server, const char *share, const char *vers, const char *username, const char *password);
+static int ns_set(int type, const char *server, const char *share, const char *vers, const char *username,
+                  const char *password);
 static sds web_version_get(sds version);
 static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp);
 static bool validate_version(const char *data);
@@ -76,16 +77,16 @@ void ideon_dc_handle(int *dc) // todo: change return type to bool
     pthread_mutex_unlock(&lock);
 }
 
-int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed,
-                       bool ns_changed, bool airplay_changed, bool roon_changed,
-                       bool spotify_changed)
+int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed, bool ns_changed, bool airplay_changed,
+                       bool roon_changed, bool spotify_changed)
 {
     // TODO: error checking, revert to old values on fail
     int dc = 0;
 
     if (ns_changed == true)
     {
-        dc = ns_set(mympd_state->ns_type, mympd_state->ns_server, mympd_state->ns_share, mympd_state->samba_version, mympd_state->ns_username, mympd_state->ns_password);
+        dc = ns_set(mympd_state->ns_type, mympd_state->ns_server, mympd_state->ns_share, mympd_state->samba_version,
+                    mympd_state->ns_username, mympd_state->ns_password);
     }
 
     if (mpd_conf_changed == true)
@@ -183,12 +184,56 @@ sds ideon_update_install(sds buffer, sds method, int request_id)
     return buffer;
 }
 
+sds ideon_ns_server_list(sds buffer, sds method, int request_id, const char *workgroup)
+{
+    sds command = sdscatfmt(sdsempty(), "/usr/bin/nmblookup -s /dev/null -S %s | grep \"<20>\" | awk \'{print $1}\'", workgroup);
+    FILE *fp = popen(command, "r");
+    if (fp == NULL)
+    {
+        LOG_ERROR("Failed to get server list");
+        buffer = jsonrpc_respond_message(buffer, method, request_id, "Failed to get server list", true);
+    }
+    else
+    {
+        buffer = jsonrpc_start_result(buffer, method, request_id);
+        buffer = sdscat(buffer, ",\"data\":[");
+        unsigned entity_count = 0;
+        char *line = NULL;
+        size_t n = 0;
+        sds server = sdsempty();
+        while (getline(&line, &n, fp) > 0)
+        {
+            server = sdsreplace(server, line);
+            if (entity_count++)
+            {
+                buffer = sdscat(buffer, ",");
+            }
+            buffer = sdscat(buffer, "{");
+            buffer = tojson_char(buffer, "server", server, false);
+            buffer = sdscat(buffer, "}");
+        }
+        buffer = sdscat(buffer, "],");
+        buffer = tojson_long(buffer, "totalEntities", entity_count, true);
+        buffer = tojson_long(buffer, "returnedEntities", entity_count, false);
+        buffer = jsonrpc_end_result(buffer);
+        if (line != NULL)
+        {
+            free(line);
+        }
+        fclose(fp);
+        sdsfree(server);
+    }
+    sdsfree(command);
+    return buffer;
+}
+
 // Compare output_name w/ device_name and set
 static bool output_name_init(void)
 {
     bool rc = true;
     sds device_name = device_name_get(sdsempty());
-    if (sdslen(device_name) > 0) {
+    if (sdslen(device_name) > 0)
+    {
         sds output_name = output_name_get(sdsempty());
         if (sdscmp(output_name, device_name) != 0)
         {
@@ -232,7 +277,8 @@ static sds device_name_get(sds name)
 }
 
 // Get mpd.conf output name
-static sds output_name_get(sds name) {
+static sds output_name_get(sds name)
+{
     FILE *fp = popen("grep \"^name\" /etc/mpd.conf", "r");
     if (fp == NULL)
     {
@@ -289,7 +335,8 @@ static bool syscmd(const char *cmdline)
     }
 }
 
-static int ns_set(int type, const char *server, const char *share, const char *vers, const char *username, const char *password)
+static int ns_set(int type, const char *server, const char *share, const char *vers, const char *username,
+                  const char *password)
 {
     // sds tmp_file = sdsnew("/tmp/fstab.XXXXXX");
     // int fd = mkstemp(tmp_file);
@@ -339,7 +386,6 @@ static int ns_set(int type, const char *server, const char *share, const char *v
         struct mntent *m;
         while ((m = getmntent(org)))
         {
-            // if (strcmp(m->mnt_dir, "/mnt/nas-\0") == 0)
             if (strstr(m->mnt_dir, "/mnt/nas-") != NULL)
             {
                 append = false;
