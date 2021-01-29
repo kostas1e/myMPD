@@ -859,16 +859,19 @@ function appInit() {
     });
 
     document.getElementById('btnDropdownServers').parentNode.addEventListener('show.bs.dropdown', function () {
-        let workgroup = document.getElementById('inputNsWorkgroup').value.toLowerCase();
-        let feedback;
-        if (/^\s*$/.test(workgroup)) {
-            feedback = '<div class="list-group-item"><span class="material-icons">error_outline</span> ' + t('Workgroup not specified') + '</div>';
-        }
-        else {
-            sendAPI("MYMPD_API_NS_SERVER_LIST", { "workgroup": workgroup }, parseServers, true);
-            feedback = '<div class="list-group-item"><span class="material-icons">search</span> ' + t('Searching for servers') + '</div>';
-        }
-        document.getElementById('dropdownServers').children[0].innerHTML = feedback;
+        sendAPI("MYMPD_API_NS_SERVER_LIST", {}, parseServers, true);
+        // document.getElementById('dropdownServers').children[0].innerHTML =
+        //         '<div class="list-group-item"><span class="material-icons">search</span> ' + t('Searching for servers') + '</div>';
+        // let workgroup = document.getElementById('inputNsWorkgroup').value.toLowerCase();
+        // let feedback;
+        // if (/^\s*$/.test(workgroup)) {
+        //     feedback = '<div class="list-group-item"><span class="material-icons">error_outline</span> ' + t('Workgroup not specified') + '</div>';
+        // }
+        // else {
+        //    sendAPI("MYMPD_API_NS_SERVER_LIST", { "workgroup": workgroup }, parseServers, true);
+        //    feedback = '<div class="list-group-item"><span class="material-icons">search</span> ' + t('Searching for servers') + '</div>';
+        // }
+        // document.getElementById('dropdownServers').children[0].innerHTML = feedback;
     });
 
     document.getElementById('dropdownServers').children[0].addEventListener('click', function (event) {

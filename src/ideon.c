@@ -227,6 +227,68 @@ sds ideon_ns_server_list(sds buffer, sds method, int request_id, const char *wor
     return buffer;
 }
 
+sds ideon_ns_server_list2(sds buffer, sds method, int request_id)
+{
+    FILE *fp = popen("/usr/bin/nmblookup -S \'*\' | grep \"<00>\" | awk \'{print $1}\'", "r");
+    // three lines per server w/ 1st line ip address 2nd line name 3rd line workgroup
+    if (fp == NULL)
+    {
+        LOG_ERROR("Failed to get server list");
+        buffer = jsonrpc_respond_message(buffer, method, request_id, "Failed to get server list", true);
+    }
+    else
+    {
+        buffer = jsonrpc_start_result(buffer, method, request_id);
+        buffer = sdscat(buffer, ",\"data\":[");
+        unsigned entity_count = 0;
+        char *line = NULL;
+        size_t n = 0;
+        sds ip_address = sdsempty();
+        sds name = sdsempty();
+        sds workgroup = sdsempty();
+        while (getline(&line, &n, fp) > 0)
+        {
+            ip_address = sdsreplace(ip_address, line);
+            sdstrim(ip_address, "\n");
+            if (getline(&line, &n, fp) < 0)
+            {
+                break;
+            }
+            name = sdsreplace(name, line);
+            sdstrim(name, "\n");
+            if (getline(&line, &n, fp) < 0)
+            {
+                break;
+            }
+            workgroup = sdsreplace(workgroup, line);
+            sdstrim(workgroup, "\n");
+
+            if (entity_count++)
+            {
+                buffer = sdscat(buffer, ",");
+            }
+            buffer = sdscat(buffer, "{");
+            buffer = tojson_char(buffer, "ipAddress", ip_address, true);
+            buffer = tojson_char(buffer, "name", name, true);
+            buffer = tojson_char(buffer, "workgroup", workgroup, false);
+            buffer = sdscat(buffer, "}");
+        }
+        buffer = sdscat(buffer, "],");
+        buffer = tojson_long(buffer, "totalEntities", entity_count, true);
+        buffer = tojson_long(buffer, "returnedEntities", entity_count, false);
+        buffer = jsonrpc_end_result(buffer);
+        if (line != NULL)
+        {
+            free(line);
+        }
+        fclose(fp);
+        sdsfree(ip_address);
+        sdsfree(name);
+        sdsfree(workgroup);
+    }
+    return buffer;
+}
+
 // Compare output_name w/ device_name and set
 static bool output_name_init(void)
 {
@@ -472,7 +534,7 @@ static sds web_version_get(sds version)
         else
         {
             version = sdscatlen(version, chunk.memory, chunk.size);
-            LOG_INFO("%lu bytes retrieved", (unsigned long)chunk.size);
+            LOG_DEBUG("%lu bytes retrieved", (unsigned long)chunk.size);
         }
 
         curl_easy_cleanup(curl_handle);

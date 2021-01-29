@@ -7,8 +7,8 @@ function parseServers(obj) {
     }
     else {
         for (let i = 0; i < obj.result.returnedEntities; i++) {
-            list += '<a href="#" class="list-group-item list-group-item-action" data-value="' + obj.result.data[i].server + '">' +
-                obj.result.data[i].server + '</a>';
+            list += '<a href="#" class="list-group-item list-group-item-action" data-value="' + obj.result.data[i].ipAddress + '">' +
+                obj.result.data[i].ipAddress + '<br/><small>' + obj.result.data[i].name + '</small></a>';
         }
         if (obj.result.returnedEntities === 0) {
             list = '<div class="list-group-item"><span class="material-icons">error_outline</span>&nbsp;' + t('Empty list') + '</div>';
@@ -110,7 +110,8 @@ function saveIdeonSettings() {
     let inputNsPassword = document.getElementById('inputNsPassword');
 
     if (selectNsTypeValue !== '0') {
-        if (!validateNotBlank(inputNsServer)) {
+        // if (!validateNotBlank(inputNsServer)) {
+        if (!validateIPAddress(inputNsServer)) {
             formOK = false;
         }
         if (!validatePath(inputNsShare)) {
