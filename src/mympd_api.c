@@ -640,21 +640,14 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
             response->data = jsonrpc_respond_ok(response->data, request->method, request->id);
         }
         break;
+    case MYMPD_API_NS_SERVER_LIST:
+        response->data = ideon_ns_server_list(response->data, request->method, request->id);
+        break;
     case MYMPD_API_UPDATE_CHECK:
         response->data = ideon_update_check(response->data, request->method, request->id);
         break;
     case MYMPD_API_UPDATE_INSTALL:
         response->data = ideon_update_install(response->data, request->method, request->id);
-        break;
-    case MYMPD_API_NS_SERVER_LIST:
-        // je = json_scanf(request->data, sdslen(request->data), "{params: {workgroup: %Q}}", &p_charbuf1);
-        // if (je == 1)
-        // {
-            response->data = ideon_ns_server_list2(response->data, request->method, request->id);
-        // }
-        // else {
-        //     response->data = jsonrpc_respond_message(response->data, request->method, request->id, "No workgroup specified", true);
-        // }
         break;
     default:
         response->data = jsonrpc_respond_message(response->data, request->method, request->id, "Unknown request", true);

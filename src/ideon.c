@@ -145,92 +145,10 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed, bool n
     return dc;
 }
 
-sds ideon_update_check(sds buffer, sds method, int request_id)
-{
-    sds latest_version = web_version_get(sdsempty());
-    sdstrim(latest_version, " \n");
-    if (validate_version(latest_version) == false)
-    {
-        sdsreplace(latest_version, sdsempty());
-    }
-    bool update_available;
-    if (sdslen(latest_version) > 0)
-    {
-        update_available = strcmp(latest_version, IDEON_VERSION) > 0 ? true : false;
-    }
-    else
-    {
-        update_available = false;
-    }
-
-    buffer = jsonrpc_start_result(buffer, method, request_id);
-    buffer = sdscat(buffer, ",");
-    buffer = tojson_char(buffer, "currentVersion", IDEON_VERSION, true);
-    buffer = tojson_char(buffer, "latestVersion", latest_version, true);
-    buffer = tojson_bool(buffer, "updateAvailable", update_available, false);
-    buffer = jsonrpc_end_result(buffer);
-    sdsfree(latest_version);
-    return buffer;
-}
-
-sds ideon_update_install(sds buffer, sds method, int request_id)
-{
-    bool service = syscmd("systemctl start ideon_update");
-
-    buffer = jsonrpc_start_result(buffer, method, request_id);
-    buffer = sdscat(buffer, ",");
-    buffer = tojson_bool(buffer, "service", service, false);
-    buffer = jsonrpc_end_result(buffer);
-    return buffer;
-}
-
-sds ideon_ns_server_list(sds buffer, sds method, int request_id, const char *workgroup)
-{
-    sds command = sdscatfmt(sdsempty(), "/usr/bin/nmblookup -s /dev/null -S %s | grep \"<20>\" | awk \'{print $1}\'", workgroup);
-    FILE *fp = popen(command, "r");
-    if (fp == NULL)
-    {
-        LOG_ERROR("Failed to get server list");
-        buffer = jsonrpc_respond_message(buffer, method, request_id, "Failed to get server list", true);
-    }
-    else
-    {
-        buffer = jsonrpc_start_result(buffer, method, request_id);
-        buffer = sdscat(buffer, ",\"data\":[");
-        unsigned entity_count = 0;
-        char *line = NULL;
-        size_t n = 0;
-        sds server = sdsempty();
-        while (getline(&line, &n, fp) > 0)
-        {
-            server = sdsreplace(server, line);
-            if (entity_count++)
-            {
-                buffer = sdscat(buffer, ",");
-            }
-            buffer = sdscat(buffer, "{");
-            buffer = tojson_char(buffer, "server", server, false);
-            buffer = sdscat(buffer, "}");
-        }
-        buffer = sdscat(buffer, "],");
-        buffer = tojson_long(buffer, "totalEntities", entity_count, true);
-        buffer = tojson_long(buffer, "returnedEntities", entity_count, false);
-        buffer = jsonrpc_end_result(buffer);
-        if (line != NULL)
-        {
-            free(line);
-        }
-        fclose(fp);
-        sdsfree(server);
-    }
-    sdsfree(command);
-    return buffer;
-}
-
-sds ideon_ns_server_list2(sds buffer, sds method, int request_id)
+sds ideon_ns_server_list(sds buffer, sds method, int request_id)
 {
     FILE *fp = popen("/usr/bin/nmblookup -S \'*\' | grep \"<00>\" | awk \'{print $1}\'", "r");
-    // three lines per server w/ 1st line ip address 2nd line name 3rd line workgroup
+    // returns three lines per server found - 1st line ip address 2nd line name 3rd line workgroup
     if (fp == NULL)
     {
         LOG_ERROR("Failed to get server list");
@@ -286,6 +204,45 @@ sds ideon_ns_server_list2(sds buffer, sds method, int request_id)
         sdsfree(name);
         sdsfree(workgroup);
     }
+    return buffer;
+}
+
+sds ideon_update_check(sds buffer, sds method, int request_id)
+{
+    sds latest_version = web_version_get(sdsempty());
+    sdstrim(latest_version, " \n");
+    if (validate_version(latest_version) == false)
+    {
+        sdsreplace(latest_version, sdsempty());
+    }
+    bool update_available;
+    if (sdslen(latest_version) > 0)
+    {
+        update_available = strcmp(latest_version, IDEON_VERSION) > 0 ? true : false;
+    }
+    else
+    {
+        update_available = false;
+    }
+
+    buffer = jsonrpc_start_result(buffer, method, request_id);
+    buffer = sdscat(buffer, ",");
+    buffer = tojson_char(buffer, "currentVersion", IDEON_VERSION, true);
+    buffer = tojson_char(buffer, "latestVersion", latest_version, true);
+    buffer = tojson_bool(buffer, "updateAvailable", update_available, false);
+    buffer = jsonrpc_end_result(buffer);
+    sdsfree(latest_version);
+    return buffer;
+}
+
+sds ideon_update_install(sds buffer, sds method, int request_id)
+{
+    bool service = syscmd("systemctl start ideon_update");
+
+    buffer = jsonrpc_start_result(buffer, method, request_id);
+    buffer = sdscat(buffer, ",");
+    buffer = tojson_bool(buffer, "service", service, false);
+    buffer = jsonrpc_end_result(buffer);
     return buffer;
 }
 

@@ -14,8 +14,7 @@ void ideon_cleanup(void);
 void ideon_dc_handle(int *dc);
 int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed, bool ns_changed, bool airplay_changed,
                        bool roon_changed, bool spotify_changed);
+sds ideon_ns_server_list(sds buffer, sds method, int request_id);
 sds ideon_update_check(sds buffer, sds method, int request_id);
 sds ideon_update_install(sds buffer, sds method, int request_id);
-sds ideon_ns_server_list(sds buffer, sds method, int request_id, const char *workgroup);
-sds ideon_ns_server_list2(sds buffer, sds method, int request_id);
 #endif

@@ -1619,7 +1619,7 @@
     </div>
   </div>
 
-  <div id="modalIdeon" class="modal fade" data-backdrop="static" tabindex="-1">
+  <div id="modalIdeon" class="modal fade" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header pb-0">
@@ -1678,13 +1678,6 @@
                   </div>
                 </div>
                 <div id="nsServerShare">
-                  <!-- <div class="form-group row">
-                    <label class="col-sm-4 col-form-label" for="inputNsWorkgroup" data-phrase="Workgroup"></label>
-                    <div class="col-sm-8">
-                      <input id="inputNsWorkgroup" class="form-control border-secondary" type="text" data-placeholder-phrase="WORKGROUP" value="WORKGROUP">
-                      <div class="invalid-feedback" data-phrase="Workgroup cannot be blank"></div>
-                    </div>
-                  </div> -->
                   <div class="form-group row">
                     <label class="col-sm-4 col-form-label" for="inputNsServer" data-phrase="Server"></label>
                     <div class="col-sm-8">
@@ -1696,14 +1689,14 @@
                             <div class="list-group"></div>
                           </div>
                         </div>
-                        <div class="invalid-feedback" data-phrase="Invalid Server"></div>
+                        <div class="invalid-feedback" data-phrase="Invalid IP address"></div>
                       </div>
                     </div>
                   </div>
                   <div class="form-group row">
-                    <label class="col-sm-4 col-form-label" for="inputNsShare" data-phrase="Path"></label>
+                    <label class="col-sm-4 col-form-label" for="inputNsShare" data-phrase="Share"></label>
                     <div class="col-sm-8">
-                      <input id="inputNsShare" class="form-control border-secondary" type="text" data-placeholder-phrase="Music folder path in NAS (e.g. /music)">
+                      <input id="inputNsShare" class="form-control border-secondary" type="text" data-placeholder-phrase="Music folder path in NAS (e.g. /Music)">
                       <div class="invalid-feedback" data-phrase="Must start with a leading slash"></div>
                     </div>
                   </div>
@@ -1858,14 +1851,22 @@
               </div>
               <div id="nsServerShare1" class="hide">
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="inputNsServer1" data-phrase="NAS IP address"></label>
+                  <label class="col-sm-4 col-form-label" for="inputNsServer1" data-phrase="Server"></label>
                   <div class="col-sm-8">
-                    <input id="inputNsServer1" class="form-control border-secondary" type="text" data-placeholder-phrase="NAS IP address">
-                    <div class="invalid-feedback" data-phrase="Invalid IP address"></div>
+                    <div class="input-group">
+                      <input id="inputNsServer1" class="form-control border-secondary" type="text" data-placeholder-phrase="Use dropdown or input ip address manually">
+                      <div class="input-group-append">
+                        <button id="btnDropdownServers1" class="btn btn-secondary dropdown-toggle dropdown-toggle-split rounded-right" type="button" data-toggle="dropdown"></button>
+                        <div id="dropdownServers1" class="dropdown-menu border-0 p-0 dropdown-menu-right">
+                          <div class="list-group"></div>
+                        </div>
+                      </div>
+                      <div class="invalid-feedback" data-phrase="Invalid IP address"></div>
+                    </div>
                   </div>
                 </div>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="inputNsShare1" data-phrase="Path"></label>
+                  <label class="col-sm-4 col-form-label" for="inputNsShare1" data-phrase="Share"></label>
                   <div class="col-sm-8">
                     <input id="inputNsShare1" class="form-control border-secondary" type="text" data-placeholder-phrase="Music folder path in NAS (e.g. /music)">
                     <div class="invalid-feedback" data-phrase="Path must start with a leading slash"></div>

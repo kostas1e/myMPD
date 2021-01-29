@@ -14,7 +14,9 @@ function parseServers(obj) {
             list = '<div class="list-group-item"><span class="material-icons">error_outline</span>&nbsp;' + t('Empty list') + '</div>';
         }
     }
-    document.getElementById('dropdownServers').children[0].innerHTML = list;
+
+    let id = settings.init !== true ? 'dropdownServers1' : 'dropdownServers';
+    document.getElementById(id).children[0].innerHTML = list;
 }
 
 function checkUpdate() {
@@ -110,7 +112,6 @@ function saveIdeonSettings() {
     let inputNsPassword = document.getElementById('inputNsPassword');
 
     if (selectNsTypeValue !== '0') {
-        // if (!validateNotBlank(inputNsServer)) {
         if (!validateIPAddress(inputNsServer)) {
             formOK = false;
         }

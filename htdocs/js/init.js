@@ -71,6 +71,17 @@ function checkInit() {
             }
         }, false);
 
+        document.getElementById('btnDropdownServers1').parentNode.addEventListener('show.bs.dropdown', function () {
+            sendAPI("MYMPD_API_NS_SERVER_LIST", {}, parseServers, true);
+        });
+
+        document.getElementById('dropdownServers1').children[0].addEventListener('click', function (event) {
+            event.preventDefault();
+            if (event.target.nodeName === 'A') {
+                document.getElementById('inputNsServer1').value = event.target.getAttribute('data-value');
+            }
+        });
+
         currentTab = 0;
         showTab(currentTab);
         modalInit.show();

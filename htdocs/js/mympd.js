@@ -858,29 +858,6 @@ function appInit() {
         }
     });
 
-    document.getElementById('btnDropdownServers').parentNode.addEventListener('show.bs.dropdown', function () {
-        sendAPI("MYMPD_API_NS_SERVER_LIST", {}, parseServers, true);
-        // document.getElementById('dropdownServers').children[0].innerHTML =
-        //         '<div class="list-group-item"><span class="material-icons">search</span> ' + t('Searching for servers') + '</div>';
-        // let workgroup = document.getElementById('inputNsWorkgroup').value.toLowerCase();
-        // let feedback;
-        // if (/^\s*$/.test(workgroup)) {
-        //     feedback = '<div class="list-group-item"><span class="material-icons">error_outline</span> ' + t('Workgroup not specified') + '</div>';
-        // }
-        // else {
-        //    sendAPI("MYMPD_API_NS_SERVER_LIST", { "workgroup": workgroup }, parseServers, true);
-        //    feedback = '<div class="list-group-item"><span class="material-icons">search</span> ' + t('Searching for servers') + '</div>';
-        // }
-        // document.getElementById('dropdownServers').children[0].innerHTML = feedback;
-    });
-
-    document.getElementById('dropdownServers').children[0].addEventListener('click', function (event) {
-        event.preventDefault();
-        if (event.target.nodeName === 'A') {
-            document.getElementById('inputNsServer').value = event.target.getAttribute('data-value');
-        }
-    });
-
     document.getElementById('BrowseFilesystemBookmark').parentNode.addEventListener('show.bs.dropdown', function () {
         sendAPI("MYMPD_API_BOOKMARK_LIST", { "offset": 0 }, parseBookmarks);
     });
@@ -1112,9 +1089,16 @@ function appInit() {
         }
     });
 
-    // document.getElementById('modalInit').addEventListener('keydown', function (event) {
-    //     event.stopPropagation();
-    // });
+    document.getElementById('btnDropdownServers').parentNode.addEventListener('show.bs.dropdown', function () {
+        sendAPI("MYMPD_API_NS_SERVER_LIST", {}, parseServers, true);
+    });
+
+    document.getElementById('dropdownServers').children[0].addEventListener('click', function (event) {
+        event.preventDefault();
+        if (event.target.nodeName === 'A') {
+            document.getElementById('inputNsServer').value = event.target.getAttribute('data-value');
+        }
+    });
 
     document.getElementById('modalConnection').addEventListener('shown.bs.modal', function () {
         getSettings();
