@@ -154,7 +154,7 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed, bool n
 
 sds ideon_ns_server_list(sds buffer, sds method, int request_id)
 {
-    FILE *fp = popen("/usr/bin/nmblookup -S \'*\' | grep \"<00>\" | awk \'{print $1}\'", "r");
+    FILE *fp = popen("/usr/bin/nmblookup -S '*' | grep \"<00>\" | awk '{print $1}'", "r");
     // returns three lines per server found - 1st line ip address 2nd line name 3rd line workgroup
     if (fp == NULL)
     {

@@ -131,9 +131,9 @@
     X(MYMPD_API_HOME_ICON_MOVE)              \
     X(MYMPD_API_HOME_ICON_PICTURE_LIST)      \
     X(MYMPD_API_STATE_SAVE)                  \
+    X(MYMPD_API_NS_SERVER_LIST)              \
     X(MYMPD_API_UPDATE_CHECK)                \
-    X(MYMPD_API_UPDATE_INSTALL)              \
-    X(MYMPD_API_NS_SERVER_LIST)
+    X(MYMPD_API_UPDATE_INSTALL)
 
 #define GEN_ENUM(X) X,
 #define GEN_STR(X) #X,
