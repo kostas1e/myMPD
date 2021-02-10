@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -132,7 +132,6 @@ td[data-col=Action] {
     height: 100vw;
     width: 4rem;
     flex-flow: column;
-/*    padding-top: 0.6rem */
     padding-top: 1.2rem;
     padding-left: 0;
     padding-right: 0;
@@ -297,9 +296,7 @@ button {
 [data-col=Track] {
   max-width: 5rem;
   min-width: min-content;
-  /* @alternate */
   min-width: -moz-min-content;
-  /* @alternate */
   min-width: -webkit-min-content;
 }
 
@@ -421,7 +418,6 @@ tr > th {
 }
 
 .album-cover-loading {
-/*  background-image: url("../assets/coverimage-loading.svg");*/
   background-image: url("../assets/coverimage-mympd.svg");
 }
 
@@ -469,7 +465,7 @@ tr > th {
   src: url(../assets/MaterialIcons-Regular.woff2) format('woff2');
 }
 
-.material-icons {
+.mi {
   font-family: 'Material Icons';
   font-weight: normal;
   font-style: normal;
@@ -491,30 +487,21 @@ tr > th {
   font-feature-settings: 'liga';
 }
 
-.material-icons:hover {
+.mi:hover {
   text-decoration: none;
 }
 
-.material-icons-left {
-/*  font-size: 1rem; */
+.mi-left {
   margin-left: -1em;
-/*  vertical-align: middle; */
 }
 
-.material-icons-small {
+.mi-small {
   font-size: 1rem;
 }
 
-.material-icons-lg {
+.mi-lg {
   font-size: 2.4rem;
 }
-
-/*
-.material-icons-small-left {
-  font-size: 1rem;
-  margin-left: -1em;
-}
-*/
 
 .btn-sm-big-icon {
   font-size: 1.4rem !important;
@@ -655,6 +642,16 @@ div.key {
   height: 2rem;
   text-align: center;
   line-height: 2rem;
+  margin-right: 1rem;
+  flex-shrink: 0;
+}
+
+div.row-keymap {
+  overflow: hidden;
+}
+
+div.col-keymap {
+  min-width: 20rem;
 }
 
 ol#searchCrumb,
@@ -673,9 +670,6 @@ ol#searchDatabaseCrumb {
 #mainMenu img {
   width: 2.5rem;
   height: 2.5rem;
-/*  font-size: 2.5rem;
-  margin-right: 5px;
-*/
 }
 
 .connected,
@@ -992,4 +986,36 @@ div.album-grid-mouseover {
   height: 3rem;
   padding: 0.3rem;
   font-size: 2.4rem;
+}
+
+.pagination button {
+  padding-left: 0.375rem;
+  padding-right: 0.375rem;
+}
+
+.pages {
+  min-width: 12.2rem;
+}
+
+.pages button {
+  min-width: 2rem;
+  margin: 0.1rem;
+}
+
+tfoot td {
+  text-align: right;
+}
+
+#dropdownHomeIconLigature {
+  width: 60vw;
+}
+
+#dropdownHomeIconLigature .row {
+  margin-right: 0;
+  margin-bottom: 1rem;
+}
+
+#listHomeIconLigature {
+  max-height: 60vh;
+  overflow-y: scroll;
 }

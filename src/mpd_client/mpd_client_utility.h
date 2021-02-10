@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -87,7 +87,6 @@ typedef struct t_mpd_client_state {
     sds smartpls_prefix;
     time_t smartpls_interval;
     unsigned last_played_count;
-    int max_elements_per_page;
     sds music_directory;
     sds music_directory_value;
     sds booklet_name;
@@ -101,6 +100,8 @@ typedef struct t_mpd_client_state {
     rax *sticker_cache;
     struct list sticker_queue;
     bool sticker_cache_building;
+    rax *album_cache;
+    bool album_cache_building;
     //mpd state
     struct t_mpd_state *mpd_state;
     //triggers
@@ -112,4 +113,6 @@ void free_mpd_client_state(t_mpd_client_state *mpd_client_state);
 void default_mpd_client_state(t_mpd_client_state *mpd_client_state);
 bool is_smartpls(t_config *config, t_mpd_client_state *mpd_client_state, const char *plpath);
 sds put_extra_files(t_mpd_client_state *mpd_client_state, sds buffer, const char *uri, bool is_dirname);
+bool mpd_client_set_binarylimit(t_config *config, t_mpd_client_state *mpd_client_state);
+bool caches_init(t_config *config, t_mpd_client_state *mpd_client_state);
 #endif

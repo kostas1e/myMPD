@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -97,6 +97,7 @@ typedef struct t_mympd_state {
     bool lyrics;
     struct list home_list;
     sds navbar_icons;
+    sds advanced;
 } t_mympd_state;
 
 void free_mympd_state(t_mympd_state *mympd_state);

@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -33,7 +33,7 @@ static sds state_file_rw_string(t_config *config, const char *name, const char *
 static bool state_file_rw_bool(t_config *config, const char *name, const bool def_value, bool warn);
 static int state_file_rw_int(t_config *config, const char *name, const int def_value, bool warn);
 static bool state_file_write(t_config *config, const char *name, const char *value);
-static sds default_navbar_icons(t_config *config);
+static sds default_navbar_icons(t_config *config, sds buffer);
 static sds read_navbar_icons(t_config *config);
 
 //public functions
@@ -48,7 +48,7 @@ void mympd_api_settings_delete(t_config *config) {
         "last_played", "last_played_count", "locale", "localplayer", "love", "love_channel", "love_message",
         "max_elements_per_page",  "mpd_host", "mpd_pass", "mpd_port", "notification_page", "notification_web", "searchtaglist",
         "smartpls", "stickers", "stream_port", "stream_url", "taglist", "music_directory", "bookmarks", "bookmark_list", "coverimage_size_small", 
-        "theme", "timer", "highlight_color", "media_session", "booklet_name", "lyrics", "home_list", "navbar_icons", 0};
+        "theme", "timer", "highlight_color", "media_session", "booklet_name", "lyrics", "home_list", "navbar_icons", "advanced", 0};
     const char** ptr = state_files;
     while (*ptr != 0) {
         sds filename = sdscatfmt(sdsempty(), "%s/state/%s", config->varlibdir, *ptr);
@@ -318,7 +318,7 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
     }
     else if (strncmp(key->ptr, "maxElementsPerPage", key->len) == 0) {
         int max_elements_per_page = strtoimax(settingvalue, &crap, 10);
-        if (max_elements_per_page <= 0 || max_elements_per_page > 999) {
+        if (max_elements_per_page < 0 || max_elements_per_page > 999) {
             sdsfree(settingname);
             sdsfree(settingvalue);
             return false;
@@ -362,6 +362,10 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
     else if (strncmp(key->ptr, "lyrics", key->len) == 0) {
         mympd_state->lyrics = val->type == JSON_TYPE_TRUE ? true : false;
         settingname = sdscat(settingname, "lyrics");
+    }
+    else if (strncmp(key->ptr, "advanced", key->len) == 0) {
+        mympd_state->advanced = sdsreplacelen(mympd_state->advanced, settingvalue, sdslen(settingvalue));
+        settingname = sdscat(settingname, "advanced");
     }
     else {
         sdsfree(settingname);
@@ -434,6 +438,7 @@ void mympd_api_read_statefiles(t_config *config, t_mympd_state *mympd_state) {
     mympd_state->timer = state_file_rw_bool(config, "timer", config->timer, false);
     mympd_state->highlight_color = state_file_rw_string(config, "highlight_color", config->highlight_color, false);
     mympd_state->booklet_name = state_file_rw_string(config, "booklet_name", config->booklet_name, false);
+    mympd_state->advanced = state_file_rw_string(config, "advanced", "{}", false);
     mympd_state->lyrics = state_file_rw_bool(config, "lyrics", config->lyrics, false);
     if (config->readonly == true) {
         mympd_state->bookmarks = false;
@@ -501,7 +506,7 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = tojson_bool(buffer, "featLyrics", mympd_state->lyrics, true);
     buffer = tojson_bool(buffer, "featScripting", config->scripting, true);
     buffer = tojson_bool(buffer, "featScripteditor", config->scripteditor, true);
-    buffer = tojson_bool(buffer, "footerStop", config->footer_stop, true);
+    buffer = tojson_char(buffer, "footerStop", config->footer_stop, true);
     buffer = tojson_bool(buffer, "featHome", config->home, true);
     buffer = tojson_long(buffer, "volumeMin", config->volume_min, true);
     buffer = tojson_long(buffer, "volumeMax", config->volume_max, true);
@@ -513,7 +518,8 @@ sds mympd_api_settings_put(t_config *config, t_mympd_state *mympd_state, sds buf
     buffer = sdscatfmt(buffer, "\"colsPlayback\":%s,", mympd_state->cols_playback);
     buffer = sdscatfmt(buffer, "\"colsQueueLastPlayed\":%s,", mympd_state->cols_queue_last_played);
     buffer = sdscatfmt(buffer, "\"colsQueueJukebox\":%s,", mympd_state->cols_queue_jukebox);
-    buffer = sdscatfmt(buffer, "\"navbarIcons\":%s", mympd_state->navbar_icons);
+    buffer = sdscatfmt(buffer, "\"navbarIcons\":%s,", mympd_state->navbar_icons);
+    buffer = sdscatfmt(buffer, "\"advanced\":%s", mympd_state->advanced);
 
     if (config->syscmds == true) {
         buffer = sdscat(buffer, ",\"syscmdList\":[");
@@ -632,10 +638,11 @@ static bool state_file_write(t_config *config, const char *name, const char *val
     return true;
 }
 
-static sds default_navbar_icons(t_config *config) {
+static sds default_navbar_icons(t_config *config, sds buffer) {
     LOG_INFO("Writing default navbar_icons");
     sds file_name = sdscatfmt(sdsempty(), "%s/state/navbar_icons", config->varlibdir);
-    sds buffer = sdsnew(NAVBAR_ICONS);
+    sdsclear(buffer);
+    buffer = sdscat(buffer, NAVBAR_ICONS);
     FILE *fp = fopen(file_name, "w");
     if (fp == NULL) {
         LOG_ERROR("Can not open file \"%s\" for write: %s", file_name, strerror(errno));
@@ -659,7 +666,7 @@ static sds read_navbar_icons(t_config *config) {
         if (errno != ENOENT) {
             LOG_ERROR("Can not open file \"%s\": %s", file_name, strerror(errno));
         }
-        buffer = default_navbar_icons(config);
+        buffer = default_navbar_icons(config, buffer);
         sdsfree(file_name);
         return buffer;
     }
@@ -667,15 +674,14 @@ static sds read_navbar_icons(t_config *config) {
     char *line = NULL;
     char *crap = NULL;
     size_t n = 0;
-    ssize_t read;
-    while ((read = getline(&line, &n, fp)) > 0) {
+    while (getline(&line, &n, fp) > 0) {
         strtok_r(line, "\n", &crap);
         buffer = sdscat(buffer, line);
     }
     FREE_PTR(line);
     fclose(fp);
     if (sdslen(buffer) == 0) {
-        buffer = default_navbar_icons(config);
+        buffer = default_navbar_icons(config, buffer);
     }
     return buffer;
 }

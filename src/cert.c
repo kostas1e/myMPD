@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -332,7 +332,7 @@ static X509_REQ *generate_request(EVP_PKEY *pkey) {
 
     /* Set the DN */
     time_t now = time(NULL);
-    sds cn = sdscatprintf(sdsempty(), "myMPD Server Certificate %ld", now);
+    sds cn = sdscatprintf(sdsempty(), "myMPD Server Certificate %llu", (unsigned long long)now);
 
     X509_NAME *name = X509_REQ_get_subject_name(req);
     X509_NAME_add_entry_by_txt(name, "C",  MBSTRING_ASC, (unsigned char *)"DE", -1, -1, 0);
@@ -463,7 +463,7 @@ static X509 *generate_selfsigned_cert(EVP_PKEY *pkey) {
     
     /* Set the DN */
     time_t now = time(NULL);
-    sds cn = sdscatprintf(sdsempty(), "myMPD CA %ld", now);
+    sds cn = sdscatprintf(sdsempty(), "myMPD CA %llu", (unsigned long long)now);
     X509_NAME_add_entry_by_txt(name, "C",  MBSTRING_ASC, (unsigned char *)"DE", -1, -1, 0);
     X509_NAME_add_entry_by_txt(name, "O",  MBSTRING_ASC, (unsigned char *)"myMPD", -1, -1, 0);
     X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (unsigned char *)cn, -1, -1, 0);

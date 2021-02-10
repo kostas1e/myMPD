@@ -4,7 +4,7 @@ MPD connection
 MPD 연결
 
 Add stream
-스트리밍 서비스 추가
+스트리밍 추가
 
 Update
 업데이트
@@ -103,13 +103,13 @@ Work
 작품
 
 Artists
-연주가
+연주자
 
 Artist
-연주가
+연주자
 
 ArtistSort
-연주가 정렬
+연주자 정렬
 
 Album
 음반
@@ -121,10 +121,10 @@ Duration
 길이
 
 AlbumArtist
-음반 연주가
+음반 연주자
 
 AlbumArtistSort
-음반 연주가 정렬
+음반 연주자 정렬
 
 Composer
 작곡가
@@ -213,12 +213,6 @@ Num playlists
 Num entries
 %{smart_count} 항목 |||| %{smart_count} 항목
 
-Add all to queue
-순서에 모두 추가
-
-Add all to playlist
-연주목록에 모두 추가
-
 Save as smart playlist
 스마트 연주목록 저장
 
@@ -233,6 +227,9 @@ Select tag to search
 
 contains
 내용
+
+starts_with
+시작점
 
 Initializing myMPD
 myMPD 초기화
@@ -441,9 +438,6 @@ Browser default
 Pagination
 페이지 매기기
 
-Must be a number smaller or equal 200
-200이하의 숫자여야 함
-
 Notifications
 알림
 
@@ -559,7 +553,7 @@ Database statistics
 데이터베이스 통계
 
 Artists
-연주가
+연주자
 
 Albums
 음반
@@ -593,9 +587,6 @@ Libmpdclient 버전
 
 Libmympdclient version
 Libmympdclient 버전
-
-Shortcut
-단축키
 
 Action
 기능
@@ -690,6 +681,9 @@ Open song details
 Open local player
 로컬 연주기 열기
 
+Goto home
+홈으로 가기
+
 Goto playback
 연주로 가기
 
@@ -698,6 +692,9 @@ Goto queue
 
 Goto last played
 앞선 연주로 가기
+
+Goto jukebox queue
+뮤직박스 순서로 가기
 
 Goto browse database
 데이터베이스 열기로 가기
@@ -1507,7 +1504,7 @@ enabled
 사용함
 
 No mixed content,  MPD stream must be served over https:
-혼합된 컨텐트는 안되며, MPD 스트리밍 서비스는 https:를 통해야 합니다.
+혼합된 컨텐트는 안되며, MPD 스트리밍은 https:를 통해야 합니다.
 
 Details
 상세
@@ -1574,9 +1571,6 @@ Homescreen welcome
 
 Can not open directory pics
 디렉터리 그림을 열 수 없음
-
-Ligature overview
-연결 미리보기
 
 Use ligature
 연결 사용
@@ -1649,3 +1643,112 @@ myMPD 메뉴
 
 Invalid volume level
 잘못된 음량 수준
+
+MaintainEnableTagsText
+최고의 사용자 경험을 위해서는 연주자, 음반 연주자, 음반, 곡, 디스크, 장르 태그를 관리하고 사용해야 합니다.
+
+Error reading metadata
+메타데이터 읽기 오류
+
+Failed to set like, unknown error
+좋아요 설정 실패, 알 수 없는 오류
+
+Invalid uri
+잘못된 URI
+
+Stop
+정지
+
+Unsupported file type
+지원되지 않는 파일 형식
+
+All
+모두
+
+Elements per page
+페이지당 요소
+
+Failed to set song priority
+곡 우선 순위를 설정할 수 없음
+
+Lookup at musicbrainz
+뮤직브레인즈에서 찾기
+
+Play after current playing song
+현재 연주 중인 곡 다음에 연주
+
+Replaced queue
+순서 바꿈
+
+First page
+첫 페이지
+
+Last page
+끝 페이지
+
+Show album
+음반 보기
+
+Can not get lyrics for stream uri
+스트리밍 URI의 가사를 가져올 수 없음
+
+Albumcache not ready
+앨범 캐시 준비 안 됨
+
+Open folder
+폴더 열기
+
+
+Open parent folder
+상위 폴더 열기
+
+Maintenance
+관리
+
+Album cache is NULL
+음반 캐시가 전혀 없음
+
+Click album play button
+음반 연주 버튼 누름
+
+Click folder
+폴더 누름
+
+Click playlist
+연주목록 누름
+
+Click song in queue
+순서의 곡 누름
+
+Click song
+곡 누름
+
+Play
+연주
+
+Homescreen
+홈 화면
+
+Homescreen help view
+보기를 홈 화면에 추가하려면 보기로 가서 [[add_to_home_screen]] 버튼을 누릅니다.
+
+Homescreen help playlist
+연주목록을 홈 화면에 추가하려면 연주목록의 연관 메뉴를 열고 "홈 화면에 추가"를 선택합니다.
+
+Homescreen help script
+스크립트를 홈 화면에 추가하려면 스크립트 대화 상자를 열고 [[add_to_home_screen]] 버튼을 누릅니다.
+
+Help to improve myMPD
+myMPD 개선 도움
+
+Are you sure?
+확실한가요?
+
+No
+아니오
+
+Yes
+예
+
+Do you really want to clear the queue?
+캐시를 지울까요?

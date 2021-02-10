@@ -1,9 +1,51 @@
 "use strict";
-/*
- SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
- https://github.com/jcorporation/mympd
-*/
+// SPDX-License-Identifier: GPL-2.0-or-later
+// myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
+// https://github.com/jcorporation/mympd
+
+function initScripts() {
+    document.getElementById('inputScriptArgument').addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            event.stopPropagation();
+            addScriptArgument();
+        }
+    }, false);
+    
+    document.getElementById('selectScriptArguments').addEventListener('click', function(event) {
+        if (event.target.nodeName === 'OPTION') {
+            removeScriptArgument(event);
+        }
+    }, false);
+
+    document.getElementById('listScriptsList').addEventListener('click', function(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        if (event.target.nodeName === 'TD') {
+            if (settings.featScripteditor === false || getAttDec(event.target.parentNode, 'data-script') === '') {
+                return false;
+            }
+            showEditScript(getAttDec(event.target.parentNode, 'data-script'));
+        }
+        else if (event.target.nodeName === 'A') {
+            let action = getAttDec(event.target, 'data-action');
+            let script = getAttDec(event.target.parentNode.parentNode, 'data-script');
+            if (action === 'delete') {
+                deleteScript(script);
+            }
+            else if (action === 'execute') {
+                execScript(getAttDec(event.target, 'data-href'));
+            }
+            else if (action === 'add2home') {
+                addScriptToHome(script, getAttDec(event.target, 'data-href'))
+            }
+        }
+    }, false);
+
+    document.getElementById('modalScripts').addEventListener('shown.bs.modal', function () {
+        showListScripts();
+    });
+}
 
 //eslint-disable-next-line no-unused-vars
 function saveScript() {
@@ -59,10 +101,8 @@ function showEditScript(script) {
     document.getElementById('listScriptsFooter').classList.add('hide');
     document.getElementById('editScriptFooter').classList.remove('hide');
     
-    document.getElementById('inputScriptName').classList.remove('is-invalid');
-    document.getElementById('inputScriptOrder').classList.remove('is-invalid');
-    document.getElementById('inputScriptArgument').classList.remove('is-invalid');
-    
+    removeIsInvalid(document.getElementById('modalScripts'));
+      
     if (script !== '') {
         sendAPI("MYMPD_API_SCRIPT_GET", {"script": script}, parseEditScript, false);
     }
@@ -111,17 +151,19 @@ function getScriptList(all) {
 
 function parseScriptList(obj) {
     let timerActions = document.createElement('optgroup');
-    timerActions.setAttribute('data-value', 'script');
+    setAttEnc(timerActions, 'data-value', 'script');
     timerActions.setAttribute('label', t('Script'));
     let scriptMaxListLen = 4;
-    let scriptListMain = ''; //list in main menu
-    let scriptList = ''; //list in scripts dialog
+    //list in main menu
+    let scriptListMain = '';
+    //list in scripts dialog
+    let scriptList = '';
     let scriptListLen = obj.result.data.length;
+    let showScriptListLen = 0;
     if (scriptListLen > 0) {
         obj.result.data.sort(function(a, b) {
             return a.metadata.order - b.metadata.order;
         });
-        let mi = 0;
         for (let i = 0; i < scriptListLen; i++) {
             let arglist = '';
             if (obj.result.data[i].metadata.arguments.length > 0) {
@@ -131,11 +173,7 @@ function parseScriptList(obj) {
                 arglist = '"' + obj.result.data[i].metadata.arguments.join('","') + '"';
             }
             if (obj.result.data[i].metadata.order > 0) {
-                if (mi === 0) {
-                    scriptListMain = scriptListLen > scriptMaxListLen ? '' : '<div class="dropdown-divider"></div>';
-                }
-                mi++;
-                
+                showScriptListLen++;
                 scriptListMain += '<a class="dropdown-item text-light alwaysEnabled" href="#" data-href=\'{"script": "' + 
                     e(obj.result.data[i].name) + '", "arguments": [' + arglist + ']}\'>' + e(obj.result.data[i].name) + '</a>';
                 
@@ -143,10 +181,10 @@ function parseScriptList(obj) {
             scriptList += '<tr data-script="' + encodeURI(obj.result.data[i].name) + '"><td>' + e(obj.result.data[i].name) + '</td>' +
                 '<td data-col="Action">' +
                     (settings.featScripteditor === true ? 
-                        '<a href="#" title="' + t('Delete') + '" data-action="delete" class="material-icons color-darkgrey">delete</a>' : '') +
-                        '<a href="#" title="' + t('Execute') + '" data-action="execute" class="material-icons color-darkgrey" ' +
+                        '<a href="#" title="' + t('Delete') + '" data-action="delete" class="mi color-darkgrey">delete</a>' : '') +
+                        '<a href="#" title="' + t('Execute') + '" data-action="execute" class="mi color-darkgrey" ' +
                             ' data-href=\'{"script": "' + e(obj.result.data[i].name) + '", "arguments": [' + arglist + ']}\'>play_arrow</a>' +
-                        '<a href="#" title="' + t('Add to homescreen') + '" data-action="add2home" class="material-icons color-darkgrey" ' +
+                        '<a href="#" title="' + t('Add to homescreen') + '" data-action="add2home" class="mi color-darkgrey" ' +
                             ' data-href=\'{"script": "' + e(obj.result.data[i].name) + '", "arguments": [' + arglist + ']}\'>add_to_home_screen</a>' +
                 '</td></tr>';
             timerActions.innerHTML += '<option data-arguments=\'{"arguments":[' + arglist + ']}\' value="' + 
@@ -155,12 +193,12 @@ function parseScriptList(obj) {
         document.getElementById('listScriptsList').innerHTML = scriptList;
     }
     else {
-        document.getElementById('listScriptsList').innerHTML = '<tr class="not-clickable"><td><span class="material-icons">error_outline</span></td>' +
+        document.getElementById('listScriptsList').innerHTML = '<tr class="not-clickable"><td><span class="mi">error_outline</span></td>' +
             '<td colspan="2">' + t('Empty list') + '</td></tr>';
     }
-    document.getElementById('scripts').innerHTML = scriptListMain;
+    document.getElementById('scripts').innerHTML = (showScriptListLen > scriptMaxListLen || showScriptListLen === 0 ? '' : '<div class="dropdown-divider"></div>') + scriptListMain;
         
-    if (scriptListLen > scriptMaxListLen) {
+    if (showScriptListLen > scriptMaxListLen) {
         document.getElementById('navScripting').classList.remove('hide');
         document.getElementById('scripts').classList.add('collapse', 'menu-indent');
     }
@@ -178,6 +216,9 @@ function parseScriptList(obj) {
     else {
         document.getElementById('selectTimerAction').appendChild(timerActions);
     }
+    //reinit mainmenu -> change of script list
+    dropdownMainMenu.dispose();
+    dropdownMainMenu = new BSN.Dropdown(document.getElementById('mainMenu'));
 }
 
 //eslint-disable-next-line no-unused-vars

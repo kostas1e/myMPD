@@ -1,10 +1,9 @@
 "use strict";
-/*
- SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
- https://github.com/jcorporation/mympd
-*/
+// SPDX-License-Identifier: GPL-2.0-or-later
+// myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
+// https://github.com/jcorporation/mympd
 
+//escapes html characters to avoid xss
 function e(x) {
     if (isNaN(x)) {
         return x.replace(/([<>"'])/g, function(m0, m1) {
@@ -17,9 +16,16 @@ function e(x) {
             else if (m1 === '003E') return '&gt;';
             else if (m1 === '0022') return '&quot;';
             else if (m1 === '0027') return '&apos;';
+        }).replace(/\[\[(\w+)\]\]/g, function(m0, m1) {
+            return '<span class="mi">' + m1 + '</span>';
         });
     }
     return x;
+}
+
+//removes special characters
+function r(x) {
+    return x.replace(/[^\w-]/g, '_');
 }
 
 function t(phrase, number, data) {
@@ -101,7 +107,7 @@ function gtPage(phrase, returnedEntities, totalEntities) {
     if (totalEntities > -1) {
         return t(phrase, totalEntities);
     }
-    else if (returnedEntities + app.current.page < settings.maxElementsPerPage) {
+    else if (returnedEntities + app.current.offset < settings.maxElementsPerPage) {
         return t(phrase, returnedEntities);
     }
     else {

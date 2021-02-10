@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -464,7 +464,7 @@ sds get_mime_type_by_magic_stream(sds stream) {
 }
 
 bool is_streamuri(const char *uri) {
-    if (uri == NULL || strcasestr(uri, "://") != NULL) {
+    if (uri != NULL && strcasestr(uri, "://") != NULL) {
         return true;
     }
     return false;
@@ -477,7 +477,7 @@ bool write_covercache_file(t_config *config, const char *uri, const char *mime_t
     sds tmp_file = sdscatfmt(sdsempty(), "%s/covercache/%s.XXXXXX", config->varlibdir, filename);
     int fd = mkstemp(tmp_file);
     if (fd < 0) {
-        LOG_ERROR("Can not write open file \"%s\" for write: %s", tmp_file, strerror(errno));
+        LOG_ERROR("Can not open file \"%s\" for write: %s", tmp_file, strerror(errno));
     }
     else {
         FILE *fp = fdopen(fd, "w");
@@ -491,6 +491,7 @@ bool write_covercache_file(t_config *config, const char *uri, const char *mime_t
                 LOG_ERROR("Error removing file \"%s\": %s", tmp_file, strerror(errno));
             }
         }
+        LOG_DEBUG("Write covercache file \"%s\" for uri \"%s\"", cover_file, uri);
         sdsfree(ext);
         sdsfree(cover_file);
         rc = true;
@@ -516,20 +517,23 @@ unsigned long substractUnsigned(unsigned long num1, unsigned long num2) {
 }
 
 char *basename_uri(char *uri) {
+    //filename
     if (strstr(uri, "://") == NULL) {
-        //filename
         char *b = basename(uri);
         return b;
     }
-    else {
-        //uri
-        char *b = uri;
-        for (size_t i = 0;  i < strlen(b); i++) {
-            if (b[i] == '#' || b[i] == '?') {
-                b[i] = '\0';
-                return b;
-            }
+    //uri, remove query and hash
+    char *b = uri;
+    for (size_t i = 0;  i < strlen(b); i++) {
+        if (b[i] == '#' || b[i] == '?') {
+            b[i] = '\0';
+            return b;
         }
-        return b;
     }
+    return b;
+}
+
+//converts unsigned to int and prevents wrap arround
+int unsigned_to_int(unsigned x) {
+    return x < INT_MAX ? (int) x : INT_MAX;
 }

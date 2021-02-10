@@ -2,7 +2,7 @@
 
 myMPD is a standalone and lightweight web-based MPD client. It's tuned for minimal resource usage and requires only very few dependencies. Therefore myMPD is ideal for raspberry pis and similar devices.
 
-The backend ist written in C and has no dependencies to external databases or webservers. The configuration is stored in plain text files and all the data is pulled on demand from MPD. The MPD database is the only source of truth for myMPD.
+The backend is written in C and has no dependencies to external databases or webservers. The configuration is stored in plain text files and all the data is pulled on demand from MPD. The MPD database is the only source of truth for myMPD.
 
 The frontend is mobile friendly, written as a PWA and offers on all devices the same functionality. It communicates over AJAX and websockets using the json-rpc 2 protocol.
 
@@ -25,7 +25,7 @@ myMPD also integrates extended features like an advanced jukebox mode, timers, t
 - [Smart playlists and saved searches](https://github.com/jcorporation/myMPD/wiki/Smart-playlists)
 - Play statistics and song voting
 - [Local albumart support: embedded and image per folder](https://github.com/jcorporation/myMPD/wiki/Albumart)
-- [Local lyrics (textfile per song or embedded)](https://github.com/jcorporation/myMPD/wiki/Lyrics)
+- [Unsynchronized and synchronized Lyrics](https://github.com/jcorporation/myMPD/wiki/Lyrics)
 - Local booklet support (per album folder)
 - HTTP stream support
 - [Local playback of mpd http stream](https://github.com/jcorporation/myMPD/wiki/Local-playback)
@@ -40,11 +40,16 @@ myMPD also integrates extended features like an advanced jukebox mode, timers, t
 - Progressiv Web App enabled
 - Support of Media Session API
 
+To use all myMPD functions you should use the latest stable MPD version (0.22.x).
+
+## Contribution
+
 myMPD is in active development. If you like myMPD, you can help to improve it (no programming skills are required).
 
-- [Help to improve myMPD](https://github.com/jcorporation/myMPD/issues/167)
-
-To use all myMPD functions you should use the latest stable MPD version (0.22.x).
+- [Help to improve myMPD](https://github.com/jcorporation/myMPD/issues/167).
+- Use [issues](https://github.com/jcorporation/myMPD/issues) for bug reports only.
+- Use [discussion](https://github.com/jcorporation/myMPD/discussions) for feature requests, questions and general feedback.
+- If I accept a feature request, I will open an issue and assign a [milestone](https://github.com/jcorporation/myMPD/milestones) to it.
 
 ## Screenshots
 
@@ -74,6 +79,6 @@ For further information on installation and configuration, see the [myMPD wiki](
 
 ## Copyright
 
-2018-2020 Juergen Mang <mail@jcgames.de>
+2018-2021 Juergen Mang <mail@jcgames.de>
 
 myMPD is a fork of [ympd](https://github.com/notandy/ympd).

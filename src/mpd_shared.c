@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -64,7 +64,7 @@ bool check_rc_error_and_recover(t_mpd_state *mpd_state, sds *buffer,
         return false;
     }
     if (rc == false) {
-        //todo: implement notify jsonrpc message on demand
+        //TODO: implement notify jsonrpc message on demand
         if (buffer != NULL && *buffer != NULL) {
             *buffer = respond_with_command_error(*buffer, method, request_id, command);
         }

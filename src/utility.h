@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -48,6 +48,7 @@ void my_usleep(time_t usec);
 unsigned long substractUnsigned(unsigned long num1, unsigned long num2);
 char *basename_uri(char *uri);
 bool is_streamuri(const char *uri);
+int unsigned_to_int(unsigned x);
 
 #define FREE_PTR(PTR) do { \
     if (PTR != NULL) \

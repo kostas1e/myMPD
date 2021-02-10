@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -77,19 +77,6 @@ bool mpd_client_sticker_dequeue(t_mpd_client_state *mpd_client_state) {
         list_shift(&mpd_client_state->sticker_queue, 0);
         current = mpd_client_state->sticker_queue.head;
     }
-    return true;
-}
-
-bool sticker_cache_init(t_config *config, t_mpd_client_state *mpd_client_state) {
-    if (config->sticker_cache == false || mpd_client_state->feat_sticker == false || mpd_client_state->mpd_state->feat_mpd_searchwindow == false) {
-        LOG_VERBOSE("Sticker cache is disabled, mpd version < 0.20.0 or stickers / sticker_cache not enabled");
-        return false;
-    }
-    //push sticker cache building request to mpd_worker thread
-    t_work_request *request = create_request(-1, 0, MPDWORKER_API_STICKERCACHE_CREATE, "MPDWORKER_API_STICKERCACHE_CREATE", "");
-    request->data = sdscat(request->data, "{\"jsonrpc\":\"2.0\",\"id\":0,\"method\":\"MPDWORKER_API_STICKERCACHE_CREATE\",\"params\":{}}");
-    tiny_queue_push(mpd_worker_queue, request, 0);
-    mpd_client_state->sticker_cache_building = true;
     return true;
 }
 

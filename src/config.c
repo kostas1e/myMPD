@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -54,6 +54,9 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     }
     else if (MATCH("mpd", "regex")) {
         p_config->regex = strtobool(value);
+    }
+    else if (MATCH("mpd", "binarylimit")) {
+        p_config->binarylimit = strtoumax(value, &crap, 10);
     }
     else if (MATCH("webserver", "webport")) {
         p_config->webport = sdsreplace(p_config->webport, value);
@@ -247,9 +250,6 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     else if (MATCH("mympd", "bookmarks")) {
         p_config->bookmarks = strtobool(value);
     }
-    else if (MATCH("mympd", "covergridminsongs")) {
-        p_config->covergridminsongs = strtoimax(value, &crap, 10);
-    }
     else if (MATCH("mympd", "bookletname")) {
         p_config->booklet_name = sdsreplace(p_config->booklet_name, value);
     }
@@ -277,7 +277,7 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
         p_config->partitions = strtobool(value);
     }
     else if (MATCH("mympd", "footerstop")) {
-        p_config->footer_stop = strtobool(value);
+        p_config->footer_stop = sdsreplace(p_config->footer_stop, value);
     }
     else if (MATCH("mympd", "home")) {
         p_config->home = strtobool(value);
@@ -287,6 +287,18 @@ static int mympd_inihandler(void *user, const char *section, const char *name, c
     }
     else if (MATCH("mympd", "volumemax")) {
         p_config->volume_max = strtoumax(value, &crap, 10);
+    }
+    else if (MATCH("mympd", "vorbisuslt")) {
+        p_config->vorbis_uslt = sdsreplace(p_config->vorbis_uslt, value);
+    }
+    else if (MATCH("mympd", "vorbissylt")) {
+        p_config->vorbis_sylt = sdsreplace(p_config->vorbis_sylt, value);
+    }
+    else if (MATCH("mympd", "usltext")) {
+        p_config->uslt_ext = sdsreplace(p_config->uslt_ext, value);
+    }
+    else if (MATCH("mympd", "syltext")) {
+        p_config->sylt_ext = sdsreplace(p_config->sylt_ext, value);
     }
     else if (MATCH("theme", "theme")) {
         p_config->theme = sdsreplace(p_config->theme, value);
@@ -350,8 +362,8 @@ static void mympd_parse_env(struct t_config *config, const char *envvar) {
 
 static void mympd_get_env(struct t_config *config) {
     const char *env_vars[]={"MPD_HOST", "MPD_PORT", "MPD_PASS", "MPD_MUSICDIRECTORY",
-        "MPD_PLAYLISTDIRECTORY", "MPD_REGEX", "WEBSERVER_WEBPORT", "WEBSERVER_PUBLISH",
-        "WEBSERVER_WEBDAV", "WEBSERVER_ACL", 
+        "MPD_PLAYLISTDIRECTORY", "MPD_REGEX", "MPD_BINARYLIMIT",
+        "WEBSERVER_WEBPORT", "WEBSERVER_PUBLISH", "WEBSERVER_WEBDAV", "WEBSERVER_ACL", 
       #ifdef ENABLE_LUA
         "WEBSERVER_SCRIPTACL",
       #endif
@@ -366,7 +378,7 @@ static void mympd_get_env(struct t_config *config) {
         "MYMPD_PAGINATION", "MYMPD_LASTPLAYEDCOUNT", "MYMPD_LOVE", "MYMPD_LOVECHANNEL", "MYMPD_LOVEMESSAGE",
         "MYMPD_NOTIFICATIONWEB", "MYMPD_CHROOT", "MYMPD_READONLY", "MYMPD_TIMER", "MYMPD_MOUNTS",
         "MYMPD_NOTIFICATIONPAGE", "MYMPD_AUTOPLAY", "MYMPD_JUKEBOXMODE", "MYMPD_BOOKMARKS",
-        "MYMPD_MEDIASESSION", "MYMPD_COVERGRIDMINSONGS", "MYMPD_BOOKLETNAME",
+        "MYMPD_MEDIASESSION", "MYMPD_BOOKLETNAME",
         "MYMPD_JUKEBOXPLAYLIST", "MYMPD_JUKEBOXQUEUELENGTH", "MYMPD_JUKEBOXLASTPLAYED",
         "MYMPD_JUKEBOXUNIQUETAG", "MYMPD_COLSQUEUECURRENT","MYMPD_COLSSEARCH", 
         "MYMPD_COLSBROWSEDATABASE", "MYMPD_COLSBROWSEPLAYLISTDETAIL",
@@ -374,7 +386,8 @@ static void mympd_get_env(struct t_config *config) {
         "MYMPD_LOCALPLAYER", "MYMPD_STREAMPORT", "MYMPD_HOME", "MYMPOD_COLSQUEUEJUKEBOX",
         "MYMPD_STREAMURL", "MYMPD_VOLUMESTEP", "MYMPD_COVERCACHEKEEPDAYS", "MYMPD_COVERCACHE",
         "MYMPD_COVERCACHEAVOID", "MYMPD_LYRICS", "MYMPD_PARTITIONS", "MYMPD_FOOTERSTOP",
-        "MYMPD_VOLUMEMIN", "MYMPD_VOLUMEMAX",
+        "MYMPD_VOLUMEMIN", "MYMPD_VOLUMEMAX", "MYMPD_VORBISUSLT", "MYMPD_VORBISSYLT",
+        "MYMPD_USLTEXT", "MYMPD_SYLTEXT",
       #ifdef ENABLE_LUA
         "MYMPD_SCRIPTING", "MYMPD_REMOTESCRIPTING", "MYMPD_LUALIBS", "MYMPD_SCRIPTEDITOR",
       #endif
@@ -433,6 +446,11 @@ void mympd_free_config(t_config *config) {
     sdsfree(config->acl);
     sdsfree(config->scriptacl);
     sdsfree(config->lualibs);
+    sdsfree(config->vorbis_uslt);
+    sdsfree(config->vorbis_sylt);
+    sdsfree(config->sylt_ext);
+    sdsfree(config->uslt_ext);
+    sdsfree(config->footer_stop);
     list_free(&config->syscmd_list);
     FREE_PTR(config);
 }
@@ -441,6 +459,8 @@ void mympd_config_defaults(t_config *config) {
     config->mpd_host = sdsnew("/run/mpd/socket");
     config->mpd_port = 6600;
     config->mpd_pass = sdsempty();
+    config->regex = true;
+    config->binarylimit = 16384;
     config->music_directory = sdsnew("auto");
     config->playlist_directory = sdsnew("/var/lib/mpd/playlists");
     config->webport = sdsnew("80");
@@ -512,10 +532,8 @@ void mympd_config_defaults(t_config *config) {
     config->theme = sdsnew("theme-dark");
     config->highlight_color = sdsnew("#28a745");
     config->custom_placeholder_images = false;
-    config->regex = true;
     config->timer = true;
     config->sticker_cache = true;
-    config->covergridminsongs = 1;
     config->booklet_name = sdsnew("booklet.pdf");
     config->mounts = true;
     config->lyrics = true;
@@ -524,12 +542,22 @@ void mympd_config_defaults(t_config *config) {
     config->acl = sdsempty();
     config->scriptacl = sdsnew("-0.0.0.0/0,+127.0.0.0/8");
     config->lualibs = sdsnew("base, string, utf8, table, math, mympd");
+    #ifdef ENABLE_LUA
+    config->scripting = true;
     config->scripteditor = true;
+    #else
+    config->scripting = false;
+    config->scripteditor = false;
+    #endif
     config->partitions = false;
-    config->footer_stop = false;
+    config->footer_stop = sdsnew("pause");
     config->home = true;
     config->volume_min = 0;
     config->volume_max = 100;
+    config->vorbis_uslt = sdsnew("LYRICS");
+    config->vorbis_sylt = sdsnew("SYNCEDLYRICS");
+    config->uslt_ext = sdsnew("txt");
+    config->sylt_ext = sdsnew("lrc");
     list_init(&config->syscmd_list);
 }
 
@@ -553,12 +581,15 @@ bool mympd_dump_config(void) {
         "#pass = \n"
         "musicdirectory = %s\n"
         "playlistdirectory = %s\n"
-        "regex = %s\n\n",
+        "regex = %s\n"
+        "binarylimit = %u\n"
+        "\n",
         p_config->mpd_host,
         p_config->mpd_port,
         p_config->music_directory,
         p_config->playlist_directory,
-        (p_config->regex == true ? "true" : "false")
+        (p_config->regex == true ? "true" : "false"),
+        p_config->binarylimit
     );
     
     fprintf(fp, "[webserver]\n"
@@ -605,7 +636,7 @@ bool mympd_dump_config(void) {
         "smartpls = %s\n"
         "smartplssort = %s\n"
         "smartplsprefix = %s\n"
-        "smartplsinterval = %ld\n"
+        "smartplsinterval = %llu\n"
         "generateplstags = %s\n"
         "mixramp = %s\n"
         "taglist = %s\n"
@@ -650,7 +681,6 @@ bool mympd_dump_config(void) {
         "#streamuri = %s\n"
         "readonly = %s\n"
         "bookmarks = %s\n"
-        "covergridminsongs = %d\n"
         "bookletname = %s\n"
         "mounts = %s\n"
         "lyrics = %s\n"
@@ -659,6 +689,10 @@ bool mympd_dump_config(void) {
         "home = %s\n"
         "volumemine = %u\n"
         "volumemax = %u\n"
+        "vorbisuslt = %s\n"
+        "vorbissylt = %s\n"
+        "usltext = %s\n"
+        "syltext = %s\n"
         "\n",
         p_config->user,
         (p_config->chroot == true ? "true" : "false"),
@@ -668,7 +702,7 @@ bool mympd_dump_config(void) {
         (p_config->smartpls == true ? "true" : "false"),
         p_config->smartpls_sort,
         p_config->smartpls_prefix,
-        p_config->smartpls_interval,
+        (unsigned long long)p_config->smartpls_interval, //cast for 32 bit compatibility
         p_config->generate_pls_tags,
         (p_config->mixramp == true ? "true" : "false"),
         p_config->taglist,
@@ -713,15 +747,18 @@ bool mympd_dump_config(void) {
         p_config->stream_url,
         (p_config->readonly == true ? "true" : "false"),
         (p_config->bookmarks == true ? "true" : "false"),
-        p_config->covergridminsongs,
         p_config->booklet_name,
         (p_config->mounts == true ? "true" : "false"),
         (p_config->lyrics == true ? "true" : "false"),
         (p_config->partitions == true ? "true" : "false"),
-        (p_config->footer_stop == true ? "true" : "false"),
+        p_config->footer_stop,
         (p_config->home == true ? "true" : "false"),
         p_config->volume_min,
-        p_config->volume_max
+        p_config->volume_max,
+        p_config->vorbis_uslt,
+        p_config->vorbis_sylt,
+        p_config->uslt_ext,
+        p_config->sylt_ext
         
     );
 
