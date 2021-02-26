@@ -19,7 +19,7 @@ function initBrowse() {
             app.current.search = '';
             document.getElementById('searchDatabaseStr').value = '';
             appGoto(app.current.app, app.current.card, undefined, 0, undefined, 'Album', 'AlbumArtist', 'Album', 
-                '(' + app.current.tag + ' == \'' + escapeMPD(getAttDec(event.target.parentNode, 'data-tag')) + '\')');
+                '((' + app.current.tag + ' == \'' + escapeMPD(getAttDec(event.target.parentNode, 'data-tag')) + '\'))');
         }
     }, false);
     
@@ -75,7 +75,6 @@ function initBrowse() {
         if (event.target.nodeName === 'BUTTON') {
             app.current.filter = getAttDec(event.target, 'data-tag');
             searchAlbumgrid(document.getElementById('searchDatabaseStr').value);
-            //appGoto(app.current.app, app.current.tab, app.current.view, '0', app.current.limit, app.current.filter, app.current.sort, app.current.tag, app.current.search);
         }
     }, false);
     
@@ -146,15 +145,11 @@ function initBrowse() {
         }
         else if (event.key === 'Enter' && app.current.tag === 'Album') {
             if (this.value !== '') {
-                let match = getSelectValue(document.getElementById('searchDatabaseMatch'));
-                let li = document.createElement('button');
-                li.classList.add('btn', 'btn-light', 'mr-2');
-                setAttEnc(li, 'data-filter-tag', app.current.filter);
-                setAttEnc(li, 'data-filter-op', match);
-                setAttEnc(li, 'data-filter-value', this.value);
-                li.innerHTML = e(app.current.filter) + ' ' + e(match) + ' \'' + e(this.value) + '\'<span class="ml-2 badge badge-secondary">&times;</span>';
+                const op = getSelectValue(document.getElementById('searchDatabaseMatch'));
+                const crumbEl = document.getElementById('searchDatabaseCrumb');
+                crumbEl.appendChild(createSearchCrumb(app.current.filter, op, this.value));
+                crumbEl.classList.remove('hide');
                 this.value = '';
-                document.getElementById('searchDatabaseCrumb').appendChild(li);
             }
             else {
                 searchAlbumgrid(this.value);
@@ -175,19 +170,25 @@ function initBrowse() {
 
     document.getElementById('searchDatabaseCrumb').addEventListener('click', function(event) {
         if (event.target.nodeName === 'SPAN') {
+            //remove search expression
             event.preventDefault();
             event.stopPropagation();
             event.target.parentNode.remove();
             searchAlbumgrid('');
         }
         else if (event.target.nodeName === 'BUTTON') {
+            //edit search expression
             event.preventDefault();
             event.stopPropagation();
             selectTag('searchDatabaseTags', 'searchDatabaseTagsDesc', getAttDec(event.target,'data-filter-tag'));
             document.getElementById('searchDatabaseStr').value = unescapeMPD(getAttDec(event.target, 'data-filter-value'));
             document.getElementById('searchDatabaseMatch').value = getAttDec(event.target, 'data-filter-op');
             event.target.remove();
+            app.current.filter = getAttDec(event.target,'data-filter-tag');
             searchAlbumgrid(document.getElementById('searchDatabaseStr').value);
+            if (document.getElementById('searchDatabaseCrumb').childElementCount === 0) {
+                document.getElementById('searchDatabaseCrumb').classList.add('hide');
+            }
         }
     }, false);
 
@@ -312,13 +313,13 @@ function gotoBrowse(event) {
             else {
                 //show filtered album list
                 document.getElementById('searchDatabaseStr').value = '';
-                appGoto('Browse', 'Database', 'List', '0', undefined, tag, tagAlbumArtist, 'Album', '(' + tag + ' == \'' + escapeMPD(name) + '\')');
+                appGoto('Browse', 'Database', 'List', '0', undefined, tag, tagAlbumArtist, 'Album', '((' + tag + ' == \'' + escapeMPD(name) + '\'))');
             }
         }
         else {
             //show filtered album list
             document.getElementById('searchDatabaseStr').value = '';
-            appGoto('Browse', 'Database', 'List', '0', undefined, tag, tagAlbumArtist, 'Album', '(' + tag + ' == \'' + escapeMPD(name) + '\')');
+            appGoto('Browse', 'Database', 'List', '0', undefined, tag, tagAlbumArtist, 'Album', '((' + tag + ' == \'' + escapeMPD(name) + '\'))');
         }
     }
 }
@@ -604,7 +605,6 @@ function parseDatabase(obj) {
     if (nrItems === 0) {
         cardContainer.innerHTML = '<div class="ml-3 mb-3 not-clickable"><span class="mi">error_outline</span>&nbsp;' + t('Empty list') + '</div>';
     }
-    //document.getElementById('cardFooterBrowse').innerText = gtPage('Num entries', obj.result.returnedEntities, obj.result.totalEntities);
 }
 
 function setGridImage(changes, observer) {
@@ -707,26 +707,7 @@ function _addAlbum(action, albumArtist, album) {
 }
 
 function searchAlbumgrid(x) {
-    let expression = '';
-    let crumbs = document.getElementById('searchDatabaseCrumb').children;
-    for (let i = 0; i < crumbs.length; i++) {
-        if (i > 0) {
-            expression += ' AND ';
-        }
-        expression += '(' + getAttDec(crumbs[i], 'data-filter-tag') + ' ' + 
-            getAttDec(crumbs[i], 'data-filter-op') + ' \'' + 
-            escapeMPD(getAttDec(crumbs[i], 'data-filter-value')) + '\')';
-    }
-    if (x !== '') {
-        if (expression !== '') {
-            expression += ' AND ';
-        }
-        expression += '(' + app.current.filter + ' ' + getSelectValue(document.getElementById('searchDatabaseMatch')) + ' \'' + escapeMPD(x) +'\')';
-    }
-    
-    if (expression.length <= 2) {
-        expression = '';
-    }
+    const expression = createSearchExpression(document.getElementById('searchDatabaseCrumb'), app.current.filter, getSelectValue('searchDatabaseMatch'), x);
     appGoto(app.current.app, app.current.tab, app.current.view, 
         '0', app.current.limit, app.current.filter, app.current.sort, app.current.tag, expression);
 }

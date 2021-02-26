@@ -121,7 +121,7 @@ function selectHomeIconLigature(x) {
 }
 
 function filterHomeIconLigatures() {
-    const str = document.getElementById('searchHomeIconLigature').value;
+    const str = document.getElementById('searchHomeIconLigature').value.toLowerCase();
     const cat = getSelectValue('searchHomeIconCat');
     const els = document.getElementById('listHomeIconLigature').getElementsByTagName('button');
     for (let i = 0; i < els.length; i++) {
@@ -172,6 +172,10 @@ function parseHome(obj) {
         if (obj.result.data[i].cmd === 'appGoto') {
             if (obj.result.data[i].options.length === 8) {
                 obj.result.data[i].options.splice(4, 0, settings.maxElementsPerPage);
+            }
+            //workarround for 6.11.2 change
+            if (obj.result.data[i].options[8].indexOf('((') === -1 && obj.result.data[i].options[8].length > 0) {
+                obj.result.data[i].options[8] = '(' + obj.result.data[i].options[8] + ')';
             }
         }
         
@@ -377,6 +381,10 @@ function _editHomeIcon(pos, replace, title) {
         if (obj.result.data.cmd === 'appGoto') {
             if (obj.result.data.options.length === 8) {
                 obj.result.data.options.splice(4, 0, settings.maxElementsPerPage);
+            }
+            //workarround for 6.11.2 change
+            if (obj.result.data.options[8].indexOf('((') === -1 && obj.result.data.options[8].length > 0) {
+                obj.result.data.options[8] = '(' + obj.result.data.options[8] + ')';
             }
         }
 
