@@ -48,12 +48,6 @@
   margin-top: 25vh;
 }
 
-#splashScreenLogo img {
-  filter: invert(100%);
-  /* height: 5rem; */
-  vertical-align: text-bottom !important;
-}
-
 .splashScreenIcon {
   font-size: 4.8rem !important;
   vertical-align: text-bottom !important;
@@ -1002,52 +996,7 @@ div.album-grid-mouseover {
   padding: 0.3rem;
   font-size: 2.4rem;
 }
-/* 
-#cardQueueMiniList tr > td {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
- 
-#BrowseDatabaseAlbumListCaption {
-  margin-left: 15px;
-  margin-right: 15px;
-  width: 100%;
-}
 
-#BrowseDatabaseAlbumListCaption h2 {
-  display: inline;
-}
-
-#BrowseDatabaseAlbumListCaption small {
-  padding-top: 0.8rem;
-}
-
-@media only screen and (max-width: 576px) {
-  .btnText {
-    display: none !important;
-  }
-}
-
-#cardHeaderBrowse > ul, #cardHeaderQueue > ul {
-  float: left;
-}
-
-#cardHeaderQueueMini {
-  height: 32px;
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-#cardHeaderQueueMini > span {
-  vertical-align: middle;
-}
-
-#tabPlaybackSettings .btn, #tabGeneralSettings .btn, #tabInterfaceSettings .btn,
-#tabPlaybackSettings .btn-group {
-    float: right !important;
-}
-*/
 #cardQueueMini {
   height: 23.6rem;
 }
@@ -1101,4 +1050,10 @@ img.covergrid-header {
   font-size: 3rem;
   margin-right: 1.25rem;
   margin-bottom: 1.25rem;
+}
+
+#splashScreenLogo img {
+  filter: invert(100%);
+  /* height: 5rem; */
+  vertical-align: text-bottom !important;
 }
