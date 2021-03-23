@@ -199,10 +199,13 @@ function initBrowse() {
             const name = getAttDec(event.target.parentNode, 'data-name');
             const dataType = getAttDec(event.target.parentNode, 'data-type');
             switch (dataType) {
-                case 'parentDir':
+                case 'parentDir': {
+                    const offset = browseFilesystemHistory[uri] !== undefined ? browseFilesystemHistory[uri].offset : 0;
+                    const scrollPos = browseFilesystemHistory[uri] !== undefined ? browseFilesystemHistory[uri].scrollPos : 0;
                     app.current.filter = '-';
-                    appGoto('Browse', 'Filesystem', undefined, '0', app.current.limit, app.current.filter, app.current.sort, '-', uri);
+                    appGoto('Browse', 'Filesystem', undefined, offset, app.current.limit, app.current.filter, app.current.sort, '-', uri, scrollPos);
                     break;
+                }
                 case 'dir':
                     clickFolder(uri, name);
                     break;
@@ -247,7 +250,10 @@ function initBrowse() {
     document.getElementById('BrowseBreadcrumb').addEventListener('click', function (event) {
         if (event.target.nodeName === 'A') {
             event.preventDefault();
-            appGoto('Browse', 'Filesystem', undefined, '0', app.current.limit, app.current.filter, app.current.sort, '-', getAttDec(event.target, 'data-uri'));
+            const uri = getAttDec(event.target, 'data-uri');
+            const offset = browseFilesystemHistory[uri] !== undefined ? browseFilesystemHistory[uri].offset : 0;
+            const scrollPos = browseFilesystemHistory[uri] !== undefined ? browseFilesystemHistory[uri].scrollPos : 0;
+            appGoto('Browse', 'Filesystem', undefined, offset, app.current.limit, app.current.filter, app.current.sort, '-', uri, scrollPos);
         }
     }, false);
 
@@ -368,6 +374,7 @@ function parseFilesystem(obj) {
         row.setAttribute('title', t(data.Type === 'song' ? rowTitleSong :
             data.Type === 'dir' ? rowTitleFolder : rowTitlePlaylist));
     });
+    scrollToPosY(app.current.scrollPos);
 }
 
 //eslint-disable-next-line no-unused-vars

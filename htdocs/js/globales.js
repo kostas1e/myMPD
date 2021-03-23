@@ -35,6 +35,9 @@ const progressBarTransition = 'width 1s linear';
 let tagAlbumArtist = 'AlbumArtist';
 let resetFlag = false;
 
+//remember offset for filesystem browsing uris
+const browseFilesystemHistory = {};
+
 //list of stickers
 const stickerList = ['stickerPlayCount', 'stickerSkipCount', 'stickerLastPlayed',
     'stickerLastSkipped', 'stickerLike'];
