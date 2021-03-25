@@ -157,7 +157,7 @@ function webSocketConnect() {
                     parseVolume(obj);
                     break;
                 case 'update_stored_playlist':
-                    if (app.current.app === 'Browse' && app.current.tab === 'Playlists' && app.current.view === 'All') {
+                    if (app.current.app === 'Browse' && app.current.tab === 'Playlists' && app.current.view === 'List') {
                         sendAPI('MPD_API_PLAYLIST_LIST', {"offset": app.current.offset, "limit": app.current.limit, "searchstr": app.current.search}, parsePlaylistsList);
                     }
                     else if (app.current.app === 'Browse' && app.current.tab === 'Playlists' && app.current.view === 'Detail') {
@@ -211,7 +211,9 @@ function webSocketConnect() {
         
         socket.onerror = function() {
             logError('Websocket error occured');
-            socket.close();
+            if (socket !== null) {
+                socket.close();
+            }
         };
     }
     catch(error) {

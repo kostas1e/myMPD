@@ -897,6 +897,10 @@ a.text-success:focus {
   scroll-margin: 3rem;
 }
 
+.lyricsSyncedText > p {
+  margin-bottom: 0;
+}
+
 .rounded-right-0 {
   border-top-right-radius: 0 !important;
   border-bottom-right-radius: 0 !important;
@@ -1039,4 +1043,11 @@ div.album-grid-mouseover {
 .fullHeight {
   overflow: unset;
   max-height: none;
+}
+
+.lyricsChangeButton {
+  max-width: 10rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
