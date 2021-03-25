@@ -23,7 +23,7 @@
 #include "api.h"
 #include "log.h"
 #include "list.h"
-#include "config_defs.h"
+#include "mympd_config_defs.h"
 #include "utility.h"
 #include "tiny_queue.h"
 #include "global.h"
@@ -356,8 +356,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
     {
         MYMPD_LOG_INFO("New Websocket connection established (%d)", (intptr_t)nc->user_data);
         sds response = jsonrpc_notify_start(sdsempty(), "welcome");
-        response = tojson_char(response, "mympdVersion", MYMPD_VERSION, true);
-        response = tojson_char(response, "ideonVersion", IDEON_VERSION, false);
+        response = tojson_char(response, "mympdVersion", MYMPD_VERSION, false);
         response = jsonrpc_result_end(response);
         mg_send_websocket_frame(nc, WEBSOCKET_OP_TEXT, response, sdslen(response));
         sdsfree(response);
@@ -369,7 +368,7 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
         static const struct mg_str browse_prefix = MG_MK_STR("/browse");
         static const struct mg_str albumart_prefix = MG_MK_STR("/albumart");
         static const struct mg_str tagpics_prefix = MG_MK_STR("/tagpics");
-        MYMPD_LOG_INFO("HTTP request (%d): %.*s", (intptr_t)nc->user_data, (int)hm->uri.len, hm->uri.p);
+        MYMPD_LOG_INFO("HTTP request %.*s (%d): %.*s", hm->method.len, hm->method.p, (intptr_t)nc->user_data, (int)hm->uri.len, hm->uri.p);
         if (mg_vcmp(&hm->uri, "/api/script") == 0)
         {
             if (config->remotescripting == false)
@@ -397,13 +396,11 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
             if (rc == false)
             {
                 MYMPD_LOG_ERROR("Invalid script API request");
-                sds method = sdsempty();
-                sds response = jsonrpc_respond_message(sdsempty(), method, 0, true,
+                sds response = jsonrpc_respond_message(sdsempty(), "", 0, true,
                                                        "script", "error", "Invalid script API request");
                 mg_send_head(nc, 200, sdslen(response), "Content-Type: application/json");
                 mg_send(nc, response, sdslen(response));
                 sdsfree(response);
-                sdsfree(method);
             }
         }
         else if (mg_vcmp(&hm->uri, "/api/serverinfo") == 0)
@@ -412,15 +409,13 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
             socklen_t len = sizeof(localip);
             if (getsockname(nc->sock, (struct sockaddr *)&localip, &len) == 0)
             {
-                sds method = sdsempty();
-                sds response = jsonrpc_result_start(sdsempty(), method, 0);
+                sds response = jsonrpc_result_start(sdsempty(), "", 0);
                 response = tojson_char(response, "version", MG_VERSION, true);
                 response = tojson_char(response, "ip", inet_ntoa(localip.sin_addr), false);
                 response = jsonrpc_result_end(response);
                 mg_send_head(nc, 200, sdslen(response), "Content-Type: application/json");
                 mg_send(nc, response, sdslen(response));
                 sdsfree(response);
-                sdsfree(method);
             }
         }
         else if (mg_vcmp(&hm->uri, "/api") == 0)
@@ -430,13 +425,11 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
             if (rc == false)
             {
                 MYMPD_LOG_ERROR("Invalid API request");
-                sds method = sdsempty();
-                sds response = jsonrpc_respond_message(sdsempty(), method, 0, true,
+                sds response = jsonrpc_respond_message(sdsempty(), "", 0, true,
                                                        "general", "error", "Invalid API request");
                 mg_send_head(nc, 200, sdslen(response), "Content-Type: application/json");
                 mg_send(nc, response, sdslen(response));
                 sdsfree(response);
-                sdsfree(method);
             }
         }
 #ifdef ENABLE_SSL
@@ -469,9 +462,8 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data)
             {
                 send_error(nc, 403, "Publishing of directories is disabled");
             }
-            if (config->webdav == false && mg_vcmp(&hm->method, "GET") == 1 && mg_vcmp(&hm->method, "HEAD") == 1)
+            else if (config->webdav == false && mg_vcmp(&hm->method, "GET") == 1 && mg_vcmp(&hm->method, "HEAD") == 1)
             {
-                MYMPD_LOG_ERROR("Invalid method: %.*s", hm->method.len, hm->method.p);
                 send_error(nc, 405, "Method not allowed (webdav is disabled)");
             }
             else

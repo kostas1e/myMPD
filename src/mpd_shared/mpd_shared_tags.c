@@ -18,7 +18,7 @@
 #include "../sds_extras.h"
 #include "../log.h"
 #include "../list.h"
-#include "config_defs.h"
+#include "mympd_config_defs.h"
 #include "../utility.h"
 #include "mpd_shared_typedefs.h"
 #include "../mpd_shared.h"
@@ -42,7 +42,9 @@ enum mpd_tag_type get_sort_tag(enum mpd_tag_type tag)
     {
         return MPD_TAG_ALBUM_SORT;
     }
-
+    if (tag == MPD_TAG_COMPOSER) {
+        return MPD_TAG_COMPOSER_SORT;
+    }
     return tag;
 }
 

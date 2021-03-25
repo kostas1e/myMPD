@@ -8,7 +8,7 @@
 
 #include "../dist/src/sds/sds.h"
 #include "list.h"
-#include "config_defs.h"
+#include "mympd_config_defs.h"
 #include "log.h"
 #include "mympd_api/mympd_api_utility.h"
 #include "sds_extras.h"

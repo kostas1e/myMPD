@@ -25,7 +25,7 @@
 #include "../sds_extras.h"
 #include "../../dist/src/rax/rax.h"
 #include "../list.h"
-#include "config_defs.h"
+#include "mympd_config_defs.h"
 #include "../utility.h"
 #include "../api.h"
 #include "../log.h"
@@ -248,6 +248,10 @@ sds mpd_client_put_filesystem(t_config *config, t_mpd_client_state *mpd_client_s
                 struct mpd_song *song = (struct mpd_song *)current->user_data;
                 buffer = sdscat(buffer, "{\"Type\":\"song\",");
                 buffer = put_song_tags(buffer, mpd_client_state->mpd_state, tagcols, song);
+                buffer = sdscatlen(buffer, ",", 1);
+                char *filename = strdup(mpd_song_get_uri(song));
+                buffer = tojson_char(buffer, "Filename", basename_uri(filename), false);
+                free(filename);
                 if (mpd_client_state->feat_sticker)
                 {
                     buffer = sdscat(buffer, ",");
@@ -262,7 +266,8 @@ sds mpd_client_put_filesystem(t_config *config, t_mpd_client_state *mpd_client_s
                 struct mpd_directory *dir = (struct mpd_directory *)current->user_data;
                 buffer = sdscat(buffer, "{\"Type\":\"dir\",");
                 buffer = tojson_char(buffer, "uri", mpd_directory_get_path(dir), true);
-                buffer = tojson_char(buffer, "name", current->value_p, false);
+                buffer = tojson_char(buffer, "name", current->value_p, true);
+                buffer = tojson_char(buffer, "Filename", current->value_p, false);
                 buffer = sdscat(buffer, "}");
                 mpd_directory_free(dir);
                 break;

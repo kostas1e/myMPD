@@ -4,19 +4,18 @@
 # https://github.com/jcorporation/mympd
 #
 
-cmake_minimum_required(VERSION 3.4)
-
-include(GNUInstallDirs)
-
 project (mympd C)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/")
 set(CPACK_PACKAGE_VERSION_MAJOR "6")
 set(CPACK_PACKAGE_VERSION_MINOR "12")
-set(CPACK_PACKAGE_VERSION_PATCH "0")
+set(CPACK_PACKAGE_VERSION_PATCH "1")
 
 set(CPACK_PACKAGE_IDEONVERSION_MAJOR "2")
 set(CPACK_PACKAGE_IDEONVERSION_MINOR "0")
 set(CPACK_PACKAGE_IDEONVERSION_PATCH "0")
+
+cmake_minimum_required(VERSION 3.4)
+include(GNUInstallDirs)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/")
 
 if(EXISTS "/etc/arch-release")
   set(WEBAPPS "/webapps/${PROJECT_NAME}")
@@ -122,7 +121,7 @@ endif()
 
 add_subdirectory("cli_tools")
 
-configure_file(src/config_defs.h.in ${PROJECT_BINARY_DIR}/config_defs.h)
+configure_file(src/mympd_config_defs.h.in ${PROJECT_BINARY_DIR}/mympd_config_defs.h)
 configure_file(cmake/CopyConfig.cmake.in cmake/CopyConfig.cmake @ONLY)
 configure_file(contrib/initscripts/mympd.service.in contrib/initscripts/mympd.service @ONLY)
 configure_file(contrib/initscripts/mympd.sysVinit.in contrib/initscripts/mympd.sysVinit @ONLY)
@@ -187,7 +186,7 @@ set(SOURCES
   src/list.c
   src/tiny_queue.c
   src/log.c
-  src/config.c
+  src/mympd_config.c
   src/handle_options.c
   src/maintenance.c
   src/utility.c
@@ -243,6 +242,7 @@ set(SOURCES
   dist/src/sds/sds.c
   dist/src/rax/rax.c
   dist/src/tinymt/tinymt32.c
+  dist/src/utf8decode/utf8decode.c
 )
 
 if("${ENABLE_SSL}" MATCHES "ON")

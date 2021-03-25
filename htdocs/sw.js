@@ -2,7 +2,7 @@
 // myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
-const CACHE = 'myMPD-cache-v6.12.0';
+const CACHE = 'myMPD-cache-v6.12.1';
 const subdir = self.location.pathname.replace('/sw.js', '').replace(/\/$/, '');
 const urlsToCache = [
     subdir + '/',
@@ -13,28 +13,28 @@ const urlsToCache = [
     subdir + '/assets/coverimage-stream.svg',
     subdir + '/assets/coverimage-notavailable.svg',
     subdir + '/assets/coverimage-loading.svg',
-	subdir + '/assets/coverimage-mympd.svg',
+    subdir + '/assets/coverimage-mympd.svg',
     subdir + '/assets/favicon.ico',
     subdir + '/assets/MaterialIcons-Regular.woff2',
-	subdir + '/assets/mympd-background-dark.svg',
-	subdir + '/assets/mympd-background-default.svg',
-	subdir + '/assets/mympd-background-light.svg',
+    subdir + '/assets/mympd-background-dark.svg',
+    subdir + '/assets/mympd-background-default.svg',
+    subdir + '/assets/mympd-background-light.svg',
     subdir + '/assets/ideon-logo.png'
 ];
 
 const ignoreRequests = new RegExp('(' + [
-  subdir + '/api',
-  subdir + '/ca.crt',
-  subdir + '/ws',
-  subdir + '/tagpics/(.*)',
-  subdir + '/albumart/(.*)',
-  subdir + '/browse/(.*)'].join('(/?)|\\') + ')$');
+    subdir + '/api',
+    subdir + '/ca.crt',
+    subdir + '/ws',
+    subdir + '/tagpics/(.*)',
+    subdir + '/albumart/(.*)',
+    subdir + '/browse/(.*)'].join('(/?)|\\') + ')$');
 
-self.addEventListener('install', function(event) {
+self.addEventListener('install', function (event) {
     event.waitUntil(
-        caches.open(CACHE).then(function(cache) {
-            urlsToCache.map(function(url) {
-		return cache.add(url).catch(function (reason) {
+        caches.open(CACHE).then(function (cache) {
+            urlsToCache.map(function (url) {
+                return cache.add(url).catch(function (reason) {
                     return console.log('ServiceWorker: ' + String(reason) + ' ' + url);
                 });
             });
@@ -42,18 +42,18 @@ self.addEventListener('install', function(event) {
     );
 });
 
-self.addEventListener('fetch', function(event) {
+self.addEventListener('fetch', function (event) {
     if (event.request.url.match('^http://')) {
         return false;
     }
     if (event.request.destination === 'audio') {
-        return false;    
+        return false;
     }
     if (ignoreRequests.test(event.request.url)) {
         return false;
     }
     event.respondWith(
-        caches.match(event.request).then(function(response) {
+        caches.match(event.request).then(function (response) {
             if (response) {
                 return response;
             }
@@ -64,11 +64,11 @@ self.addEventListener('fetch', function(event) {
     );
 });
 
-self.addEventListener('activate', function(event) {
+self.addEventListener('activate', function (event) {
     event.waitUntil(
-        caches.keys().then(function(cacheNames) {
+        caches.keys().then(function (cacheNames) {
             return Promise.all(
-                cacheNames.map(function(cacheName) {
+                cacheNames.map(function (cacheName) {
                     if (cacheName !== CACHE) {
                         return caches.delete(cacheName);
                     }

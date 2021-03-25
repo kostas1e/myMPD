@@ -211,6 +211,9 @@ function getLyrics(uri, el) {
         else if (obj.result.message) {
             el.innerText = t(obj.result.message);
         }
+        else if (obj.result.returnedEntities === 0) {
+            el.innerHTML = t('No lyrics found');
+        }
         else {
             let lyricsHeader = '<span class="lyricsHeader" class="btn-group-toggle" data-toggle="buttons">';
             let lyrics = '<div class="lyricsTextContainer">';
@@ -227,7 +230,8 @@ function getLyrics(uri, el) {
                 else {
                     ht = i;
                 }
-                lyricsHeader += '<label data-num="' + i + '" class="btn btn-sm btn-outline-secondary mr-2' + (i === 0 ? ' active' : '') + '">' + ht + '</label>';
+                lyricsHeader += '<label data-num="' + i + '" class="btn btn-sm btn-outline-secondary mr-2 lyricsChangeButton' + (i === 0 ? ' active' : '') + '" title="' +
+                    (obj.result.data[i].synced === true ? t('Synced lyrics') : t('Unsynced lyrics')) + ': ' + e(ht) + '">' + e(ht) + '</label>';
                 lyrics += '<div class="lyricsText ' + (i > 0 ? 'hide' : '') + (obj.result.data[i].synced === true ? 'lyricsSyncedText' : '') +
                     (clickable === true ? '' : ' fullHeight') + '">' +
                     (obj.result.data[i].synced === true ? parseSyncedLyrics(obj.result.data[i].text, clickable) : e(obj.result.data[i].text).replace(/\n/g, "<br/>")) +
@@ -238,8 +242,10 @@ function getLyrics(uri, el) {
             }
             lyricsHeader += '</span>';
             lyrics += '</div>';
+            const lyricsScroll = showSyncedLyrics === false || clickable === false ? '' :
+                '<button class="btn btn-sm mi mr-2 active" id="lyricsScroll">autorenew</button>';
             if (obj.result.returnedEntities > 1) {
-                el.innerHTML = lyricsHeader + lyrics;
+                el.innerHTML = lyricsScroll + lyricsHeader + lyrics;
                 el.getElementsByClassName('lyricsHeader')[0].addEventListener('click', function (event) {
                     if (event.target.nodeName === 'LABEL') {
                         event.target.parentNode.getElementsByClassName('active')[0].classList.remove('active');
@@ -258,11 +264,16 @@ function getLyrics(uri, el) {
                 }, false);
             }
             else {
-                el.innerHTML = lyrics;
+                el.innerHTML = lyricsScroll + lyrics;
             }
             if (showSyncedLyrics === true && clickable === true) {
+                document.getElementById('lyricsScroll').addEventListener('click', function (event) {
+                    toggleBtn(event.target);
+                    scrollSyncedLyrics = event.target.classList.contains('active');
+                }, false);
                 const textEls = el.getElementsByClassName('lyricsSyncedText');
                 for (let i = 0; i < textEls.length; i++) {
+                    //seek to songpos in click
                     textEls[i].addEventListener('click', function (event) {
                         const sec = event.target.getAttribute('data-sec');
                         if (sec !== null) {
@@ -286,12 +297,17 @@ function parseSyncedLyrics(text, clickable) {
             const sec = parseInt(line[1]) * 60 + parseInt(line[2]);
             //line[3] are hundreths of a seconde - ignore it for the moment
             html += '<p><span class="' + (clickable === true ? 'clickable' : '') + '" data-sec="' + sec + '">';
-            //support of extended lrc format - timestamps for words
-            html += line[4].replace(/<(\d+):(\d+)\.\d+>/g, function (m0, m1, m2) {
-                //hundreths of a secondes are ignored
-                const wsec = parseInt(m1) * 60 + parseInt(m2);
-                return '</span><span class="' + (clickable === true ? 'clickable' : '') + '" data-sec="' + wsec + '">';
-            });
+            if (line[4].match(/^\s+$/)) {
+                html += '&nbsp;';
+            }
+            else {
+                //support of extended lrc format - timestamps for words
+                html += line[4].replace(/<(\d+):(\d+)\.\d+>/g, function (m0, m1, m2) {
+                    //hundreths of a secondes are ignored
+                    const wsec = parseInt(m1) * 60 + parseInt(m2);
+                    return '</span><span class="' + (clickable === true ? 'clickable' : '') + '" data-sec="' + wsec + '">';
+                });
+            }
             html += '</span></p>';
         }
     }
