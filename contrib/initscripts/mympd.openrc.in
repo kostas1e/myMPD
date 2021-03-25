@@ -1,7 +1,7 @@
 #!/sbin/openrc-run
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
-# myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+# myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
 # https://github.com/jcorporation/mympd
 
 name=myMPD
@@ -11,9 +11,6 @@ command_background="yes"
 
 start_stop_daemon_args=""
 pidfile="/run/$name.pid"
-
-output_logger="logger -t mympd -p daemon.info"
-error_logger="logger -t mympd -p daemon.error"
 
 depend() {
 	need net

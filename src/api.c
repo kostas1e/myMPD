@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -31,7 +31,7 @@ bool is_public_api_method(enum mympd_cmd_ids cmd_id)
     case MPD_API_UNKNOWN:
     case MPD_API_SCRIPT_INIT:
     case MPD_API_TIMER_STARTPLAY:
-    case MPDWORKER_API_STICKERCACHE_CREATE:
+    case MPDWORKER_API_CACHES_CREATE:
     case MYMPD_API_TIMER_SET:
     case MYMPD_API_SCRIPT_INIT:
     case MYMPD_API_SCRIPT_POST_EXECUTE:

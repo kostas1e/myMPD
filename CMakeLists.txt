@@ -1,6 +1,6 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
-# myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+# myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
 # https://github.com/jcorporation/mympd
 #
 
@@ -11,8 +11,8 @@ include(GNUInstallDirs)
 project (mympd C)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/")
 set(CPACK_PACKAGE_VERSION_MAJOR "6")
-set(CPACK_PACKAGE_VERSION_MINOR "8")
-set(CPACK_PACKAGE_VERSION_PATCH "3")
+set(CPACK_PACKAGE_VERSION_MINOR "12")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
 
 set(CPACK_PACKAGE_IDEONVERSION_MAJOR "2")
 set(CPACK_PACKAGE_IDEONVERSION_MINOR "0")
@@ -57,6 +57,8 @@ endif()
 message("ASSETS_PATH: ${ASSETS_PATH}")
 
 find_package(Threads REQUIRED)
+find_package(PCRE REQUIRED)
+include_directories(${PCRE_INCLUDE_DIRS})
 
 if(NOT "${ENABLE_SSL}" MATCHES "OFF")
   message("Searching for openssl")
@@ -110,6 +112,9 @@ if(LUA_FOUND)
     message("Lua is disabled because a version lower then 5.3.0 was found")
     set(ENABLE_LUA "OFF")
   endif()
+elseif("${ENABLE_LUA}" MATCHES "OFF")
+  message("Lua is disabled by user")
+  set(ENABLE_LUA "OFF")
 else()
   message("Lua is disabled because it was not found")
   set(ENABLE_LUA "OFF")
@@ -213,11 +218,12 @@ set(SOURCES
   src/mpd_client/mpd_client_mounts.c
   src/mpd_client/mpd_client_partitions.c
   src/mpd_client/mpd_client_trigger.c
+  src/mpd_client/mpd_client_lyrics.c
   src/mpd_worker.c
   src/mpd_worker/mpd_worker_api.c
   src/mpd_worker/mpd_worker_utility.c
   src/mpd_worker/mpd_worker_smartpls.c
-  src/mpd_worker/mpd_worker_stickercache.c
+  src/mpd_worker/mpd_worker_cache.c
   src/mympd_api.c
   src/mympd_api/mympd_api_bookmarks.c
   src/mympd_api/mympd_api_home.c
@@ -230,7 +236,6 @@ set(SOURCES
   src/web_server.c
   src/web_server/web_server_utility.c
   src/web_server/web_server_albumart.c
-  src/web_server/web_server_lyrics.c
   src/web_server/web_server_tagpics.c
   dist/src/mongoose/mongoose.c
   dist/src/frozen/frozen.c
@@ -248,6 +253,7 @@ endif()
 
 set(LIBMPDCLIENT_SOURCES
   dist/src/libmpdclient/src/albumart.c
+  dist/src/libmpdclient/src/binary.c
   dist/src/libmpdclient/src/async.c
   dist/src/libmpdclient/src/audio_format.c
   dist/src/libmpdclient/src/capabilities.c
@@ -308,6 +314,7 @@ add_executable(mympd ${SOURCES} ${LIBMPDCLIENT_SOURCES} ${CERT_SOURCES})
 
 target_link_libraries(mympd ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(mympd m -lcurl)
+target_link_libraries(mympd ${PCRE_LIBRARIES})
 if (OPENSSL_FOUND)
   target_link_libraries(mympd ${OPENSSL_LIBRARIES})
 endif()

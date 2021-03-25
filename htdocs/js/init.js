@@ -7,12 +7,11 @@ function checkInit() {
     if (settings.init !== true) {
         getServerinfo();
 
-        // document.getElementById('selectLocale1').innerHTML = document.getElementById('selectLocale').innerHTML;
         document.getElementById('selectTheme1').innerHTML = document.getElementById('selectTheme').innerHTML;
         document.getElementById('selectTheme1').value = settings.theme;
 
-        document.getElementById('selectTheme1').addEventListener('change', function () {
-            let value = getSelectValue(this);
+        document.getElementById('selectTheme1').addEventListener('change', function (event) {
+            const value = getSelectValue(event.target);
             if (value === 'theme-autodetect') {
                 value = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
             }
@@ -27,18 +26,18 @@ function checkInit() {
             });
 
             if (value === 'theme-default') {
-                bgColor = '#ccc';
+                bgColor = '#aaaaaa';
             }
             else if (value === 'theme-light') {
-                bgColor = '#fff';
+                bgColor = '#ffffff';
             }
             else if (value === 'theme-dark') {
-                bgColor = '#000';
+                bgColor = '#060708';
             }
             else if (value === 'theme-maroon') {
-                bgColor = '#800';
+                bgColor = '#800000';
             }
-            document.getElementsByTagName('body')[0].style.backgroundColor = bgColor;
+            domCache.body.style.backgroundColor = bgColor;
         }, false);
 
         document.getElementById('selectNsType1').addEventListener('change', function () {

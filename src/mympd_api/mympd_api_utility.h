@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -30,7 +30,7 @@ struct t_timer_node
     struct t_timer_definition *definition;
     void *user_data;
     unsigned int timeout;
-    unsigned int interval;
+    int interval;
     int timer_id;
     struct t_timer_node *next;
 };
@@ -57,7 +57,6 @@ typedef struct t_mympd_state
     sds smartpls_prefix;
     time_t smartpls_interval;
     sds generate_pls_tags;
-    int max_elements_per_page;
     int last_played_count;
     bool love;
     sds love_channel;
@@ -101,6 +100,10 @@ typedef struct t_mympd_state
     bool lyrics;
     struct list home_list;
     sds navbar_icons;
+    sds advanced;
+    bool home;
+    sds bg_image;
+    // ideon
     sds mixer_type;
     bool dop;
     int ns_type;

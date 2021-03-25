@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -35,7 +35,8 @@
 static void mpd_worker_feature_commands(t_mpd_worker_state *mpd_worker_state);
 
 //public functions
-void default_mpd_worker_state(t_mpd_worker_state *mpd_worker_state) {
+void default_mpd_worker_state(t_mpd_worker_state *mpd_worker_state)
+{
     mpd_worker_state->smartpls_sort = sdsempty();
     mpd_worker_state->smartpls_prefix = sdsempty();
     mpd_worker_state->generate_pls_tags = sdsempty();
@@ -46,7 +47,8 @@ void default_mpd_worker_state(t_mpd_worker_state *mpd_worker_state) {
     mpd_shared_default_mpd_state(mpd_worker_state->mpd_state);
 }
 
-void free_mpd_worker_state(t_mpd_worker_state *mpd_worker_state) {
+void free_mpd_worker_state(t_mpd_worker_state *mpd_worker_state)
+{
     sdsfree(mpd_worker_state->smartpls_sort);
     sdsfree(mpd_worker_state->smartpls_prefix);
     sdsfree(mpd_worker_state->generate_pls_tags);
@@ -55,7 +57,8 @@ void free_mpd_worker_state(t_mpd_worker_state *mpd_worker_state) {
     free(mpd_worker_state);
 }
 
-void mpd_worker_features(t_mpd_worker_state *mpd_worker_state) {
+void mpd_worker_features(t_mpd_worker_state *mpd_worker_state)
+{
     mpd_worker_state->mpd_state->feat_mpd_searchwindow = mpd_shared_feat_mpd_searchwindow(mpd_worker_state->mpd_state);
     mpd_worker_state->mpd_state->feat_advsearch = mpd_shared_feat_advsearch(mpd_worker_state->mpd_state);
 
@@ -63,36 +66,43 @@ void mpd_worker_features(t_mpd_worker_state *mpd_worker_state) {
 
     mpd_shared_feat_tags(mpd_worker_state->mpd_state);
 
-    if (mpd_worker_state->mpd_state->feat_tags == true) {
+    if (mpd_worker_state->mpd_state->feat_tags == true)
+    {
         check_tags(mpd_worker_state->generate_pls_tags, "generate pls tags", &mpd_worker_state->generate_pls_tag_types, mpd_worker_state->mpd_state->mympd_tag_types);
     }
-    
+
     mpd_worker_feature_commands(mpd_worker_state);
 }
 
 //private functions
-static void mpd_worker_feature_commands(t_mpd_worker_state *mpd_worker_state) {
+static void mpd_worker_feature_commands(t_mpd_worker_state *mpd_worker_state)
+{
     mpd_worker_state->feat_playlists = false;
     mpd_worker_state->feat_smartpls = mpd_worker_state->smartpls;
-    
-    if (mpd_send_allowed_commands(mpd_worker_state->mpd_state->conn) == true) {
+
+    if (mpd_send_allowed_commands(mpd_worker_state->mpd_state->conn) == true)
+    {
         struct mpd_pair *pair;
-        while ((pair = mpd_recv_command_pair(mpd_worker_state->mpd_state->conn)) != NULL) {
-            if (strcmp(pair->value, "listplaylists") == 0) {
-                LOG_DEBUG("MPD supports playlists");
+        while ((pair = mpd_recv_command_pair(mpd_worker_state->mpd_state->conn)) != NULL)
+        {
+            if (strcmp(pair->value, "listplaylists") == 0)
+            {
+                MYMPD_LOG_DEBUG("MPD supports playlists");
                 mpd_worker_state->feat_playlists = true;
             }
             mpd_return_pair(mpd_worker_state->mpd_state->conn, pair);
         }
     }
-    else {
-        LOG_ERROR("Error in response to command: mpd_send_allowed_commands");
+    else
+    {
+        MYMPD_LOG_ERROR("Error in response to command: mpd_send_allowed_commands");
     }
     mpd_response_finish(mpd_worker_state->mpd_state->conn);
     check_error_and_recover2(mpd_worker_state->mpd_state, NULL, NULL, 0, false);
 
-    if (mpd_worker_state->feat_playlists == false && mpd_worker_state->smartpls == true) {
-        LOG_WARN("Playlists are disabled, disabling smart playlists");
+    if (mpd_worker_state->feat_playlists == false && mpd_worker_state->smartpls == true)
+    {
+        MYMPD_LOG_WARN("Playlists are disabled, disabling smart playlists");
         mpd_worker_state->feat_smartpls = false;
     }
 }

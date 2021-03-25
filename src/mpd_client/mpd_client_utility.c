@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -35,6 +35,38 @@
 static void detect_extra_files(t_mpd_client_state *mpd_client_state, const char *uri, sds *booklet_path, struct list *images, bool is_dirname);
 
 //public functions
+bool caches_init(t_mpd_client_state *mpd_client_state)
+{
+    if (mpd_client_state->mpd_state->feat_mpd_searchwindow == false)
+    {
+        MYMPD_LOG_INFO("Can not create caches, mpd version < 0.20.0");
+        return false;
+    }
+
+    if (mpd_client_state->feat_sticker == true || mpd_client_state->mpd_state->feat_tags == true)
+    {
+        //push cache building request to mpd_worker thread
+        if (mpd_client_state->feat_sticker == true)
+        {
+            mpd_client_state->sticker_cache_building = true;
+        }
+        if (mpd_client_state->mpd_state->feat_tags == true)
+        {
+            mpd_client_state->album_cache_building = true;
+        }
+        t_work_request *request = create_request(-1, 0, MPDWORKER_API_CACHES_CREATE, "MPDWORKER_API_CACHES_CREATE", "");
+        request->data = sdscat(request->data, "{\"jsonrpc\":\"2.0\",\"id\":0,\"method\":\"MPDWORKER_API_CACHES_CREATE\",\"params\":{");
+        request->data = tojson_bool(request->data, "featSticker", mpd_client_state->feat_sticker, true);
+        request->data = tojson_bool(request->data, "featTags", mpd_client_state->mpd_state->feat_tags, false);
+        request->data = sdscat(request->data, "}}");
+        tiny_queue_push(mpd_worker_queue, request, 0);
+    }
+    else
+    {
+        MYMPD_LOG_INFO("Caches creation skipped, sticker_cache and tags are disabled");
+    }
+    return true;
+}
 
 sds put_extra_files(t_mpd_client_state *mpd_client_state, sds buffer, const char *uri, bool is_dirname)
 {
@@ -139,7 +171,6 @@ void default_mpd_client_state(t_mpd_client_state *mpd_client_state)
     mpd_client_state->smartpls_interval = 14400;
     mpd_client_state->booklet_name = sdsnew("booklet.pdf");
     mpd_client_state->stickers = false;
-    mpd_client_state->max_elements_per_page = 100;
     mpd_client_state->feat_coverimage = false;
     mpd_client_state->auto_play = false;
     reset_t_tags(&mpd_client_state->search_tag_types);
@@ -149,8 +180,12 @@ void default_mpd_client_state(t_mpd_client_state *mpd_client_state)
     list_init(&mpd_client_state->last_played);
     //init sticker queue
     list_init(&mpd_client_state->sticker_queue);
+    //sticker cache
     mpd_client_state->sticker_cache_building = false;
     mpd_client_state->sticker_cache = NULL;
+    //album cache
+    mpd_client_state->album_cache_building = false;
+    mpd_client_state->album_cache = NULL;
     //jukebox queue
     list_init(&mpd_client_state->jukebox_queue);
     list_init(&mpd_client_state->jukebox_queue_tmp);
@@ -187,15 +222,26 @@ void free_mpd_client_state(t_mpd_client_state *mpd_client_state)
     free(mpd_client_state);
 }
 
-//private functions
+bool mpd_client_set_binarylimit(t_config *config, t_mpd_client_state *mpd_client_state)
+{
+    bool rc = false;
+    if (mpd_connection_cmp_server_version(mpd_client_state->mpd_state->conn, 0, 22, 4) >= 0)
+    {
+        rc = mpd_run_binarylimit(mpd_client_state->mpd_state->conn, config->binarylimit);
+        check_rc_error_and_recover(mpd_client_state->mpd_state, NULL, NULL, 0, false, rc, "mpd_run_binarylimit");
+    }
+    MYMPD_LOG_DEBUG("binarylimit command not supported, depends on mpd >= 0.22.4");
+    return rc;
+}
 
+//private functions
 static void detect_extra_files(t_mpd_client_state *mpd_client_state, const char *uri, sds *booklet_path, struct list *images, bool is_dirname)
 {
     char *uricpy = strdup(uri);
 
     const char *path = is_dirname == false ? dirname(uricpy) : uri;
     sds albumpath = sdscatfmt(sdsempty(), "%s/%s", mpd_client_state->music_directory_value, path);
-    LOG_DEBUG("Read extra files from albumpath: %s", albumpath);
+    MYMPD_LOG_DEBUG("Read extra files from albumpath: %s", albumpath);
     DIR *album_dir = opendir(albumpath);
     if (album_dir != NULL)
     {
@@ -205,7 +251,7 @@ static void detect_extra_files(t_mpd_client_state *mpd_client_state, const char 
             const char *ext = strrchr(next_file->d_name, '.');
             if (strcmp(next_file->d_name, mpd_client_state->booklet_name) == 0)
             {
-                LOG_DEBUG("Found booklet for uri %s", uri);
+                MYMPD_LOG_DEBUG("Found booklet for uri %s", uri);
                 *booklet_path = sdscatfmt(*booklet_path, "%s/%s", path, mpd_client_state->booklet_name);
             }
             else if (ext != NULL)
@@ -225,7 +271,7 @@ static void detect_extra_files(t_mpd_client_state *mpd_client_state, const char 
     }
     else
     {
-        LOG_ERROR("Can not open directory \"%s\" to get list of extra files: %s", albumpath, strerror(errno));
+        MYMPD_LOG_ERROR("Can not open directory \"%s\" to get list of extra files: %s", albumpath, strerror(errno));
     }
     FREE_PTR(uricpy);
     sdsfree(albumpath);

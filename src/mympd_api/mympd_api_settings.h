@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -14,4 +14,5 @@ bool mympd_api_settings_set(t_config *config, t_mympd_state *mympd_state, struct
                             bool *mpd_conf_changed, bool *ns_changed, bool *airplay_changed, bool *roon_changed, bool *spotify_changed);
 bool mympd_api_connection_save(t_config *config, t_mympd_state *mympd_state, struct json_token *key, struct json_token *val);
 void mympd_api_settings_delete(t_config *config);
+sds mympd_api_picture_list(t_config *config, sds buffer, sds method, long request_id);
 #endif

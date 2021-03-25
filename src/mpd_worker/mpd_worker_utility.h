@@ -1,13 +1,14 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
 #ifndef __MPD_WORKER_UTILITY_H__
 #define __MPD_WORKER_UTILITY_H__
 
-typedef struct t_mpd_worker_state {
+typedef struct t_mpd_worker_state
+{
     bool feat_playlists;
     bool smartpls;
     bool feat_smartpls;

@@ -164,7 +164,8 @@ body.theme-maroon .bg-white {
   background-color: #750000 !important;
 }
 
-body.theme-maroon #modalInit img {
+body.theme-maroon #modalInit img,
+body.theme-maroon #modalAbout img {
   filter: invert(100%);
 }
 

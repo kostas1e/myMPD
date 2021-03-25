@@ -1,6 +1,6 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
-# myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+# myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
 # https://github.com/jcorporation/mympd
 #
 FROM alpine:latest as build
@@ -9,6 +9,7 @@ ENV DESTDIR=/myMPD-dist
 RUN mkdir -p $DESTDIR
 WORKDIR /myMPD
 RUN ./build.sh installdeps
+ENV MANPAGES=OFF
 RUN ./build.sh releaseinstall
 WORKDIR /
 RUN tar -czvf /mympd.tar.gz -C /myMPD-dist .
@@ -17,7 +18,7 @@ FROM alpine:latest
 ENV MPD_HOST=127.0.0.1
 ENV MPD_PORT=6600
 # hadolint ignore=DL3008
-RUN apk add --no-cache openssl libid3tag flac lua5.3
+RUN apk add --no-cache openssl libid3tag flac lua5.3 pcre
 # hadolint ignore=DL3010
 COPY --from=build /mympd.tar.gz /
 WORKDIR /

@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -21,21 +21,22 @@
 
 _Thread_local sds thread_logname;
 
-int main(void) {
-//tests tiny queue
+int main(void)
+{
+    //tests tiny queue
     thread_logname = sdsempty();
     tiny_queue_t *test_queue = tiny_queue_create();
     sds test_data_in0 = sdsnew("test0");
     sds test_data_in1 = sdsnew("test0");
     sds test_data_in2 = sdsnew("test0");
-    
+
     sds test_data_out;
-    
+
     //test1
     tiny_queue_push(test_queue, test_data_in0, 0);
     test_data_out = tiny_queue_shift(test_queue, 50, 0);
     printf(strcmp(test_data_out, test_data_in0) == 0 ? "OK\n" : "ERROR\n");
-    
+
     //test2
     tiny_queue_push(test_queue, test_data_in1, 0);
     tiny_queue_push(test_queue, test_data_in2, 0);
@@ -46,7 +47,7 @@ int main(void) {
     test_data_out = NULL;
     test_data_out = tiny_queue_shift(test_queue, 50, 0);
     printf(strcmp(test_data_out, test_data_in2) == 0 ? "OK\n" : "ERROR\n");
-    
+
     //test3
     tiny_queue_push(test_queue, test_data_in0, 10);
     tiny_queue_push(test_queue, test_data_in1, 20);
@@ -58,7 +59,7 @@ int main(void) {
     test_data_out = NULL;
     test_data_out = tiny_queue_shift(test_queue, 50, 10);
     printf(strcmp(test_data_out, test_data_in0) == 0 ? "OK\n" : "ERROR\n");
-    
+
     test_data_out = NULL;
     test_data_out = tiny_queue_shift(test_queue, 50, 10);
     printf(strcmp(test_data_out, test_data_in2) == 0 ? "OK\n" : "ERROR\n");
@@ -68,9 +69,9 @@ int main(void) {
     sdsfree(test_data_in0);
     sdsfree(test_data_in1);
     sdsfree(test_data_in2);
-    
-//test list
-    struct list *test_list = (struct list *) malloc(sizeof(struct list));
+
+    //test list
+    struct list *test_list = (struct list *)malloc(sizeof(struct list));
     assert(test_list);
     list_init(test_list);
     list_push(test_list, "key1", 1, "value1", NULL);
@@ -83,7 +84,7 @@ int main(void) {
     list_swap_item_pos(test_list, 3, 1);
     list_move_item_pos(test_list, 4, 2);
     //remove middle item
-    list_shift(test_list,3);
+    list_shift(test_list, 3);
     //remove last item
     list_shift(test_list, 5);
     //remove first item
@@ -92,11 +93,52 @@ int main(void) {
     list_insert(test_list, "key7", 7, "value7", NULL);
     int i = 0;
     struct list_node *current = test_list->head;
-    while (current != NULL) {
+    while (current != NULL)
+    {
         printf("%d: %s\n", i, current->key);
         current = current->next;
         i++;
     }
+    list_free(test_list);
+    //sorted inserts by key
+    list_insert_sorted_by_key(test_list, "ddd", 1, "value1", NULL, true);
+    list_insert_sorted_by_key(test_list, "bbb", 1, "value1", NULL, true);
+    list_insert_sorted_by_key(test_list, "ccc", 1, "value1", NULL, true);
+    list_insert_sorted_by_key(test_list, "aaa", 1, "value1", NULL, true);
+    list_insert_sorted_by_key(test_list, "xxx", 1, "value1", NULL, true);
+    list_insert_sorted_by_key(test_list, "ggg", 1, "value1", NULL, true);
+    list_insert_sorted_by_key(test_list, "yyy", 1, "value1", NULL, true);
+    list_insert_sorted_by_key(test_list, "zzz", 1, "value1", NULL, true);
+    list_push(test_list, "last", 1, "value1", NULL); //check if tail is correct
+    i = 0;
+    current = test_list->head;
+    while (current != NULL)
+    {
+        printf("%d: %s\n", i, current->key);
+        current = current->next;
+        i++;
+    }
+    printf("Tail is: %s\n", test_list->tail->key);
+    list_free(test_list);
+    //sorted inserts by value_i
+    list_insert_sorted_by_value_i(test_list, "ddd", 4, "value1", NULL, true);
+    list_insert_sorted_by_value_i(test_list, "bbb", 2, "value1", NULL, true);
+    list_insert_sorted_by_value_i(test_list, "ccc", 3, "value1", NULL, true);
+    list_insert_sorted_by_value_i(test_list, "aaa", 1, "value1", NULL, true);
+    list_insert_sorted_by_value_i(test_list, "xxx", 24, "value1", NULL, true);
+    list_insert_sorted_by_value_i(test_list, "ggg", 7, "value1", NULL, true);
+    list_insert_sorted_by_value_i(test_list, "yyy", 25, "value1", NULL, true);
+    list_insert_sorted_by_value_i(test_list, "zzz", 26, "value1", NULL, true);
+    list_push(test_list, "last", 0, "value1", NULL); //check if tail is correct
+    i = 0;
+    current = test_list->head;
+    while (current != NULL)
+    {
+        printf("%d: %s - %ld\n", i, current->key, current->value_i);
+        current = current->next;
+        i++;
+    }
+    printf("Tail is: %s\n", test_list->tail->key);
     list_free(test_list);
     free(test_list);
 }

@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -20,17 +20,15 @@
     X(MPD_API_QUEUE_RM_RANGE)                \
     X(MPD_API_QUEUE_MOVE_TRACK)              \
     X(MPD_API_QUEUE_ADD_TRACK_AFTER)         \
-    X(MPD_API_QUEUE_ADD_TRACK_PLAY)          \
     X(MPD_API_QUEUE_ADD_TRACK)               \
+    X(MPD_API_QUEUE_ADD_PLAY_TRACK)          \
     X(MPD_API_QUEUE_REPLACE_TRACK)           \
-    X(MPD_API_QUEUE_ADD_DIR_PLAY)            \
-    X(MPD_API_QUEUE_ADD_PLAYLIST_PLAY)       \
     X(MPD_API_QUEUE_ADD_PLAYLIST)            \
     X(MPD_API_QUEUE_REPLACE_PLAYLIST)        \
     X(MPD_API_QUEUE_SHUFFLE)                 \
     X(MPD_API_QUEUE_LAST_PLAYED)             \
     X(MPD_API_QUEUE_ADD_RANDOM)              \
-    X(MPD_API_QUEUE_MINI)                    \
+    X(MPD_API_QUEUE_PRIO_SET_HIGHEST)        \
     X(MPD_API_PLAYLIST_CLEAR)                \
     X(MPD_API_PLAYLIST_RENAME)               \
     X(MPD_API_PLAYLIST_MOVE_TRACK)           \
@@ -38,15 +36,15 @@
     X(MPD_API_PLAYLIST_RM_TRACK)             \
     X(MPD_API_PLAYLIST_RM_ALL)               \
     X(MPD_API_PLAYLIST_RM)                   \
-    X(MPD_API_PLAYLIST_LIST_ALL)             \
     X(MPD_API_PLAYLIST_LIST)                 \
     X(MPD_API_PLAYLIST_CONTENT_LIST)         \
     X(MPD_API_PLAYLIST_SHUFFLE)              \
     X(MPD_API_PLAYLIST_SORT)                 \
     X(MPDWORKER_API_SMARTPLS_UPDATE_ALL)     \
     X(MPDWORKER_API_SMARTPLS_UPDATE)         \
-    X(MPDWORKER_API_STICKERCACHE_CREATE)     \
+    X(MPDWORKER_API_CACHES_CREATE)           \
     X(MPD_API_STICKERCACHE_CREATED)          \
+    X(MPD_API_ALBUMCACHE_CREATED)            \
     X(MPD_API_SMARTPLS_SAVE)                 \
     X(MPD_API_SMARTPLS_GET)                  \
     X(MPD_API_DATABASE_SEARCH_ADV)           \
@@ -99,6 +97,7 @@
     X(MPD_API_JUKEBOX_LIST)                  \
     X(MPD_API_JUKEBOX_RM)                    \
     X(MPD_API_STATE_SAVE)                    \
+    X(MPD_API_LYRICS_GET)                    \
     X(MYMPD_API_COLS_SAVE)                   \
     X(MYMPD_API_SYSCMD)                      \
     X(MYMPD_API_SETTINGS_GET)                \
@@ -129,8 +128,9 @@
     X(MYMPD_API_HOME_ICON_SAVE)              \
     X(MYMPD_API_HOME_ICON_DELETE)            \
     X(MYMPD_API_HOME_ICON_MOVE)              \
-    X(MYMPD_API_HOME_ICON_PICTURE_LIST)      \
+    X(MYMPD_API_PICTURE_LIST)                \
     X(MYMPD_API_STATE_SAVE)                  \
+    X(MPD_API_QUEUE_MINI)                    \
     X(MYMPD_API_NS_SERVER_LIST)              \
     X(MYMPD_API_UPDATE_CHECK)                \
     X(MYMPD_API_UPDATE_INSTALL)

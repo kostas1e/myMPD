@@ -1,13 +1,16 @@
 *~
-.vscode/
 /debug/
 /release/
 /osc/
 /package/
 /htdocs/css/bootstrap.css
 /htdocs/js/bootstrap-native.js
+/htdocs/js/long-press-event.js
 /htdocs/js/i18n.js
+/htdocs/assets/MaterialIcons-Regular.woff2
 /valgrind.out
 /src/compile_commands.json
 /clang-tidy.out
 /test/build/
+/builder/
+.vscode/

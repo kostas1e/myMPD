@@ -1,7 +1,7 @@
 "use strict";
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -14,7 +14,7 @@ function init() {
     }
     let select = document.getElementById('cmds');
     select.innerHTML = options;
-    select.addEventListener('change', function() {
+    select.addEventListener('change', function () {
         let id = this.options[this.selectedIndex].value;
         let form = '';
         if (cmds[id].params !== undefined) {
@@ -31,7 +31,7 @@ function init() {
         document.getElementById('requestText').innerText = '';
         document.getElementById('resultState').innerText = 'Result';
     }, false);
-    document.getElementById('btnSubmit').addEventListener('click', function(event) {
+    document.getElementById('btnSubmit').addEventListener('click', function (event) {
         event.preventDefault();
         sendAPI();
     }, false);
@@ -65,10 +65,10 @@ function sendAPI() {
             }
         }
     }
-    let ajaxRequest=new XMLHttpRequest();
+    let ajaxRequest = new XMLHttpRequest();
     ajaxRequest.open('POST', '/api', true);
     ajaxRequest.setRequestHeader('Content-type', 'application/json');
-    ajaxRequest.onreadystatechange = function() {
+    ajaxRequest.onreadystatechange = function () {
         if (ajaxRequest.readyState === 4) {
             try {
                 let obj = JSON.parse(ajaxRequest.responseText);
@@ -79,7 +79,7 @@ function sendAPI() {
                     document.getElementById('resultState').innerText = 'ERROR';
                 }
             }
-            catch(e) {
+            catch (e) {
                 document.getElementById('resultState').innerText = 'JSON parse error: ' + e;
             }
             document.getElementById('resultText').innerText = ajaxRequest.responseText;

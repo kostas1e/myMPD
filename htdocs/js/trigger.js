@@ -1,24 +1,53 @@
 "use strict";
-/*
- SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
- https://github.com/jcorporation/mympd
-*/
+// SPDX-License-Identifier: GPL-2.0-or-later
+// myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
+// https://github.com/jcorporation/mympd
+
+function initTrigger() {
+    document.getElementById('listTriggerList').addEventListener('click', function (event) {
+        event.stopPropagation();
+        event.preventDefault();
+        if (event.target.nodeName === 'TD') {
+            const id = decodeURI(event.target.parentNode.getAttribute('data-trigger-id'));
+            showEditTrigger(id);
+        }
+        else if (event.target.nodeName === 'A') {
+            const action = event.target.getAttribute('data-action');
+            const id = decodeURI(event.target.parentNode.parentNode.getAttribute('data-trigger-id'));
+            if (action === 'delete') {
+                deleteTrigger(id);
+            }
+        }
+    }, false);
+
+    document.getElementById('selectTriggerScript').addEventListener('change', function () {
+        selectTriggerActionChange();
+    }, false);
+
+    document.getElementById('modalTrigger').addEventListener('shown.bs.modal', function () {
+        showListTrigger();
+    });
+}
 
 //eslint-disable-next-line no-unused-vars
 function saveTrigger() {
     let formOK = true;
 
-    let nameEl = document.getElementById('inputTriggerName');
+    const nameEl = document.getElementById('inputTriggerName');
     if (!validatePlnameEl(nameEl)) {
         formOK = false;
     }
 
+    const scriptEl = document.getElementById('selectTriggerScript');
+    if (!validateSelect(scriptEl)) {
+        formOK = false;
+    }
+
     if (formOK === true) {
-        let args = {};
-        let argEls = document.getElementById('triggerActionScriptArguments').getElementsByTagName('input');
+        const args = {};
+        const argEls = document.getElementById('triggerActionScriptArguments').getElementsByTagName('input');
         for (let i = 0; i < argEls.length; i++) {
-            args[argEls[i].getAttribute('data-name')] = argEls[i].value;
+            args[getAttDec(argEls[i], 'data-name')] = argEls[i].value;
         }
 
         sendAPI("MPD_API_TRIGGER_SAVE", {
@@ -39,7 +68,7 @@ function showEditTrigger(id) {
     document.getElementById('newTriggerFooter').classList.remove('hide');
 
     const nameEl = document.getElementById('inputTriggerName');
-    nameEl.classList.remove('is-invalid');
+    removeIsInvalid(document.getElementById('modalTrigger'));
     nameEl.value = '';
     nameEl.focus();
     document.getElementById('inputTriggerId').value = '-1';
@@ -62,15 +91,17 @@ function parseTriggerEdit(obj) {
 }
 
 function selectTriggerActionChange(values) {
-    let el = document.getElementById('selectTriggerScript');
-    showTriggerScriptArgs(el.options[el.selectedIndex], values);
+    const el = document.getElementById('selectTriggerScript');
+    if (el.selectedIndex > -1) {
+        showTriggerScriptArgs(el.options[el.selectedIndex], values);
+    }
 }
 
 function showTriggerScriptArgs(option, values) {
     if (values === undefined) {
         values = {};
     }
-    let args = JSON.parse(option.getAttribute('data-arguments'));
+    const args = JSON.parse(getAttDec(option, 'data-arguments'));
     let list = '';
     for (let i = 0; i < args.arguments.length; i++) {
         list += '<div class="form-group row">' +
@@ -78,7 +109,7 @@ function showTriggerScriptArgs(option, values) {
             '<div class="col-sm-8">' +
             '<input name="triggerActionScriptArguments' + i + '" class="form-control border-secondary" type="text" value="' +
             (values[args.arguments[i]] ? e(values[args.arguments[i]]) : '') + '"' +
-            'data-name="' + args.arguments[i] + '">' +
+            'data-name="' + encodeURI(args.arguments[i]) + '">' +
             '</div>' +
             '</div>';
     }
@@ -114,13 +145,13 @@ function parseTriggerList(obj) {
                 '<td>' + e(obj.result.data[i].script) + '</td>' +
                 '<td data-col="Action">' +
                 (obj.result.data[i].name === 'default' || obj.result.data[i].name === settings.trigger ? '' :
-                    '<a href="#" title="' + t('Delete') + '" data-action="delete" class="material-icons color-darkgrey">delete</a>') +
+                    '<a href="#" title="' + t('Delete') + '" data-action="delete" class="mi color-darkgrey">delete</a>') +
                 '</td></tr>';
         }
         document.getElementById('listTriggerList').innerHTML = triggerList;
     }
     else {
-        document.getElementById('listTriggerList').innerHTML = '<tr class="not-clickable"><td><span class="material-icons">error_outline</span></td>' +
-            '<td colspan="2">' + t('Empty list') + '</td></tr>';
+        document.getElementById('listTriggerList').innerHTML = '<tr class="not-clickable">' +
+            '<td colspan="3"><span class="mi">info</span>&nbsp;&nbsp;' + t('Empty list') + '</td></tr>';
     }
 }

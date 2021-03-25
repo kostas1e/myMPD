@@ -1,7 +1,7 @@
 "use strict";
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -9,7 +9,8 @@
 
 let strings = {};
 strings['cols'] = 'cols: array of columns to return';
-strings['offset'] = 'offset: Offset of the returned list';
+strings['offset'] = 'offset: start offset of the returned list';
+strings['limit'] = 'limit: maximum number of elements to return';
 
 let desc = {};
 desc['MPD_API_QUEUE_CLEAR'] = 'Clears the queue';
@@ -22,11 +23,13 @@ desc['MPD_API_QUEUE_SAVE'] = 'Saves the queue as a playlist' +
 desc['MPD_API_QUEUE_LIST'] = 'List the contents of the queu' +
     '<ul>' +
     '<li>' + strings['offset'] + '</li>' +
+    '<li>' + strings['limit'] + '</li>' +
     '<li>' + strings['cols'] + '</li>' +
     '</ul>';
 desc['MPD_API_QUEUE_SEARCH'] = 'Searches the queue' +
     '<ul>' +
     '<li>' + strings['offset'] + '</li>' +
+    '<li>' + strings['limit'] + '</li>' +
     '<li>filter: tag to search, <code>any</code> for any tag</li>' +
     '<li>searchstr: string to search</li>' +
     '<li>' + strings['cols'] + '</li>' +
@@ -80,6 +83,7 @@ desc['MPD_API_QUEUE_SHUFFLE'] = 'Shuffles the queue.';
 desc['MPD_API_QUEUE_LAST_PLAYED'] = 'List the last played songs.' +
     '<ul>' +
     '<li>' + strings['offset'] + '</li>' +
+    '<li>' + strings['limit'] + '</li>' +
     '<li>' + strings['cols'] + '</li>' +
     '</ul>';
 desc['MPD_API_PLAYLIST_RM'] = 'Removes the playlist.' +
@@ -114,24 +118,22 @@ desc['MPD_API_PLAYLIST_RM_TRACK'] = 'Removes a song from the playlist.' +
 desc['MPD_API_PLAYLIST_RM_ALL'] = 'Removes all playlists.' +
     '<ul>' +
     '<li>type: <ul>' +
-      '<li>deleteAllPlaylists: deletes all playlists</li>' +
-      '<li>deleteSmartPlaylists: deletes all smart playlists</li>' +
-      '<li>deleteEmptyPlaylists: deletes all empty playlists</li>' +
+    '<li>deleteAllPlaylists: deletes all playlists</li>' +
+    '<li>deleteSmartPlaylists: deletes all smart playlists</li>' +
+    '<li>deleteEmptyPlaylists: deletes all empty playlists</li>' +
     '</ul></li>' +
     '</ul>';
 desc['MPD_API_PLAYLIST_LIST'] = 'Lists all playlists (paginated).' +
     '<ul>' +
     '<li>' + strings['offset'] + '</li>' +
-    '<li>searchstr: string to search</li>' +
-    '</ul>';
-desc['MPD_API_PLAYLIST_LIST_ALL'] = 'Lists all playlists (realy all).' +
-    '<ul>' +
+    '<li>' + strings['limit'] + '</li>' +
     '<li>searchstr: string to search</li>' +
     '</ul>';
 desc['MPD_API_PLAYLIST_CONTENT_LIST'] = 'Lists the content of a playlist.' +
     '<ul>' +
     '<li>uri: playlist</li>' +
     '<li>' + strings['offset'] + '</li>' +
+    '<li>' + strings['limit'] + '</li>' +
     '<li>searchstr: string to search</li>' +
     '<li>' + strings['cols'] + '</li>' +
     '</ul>';
@@ -147,8 +149,8 @@ desc['MPD_API_PLAYLIST_SORT'] = 'Sorts the playlist.' +
 desc['MPDWORKER_API_SMARTPLS_UPDATE_ALL'] = 'Updates all smart playlists.' +
     '<ul>' +
     '<li>force: <ul>' +
-      '<li>true: updates all smart playlists' +
-      '<li>false: updates smart playlists only if nedded' +
+    '<li>true: updates all smart playlists' +
+    '<li>false: updates smart playlists only if nedded' +
     '</li>' +
     '</ul>';
 desc['MPDWORKER_API_SMARTPLS_UPDATE'] = 'Updates the smart playlists.' +
@@ -169,7 +171,7 @@ function paramsToString(obj) {
     if (obj === undefined) {
         return 'Without parameters';
     }
-    
+
     return JSON.stringify(obj).
         replace(/</g, '&lt;').
         replace(/>/g, '&gt;').

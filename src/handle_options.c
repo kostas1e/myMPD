@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -59,7 +59,7 @@ bool smartpls_default(t_config *config)
     else
     {
         //ignore error
-        LOG_DEBUG("Can not open file \"%s\": %s", prefix_file, strerror(errno));
+        MYMPD_LOG_DEBUG("Can not open file \"%s\": %s", prefix_file, strerror(errno));
         prefix = sdscat(prefix, config->smartpls_prefix);
     }
     sdsfree(prefix_file);
@@ -119,11 +119,11 @@ bool handle_option(t_config *config, char *cmd, sds option)
         }
         if (rc == ENOENT)
         {
-            LOG_ERROR("last_played file does not exist");
+            MYMPD_LOG_ERROR("last_played file does not exist");
         }
         else
         {
-            LOG_ERROR("Can not delete file \"%s\": %s", lpfile, strerror(errno));
+            MYMPD_LOG_ERROR("Can not delete file \"%s\": %s", lpfile, strerror(errno));
         }
         sdsfree(lpfile);
         return false;
@@ -173,7 +173,7 @@ bool handle_option(t_config *config, char *cmd, sds option)
     }
 
     printf("myMPD %s\n"
-           "Copyright (C) 2018-2020 Juergen Mang <mail@jcgames.de>\n"
+           "Copyright (C) 2018-2021 Juergen Mang <mail@jcgames.de>\n"
            "https://github.com/jcorporation/myMPD\n\n"
            "Usage: %s [/etc/mympd.conf] <command>\n"
            "Commands (you should stop mympd before):\n"
@@ -207,7 +207,7 @@ static bool smartpls_init(t_config *config, const char *name, const char *value)
     int fd = mkstemp(tmp_file);
     if (fd < 0)
     {
-        LOG_ERROR("Can not open file \"%s\" for write: %s", tmp_file, strerror(errno));
+        MYMPD_LOG_ERROR("Can not open file \"%s\" for write: %s", tmp_file, strerror(errno));
         sdsfree(tmp_file);
         return false;
     }
@@ -217,7 +217,7 @@ static bool smartpls_init(t_config *config, const char *name, const char *value)
     sds cfg_file = sdscatfmt(sdsempty(), "%s/smartpls/%s", config->varlibdir, name);
     if (rename(tmp_file, cfg_file) == -1)
     {
-        LOG_ERROR("Renaming file from %s to %s failed: %s", tmp_file, cfg_file, strerror(errno));
+        MYMPD_LOG_ERROR("Renaming file from %s to %s failed: %s", tmp_file, cfg_file, strerror(errno));
         sdsfree(tmp_file);
         sdsfree(cfg_file);
         return false;

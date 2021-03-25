@@ -171,13 +171,13 @@ Wertung konnte nicht gesetzt werden, ungültiger Wert
 Failed to set like, invalid song uri
 Wertung konnte nicht gesetzt werden, ungültige Lied URL
 
-Last played
-Zuletzt gespielt
-
 LastPlayed
 Zuletzt gespielt
 
-Last skipped
+stickerLastPlayed
+Zuletzt gespielt
+
+stickerLastSkipped
 Zuletzt übersprungen
 
 Database
@@ -207,17 +207,8 @@ Nächste Seite
 Num songs
 %{smart_count} Lied |||| %{smart_count} Lieder
 
-Num playlists
-%{smart_count} Wiedergabeliste |||| %{smart_count} Wiedergabelisten
-
 Num entries
 %{smart_count} Eintrag |||| %{smart_count} Einträge
-
-Add all to queue
-Alles zur Warteschlange hinzufügen
-
-Add all to playlist
-Alles zu einer Wiedergabeliste hinzufügen
 
 Save as smart playlist
 Als intelligente Wiedergabeliste speichern
@@ -233,6 +224,9 @@ Tag zum Suchen auswählen
 
 contains
 enthält
+
+starts_with
+beginnt mit
 
 Initializing myMPD
 Initialisiere myMPD
@@ -354,11 +348,17 @@ Tage
 Like
 Wertung
 
+stickerLike
+Wertung
+
 Play count
 Wie oft gespielt
 
-Skip count
-Wie oft übersprungen
+stickerPlayCount
+Gespielt
+
+stickerSkipCount
+Übersprungen
 
 Theme
 Design
@@ -438,12 +438,6 @@ Sprache
 Browser default
 Browsereinstellung
 
-Pagination
-Seitenumbruch
-
-Must be a number smaller or equal 200
-Muss eine Zahl kleinergleich 200 sein
-
 Notifications
 Hinweise
 
@@ -501,7 +495,7 @@ Intelligente Wiedergabelisten konnten nicht aktualisiert werden
 Smart playlist %{playlist} updated
 Intelligente Wiedergabeliste %{playlist} aktualisiert
 
-Updating of smart playlist %{playlist} failed
+Updating smart playlist %{playlist} failed
 Intelligente Wiedergabeliste %{playlist} konnte nicht aktualisiert werden
 
 Smart playlist
@@ -593,9 +587,6 @@ Libmpdclient Version
 
 Libmympdclient version
 Libmympdclient Version
-
-Shortcut
-Tastenkürzel
 
 Action
 Aktion
@@ -690,6 +681,9 @@ Lieddetails
 Open local player
 Lokale Wiedergabe
 
+Goto home
+Gehe zur Startseite
+
 Goto playback
 Gehe zu Wiedergabe
 
@@ -698,6 +692,9 @@ Gehe zu Warteschlange
 
 Goto last played
 Gehe zu Zuletzt gespielt
+
+Goto jukebox queue
+Gehe zur Jukebox Warteschlange
 
 Goto browse database
 Gehe zu Datenbank durchsuchen
@@ -750,20 +747,8 @@ Lautstärkeregelung deaktiviert
 Volume
 Lautstärke
 
-No results, please refine your search
-Keine Ergebnisse, bitte passe die Suche an
-
-Empty queue
-Leere Warteschlange
-
 Empty list
 Leere Liste
-
-Empty playlist
-Leere Wiedergabeliste
-
-No playlists found
-Keine Wiedergabelisten gefunden
 
 Added stream %{streamUri} to queue
 Stream %{streamUri} zu Warteschlange hinzugefügt
@@ -1005,7 +990,7 @@ Konsumieren muss aktiviert sein
 Advanced
 Erweitert
 
-Successfully croped covercache
+Successfully cropped covercache
 Covercache erfolgreich bereinigt
 
 Successfully cleared covercache
@@ -1575,9 +1560,6 @@ Du hast noch keine Homeicons hinzugefügt. Du kannst einzelne Ansichten, Wiederg
 Can not open directory pics
 Konnte Verzeichnis pics nicht öffnen
 
-Ligature overview
-Übersicht der Ligaturen
-
 Use ligature
 Ligatur benutzen
 
@@ -1629,9 +1611,6 @@ Nächstes Lied
 Outputs
 Ausgabegeräte
 
-Playback settings
-Wiedergabeeinstellungen
-
 Previous
 Vorheriges Lied
 
@@ -1649,3 +1628,203 @@ myMPD Menu
 
 Invalid volume level
 Ungültige Lautstärke
+
+MaintainEnableTagsText
+Folgende Tags sollten gepflegt und aktiviert sein: Artist, AlbumArtist, Album, Track, Disc and Genre
+
+Failed to set like, unknown error
+Like konnte nicht gesetzt werden - unbekannter Fehler
+
+Invalid uri
+Ungültige URI
+
+Stop
+Stop
+
+All
+Alle
+
+Elements per page
+Anzahl Listenelemente
+
+Failed to set song priority
+Priorität des Liedes konnte nicht gesetzt werden
+
+Lookup at musicbrainz
+Bei Musicbraonz nachschlagen
+
+
+Play after current playing song
+Nach aktuellem Lied abspielen
+
+Replaced queue
+Warteschlange ersetzt
+
+First page
+Erste Seite
+
+Last page
+Letzte Seite
+
+Show album
+Album anzeigen
+
+Can not get lyrics for stream uri
+Liedtexte für Streams sind nicht unterstützt
+
+Albumcache not ready
+Albumcache ist noch nicht initialisiert
+
+Open folder
+Verzeichnis öffnen
+
+Open parent folder
+Gehe zu darüberliegenden Verzeichnis
+
+Maintenance
+Wartung
+
+Album cache is NULL
+Album Cache ist leer
+
+Click album play button
+Klick auf Album abspielen
+
+Click folder
+Click auf Verzeichnis
+
+Click playlist
+Click auf Wiedergabeliste
+
+Click song in queue
+Click auf Lied in Warteschlange
+
+Click song
+Click auf ein Lied
+
+Play
+Abspielen
+
+Homescreen
+Startbildschirm
+
+Homescreen help view
+Gehe zur Ansicht und klicke auf den [[add_to_home_screen]] Button.
+
+Homescreen help playlist
+Öffne das Contextmenü einer Wiedergabeliste und wähle "Zum Startbildschirm hinzufügen"
+
+Homescreen help script
+Öffne die Skriptverwaltung und klicke auf den [[add_to_home_screen]] Button, um ein Skript hinzuzufügen.
+
+Help to improve myMPD
+Hilf mit myMPD zu verbessern
+
+Are you sure?
+Bist du sicher?
+
+No
+Nein
+
+Yes
+Ja
+
+Do you really want to clear the queue?
+Willst du die Warteschlange wirklich leeren?
+
+Number of songs to high
+Die Anzahl der Lieder ist zu hoch
+
+Playback controls
+Wiedergabe Steuerelemente
+
+pause and stop
+Pause und Stop
+
+pause only
+nur Pause
+
+stop only
+nur Stop
+
+Do you really want to clear the playlist?
+Willst du wirlich die Wiedergabeliste wirklich leeren?
+
+
+Do you really want to delete the playlist?
+Willst du wirklich die Wiedergabeliste löschen?
+
+Playback settings
+Wiedergabeeinstellungen
+
+Color
+Farbe
+
+Song change
+Neues Lied
+
+Show playback settings in footer
+Wiedergabeeinstellungen im Footer anzeigen
+
+Error getting mpd state for script execution
+Fehler beim Ermitteln des Status beim Starten des Skripts
+
+Custom
+Benutzerdefiniert
+
+Daily
+Täglich
+
+Interval
+Interval
+
+Invalid timer interval
+Ungültiger Interval
+
+One shot and delete
+Einmalig und löschen
+
+One shot and disable
+Einmalig und deaktivieren
+
+Weekly
+Wöchentlich
+
+Each hours
+jede Stunde |||| jede %{smart_count}. Stunde
+
+hours
+Stunden
+
+Missing translations
+Für die ausgewählte Sprache fehlt %{smart_count} Übersetzung |||| Für die ausgewähle Sprache fehlen %{smart_count} Übersetzungen
+
+Updated album cache
+Album Cache wurde aktualisiert
+
+Update of album cache failed
+Album Cache konnte nicht aktualisiert werden
+
+Updated sticker cache
+Sticker Cache wurde aktualisiert
+
+Update of sticker cache failed
+Sticker Cache konnte nicht aktualisiert werden
+
+Facilities
+Kategorie
+
+Can not parse response to json object
+Antwort konnte nicht geparsed werden
+
+Default image
+Standardbild
+
+Default image light
+Standardbild Hell
+
+Default image dark
+Standardbild Dunkel
+
+No script selected
+Kein Skript ausgewählt

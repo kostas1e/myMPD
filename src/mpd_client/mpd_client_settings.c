@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -39,7 +39,7 @@ bool mpd_api_settings_set(t_config *config, t_mpd_client_state *mpd_client_state
     sds settingvalue = sdscatlen(sdsempty(), val->ptr, val->len);
 
     *check_mpd_error = false;
-    LOG_DEBUG("Parse setting \"%.*s\" with value \"%.*s\"", key->len, key->ptr, val->len, val->ptr);
+    MYMPD_LOG_DEBUG("Parse setting \"%.*s\" with value \"%.*s\"", key->len, key->ptr, val->len, val->ptr);
     if (strncmp(key->ptr, "mpdPass", key->len) == 0)
     {
         if (strncmp(val->ptr, "dontsetpassword", val->len) != 0)
@@ -204,16 +204,6 @@ bool mpd_api_settings_set(t_config *config, t_mpd_client_state *mpd_client_state
     {
         mpd_client_state->generate_pls_tags = sdsreplacelen(mpd_client_state->generate_pls_tags, settingvalue, sdslen(settingvalue));
     }
-    else if (strncmp(key->ptr, "maxElementsPerPage", key->len) == 0)
-    {
-        int max_elements_per_page = strtoimax(settingvalue, &crap, 10);
-        if (max_elements_per_page <= 0 || max_elements_per_page > 999)
-        {
-            sdsfree(settingvalue);
-            return false;
-        }
-        mpd_client_state->max_elements_per_page = max_elements_per_page;
-    }
     else if (strncmp(key->ptr, "lastPlayedCount", key->len) == 0)
     {
         int last_played_count = strtoimax(settingvalue, &crap, 10);
@@ -296,7 +286,7 @@ bool mpd_api_settings_set(t_config *config, t_mpd_client_state *mpd_client_state
             enum mpd_replay_gain_mode mode = mpd_parse_replay_gain_name(settingvalue);
             if (mode == MPD_REPLAY_UNKNOWN)
             {
-                LOG_ERROR("Unknown replay gain mode: %s", settingvalue);
+                MYMPD_LOG_ERROR("Unknown replay gain mode: %s", settingvalue);
             }
             else
             {
@@ -329,8 +319,7 @@ sds mpd_client_put_settings(t_mpd_client_state *mpd_client_state, sds buffer, sd
     }
     const char *replaygain = mpd_lookup_replay_gain_mode(replay_gain_mode);
 
-    buffer = jsonrpc_start_result(buffer, method, request_id);
-    buffer = sdscat(buffer, ",");
+    buffer = jsonrpc_result_start(buffer, method, request_id);
     buffer = tojson_long(buffer, "repeat", mpd_status_get_repeat(status), true);
     if (mpd_client_state->feat_single_oneshot == true)
     {
@@ -382,7 +371,7 @@ sds mpd_client_put_settings(t_mpd_client_state *mpd_client_state, sds buffer, sd
     buffer = print_trigger_list(buffer);
     buffer = sdscat(buffer, "}");
 
-    buffer = jsonrpc_end_result(buffer);
+    buffer = jsonrpc_result_end(buffer);
 
     return buffer;
 }

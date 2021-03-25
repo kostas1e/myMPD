@@ -171,15 +171,6 @@ Like non appliqué, valeur de like non valide
 Failed to set like, invalid song uri
 Like non appliqué, URI de la chanson non valide
 
-Last played
-Dernier joué
-
-LastPlayed
-Dernier joué
-
-Last skipped
-Dernier ignoré
-
 Database
 Base de données
 
@@ -207,17 +198,8 @@ Page suivante
 Num songs
 %{smart_count} Chanson |||| %{smart_count} Chansons
 
-Num playlists
-%{smart_count} Liste de lecture |||| %{smart_count} Listes de lecture
-
 Num entries
 %{smart_count} Entrée |||| %{smart_count} Entrées
-
-Add all to queue
-Ajouter à la queue
-
-Add all to playlist
-Ajouter à la liste de lecture
 
 Save as smart playlist
 Enregistrer comme liste de lecture intelligente
@@ -357,9 +339,6 @@ J'aime
 Play count
 Nombre de lecture
 
-Skip count
-Nombre de fois ignoré 
-
 Theme
 Thème  
 
@@ -438,12 +417,6 @@ Langue
 Browser default
 Explorateur par défaut
 
-Pagination
-Pagination
-
-Must be a number smaller or equal 200
-Doit être un nombre inférieur ou égal à 200
-
 Notifications
 Notifications
 
@@ -501,7 +474,7 @@ Echec de la mise à jour des listes de lecture intelligentes
 Smart playlist %{playlist} updated
 Liste de lecture intelligente %{playlist} mise à jour
 
-Updating of smart playlist %{playlist} failed
+Updating smart playlist %{playlist} failed
 Echec de la mise à jour de la liste de lecture intelligente %{playlist}
 
 Smart playlist
@@ -593,9 +566,6 @@ Version de Libmpdclient
 
 Libmympdclient version
 Version de Libmympdclient
-
-Shortcut
-Raccourci
 
 Action
 Action
@@ -750,20 +720,8 @@ Contrôle du volulme désactivé
 Volume
 Volume
 
-No results, please refine your search
-Pas de résultats, veuillez préciser la rechercher
-
-Empty queue
-Queue vide
-
 Empty list
 Liste vide
-
-Empty playlist
-Liste de lecture vide
-
-No playlists found
-Pas de liste de lecture trouvée
 
 Added stream %{streamUri} to queue
 Flux %{streamUri} ajouté à la queue
@@ -1008,7 +966,7 @@ Consummer doit être activé
 Advanced
 Avancé
 
-Successfully croped covercache
+Successfully cropped covercache
 Le cache des jaquettes a été coupé
 
 Successfully cleared covercache
@@ -1518,8 +1476,8 @@ Détails
 Port
 Port
 
-Select tag to display
-Choix du tag à afficher
-
 Websocket is disconnected
 La websocket est déconnectée
+
+Missing translations
+Selected locale is missing %{smart_count} translation |||| Selected locale is missing %{smart_count} translations

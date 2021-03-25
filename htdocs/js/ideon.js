@@ -1,9 +1,65 @@
 "use strict";
 
+function initIdeon() {
+    document.getElementById('modalIdeon').addEventListener('shown.bs.modal', function () {
+        getSettings();
+        removeIsInvalid(document.getElementById('modalIdeon'));
+    });
+
+    document.getElementById('modalIdeon').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            saveIdeonSettings();
+            event.stopPropagation();
+            event.preventDefault();
+        }
+    });
+
+    document.getElementById('selectNsType').addEventListener('change', function () {
+        let value = this.options[this.selectedIndex].value;
+        if (value === '0') {
+            document.getElementById('nsServerShare').classList.add('hide');
+            document.getElementById('sambaVersion').classList.add('hide');
+            document.getElementById('nsCredentials').classList.add('hide');
+            document.getElementById('inputNsServer').value = '';
+            document.getElementById('inputNsShare').value = '';
+            document.getElementById('inputNsUsername').value = '';
+            document.getElementById('inputNsPassword').value = '';
+        }
+        else if (value === '2') {
+            document.getElementById('nsServerShare').classList.remove('hide');
+            document.getElementById('sambaVersion').classList.remove('hide');
+            document.getElementById('nsCredentials').classList.remove('hide');
+        }
+        else {
+            document.getElementById('nsServerShare').classList.remove('hide');
+            if (value === '1') {
+                document.getElementById('sambaVersion').classList.remove('hide');
+            }
+            else {
+                document.getElementById('sambaVersion').classList.add('hide');
+            }
+            document.getElementById('nsCredentials').classList.add('hide');
+            document.getElementById('inputNsUsername').value = '';
+            document.getElementById('inputNsPassword').value = '';
+        }
+    });
+
+    document.getElementById('btnDropdownServers').parentNode.addEventListener('show.bs.dropdown', function () {
+        sendAPI("MYMPD_API_NS_SERVER_LIST", {}, parseServers, true);
+    });
+
+    document.getElementById('dropdownServers').children[0].addEventListener('click', function (event) {
+        event.preventDefault();
+        if (event.target.nodeName === 'A') {
+            document.getElementById('inputNsServer').value = event.target.getAttribute('data-value');
+        }
+    });
+}
+
 function parseServers(obj) {
     let list = '';
     if (obj.error) {
-        list = '<div class="list-group-item"><span class="material-icons">error_outline</span> ' + t(obj.error.message) + '</div>';
+        list = '<div class="list-group-item"><span class="mi">error_outline</span> ' + t(obj.error.message) + '</div>';
     }
     else {
         for (let i = 0; i < obj.result.returnedEntities; i++) {
@@ -11,7 +67,7 @@ function parseServers(obj) {
                 obj.result.data[i].ipAddress + '<br/><small>' + obj.result.data[i].name + '</small></a>';
         }
         if (obj.result.returnedEntities === 0) {
-            list = '<div class="list-group-item"><span class="material-icons">error_outline</span>&nbsp;' + t('Empty list') + '</div>';
+            list = '<div class="list-group-item"><span class="mi">error_outline</span>&nbsp;' + t('Empty list') + '</div>';
         }
     }
 

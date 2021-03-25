@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -26,7 +26,7 @@
 //timer_id 1
 void timer_handler_covercache(struct t_timer_definition *definition, void *user_data)
 {
-    LOG_VERBOSE("Start timer_handler_covercache");
+    MYMPD_LOG_INFO("Start timer_handler_covercache");
     (void)definition;
     t_config *config = (t_config *)user_data;
     clear_covercache(config, -1);
@@ -35,7 +35,7 @@ void timer_handler_covercache(struct t_timer_definition *definition, void *user_
 //timer_id 2
 void timer_handler_smartpls_update(struct t_timer_definition *definition, void *user_data)
 {
-    LOG_VERBOSE("Start timer_handler_smartpls_update");
+    MYMPD_LOG_INFO("Start timer_handler_smartpls_update");
     (void)definition;
     (void)user_data;
     t_work_request *request = create_request(-1, 0, MPDWORKER_API_SMARTPLS_UPDATE_ALL, "MPDWORKER_API_SMARTPLS_UPDATE_ALL", "");
@@ -45,7 +45,7 @@ void timer_handler_smartpls_update(struct t_timer_definition *definition, void *
 
 void timer_handler_select(struct t_timer_definition *definition, void *user_data)
 {
-    LOG_VERBOSE("Start timer_handler_select for timer \"%s\"", definition->name);
+    MYMPD_LOG_INFO("Start timer_handler_select for timer \"%s\"", definition->name);
     if (strcmp(definition->action, "player") == 0 && strcmp(definition->subaction, "stopplay") == 0)
     {
         t_work_request *request = create_request(-1, 0, MPD_API_PLAYER_STOP, "MPD_API_PLAYER_STOP", "");
@@ -92,7 +92,7 @@ void timer_handler_select(struct t_timer_definition *definition, void *user_data
     }
     else
     {
-        LOG_ERROR("Unknown script action: %s - %s", definition->action, definition->subaction);
+        MYMPD_LOG_ERROR("Unknown script action: %s - %s", definition->action, definition->subaction);
     }
     (void)user_data;
 }

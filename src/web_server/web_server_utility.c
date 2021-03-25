@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -26,7 +26,7 @@ bool rm_mk_dir(sds dir_name, bool create)
         int rc = mkdir(dir_name, 0700);
         if (rc != 0 && errno != EEXIST)
         {
-            LOG_ERROR("Can not create directory %s: %s", dir_name, strerror(errno));
+            MYMPD_LOG_ERROR("Can not create directory %s: %s", dir_name, strerror(errno));
             return false;
         }
     }
@@ -35,7 +35,7 @@ bool rm_mk_dir(sds dir_name, bool create)
         int rc = rmdir(dir_name);
         if (rc != 0 && errno != ENOENT)
         {
-            LOG_ERROR("Can not remove directory %s: %s", dir_name, strerror(errno));
+            MYMPD_LOG_ERROR("Can not remove directory %s: %s", dir_name, strerror(errno));
             return false;
         }
     }
@@ -63,6 +63,7 @@ void manage_emptydir(sds varlibdir, bool pics, bool smartplaylists, bool music, 
 
 void populate_dummy_hm(struct http_message *hm)
 {
+    //create an empty dummy message struct, used for async responses
     hm->message = mg_mk_str("");
     hm->body = mg_mk_str("");
     hm->method = mg_mk_str("GET");
@@ -71,8 +72,10 @@ void populate_dummy_hm(struct http_message *hm)
     hm->resp_code = 200;
     hm->resp_status_msg = mg_mk_str("OK");
     hm->query_string = mg_mk_str("");
-    hm->header_names[0] = mg_mk_str("");
-    hm->header_values[0] = mg_mk_str("");
+    //add accept-encoding header to deliver gziped embedded files
+    //browsers without gzip support are not supported by myMPD
+    hm->header_names[0] = mg_mk_str("Accept-Encoding");
+    hm->header_values[0] = mg_mk_str("gzip");
 }
 
 sds *split_coverimage_names(const char *coverimage_name, sds *coverimage_names, int *count)
@@ -98,7 +101,7 @@ void send_error(struct mg_connection *nc, int code, const char *msg)
     sdsfree(errorpage);
     if (code >= 400)
     {
-        LOG_ERROR(msg);
+        MYMPD_LOG_ERROR(msg);
     }
 }
 
@@ -141,7 +144,7 @@ void serve_asset_image(struct mg_connection *nc, struct http_message *hm, const 
         serve_embedded_files(nc, asset_image, hm);
 #endif
     }
-    LOG_DEBUG("Serving file %s (%s)", asset_image, mime_type);
+    MYMPD_LOG_DEBUG("Serving file %s (%s)", asset_image, mime_type);
     sdsfree(asset_image);
     sdsfree(mime_type);
 }
@@ -160,6 +163,7 @@ struct embedded_file
     const size_t uri_len;
     const char *mimetype;
     bool compressed;
+    bool cache;
     const unsigned char *data;
     const unsigned size;
 };
@@ -167,22 +171,25 @@ struct embedded_file
 bool serve_embedded_files(struct mg_connection *nc, sds uri, struct http_message *hm)
 {
     const struct embedded_file embedded_files[] = {
-        {"/", 1, "text/html; charset=utf-8", true, index_html_data, index_html_size},
-        {"/css/combined.css", 17, "text/css; charset=utf-8", true, combined_css_data, combined_css_size},
-        {"/js/combined.js", 15, "application/javascript; charset=utf-8", true, combined_js_data, combined_js_size},
-        {"/sw.js", 6, "application/javascript; charset=utf-8", true, sw_js_data, sw_js_size},
-        {"/mympd.webmanifest", 18, "application/manifest+json", true, mympd_webmanifest_data, mympd_webmanifest_size},
-        {"/assets/coverimage-notavailable.svg", 35, "image/svg+xml", true, coverimage_notavailable_svg_data, coverimage_notavailable_svg_size},
-        {"/assets/MaterialIcons-Regular.woff2", 35, "font/woff2", false, MaterialIcons_Regular_woff2_data, MaterialIcons_Regular_woff2_size},
-        {"/assets/coverimage-stream.svg", 29, "image/svg+xml", true, coverimage_stream_svg_data, coverimage_stream_svg_size},
-        {"/assets/coverimage-loading.svg", 30, "image/svg+xml", true, coverimage_loading_svg_data, coverimage_loading_svg_size},
-        {"/assets/coverimage-booklet.svg", 30, "image/svg+xml", true, coverimage_booklet_svg_data, coverimage_booklet_svg_size},
-        {"/assets/coverimage-mympd.svg", 28, "image/svg+xml", true, coverimage_mympd_svg_data, coverimage_mympd_svg_size},
-        {"/assets/favicon.ico", 19, "image/vnd.microsoft.icon", false, favicon_ico_data, favicon_ico_size},
-        {"/assets/appicon-192.png", 23, "image/png", false, appicon_192_png_data, appicon_192_png_size},
-        {"/assets/appicon-512.png", 23, "image/png", false, appicon_512_png_data, appicon_512_png_size},
-        {"/assets/logo-ideon.png", 22, "image/png", false, logo_ideon_png_data, logo_ideon_png_size},
-        {NULL, 0, NULL, false, NULL, 0}};
+        {"/", 1, "text/html; charset=utf-8", true, false, index_html_data, index_html_size},
+        {"/css/combined.css", 17, "text/css; charset=utf-8", true, false, combined_css_data, combined_css_size},
+        {"/js/combined.js", 15, "application/javascript; charset=utf-8", true, false, combined_js_data, combined_js_size},
+        {"/sw.js", 6, "application/javascript; charset=utf-8", true, false, sw_js_data, sw_js_size},
+        {"/mympd.webmanifest", 18, "application/manifest+json", true, false, mympd_webmanifest_data, mympd_webmanifest_size},
+        {"/assets/coverimage-notavailable.svg", 35, "image/svg+xml", true, true, coverimage_notavailable_svg_data, coverimage_notavailable_svg_size},
+        {"/assets/MaterialIcons-Regular.woff2", 35, "font/woff2", false, true, MaterialIcons_Regular_woff2_data, MaterialIcons_Regular_woff2_size},
+        {"/assets/coverimage-stream.svg", 29, "image/svg+xml", true, true, coverimage_stream_svg_data, coverimage_stream_svg_size},
+        {"/assets/coverimage-loading.svg", 30, "image/svg+xml", true, true, coverimage_loading_svg_data, coverimage_loading_svg_size},
+        {"/assets/coverimage-booklet.svg", 30, "image/svg+xml", true, true, coverimage_booklet_svg_data, coverimage_booklet_svg_size},
+        {"/assets/coverimage-mympd.svg", 28, "image/svg+xml", true, true, coverimage_mympd_svg_data, coverimage_mympd_svg_size},
+        {"/assets/mympd-background-dark.svg", 33, "image/svg+xml", true, true, mympd_background_dark_svg_data, mympd_background_dark_svg_size},
+        {"/assets/mympd-background-light.svg", 34, "image/svg+xml", true, true, mympd_background_light_svg_data, mympd_background_light_svg_size},
+        {"/assets/mympd-background-default.svg", 36, "image/svg+xml", true, true, mympd_background_default_svg_data, mympd_background_default_svg_size},
+        {"/assets/favicon.ico", 19, "image/vnd.microsoft.icon", false, true, favicon_ico_data, favicon_ico_size},
+        {"/assets/appicon-192.png", 23, "image/png", false, true, appicon_192_png_data, appicon_192_png_size},
+        {"/assets/appicon-512.png", 23, "image/png", false, true, appicon_512_png_data, appicon_512_png_size},
+        {"/assets/ideon-logo.png", 22, "image/png", false, true, ideon_logo_png_data, ideon_logo_png_size},
+        {NULL, 0, NULL, false, false, NULL, 0}};
     //decode uri
     sds uri_decoded = sdsurldecode(sdsempty(), uri, sdslen(uri), 0);
     if (sdslen(uri_decoded) == 0)
@@ -216,9 +223,11 @@ bool serve_embedded_files(struct mg_connection *nc, sds uri, struct http_message
         }
         //send header
         mg_printf(nc, "HTTP/1.1 200 OK\r\n" EXTRA_HEADERS "\r\n"
+                      "%s"
                       "Content-Length: %u\r\n"
                       "Content-Type: %s\r\n"
                       "%s\r\n",
+                  (p->cache == true ? EXTRA_HEADERS_CACHE "\r\n" : ""),
                   p->size,
                   p->mimetype,
                   (p->compressed == true ? "Content-Encoding: gzip\r\n" : ""));

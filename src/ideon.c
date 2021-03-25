@@ -34,11 +34,11 @@ void ideon_init(void) // todo: change return type to bool
 {
     if (curl_global_init(CURL_GLOBAL_ALL) != 0)
     {
-        LOG_ERROR("curl global init has failed");
+        MYMPD_LOG_ERROR("curl global init has failed");
     }
     if (pthread_mutex_init(&lock, NULL) != 0)
     {
-        LOG_ERROR("mutex init has failed");
+        MYMPD_LOG_ERROR("mutex init has failed");
     }
     output_name_init();
 }
@@ -57,11 +57,11 @@ void ideon_dc_handle(int *dc) // todo: change return type to bool
 
     if (handled == true)
     {
-        LOG_DEBUG("Handled dc %d", *dc);
+        MYMPD_LOG_DEBUG("Handled dc %d", *dc);
     }
     else
     {
-        LOG_DEBUG("Handling dc %d", *dc);
+        MYMPD_LOG_DEBUG("Handling dc %d", *dc);
         if (*dc != 3)
         {
             syscmd("reboot");
@@ -98,7 +98,7 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed, bool n
 
     if (mpd_conf_changed == true)
     {
-        LOG_DEBUG("mpd conf changed");
+        MYMPD_LOG_DEBUG("mpd conf changed");
 
         const char *dop = mympd_state->dop == true ? "yes" : "no";
         sds conf = sdsnew("/etc/mpd.conf");
@@ -121,7 +121,7 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed, bool n
         }
         else
         {
-            syscmd("systemctl stop shairport-sync && systemctl disable shairport-sync");
+            syscmd("systemctl disable shairport-sync && systemctl stop shairport-sync");
         }
     }
 
@@ -133,7 +133,7 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed, bool n
         }
         else
         {
-            syscmd("systemctl stop roonbridge && systemctl disable roonbridge");
+            syscmd("systemctl disable roonbridge && systemctl stop roonbridge");
         }
     }
 
@@ -145,7 +145,7 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed, bool n
         }
         else
         {
-            syscmd("systemctl stop spotifyd && systemctl disable spotifyd");
+            syscmd("systemctl disable spotifyd && systemctl stop spotifyd");
         }
     }
 
@@ -158,13 +158,13 @@ sds ideon_ns_server_list(sds buffer, sds method, int request_id)
     // returns three lines per server found - 1st line ip address 2nd line name 3rd line workgroup
     if (fp == NULL)
     {
-        LOG_ERROR("Failed to get server list");
-        buffer = jsonrpc_respond_message(buffer, method, request_id, "Failed to get server list", true);
+        MYMPD_LOG_ERROR("Failed to get server list");
+        buffer = jsonrpc_respond_message(buffer, method, request_id, true, "general", "error", "Failed to get server list");
     }
     else
     {
-        buffer = jsonrpc_start_result(buffer, method, request_id);
-        buffer = sdscat(buffer, ",\"data\":[");
+        buffer = jsonrpc_result_start(buffer, method, request_id);
+        buffer = sdscat(buffer, "\"data\":[");
         unsigned entity_count = 0;
         char *line = NULL;
         size_t n = 0;
@@ -201,7 +201,7 @@ sds ideon_ns_server_list(sds buffer, sds method, int request_id)
         buffer = sdscat(buffer, "],");
         buffer = tojson_long(buffer, "totalEntities", entity_count, true);
         buffer = tojson_long(buffer, "returnedEntities", entity_count, false);
-        buffer = jsonrpc_end_result(buffer);
+        buffer = jsonrpc_result_end(buffer);
         if (line != NULL)
         {
             free(line);
@@ -232,12 +232,11 @@ sds ideon_update_check(sds buffer, sds method, int request_id)
         update_available = false;
     }
 
-    buffer = jsonrpc_start_result(buffer, method, request_id);
-    buffer = sdscat(buffer, ",");
+    buffer = jsonrpc_result_start(buffer, method, request_id);
     buffer = tojson_char(buffer, "currentVersion", IDEON_VERSION, true);
     buffer = tojson_char(buffer, "latestVersion", latest_version, true);
     buffer = tojson_bool(buffer, "updateAvailable", update_available, false);
-    buffer = jsonrpc_end_result(buffer);
+    buffer = jsonrpc_result_end(buffer);
     sdsfree(latest_version);
     return buffer;
 }
@@ -246,10 +245,9 @@ sds ideon_update_install(sds buffer, sds method, int request_id)
 {
     bool service = syscmd("systemctl start ideon_update");
 
-    buffer = jsonrpc_start_result(buffer, method, request_id);
-    buffer = sdscat(buffer, ",");
+    buffer = jsonrpc_result_start(buffer, method, request_id);
     buffer = tojson_bool(buffer, "service", service, false);
-    buffer = jsonrpc_end_result(buffer);
+    buffer = jsonrpc_result_end(buffer);
     return buffer;
 }
 
@@ -277,7 +275,7 @@ static sds device_name_get(sds name)
     FILE *fp = popen("/usr/bin/aplay -l | grep \"card 0.*device 0\"", "r");
     if (fp == NULL)
     {
-        LOG_ERROR("Failed to get device name");
+        MYMPD_LOG_ERROR("Failed to get device name");
     }
     else
     {
@@ -308,7 +306,7 @@ static sds output_name_get(sds name)
     FILE *fp = popen("grep \"^name\" /etc/mpd.conf", "r");
     if (fp == NULL)
     {
-        LOG_ERROR("Failed to get output name");
+        MYMPD_LOG_ERROR("Failed to get output name");
     }
     else
     {
@@ -348,7 +346,7 @@ static bool output_name_set(const char *name)
 
 static bool syscmd(const char *cmdline)
 {
-    LOG_DEBUG("Executing syscmd \"%s\"", cmdline);
+    MYMPD_LOG_DEBUG("Executing syscmd \"%s\"", cmdline);
     const int rc = system(cmdline);
     if (rc == 0)
     {
@@ -356,7 +354,7 @@ static bool syscmd(const char *cmdline)
     }
     else
     {
-        LOG_ERROR("Executing syscmd \"%s\" failed", cmdline);
+        MYMPD_LOG_ERROR("Executing syscmd \"%s\" failed", cmdline);
         return false;
     }
 }
@@ -441,7 +439,7 @@ static int ns_set(int type, const char *server, const char *share, const char *v
         int rc = rename(tmp_file, org_file);
         if (rc == -1)
         {
-            LOG_ERROR("Renaming file from %s to %s failed", tmp_file, org_file);
+            MYMPD_LOG_ERROR("Renaming file from %s to %s failed", tmp_file, org_file);
             me = 0; // old table
         }
         sdsfree(mnt_fsname);
@@ -452,14 +450,13 @@ static int ns_set(int type, const char *server, const char *share, const char *v
     }
     else
     {
-        // LOG_ERROR("Can't open %s for read", org_file);
         if (tmp)
         {
             endmntent(tmp);
         }
         else
         {
-            LOG_ERROR("Can't open %s for write", tmp_file);
+            MYMPD_LOG_ERROR("Can't open %s for write", tmp_file);
         }
         if (org)
         {
@@ -467,7 +464,7 @@ static int ns_set(int type, const char *server, const char *share, const char *v
         }
         else
         {
-            LOG_ERROR("Can't open %s for read", org_file);
+            MYMPD_LOG_ERROR("Can't open %s for read", org_file);
         }
     }
     sdsfree(tmp_file);
@@ -493,19 +490,19 @@ static sds web_version_get(sds version)
         CURLcode res = curl_easy_perform(curl_handle);
         if (res != CURLE_OK)
         {
-            LOG_ERROR("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            MYMPD_LOG_ERROR("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
         }
         else
         {
             version = sdscatlen(version, chunk.memory, chunk.size);
-            LOG_DEBUG("%lu bytes retrieved", (unsigned long)chunk.size);
+            MYMPD_LOG_DEBUG("%lu bytes retrieved", (unsigned long)chunk.size);
         }
 
         curl_easy_cleanup(curl_handle);
     }
     else
     {
-        LOG_ERROR("curl_easy_init");
+        MYMPD_LOG_ERROR("curl_easy_init");
     }
     free(chunk.memory);
     return version;
@@ -520,7 +517,7 @@ static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, v
     if (ptr == NULL)
     {
         // out of memory
-        LOG_ERROR("not enough memory (realloc returned NULL)");
+        MYMPD_LOG_ERROR("not enough memory (realloc returned NULL)");
         return 0;
     }
 

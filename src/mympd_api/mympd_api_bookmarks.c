@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -33,7 +33,7 @@ bool mympd_api_bookmark_update(t_config *config, const int id, const char *name,
     int fd = mkstemp(tmp_file);
     if (fd < 0)
     {
-        LOG_ERROR("Can not open file \"%s\" for write: %s", tmp_file, strerror(errno));
+        MYMPD_LOG_ERROR("Can not open file \"%s\" for write: %s", tmp_file, strerror(errno));
         sdsfree(tmp_file);
         return false;
     }
@@ -76,8 +76,8 @@ bool mympd_api_bookmark_update(t_config *config, const int id, const char *name,
             }
             else
             {
-                LOG_ERROR("Can not read bookmarks line");
-                LOG_DEBUG("Errorneous line: %s", line);
+                MYMPD_LOG_ERROR("Can not read bookmarks line");
+                MYMPD_LOG_DEBUG("Errorneous line: %s", line);
             }
             FREE_PTR(lname);
             FREE_PTR(luri);
@@ -95,7 +95,7 @@ bool mympd_api_bookmark_update(t_config *config, const int id, const char *name,
 
     if (rename(tmp_file, b_file) == -1)
     {
-        LOG_ERROR("Rename file from \"%s\" to \"%s\" failed: %s", tmp_file, b_file, strerror(errno));
+        MYMPD_LOG_ERROR("Rename file from \"%s\" to \"%s\" failed: %s", tmp_file, b_file, strerror(errno));
         sdsfree(tmp_file);
         sdsfree(b_file);
         return false;
@@ -116,19 +116,18 @@ bool mympd_api_bookmark_clear(t_config *config)
     }
     if (rc == -1 && errno != ENOENT)
     {
-        LOG_ERROR("Error removing file \"%s\": %s", b_file, strerror(errno));
+        MYMPD_LOG_ERROR("Error removing file \"%s\": %s", b_file, strerror(errno));
     }
     else
     {
         //ignore error
-        LOG_DEBUG("Error removing file \"%s\": %s", b_file, strerror(errno));
+        MYMPD_LOG_DEBUG("Error removing file \"%s\": %s", b_file, strerror(errno));
     }
     sdsfree(b_file);
     return false;
 }
 
-sds mympd_api_bookmark_list(t_config *config, sds buffer, sds method, long request_id,
-                            unsigned int offset)
+sds mympd_api_bookmark_list(t_config *config, sds buffer, sds method, long request_id, unsigned int offset, unsigned int limit)
 {
     char *line = NULL;
     char *crap = NULL;
@@ -139,8 +138,8 @@ sds mympd_api_bookmark_list(t_config *config, sds buffer, sds method, long reque
     sds b_file = sdscatfmt(sdsempty(), "%s/state/bookmark_list", config->varlibdir);
     FILE *fi = fopen(b_file, "r");
 
-    buffer = jsonrpc_start_result(buffer, method, request_id);
-    buffer = sdscat(buffer, ", \"data\": [");
+    buffer = jsonrpc_result_start(buffer, method, request_id);
+    buffer = sdscat(buffer, "\"data\":[");
 
     if (fi == NULL)
     {
@@ -148,9 +147,10 @@ sds mympd_api_bookmark_list(t_config *config, sds buffer, sds method, long reque
         fi = fopen(b_file, "w");
         if (fi == NULL)
         {
-            LOG_ERROR("Can't open %s for write", b_file);
+            MYMPD_LOG_ERROR("Can't open %s for write", b_file);
             buffer = sdscrop(buffer);
-            buffer = jsonrpc_respond_message(buffer, method, request_id, "Failed to open bookmarks file", true);
+            buffer = jsonrpc_respond_message(buffer, method, request_id, true,
+                                             "general", "error", "Failed to open bookmarks file");
             sdsfree(b_file);
             return buffer;
         }
@@ -161,7 +161,7 @@ sds mympd_api_bookmark_list(t_config *config, sds buffer, sds method, long reque
         while (getline(&line, &n, fi) > 0)
         {
             entity_count++;
-            if (entity_count > offset && entity_count <= offset + config->max_elements_per_page)
+            if (entity_count > offset && entity_count <= offset + limit)
             {
                 if (entities_returned++)
                 {
@@ -179,7 +179,7 @@ sds mympd_api_bookmark_list(t_config *config, sds buffer, sds method, long reque
     buffer = tojson_long(buffer, "totalEntities", entity_count, true);
     buffer = tojson_long(buffer, "offset", offset, true);
     buffer = tojson_long(buffer, "returnedEntities", entities_returned, false);
-    buffer = jsonrpc_end_result(buffer);
+    buffer = jsonrpc_result_end(buffer);
     return buffer;
 }
 
@@ -199,6 +199,6 @@ static bool write_bookmarks_line(FILE *fp, int id, const char *name,
     {
         return true;
     }
-    LOG_ERROR("Can't write bookmarks line to file");
+    MYMPD_LOG_ERROR("Can't write bookmarks line to file");
     return false;
 }

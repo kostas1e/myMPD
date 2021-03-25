@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -24,6 +24,10 @@
 #include "../mpd_shared.h"
 #include "mpd_shared_tags.h"
 
+//private definitions
+static sds _mpd_shared_get_tags(struct mpd_song const *song, const enum mpd_tag_type tag, sds tags);
+
+//public functions
 enum mpd_tag_type get_sort_tag(enum mpd_tag_type tag)
 {
     if (tag == MPD_TAG_ARTIST)
@@ -52,7 +56,7 @@ void disable_all_mpd_tags(t_mpd_state *mpd_state)
 {
     if (mpd_connection_cmp_server_version(mpd_state->conn, 0, 21, 0) >= 0)
     {
-        LOG_DEBUG("Disabling all mpd tag types");
+        MYMPD_LOG_DEBUG("Disabling all mpd tag types");
         bool rc = mpd_run_clear_tag_types(mpd_state->conn);
         check_rc_error_and_recover(mpd_state, NULL, NULL, 0, false, rc, "mpd_run_clear_tag_types");
     }
@@ -62,7 +66,7 @@ void enable_all_mpd_tags(t_mpd_state *mpd_state)
 {
     if (mpd_connection_cmp_server_version(mpd_state->conn, 0, 21, 0) >= 0)
     {
-        LOG_DEBUG("Enabling all mpd tag types");
+        MYMPD_LOG_DEBUG("Enabling all mpd tag types");
         bool rc = mpd_run_all_tag_types(mpd_state->conn);
         check_rc_error_and_recover(mpd_state, NULL, NULL, 0, false, rc, "mpd_run_all_tag_types");
     }
@@ -72,20 +76,20 @@ void enable_mpd_tags(t_mpd_state *mpd_state, t_tags enable_tags)
 {
     if (mpd_connection_cmp_server_version(mpd_state->conn, 0, 21, 0) >= 0)
     {
-        LOG_DEBUG("Setting interesting mpd tag types");
+        MYMPD_LOG_DEBUG("Setting interesting mpd tag types");
         if (mpd_command_list_begin(mpd_state->conn, false))
         {
             bool rc = mpd_send_clear_tag_types(mpd_state->conn);
             if (rc == false)
             {
-                LOG_ERROR("Error adding command to command list mpd_send_clear_tag_types");
+                MYMPD_LOG_ERROR("Error adding command to command list mpd_send_clear_tag_types");
             }
             if (enable_tags.len > 0)
             {
                 rc = mpd_send_enable_tag_types(mpd_state->conn, enable_tags.tags, enable_tags.len);
                 if (rc == false)
                 {
-                    LOG_ERROR("Error adding command to command list mpd_send_enable_tag_types");
+                    MYMPD_LOG_ERROR("Error adding command to command list mpd_send_enable_tag_types");
                 }
             }
             if (mpd_command_list_end(mpd_state->conn))
@@ -114,22 +118,6 @@ sds mpd_shared_get_tags(struct mpd_song const *song, const enum mpd_tag_type tag
         {
             tags = sdscatlen(tags, "-", 1);
         }
-    }
-    return tags;
-}
-
-sds _mpd_shared_get_tags(struct mpd_song const *song, const enum mpd_tag_type tag, sds tags)
-{
-    tags = sdscrop(tags);
-    char *value = NULL;
-    int i = 0;
-    while ((value = (char *)mpd_song_get_tag(song, tag, i)) != NULL)
-    {
-        if (i++)
-        {
-            tags = sdscatlen(tags, ", ", 2);
-        }
-        tags = sdscat(tags, value);
     }
     return tags;
 }
@@ -193,7 +181,7 @@ void check_tags(sds taglist, const char *taglistname, t_tags *tagtypes, t_tags a
         enum mpd_tag_type tag = mpd_tag_name_iparse(tokens[i]);
         if (tag == MPD_TAG_UNKNOWN)
         {
-            LOG_WARN("Unknown tag %s", tokens[i]);
+            MYMPD_LOG_WARN("Unknown tag %s", tokens[i]);
         }
         else
         {
@@ -204,12 +192,12 @@ void check_tags(sds taglist, const char *taglistname, t_tags *tagtypes, t_tags a
             }
             else
             {
-                LOG_DEBUG("Disabling tag %s", mpd_tag_name(tag));
+                MYMPD_LOG_DEBUG("Disabling tag %s", mpd_tag_name(tag));
             }
         }
     }
     sdsfreesplitres(tokens, tokens_count);
-    LOG_INFO(logline);
+    MYMPD_LOG_NOTICE(logline);
     sdsfree(logline);
 }
 
@@ -223,4 +211,40 @@ bool mpd_shared_tag_exists(const enum mpd_tag_type tag_types[64], const size_t t
         }
     }
     return false;
+}
+
+void album_cache_free(rax **album_cache)
+{
+    if (*album_cache == NULL)
+    {
+        MYMPD_LOG_DEBUG("Album cache is NULL not freeing anything");
+        return;
+    }
+    raxIterator iter;
+    raxStart(&iter, *album_cache);
+    raxSeek(&iter, "^", NULL, 0);
+    while (raxNext(&iter))
+    {
+        mpd_song_free((struct mpd_song *)iter.data);
+    }
+    raxStop(&iter);
+    raxFree(*album_cache);
+    *album_cache = NULL;
+}
+
+//private functions
+static sds _mpd_shared_get_tags(struct mpd_song const *song, const enum mpd_tag_type tag, sds tags)
+{
+    tags = sdscrop(tags);
+    char *value = NULL;
+    int i = 0;
+    while ((value = (char *)mpd_song_get_tag(song, tag, i)) != NULL)
+    {
+        if (i++)
+        {
+            tags = sdscatlen(tags, ", ", 2);
+        }
+        tags = sdscat(tags, value);
+    }
+    return tags;
 }

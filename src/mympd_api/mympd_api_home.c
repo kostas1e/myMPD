@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -97,7 +97,7 @@ bool mympd_api_read_home_list(t_config *config, t_mympd_state *mympd_state)
     else
     {
         //ignore error
-        LOG_DEBUG("Can not open file \"%s\": %s", home_file, strerror(errno));
+        MYMPD_LOG_DEBUG("Can not open file \"%s\": %s", home_file, strerror(errno));
         sdsfree(home_file);
         return false;
     }
@@ -111,12 +111,12 @@ bool mympd_api_write_home_list(t_config *config, t_mympd_state *mympd_state)
     {
         return true;
     }
-    LOG_VERBOSE("Saving home icons to disc");
+    MYMPD_LOG_INFO("Saving home icons to disc");
     sds tmp_file = sdscatfmt(sdsempty(), "%s/state/home_list.XXXXXX", config->varlibdir);
     int fd = mkstemp(tmp_file);
     if (fd < 0)
     {
-        LOG_ERROR("Can not open \"%s\" for write: %s", tmp_file, strerror(errno));
+        MYMPD_LOG_ERROR("Can not open \"%s\" for write: %s", tmp_file, strerror(errno));
         sdsfree(tmp_file);
         return false;
     }
@@ -127,7 +127,7 @@ bool mympd_api_write_home_list(t_config *config, t_mympd_state *mympd_state)
         int rc = fprintf(fp, "%s\n", current->key);
         if (rc < 0)
         {
-            LOG_ERROR("Can not write to file \"%s\"", tmp_file);
+            MYMPD_LOG_ERROR("Can not write to file \"%s\"", tmp_file);
             sdsfree(tmp_file);
             fclose(fp);
             return false;
@@ -138,7 +138,7 @@ bool mympd_api_write_home_list(t_config *config, t_mympd_state *mympd_state)
     sds home_file = sdscatfmt(sdsempty(), "%s/state/home_list", config->varlibdir);
     if (rename(tmp_file, home_file) == -1)
     {
-        LOG_ERROR("Rename file from \"%s\" to \"%s\" failed: %s", tmp_file, home_file, strerror(errno));
+        MYMPD_LOG_ERROR("Rename file from \"%s\" to \"%s\" failed: %s", tmp_file, home_file, strerror(errno));
         sdsfree(tmp_file);
         sdsfree(home_file);
         return false;
@@ -150,8 +150,8 @@ bool mympd_api_write_home_list(t_config *config, t_mympd_state *mympd_state)
 
 sds mympd_api_put_home_list(t_mympd_state *mympd_state, sds buffer, sds method, long request_id)
 {
-    buffer = jsonrpc_start_result(buffer, method, request_id);
-    buffer = sdscat(buffer, ",\"data\":[");
+    buffer = jsonrpc_result_start(buffer, method, request_id);
+    buffer = sdscat(buffer, "\"data\":[");
     int returned_entities = 0;
     struct list_node *current = mympd_state->home_list.head;
     while (current != NULL)
@@ -165,7 +165,7 @@ sds mympd_api_put_home_list(t_mympd_state *mympd_state, sds buffer, sds method, 
     }
     buffer = sdscatlen(buffer, "],", 2);
     buffer = tojson_long(buffer, "returnedEntities", returned_entities, false);
-    buffer = jsonrpc_end_result(buffer);
+    buffer = jsonrpc_result_end(buffer);
     return buffer;
 }
 
@@ -175,51 +175,16 @@ sds mympd_api_get_home_icon(t_mympd_state *mympd_state, sds buffer, sds method, 
 
     if (current != NULL)
     {
-        buffer = jsonrpc_start_result(buffer, method, request_id);
-        buffer = sdscat(buffer, ",\"data\":");
+        buffer = jsonrpc_result_start(buffer, method, request_id);
+        buffer = sdscat(buffer, "\"data\":");
         buffer = sdscat(buffer, current->key);
         buffer = sdscatlen(buffer, ",", 1);
         buffer = tojson_long(buffer, "returnedEntities", 1, false);
-        buffer = jsonrpc_end_result(buffer);
+        buffer = jsonrpc_result_end(buffer);
         return buffer;
     }
 
-    LOG_ERROR("Can not get home icon at pos %u", pos);
-    buffer = jsonrpc_respond_message(buffer, method, request_id, "Can not get home icon", true);
-    return buffer;
-}
-
-sds mympd_api_put_home_picture_list(t_config *config, sds buffer, sds method, long request_id)
-{
-    sds pic_dirname = sdscatfmt(sdsempty(), "%s/pics", config->varlibdir);
-    DIR *pic_dir = opendir(pic_dirname);
-    if (pic_dir == NULL)
-    {
-        buffer = jsonrpc_respond_message(buffer, method, request_id, "Can not open directory pics", true);
-        LOG_ERROR("Can not open directory \"%s\": %s", pic_dirname, strerror(errno));
-        sdsfree(pic_dirname);
-        return buffer;
-    }
-
-    buffer = jsonrpc_start_result(buffer, method, request_id);
-    buffer = sdscat(buffer, ",\"data\":[");
-    int returned_entities = 0;
-    struct dirent *next_file;
-    while ((next_file = readdir(pic_dir)) != NULL)
-    {
-        if (next_file->d_type == DT_REG)
-        {
-            if (returned_entities++)
-            {
-                buffer = sdscat(buffer, ",");
-            }
-            buffer = sdscatjson(buffer, next_file->d_name, strlen(next_file->d_name));
-        }
-    }
-    closedir(pic_dir);
-    sdsfree(pic_dirname);
-    buffer = sdscatlen(buffer, "],", 2);
-    buffer = tojson_long(buffer, "returnedEntities", returned_entities, false);
-    buffer = jsonrpc_end_result(buffer);
+    MYMPD_LOG_ERROR("Can not get home icon at pos %u", pos);
+    buffer = jsonrpc_respond_message(buffer, method, request_id, true, "home", "error", "Can not get home icon");
     return buffer;
 }

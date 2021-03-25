@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -52,7 +52,6 @@ void mympd_api_push_to_mpd_client(t_mympd_state *mympd_state)
     request->data = tojson_char(request->data, "mpdPass", mympd_state->mpd_pass, true);
     request->data = tojson_long(request->data, "mpdPort", mympd_state->mpd_port, true);
     request->data = tojson_long(request->data, "lastPlayedCount", mympd_state->last_played_count, true);
-    request->data = tojson_long(request->data, "maxElementsPerPage", mympd_state->max_elements_per_page, true);
     request->data = tojson_char(request->data, "musicDirectory", mympd_state->music_directory, false);
     request->data = sdscat(request->data, "}}");
     tiny_queue_push(mpd_client_queue, request, 0);
@@ -112,6 +111,8 @@ void free_mympd_state_sds(t_mympd_state *mympd_state)
     sdsfree(mympd_state->smartpls_prefix);
     sdsfree(mympd_state->booklet_name);
     sdsfree(mympd_state->navbar_icons);
+    sdsfree(mympd_state->advanced);
+    sdsfree(mympd_state->bg_image);
     sdsfree(mympd_state->mixer_type);
     sdsfree(mympd_state->ns_server);
     sdsfree(mympd_state->ns_share);
@@ -120,7 +121,8 @@ void free_mympd_state_sds(t_mympd_state *mympd_state)
     sdsfree(mympd_state->ns_password);
 }
 
-static const char *mympd_cols[] = {"Pos", "Duration", "Type", "LastPlayed", "Filename", "Filetype", "Fileformat", "LastModified", "Lyrics", 0};
+static const char *mympd_cols[] = {"Pos", "Duration", "Type", "LastPlayed", "Filename", "Filetype", "Fileformat", "LastModified",
+                                   "Lyrics", "stickerPlayCount", "stickerSkipCount", "stickerLastPlayed", "stickerLastSkipped", "stickerLike", 0};
 
 static bool is_mympd_col(sds token)
 {
@@ -155,7 +157,7 @@ sds json_to_cols(sds cols, char *str, size_t len, bool *error)
         }
         else
         {
-            LOG_WARN("Unknown column: %s", token);
+            MYMPD_LOG_WARN("Unknown column: %s", token);
             *error = true;
         }
         sdsfree(token);

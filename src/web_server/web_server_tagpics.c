@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -34,14 +34,14 @@ bool handle_tagpics(struct mg_connection *nc, struct http_message *hm, t_mg_user
     sds uri_decoded = sdsurldecode(sdsempty(), hm->uri.p, (int)hm->uri.len, 0);
     if (sdslen(uri_decoded) == 0)
     {
-        LOG_ERROR("Failed to decode uri");
+        MYMPD_LOG_ERROR("Failed to decode uri");
         serve_plaintext(nc, "Failed to decode uri");
         sdsfree(uri_decoded);
         return true;
     }
     if (validate_uri(uri_decoded) == false)
     {
-        LOG_ERROR("Invalid URI: %s", uri_decoded);
+        MYMPD_LOG_ERROR("Invalid URI: %s", uri_decoded);
         serve_plaintext(nc, "Invalid URI");
         sdsfree(uri_decoded);
         return true;
@@ -51,12 +51,12 @@ bool handle_tagpics(struct mg_connection *nc, struct http_message *hm, t_mg_user
     //create absolute file
     sds mediafile = sdscatfmt(sdsempty(), "%s/pics/%s", config->varlibdir, uri_decoded);
     sdsfree(uri_decoded);
-    LOG_DEBUG("Absolut media_file: %s", mediafile);
+    MYMPD_LOG_DEBUG("Absolut media_file: %s", mediafile);
     mediafile = find_image_file(mediafile);
     if (sdslen(mediafile) > 0)
     {
         sds mime_type = get_mime_type_by_ext(mediafile);
-        LOG_DEBUG("Serving file %s (%s)", mediafile, mime_type);
+        MYMPD_LOG_DEBUG("Serving file %s (%s)", mediafile, mime_type);
         mg_http_serve_file(nc, hm, mediafile, mg_mk_str(mime_type), mg_mk_str(EXTRA_HEADERS_CACHE));
         sdsfree(mime_type);
     }

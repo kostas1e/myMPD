@@ -1,16 +1,14 @@
 "use strict";
-/*
- SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
- https://github.com/jcorporation/mympd
-*/
+// SPDX-License-Identifier: GPL-2.0-or-later
+// myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
+// https://github.com/jcorporation/mympd
 
 function focusTable(rownr, table) {
     if (table === undefined) {
         table = document.getElementById(app.current.app + (app.current.tab !== undefined ? app.current.tab : '') + (app.current.view !== undefined ? app.current.view : '') + 'List');
     }
 
-    if ((app.current.app === 'Browse' || app.current.app === 'Playback') && app.current.tab === 'Database' && app.current.view === 'List') {
+    if (app.current.app === 'Browse' && app.current.tab === 'Database' && app.current.view === 'List') {
         const tables = document.getElementsByClassName('card-grid');
         if (tables.length === 0) {
             return;
@@ -42,12 +40,18 @@ function focusTable(rownr, table) {
     }
 
     if (table !== null) {
-        let sel = table.getElementsByClassName('selected');
+        const sel = table.getElementsByClassName('selected');
         if (rownr === undefined) {
             if (sel.length === 0) {
                 let row = table.getElementsByTagName('tbody')[0].rows[0];
+                if (row === null) {
+                    return;
+                }
                 if (row.classList.contains('not-clickable')) {
                     row = table.getElementsByTagName('tbody')[0].rows[1];
+                }
+                if (row === null) {
+                    return;
                 }
                 row.focus();
                 row.classList.add('selected');
@@ -60,8 +64,8 @@ function focusTable(rownr, table) {
             if (sel && sel.length > 0) {
                 sel[0].classList.remove('selected');
             }
-            let rows = table.getElementsByTagName('tbody')[0].rows;
-            let rowsLen = rows.length;
+            const rows = table.getElementsByTagName('tbody')[0].rows;
+            const rowsLen = rows.length;
             if (rowsLen < rownr) {
                 rownr = 0;
             }
@@ -70,34 +74,21 @@ function focusTable(rownr, table) {
                 rows[rownr].classList.add('selected');
             }
         }
-        //insert goto parent row
-        if (table.id === 'BrowseFilesystemList') {
-            let tbody = table.getElementsByTagName('tbody')[0];
-            if (tbody.rows.length > 0 && tbody.rows[0].getAttribute('data-type') !== 'parentDir' && app.current.search !== '') {
-                let nrCells = table.getElementsByTagName('thead')[0].rows[0].cells.length;
-                let uri = app.current.search.replace(/\/?([^/]+)$/, '');
-                let row = tbody.insertRow(0);
-                row.setAttribute('data-type', 'parentDir');
-                row.setAttribute('tabindex', 0);
-                row.setAttribute('data-uri', encodeURI(uri));
-                row.innerHTML = '<td colspan="' + nrCells + '">..</td>';
-            }
-        }
         scrollFocusIntoView();
     }
 }
 
 function scrollFocusIntoView() {
-    let el = document.activeElement;
-    let posY = el.getBoundingClientRect().top;
-    let height = el.offsetHeight;
+    const el = document.activeElement;
+    const posY = el.getBoundingClientRect().top;
+    const height = el.offsetHeight;
     let headerHeight = el.parentNode.parentNode.offsetTop;
     if (window.innerHeight > window.innerWidth) {
-        headerHeight += domCache.header.offsetHeight;
+        headerHeight += document.getElementById('header').offsetHeight;
     }
-    let footerHeight = domCache.footer.offsetHeight;
-    let parentHeight = window.innerHeight - headerHeight - footerHeight;
-    let treshold = height / 2;
+    const footerHeight = document.getElementsByTagName('footer')[0].offsetHeight;
+    const parentHeight = window.innerHeight - headerHeight - footerHeight;
+    const treshold = height / 2;
     //console.log('posY: ' + posY);
     //console.log('height: ' + height);
     //console.log('treshold: ' + treshold);
@@ -105,8 +96,8 @@ function scrollFocusIntoView() {
     //console.log('headerHeight:' + headerHeight);
     //console.log('footerHeight:' + footerHeight);
     if (posY <= headerHeight + treshold) {
-        //console.log('0, -height');
-        window.scrollBy(0, -height);
+        //console.log('0, - height');
+        window.scrollBy(0, - height);
     }
     else if (posY + height > parentHeight - treshold) {
         //console.log('0, height');
@@ -115,12 +106,15 @@ function scrollFocusIntoView() {
 }
 
 function navigateTable(table, keyCode) {
-    let cur = document.activeElement;
+    const cur = document.activeElement;
     if (cur) {
         let next = null;
         let handled = false;
         if (keyCode === 'ArrowDown') {
             next = cur.nextElementSibling;
+            if (next === null) {
+                return;
+            }
             if (next.classList.contains('not-clickable')) {
                 next = next.nextElementSibling;
             }
@@ -128,13 +122,16 @@ function navigateTable(table, keyCode) {
         }
         else if (keyCode === 'ArrowUp') {
             next = cur.previousElementSibling;
+            if (next === null) {
+                return;
+            }
             if (next.classList.contains('not-clickable')) {
                 next = next.previousElementSibling;
             }
             handled = true;
         }
         else if (keyCode === ' ') {
-            let popupBtn = cur.lastChild.firstChild;
+            const popupBtn = cur.lastChild.firstChild;
             if (popupBtn.nodeName === 'A') {
                 popupBtn.click();
             }
@@ -163,7 +160,7 @@ function navigateTable(table, keyCode) {
 }
 
 function dragAndDropTable(table) {
-    let tableBody = document.getElementById(table).getElementsByTagName('tbody')[0];
+    const tableBody = document.getElementById(table).getElementsByTagName('tbody')[0];
     tableBody.addEventListener('dragstart', function (event) {
         if (event.target.nodeName === 'TR') {
             event.target.classList.add('opacity05');
@@ -175,7 +172,7 @@ function dragAndDropTable(table) {
     }, false);
     tableBody.addEventListener('dragleave', function (event) {
         event.preventDefault();
-        if (dragEl.nodeName !== 'TR') {
+        if (dragEl === undefined || dragEl.nodeName !== 'TR') {
             return;
         }
         let target = event.target;
@@ -188,11 +185,11 @@ function dragAndDropTable(table) {
     }, false);
     tableBody.addEventListener('dragover', function (event) {
         event.preventDefault();
-        if (dragEl.nodeName !== 'TR') {
+        if (dragEl === undefined || dragEl.nodeName !== 'TR') {
             return;
         }
-        let tr = tableBody.getElementsByClassName('dragover');
-        let trLen = tr.length;
+        const tr = tableBody.getElementsByClassName('dragover');
+        const trLen = tr.length;
         for (let i = 0; i < trLen; i++) {
             tr[i].classList.remove('dragover');
         }
@@ -207,35 +204,36 @@ function dragAndDropTable(table) {
     }, false);
     tableBody.addEventListener('dragend', function (event) {
         event.preventDefault();
-        if (dragEl.nodeName !== 'TR') {
+        if (dragEl === undefined || dragEl.nodeName !== 'TR') {
             return;
         }
-        let tr = tableBody.getElementsByClassName('dragover');
-        let trLen = tr.length;
+        const tr = tableBody.getElementsByClassName('dragover');
+        const trLen = tr.length;
         for (let i = 0; i < trLen; i++) {
             tr[i].classList.remove('dragover');
         }
         if (document.getElementById(event.dataTransfer.getData('Text'))) {
             document.getElementById(event.dataTransfer.getData('Text')).classList.remove('opacity05');
         }
+        dragEl = undefined;
     }, false);
     tableBody.addEventListener('drop', function (event) {
         event.stopPropagation();
         event.preventDefault();
-        if (dragEl.nodeName !== 'TR') {
+        if (dragEl === undefined || dragEl.nodeName !== 'TR') {
             return;
         }
         let target = event.target;
         if (event.target.nodeName === 'TD') {
             target = event.target.parentNode;
         }
-        let oldSongpos = document.getElementById(event.dataTransfer.getData('Text')).getAttribute('data-songpos');
-        let newSongpos = target.getAttribute('data-songpos');
+        const oldSongpos = getAttDec(document.getElementById(event.dataTransfer.getData('Text')), 'data-songpos');
+        const newSongpos = getAttDec(target, 'data-songpos');
         document.getElementById(event.dataTransfer.getData('Text')).remove();
         dragEl.classList.remove('opacity05');
         tableBody.insertBefore(dragEl, target);
-        let tr = tableBody.getElementsByClassName('dragover');
-        let trLen = tr.length;
+        const tr = tableBody.getElementsByClassName('dragover');
+        const trLen = tr.length;
         for (let i = 0; i < trLen; i++) {
             tr[i].classList.remove('dragover');
         }
@@ -270,7 +268,7 @@ function dragAndDropTableHeader(table) {
     }, false);
     tableHeader.addEventListener('dragleave', function (event) {
         event.preventDefault();
-        if (dragEl.nodeName !== 'TH') {
+        if (dragEl === undefined || dragEl.nodeName !== 'TH') {
             return;
         }
         if (event.target.nodeName === 'TH') {
@@ -279,11 +277,11 @@ function dragAndDropTableHeader(table) {
     }, false);
     tableHeader.addEventListener('dragover', function (event) {
         event.preventDefault();
-        if (dragEl.nodeName !== 'TH') {
+        if (dragEl === undefined || dragEl.nodeName !== 'TH') {
             return;
         }
-        let th = tableHeader.getElementsByClassName('dragover-th');
-        let thLen = th.length;
+        const th = tableHeader.getElementsByClassName('dragover-th');
+        const thLen = th.length;
         for (let i = 0; i < thLen; i++) {
             th[i].classList.remove('dragover-th');
         }
@@ -294,29 +292,30 @@ function dragAndDropTableHeader(table) {
     }, false);
     tableHeader.addEventListener('dragend', function (event) {
         event.preventDefault();
-        if (dragEl.nodeName !== 'TH') {
+        if (dragEl === undefined || dragEl.nodeName !== 'TH') {
             return;
         }
-        let th = tableHeader.getElementsByClassName('dragover-th');
-        let thLen = th.length;
+        const th = tableHeader.getElementsByClassName('dragover-th');
+        const thLen = th.length;
         for (let i = 0; i < thLen; i++) {
             th[i].classList.remove('dragover-th');
         }
         if (this.querySelector('[data-col=' + event.dataTransfer.getData('Text') + ']')) {
             this.querySelector('[data-col=' + event.dataTransfer.getData('Text') + ']').classList.remove('opacity05');
         }
+        dragEl = undefined;
     }, false);
     tableHeader.addEventListener('drop', function (event) {
         event.stopPropagation();
         event.preventDefault();
-        if (dragEl.nodeName !== 'TH') {
+        if (dragEl === undefined || dragEl.nodeName !== 'TH') {
             return;
         }
         this.querySelector('[data-col=' + event.dataTransfer.getData('Text') + ']').remove();
         dragEl.classList.remove('opacity05');
         tableHeader.insertBefore(dragEl, event.target);
-        let th = tableHeader.getElementsByClassName('dragover-th');
-        let thLen = th.length;
+        const th = tableHeader.getElementsByClassName('dragover-th');
+        const thLen = th.length;
         for (let i = 0; i < thLen; i++) {
             th[i].classList.remove('dragover-th');
         }
@@ -331,55 +330,62 @@ function dragAndDropTableHeader(table) {
 }
 
 function setColTags(table) {
-    let tags = settings.tags.slice();
+    const tags = settings.tags.slice();
     if (settings.featTags === false) {
         tags.push('Title');
     }
     tags.push('Duration');
+    tags.push('LastModified');
     if (table === 'QueueCurrent' || table === 'BrowsePlaylistsDetail' || table === 'QueueLastPlayed' || table === 'QueueJukebox') {
         tags.push('Pos');
     }
     if (table === 'BrowseFilesystem') {
         tags.push('Type');
     }
-    if (table === 'QueueLastPlayed') {
-        tags.push('LastPlayed');
-    }
-    if (table === 'Search') {
-        tags.push('LastModified');
-    }
     if (table === 'Playback') {
         tags.push('Filetype');
         tags.push('Fileformat');
-        tags.push('LastModified');
         if (settings.featLyrics === true) {
-            tags.push('Lyrics');
+            // tags.push('Lyrics');
         }
     }
-
+    if (table === 'QueueLastPlayed') {
+        tags.push('LastPlayed');
+    }
     tags.sort();
+    tags.push('dropdownTitleSticker');
+    if (settings.featStickers === true) {
+        for (const sticker of stickerList) {
+            tags.push(sticker);
+        }
+    }
     return tags;
 }
 
 function setColsChecklist(table) {
     let tagChks = '';
-    let tags = setColTags(table);
+    const tags = setColTags(table);
     for (let i = 0; i < tags.length; i++) {
         if (table === 'Playback' && tags[i] === 'Title') {
             continue;
         }
-        tagChks += '<div>' +
-            '<button class="btn btn-secondary btn-xs clickable material-icons material-icons-small' +
-            (settings['cols' + table].includes(tags[i]) ? ' active' : '') + '" name="' + tags[i] + '">' +
-            (settings['cols' + table].includes(tags[i]) ? 'check' : 'radio_button_unchecked') + '</button>' +
-            '<label class="form-check-label" for="' + tags[i] + '">&nbsp;&nbsp;' + t(tags[i]) + '</label>' +
-            '</div>';
+        if (tags[i] === 'dropdownTitleSticker') {
+            tagChks += '<h6 class="dropdown-header pl-0">' + t('Sticker') + '</h6>';
+        }
+        else {
+            tagChks += '<div>' +
+                '<button class="btn btn-secondary btn-xs clickable mi mi-small' +
+                (settings['cols' + table].includes(tags[i]) ? ' active' : '') + '" name="' + tags[i] + '">' +
+                (settings['cols' + table].includes(tags[i]) ? 'check' : 'radio_button_unchecked') + '</button>' +
+                '<label class="form-check-label" for="' + tags[i] + '">&nbsp;&nbsp;' + t(tags[i]) + '</label>' +
+                '</div>';
+        }
     }
     return tagChks;
 }
 
 function setCols(table) {
-    let colsChkList = document.getElementById(table + 'ColsDropdown');
+    const colsChkList = document.getElementById(table + 'ColsDropdown');
     if (colsChkList) {
         colsChkList.firstChild.innerHTML = setColsChecklist(table);
     }
@@ -415,23 +421,22 @@ function setCols(table) {
                 if (app.current.sort.indexOf('-') === 0) {
                     sortdesc = true;
                 }
-                heading += '<span class="sort-dir material-icons pull-right">' + (sortdesc === true ? 'arrow_drop_up' : 'arrow_drop_down') + '</span>';
+                heading += '<span class="sort-dir mi pull-right">' + (sortdesc === true ? 'arrow_drop_up' : 'arrow_drop_down') + '</span>';
             }
             heading += '</th>';
         }
         if (settings.featTags === true) {
-            heading += '<th data-col="Action"><a data-title-phrase="' + t('Columns') + '" href="#" class="text-secondary align-middle material-icons material-icons-small">settings</a></th>';
+            heading += '<th data-col="Action"><a data-title-phrase="' + t('Columns') + '" href="#" class="text-secondary align-middle mi mi-small">settings</a></th>';
         }
         else {
             heading += '<th></th>';
         }
-
         document.getElementById(table + 'List').getElementsByTagName('tr')[0].innerHTML = heading;
     }
 }
 
 function saveCols(table, tableEl) {
-    let colsDropdown = document.getElementById(table + 'ColsDropdown');
+    const colsDropdown = document.getElementById(table + 'ColsDropdown');
     let header;
     if (tableEl === undefined) {
         header = document.getElementById(table + 'List').getElementsByTagName('tr')[0];
@@ -443,7 +448,7 @@ function saveCols(table, tableEl) {
         header = tableEl.getElementsByTagName('tr')[0];
     }
     if (colsDropdown) {
-        let colInputs = colsDropdown.firstChild.getElementsByTagName('button');
+        const colInputs = colsDropdown.firstChild.getElementsByTagName('button');
         for (let i = 0; i < colInputs.length; i++) {
             if (colInputs[i].getAttribute('name') === null) {
                 continue;
@@ -463,10 +468,10 @@ function saveCols(table, tableEl) {
         }
     }
 
-    let params = { "table": "cols" + table, "cols": [] };
-    let ths = header.getElementsByTagName('th');
+    const params = { "table": "cols" + table, "cols": [] };
+    const ths = header.getElementsByTagName('th');
     for (let i = 0; i < ths.length; i++) {
-        let name = ths[i].getAttribute('data-col');
+        const name = ths[i].getAttribute('data-col');
         if (name !== 'Action' && name !== null && name !== 'Img') {
             params.cols.push(name);
         }
@@ -476,8 +481,8 @@ function saveCols(table, tableEl) {
 
 //eslint-disable-next-line no-unused-vars
 function saveColsPlayback(table) {
-    let colInputs = document.getElementById(table + 'ColsDropdown').firstChild.getElementsByTagName('button');
-    let header = document.getElementById('cardPlaybackTags');
+    const colInputs = document.getElementById(table + 'ColsDropdown').firstChild.getElementsByTagName('button');
+    const header = document.getElementById('cardPlaybackTags');
 
     for (let i = 0; i < colInputs.length; i++) {
         let th = document.getElementById('current' + colInputs[i].name);
@@ -488,17 +493,17 @@ function saveColsPlayback(table) {
         }
         else if (!th) {
             th = document.createElement('div');
-            th.innerHTML = '<small>' + t(colInputs[i].name) + ': </small><span></span>';
+            th.innerHTML = '<small>' + t(colInputs[i].name) + ' &bull; </small><span></span>';
             th.setAttribute('id', 'current' + colInputs[i].name);
-            th.setAttribute('data-tag', colInputs[i].name);
+            setAttEnc(th, 'data-tag', colInputs[i].name);
             header.appendChild(th);
         }
     }
 
-    let params = { "table": "cols" + table, "cols": [] };
-    let ths = header.getElementsByTagName('div');
+    const params = { "table": "cols" + table, "cols": [] };
+    const ths = header.getElementsByTagName('div');
     for (let i = 0; i < ths.length; i++) {
-        let name = ths[i].getAttribute('data-tag');
+        const name = getAttDec(ths[i], 'data-tag');
         if (name) {
             params.cols.push(name);
         }
@@ -507,7 +512,7 @@ function saveColsPlayback(table) {
 }
 
 function replaceTblRow(row, el) {
-    let menuEl = row.querySelector('[data-popover]');
+    const menuEl = row.querySelector('[data-popover]');
     let result = false;
     if (menuEl) {
         hideMenu();
@@ -519,4 +524,123 @@ function replaceTblRow(row, el) {
     }
     row.replaceWith(el);
     return result;
+}
+
+function updateTable(obj, list, perRowCallback, createRowCellsCallback) {
+    const table = document.getElementById(list + 'List');
+    const tbody = table.getElementsByTagName('tbody')[0];
+    const colspan = settings['cols' + list] !== undefined ? settings['cols' + list].length : 0;
+
+    if (obj.error) {
+        tbody.innerHTML = '<tr class="not-clickable"><td colspan="' + (colspan + 1) + '">' +
+            '<div class="alert alert-danger">' +
+            '<span class="mi">error_outline</span>&nbsp;&nbsp;' + t(obj.error.message, obj.error.data) + '</div></td></tr>';
+        table.classList.remove('opacity05');
+        return;
+    }
+
+    const nrItems = obj.result.returnedEntities;
+    const tr = tbody.getElementsByTagName('tr');
+    const navigate = document.activeElement.parentNode.parentNode === table ? true : false;
+    let activeRow = 0;
+    //disc handling for album view
+    let z = 0;
+    let lastDisc = obj.result.data.length > 0 && obj.result.data[0].Disc !== undefined ? parseInt(obj.result.data[0].Disc) : 0;
+    if (obj.result.Discs !== undefined && obj.result.Discs > 1) {
+        const row = document.createElement('tr');
+        row.classList.add('not-clickable');
+        row.innerHTML = '<td><span class="mi">album</span></td><td colspan="' + colspan + '">' + t('Disc 1') + '</td>';
+        if (z < tr.length) {
+            activeRow = replaceTblRow(tr[z], row) === true ? z : activeRow;
+        }
+        else {
+            tbody.append(row);
+        }
+        z++;
+    }
+    for (let i = 0; i < nrItems; i++) {
+        if (obj.result.data[0].Disc !== undefined && lastDisc < parseInt(obj.result.data[i].Disc)) {
+            const row = document.createElement('tr');
+            row.classList.add('not-clickable');
+            row.innerHTML = '<td><span class="mi">album</span></td><td colspan="' + colspan + '">' +
+                t('Disc') + ' ' + e(obj.result.data[i].Disc) + '</td></tr>';
+            if (i + z < tr.length) {
+                activeRow = replaceTblRow(tr[i + z], row) === true ? i + z : activeRow;
+            }
+            else {
+                tbody.append(row);
+            }
+            z++;
+            lastDisc = obj.result.data[i].Disc;
+        }
+        const row = document.createElement('tr');
+        if (perRowCallback !== undefined && typeof (perRowCallback) === 'function') {
+            perRowCallback(row, obj.result.data[i]);
+        }
+        let tds = '';
+        row.setAttribute('tabindex', 0);
+        //set Title to name if not defined - for folders and playlists
+        if (obj.result.data[i].Title === undefined) {
+            obj.result.data[i].Title = obj.result.data[i].name;
+        }
+
+        if (createRowCellsCallback !== undefined && typeof (createRowCellsCallback) === 'function') {
+            //custom row content
+            createRowCellsCallback(row, obj.result.data[i]);
+        }
+        else {
+            //default row content
+            if (obj.result.data[i].Type === 'parentDir') {
+                row.innerHTML = '<td colspan="' + (colspan + 1) + '">..</td>';
+                row.setAttribute('title', t('Open parent folder'));
+            }
+            else {
+                if (list === 'QueueCurrent') {
+                    tds += '<td data-col="Img"><img class="covergrid-header mr-0"/></td>';
+                }
+                for (let c = 0; c < settings['cols' + list].length; c++) {
+                    tds += '<td data-col="' + encodeURI(settings['cols' + list][c]) + '">' +
+                        printValue(settings['cols' + list][c], obj.result.data[i][settings['cols' + list][c]]) +
+                        '</td>';
+                }
+                tds += '<td data-col="Action"><a href="#" class="mi color-darkgrey">' + ligatureMore + '</a></td>';
+                row.innerHTML = tds;
+            }
+        }
+        if (i + z < tr.length) {
+            activeRow = replaceTblRow(tr[i + z], row) === true ? i + z : activeRow;
+        }
+        else {
+            tbody.append(row);
+        }
+        if (list === 'QueueCurrent') {
+            if ('IntersectionObserver' in window) {
+                let options = {
+                    root: null,
+                    rootMargin: '0px',
+                };
+                let observer = new IntersectionObserver(setRowImage, options);
+                observer.observe(row);
+            }
+            else {
+                row.firstChild.firstChild.src = subdir + '/albumart/' + obj.result.data[i].uri;
+            }
+        }
+    }
+    const trLen = tr.length - 1;
+    for (let i = trLen; i >= nrItems + z; i--) {
+        tr[i].remove();
+    }
+
+    if (navigate === true) {
+        focusTable(activeRow);
+    }
+
+    setPagination(obj.result.totalEntities, obj.result.returnedEntities);
+
+    if (nrItems === 0) {
+        tbody.innerHTML = '<tr class="not-clickable"><td colspan="' + (colspan + 1) + '">' +
+            '<span class="mi">info</span>&nbsp;&nbsp;' + t('Empty list') + '</td></tr>';
+    }
+    table.classList.remove('opacity05');
 }

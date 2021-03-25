@@ -1,17 +1,50 @@
 "use strict";
-/*
- SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
- https://github.com/jcorporation/mympd
-*/
+// SPDX-License-Identifier: GPL-2.0-or-later
+// myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
+// https://github.com/jcorporation/mympd
+
+function initPartitions() {
+    document.getElementById('listPartitionsList').addEventListener('click', function (event) {
+        event.stopPropagation();
+        event.preventDefault();
+        if (event.target.nodeName === 'A') {
+            const action = event.target.getAttribute('data-action');
+            const partition = decodeURI(event.target.parentNode.parentNode.getAttribute('data-partition'));
+            if (action === 'delete') {
+                deletePartition(partition);
+            }
+            else if (action === 'switch') {
+                switchPartition(partition);
+            }
+        }
+    }, false);
+
+    document.getElementById('partitionOutputsList').addEventListener('click', function (event) {
+        event.stopPropagation();
+        event.preventDefault();
+        if (event.target.nodeName === 'TD') {
+            const outputName = decodeURI(event.target.parentNode.getAttribute('data-output'));
+            moveOutput(outputName);
+            uiElements.modalPartitionOutputs.hide();
+        }
+    }, false);
+
+    document.getElementById('modalPartitions').addEventListener('shown.bs.modal', function () {
+        showListPartitions();
+    });
+
+    document.getElementById('modalPartitionOutputs').addEventListener('shown.bs.modal', function () {
+        sendAPI("MPD_API_PLAYER_OUTPUT_LIST", { "partition": "default" }, parsePartitionOutputsList, false);
+    });
+}
 
 function moveOutput(output) {
     sendAPI("MPD_API_PARTITION_OUTPUT_MOVE", { "name": output });
 }
 
 function parsePartitionOutputsList(obj) {
-    let outputs = document.getElementById('outputs').getElementsByTagName('button');
-    let outputIds = [];
+    const outputs = document.getElementById('outputs').getElementsByTagName('button');
+    const outputIds = [];
     for (let i = 0; i < outputs.length; i++) {
         outputIds.push(parseInt(outputs[i].getAttribute('data-output-id')));
     }
@@ -26,8 +59,7 @@ function parsePartitionOutputsList(obj) {
         }
     }
     if (nr === 0) {
-        outputList = '<tr class="not-clickable"><td><span class="material-icons">error_outline</span>&nbsp;' +
-            t('Empty list') + '</td></tr>';
+        outputList = '<tr class="not-clickable"><td><span class="mi">info</span>&nbsp;&nbsp;' + t('Empty list') + '</td></tr>';
     }
     document.getElementById('partitionOutputsList').innerHTML = outputList;
 }
@@ -36,7 +68,7 @@ function parsePartitionOutputsList(obj) {
 function savePartition() {
     let formOK = true;
 
-    let nameEl = document.getElementById('inputPartitionName');
+    const nameEl = document.getElementById('inputPartitionName');
     if (!validatePlnameEl(nameEl)) {
         formOK = false;
     }
@@ -56,7 +88,7 @@ function showNewPartition() {
     document.getElementById('newPartitionFooter').classList.remove('hide');
 
     const nameEl = document.getElementById('inputPartitionName');
-    nameEl.classList.remove('is-invalid');
+    removeIsInvalid(document.getElementById('modalPartitions'));
     nameEl.value = '';
     nameEl.focus();
 }
@@ -73,7 +105,7 @@ function showListPartitions() {
 function deletePartition(partition) {
     sendAPI("MPD_API_PARTITION_RM", { "name": partition }, function (obj) {
         if (obj.error) {
-            let el = document.getElementById('errorPartition');
+            const el = document.getElementById('errorPartition');
             el.innerText = t(obj.error.message);
             el.classList.remove('hide');
         }
@@ -84,7 +116,7 @@ function deletePartition(partition) {
 function switchPartition(partition) {
     sendAPI("MPD_API_PARTITION_SWITCH", { "name": partition }, function (obj) {
         if (obj.error) {
-            let el = document.getElementById('errorPartition');
+            const el = document.getElementById('errorPartition');
             el.innerText = t(obj.error.message);
             el.classList.remove('hide');
         }
@@ -104,14 +136,14 @@ function parsePartitionList(obj) {
                 '</td>' +
                 '<td data-col="Action">' +
                 (obj.result.data[i].name === 'default' || obj.result.data[i].name === settings.partition ? '' :
-                    '<a href="#" title="' + t('Delete') + '" data-action="delete" class="material-icons color-darkgrey">delete</a>') +
-                (obj.result.data[i].name !== settings.partition ? '<a href="#" title="' + t('Switch to') + '" data-action="switch" class="material-icons color-darkgrey">check_circle</a>' : '') +
+                    '<a href="#" title="' + t('Delete') + '" data-action="delete" class="mi color-darkgrey">delete</a>') +
+                (obj.result.data[i].name !== settings.partition ? '<a href="#" title="' + t('Switch to') + '" data-action="switch" class="mi color-darkgrey">check_circle</a>' : '') +
                 '</td></tr>';
         }
         document.getElementById('listPartitionsList').innerHTML = partitionList;
     }
     else {
-        document.getElementById('listPartitionsList').innerHTML = '<tr class="not-clickable"><td><span class="material-icons">error_outline</span></td>' +
-            '<td colspan="2">' + t('Empty list') + '</td></tr>';
+        document.getElementById('listPartitionsList').innerHTML = '<tr class="not-clickable">' +
+            '<td colspan="3"><span class="mi">info</span>&nbsp;&nbsp;' + t('Empty list') + '</td></tr>';
     }
 }

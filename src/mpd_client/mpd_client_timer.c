@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -50,24 +50,24 @@ sds mpd_client_timer_startplay(t_mpd_client_state *mpd_client_state, sds buffer,
         rc = mpd_send_stop(mpd_client_state->mpd_state->conn);
         if (rc == false)
         {
-            LOG_ERROR("Error adding command to command list mpd_send_stop");
+            MYMPD_LOG_ERROR("Error adding command to command list mpd_send_stop");
         }
         rc = mpd_send_set_volume(mpd_client_state->mpd_state->conn, volume);
         if (rc == false)
         {
-            LOG_ERROR("Error adding command to command list mpd_send_set_volume");
+            MYMPD_LOG_ERROR("Error adding command to command list mpd_send_set_volume");
         }
         rc = mpd_send_clear(mpd_client_state->mpd_state->conn);
         if (rc == false)
         {
-            LOG_ERROR("Error adding command to command list mpd_send_clear");
+            MYMPD_LOG_ERROR("Error adding command to command list mpd_send_clear");
         }
         if (jukebox_mode == JUKEBOX_OFF)
         {
             rc = mpd_send_load(mpd_client_state->mpd_state->conn, playlist);
             if (rc == false)
             {
-                LOG_ERROR("Error adding command to command list mpd_send_load");
+                MYMPD_LOG_ERROR("Error adding command to command list mpd_send_load");
             }
         }
         else
@@ -75,20 +75,20 @@ sds mpd_client_timer_startplay(t_mpd_client_state *mpd_client_state, sds buffer,
             rc = mpd_send_consume(mpd_client_state->mpd_state->conn, true);
             if (rc == false)
             {
-                LOG_ERROR("Error adding command to command list mpd_send_consume");
+                MYMPD_LOG_ERROR("Error adding command to command list mpd_send_consume");
             }
         }
         rc = mpd_send_single(mpd_client_state->mpd_state->conn, false);
         if (rc == false)
         {
-            LOG_ERROR("Error adding command to command list mpd_send_single");
+            MYMPD_LOG_ERROR("Error adding command to command list mpd_send_single");
         }
         if (jukebox_mode == JUKEBOX_OFF)
         {
             rc = mpd_send_play(mpd_client_state->mpd_state->conn);
             if (rc == false)
             {
-                LOG_ERROR("Error adding command to command list mpd_send_play");
+                MYMPD_LOG_ERROR("Error adding command to command list mpd_send_play");
             }
         }
         if (mpd_command_list_end(mpd_client_state->mpd_state->conn) == true)

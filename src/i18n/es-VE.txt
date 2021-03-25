@@ -168,15 +168,6 @@ Error al establecer me gusta, no válido
 Failed to set like, invalid song uri
 Error al establecer me gusta, URI de canción inválido
 
-Last played
-Última reproducción
-
-LastPlayed
-Última reproducción
-
-Last skipped
-Última omisión
-
 Database
 Base de datos
 
@@ -204,17 +195,8 @@ Página siguiente
 Num songs
 %{smart_count} Canción |||| %{smart_count} Canciones
 
-Num playlists
-%{smart_count} Lista de reproducción |||| %{smart_count} Listas de reproducción
-
 Num entries
 %{smart_count} Entrada |||| %{smart_count} Entradas
-
-Add all to queue
-Agregar todo a cola de reproducción
-
-Add all to playlist
-Agregar todo a lista de reproducción
 
 Save as smart playlist
 Guardar como lista de reproducción inteligente
@@ -354,9 +336,6 @@ Me gusta
 Play count
 Conteo reproducciones
 
-Skip count
-Conteo omisiones
-
 Theme
 Tema
 
@@ -435,12 +414,6 @@ Idioma
 Browser default
 Por defecto del navegador
 
-Pagination
-Paginación
-
-Must be a number smaller or equal 200
-Debe ser un número menor o igual a 200
-
 Notifications
 Notificaciones
 
@@ -495,7 +468,7 @@ Error Actualizando listas de reproducción inteligentes
 Smart playlist %{playlist} updated
 Lista de reproducción %{playlist} actualizada
 
-Updating of smart playlist %{playlist} failed
+Updating smart playlist %{playlist} failed
 Error actualizando de lista de reproducción inteligente %{playlist} 
 
 Smart playlist
@@ -587,9 +560,6 @@ Versión Libmpdclient
 
 Libmympdclient version
 Versión Libmympdclient
-
-Shortcut
-Acceso directo
 
 Action
 Acción
@@ -744,20 +714,8 @@ Control de volumen deshabilitado
 Volume
 Volumen
 
-No results, please refine your search
-Sin resultados, cambie los parámetros de búsqueda
-
-Empty queue
-Cola de reproducción vavía
-
 Empty list
 Lista vacía
-
-Empty playlist
-Lista de reproducción vacía
-
-No playlists found
-No se encontraron Listas de reproducción
 
 Added stream %{streamUri} to queue
 Agregar Fuente %{streamUri} a la cola de reproducción
@@ -999,7 +957,7 @@ Modo Consumir debe estar habilitado
 Advanced
 Avanzado
 
-Successfully croped covercache
+Successfully cropped covercache
 Covercache cortado exitosamente
 
 Successfully cleared covercache
@@ -1289,3 +1247,6 @@ No se encontró ese directorio
 
 Error in response to command: %{command}
 Error en respuesta al comando: %{command}
+
+Missing translations
+Selected locale is missing %{smart_count} translation |||| Selected locale is missing %{smart_count} translations

@@ -1,9 +1,7 @@
 "use strict";
-/*
- SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
- https://github.com/jcorporation/mympd
-*/
+// SPDX-License-Identifier: GPL-2.0-or-later
+// myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
+// https://github.com/jcorporation/mympd
 
 function parseStats(obj) {
     document.getElementById('mpdstats_artists').innerText = obj.result.artists;
@@ -22,11 +20,18 @@ function parseStats(obj) {
 }
 
 function getServerinfo() {
-    let ajaxRequest = new XMLHttpRequest();
+    const ajaxRequest = new XMLHttpRequest();
     ajaxRequest.open('GET', subdir + '/api/serverinfo', true);
     ajaxRequest.onreadystatechange = function () {
         if (ajaxRequest.readyState === 4) {
-            let obj = JSON.parse(ajaxRequest.responseText);
+            let obj;
+            try {
+                obj = JSON.parse(ajaxRequest.responseText);
+            }
+            catch (error) {
+                showNotification(t('Can not parse response to json object'), '', 'general', 'error');
+                logError('Can not parse response to json object:' + ajaxRequest.responseText);
+            }
             document.getElementById('wsIP').innerText = obj.result.ip;
             document.getElementById('wsIP1').innerText = obj.result.ip;
             document.getElementById('wsMongooseVersion').innerText = obj.result.version;
@@ -41,29 +46,27 @@ function parseOutputs(obj) {
     for (let i = 0; i < obj.result.numOutputs; i++) {
         if (obj.result.data[i].plugin !== 'dummy') {
             nr++;
-            btns += '<button id="btnOutput' + obj.result.data[i].id + '" data-output-name="' + encodeURI(obj.result.data[i].name) + '" data-output-id="' + obj.result.data[i].id + '" class="btn btn-secondary btn-block';
+            btns += '<button id="btnOutput' + obj.result.data[i].id + '" data-output-name="' + encodeURI(obj.result.data[i].name) + '" data-output-id="' +
+                obj.result.data[i].id + '" class="btn btn-secondary btn-block d-flex justify-content-between';
             if (obj.result.data[i].state === 1) {
                 btns += ' active';
             }
-            btns += '"><span class="material-icons float-left">volume_up</span> ' + e(obj.result.data[i].name);
-            if (Object.keys(obj.result.data[i].attributes).length > 0) {
-                btns += '<a class="material-icons float-right text-white" title="' + t('Edit attributes') + '">settings</a>';
-            }
-            else {
-                btns += '<a class="material-icons float-right text-white" title="' + t('Show attributes') + '">settings</a>';
-            }
-            btns += '</button>';
+            btns += '"><span class="mi align-self-center">' + (obj.result.data[i].plugin === 'httpd' ? 'cast' : 'volume_up') + '</span> ' +
+                '<span class="ml-2 mr-2 align-self-center">' + e(obj.result.data[i].name) + '</span>' +
+                '<a class="mi text-white align-self-center" title="' +
+                (Object.keys(obj.result.data[i].attributes).length > 0 ? t('Edit attributes') : t('Show attributes')) + '">settings</a>' +
+                '</button>';
         }
     }
     if (nr === 0) {
-        btns = '<span class="material-icons">error_outline</span> ' + t('No outputs');
+        btns = '<span class="mi">error_outline</span> ' + t('No outputs');
     }
-    domCache.outputs.innerHTML = btns;
+    document.getElementById('outputs').innerHTML = btns;
 }
 
 function showListOutputAttributes(outputName) {
     sendAPI("MPD_API_PLAYER_OUTPUT_LIST", {}, function (obj) {
-        modalOutputAttributes.show();
+        uiElements.modalOutputAttributes.show();
         let output;
         for (let i = 0; i < obj.result.data.length; i++) {
             if (obj.result.data[i].name === outputName) {
@@ -82,10 +85,10 @@ function showListOutputAttributes(outputName) {
                 e(output.attributes[key]) + '"/></td></tr>';
         });
         if (i > 0) {
-            document.getElementById('btnOutputAttributesSave').removeAttribute('disabled');
+            enableEl('btnOutputAttributesSave');
         }
         else {
-            document.getElementById('btnOutputAttributesSave').setAttribute('disabled', 'disabled');
+            disableEl('btnOutputAttributesSave');
         }
         document.getElementById('outputAttributesList').innerHTML = list;
     });
@@ -93,15 +96,15 @@ function showListOutputAttributes(outputName) {
 
 //eslint-disable-next-line no-unused-vars
 function saveOutputAttributes() {
-    let params = {};
+    const params = {};
     params.outputId = parseInt(document.getElementById('modalOutputAttributesId').value);
     params.attributes = {};
-    let el = document.getElementById('outputAttributesList').getElementsByTagName('input');
-    for (let i = 0; i < el.length; i++) {
-        params.attributes[el[i].name] = el[i].value;
+    const els = document.getElementById('outputAttributesList').getElementsByTagName('input');
+    for (let i = 0; i < els.length; i++) {
+        params.attributes[els[i].name] = els[i].value;
     }
     sendAPI('MPD_API_PLAYER_OUTPUT_ATTRIBUTS_SET', params);
-    modalOutputAttributes.hide();
+    uiElements.modalOutputAttributes.hide();
 }
 
 function setCounter(currentSongId, totalTime, elapsedTime) {
@@ -127,7 +130,7 @@ function setCounter(currentSongId, totalTime, elapsedTime) {
         domCache.progress.style.cursor = 'pointer';
     }
 
-    let counterText = beautifySongDuration(elapsedTime) + "&nbsp;/&nbsp;" + beautifySongDuration(totalTime);
+    const counterText = beautifySongDuration(elapsedTime) + "&nbsp;/&nbsp;" + beautifySongDuration(totalTime);
     domCache.counter.innerHTML = counterText;
 
     //Set playing track in queue view
@@ -135,27 +138,27 @@ function setCounter(currentSongId, totalTime, elapsedTime) {
         if (lastState.currentSongId !== currentSongId) {
             let tr = document.getElementById('queueTrackId' + lastState.currentSongId);
             if (tr) {
-                let durationTd = tr.querySelector('[data-col=Duration]');
+                const durationTd = tr.querySelector('[data-col=Duration]');
                 if (durationTd) {
-                    durationTd.innerText = tr.getAttribute('data-duration');
+                    durationTd.innerText = getAttDec(tr, 'data-duration');
                 }
-                let posTd = tr.querySelector('[data-col=Pos]');
+                const posTd = tr.querySelector('[data-col=Pos]');
                 if (posTd) {
-                    posTd.classList.remove('material-icons');
-                    posTd.innerText = tr.getAttribute('data-songpos');
+                    posTd.classList.remove('mi');
+                    posTd.innerText = getAttDec(tr, 'data-songpos');
                 }
                 tr.classList.remove('font-weight-bold');
             }
             tr = document.getElementById('queueMiniTrackId' + lastState.currentSongId);
             if (tr) {
-                let durationTd = tr.querySelector('[data-col=Duration]');
+                const durationTd = tr.querySelector('[data-col=Duration]');
                 if (durationTd) {
-                    durationTd.innerText = tr.getAttribute('data-duration');
+                    durationTd.innerText = getAttDec(tr, 'data-duration');
                 }
-                let posTd = tr.querySelector('[data-col=Pos]');
+                const posTd = tr.querySelector('[data-col=Pos]');
                 if (posTd) {
-                    posTd.classList.remove('material-icons');
-                    posTd.innerText = tr.getAttribute('data-songpos');
+                    posTd.classList.remove('mi');
+                    posTd.innerText = getAttDec(tr, 'data-songpos');
                 }
                 tr.classList.remove('font-weight-bold');
             }
@@ -163,14 +166,14 @@ function setCounter(currentSongId, totalTime, elapsedTime) {
     }
     let tr = document.getElementById('queueTrackId' + currentSongId);
     if (tr) {
-        let durationTd = tr.querySelector('[data-col=Duration]');
+        const durationTd = tr.querySelector('[data-col=Duration]');
         if (durationTd) {
             durationTd.innerHTML = counterText;
         }
-        let posTd = tr.querySelector('[data-col=Pos]');
+        const posTd = tr.querySelector('[data-col=Pos]');
         if (posTd) {
-            if (!posTd.classList.contains('material-icons')) {
-                posTd.classList.add('material-icons');
+            if (!posTd.classList.contains('mi')) {
+                posTd.classList.add('mi');
                 posTd.innerText = 'play_arrow';
             }
         }
@@ -178,18 +181,34 @@ function setCounter(currentSongId, totalTime, elapsedTime) {
     }
     tr = document.getElementById('queueMiniTrackId' + currentSongId);
     if (tr) {
-        let durationTd = tr.querySelector('[data-col=Duration]');
+        const durationTd = tr.querySelector('[data-col=Duration]');
         if (durationTd) {
             durationTd.innerHTML = counterText;
         }
-        let posTd = tr.querySelector('[data-col=Pos]');
+        const posTd = tr.querySelector('[data-col=Pos]');
         if (posTd) {
-            if (!posTd.classList.contains('material-icons')) {
-                posTd.classList.add('material-icons');
+            if (!posTd.classList.contains('mi')) {
+                posTd.classList.add('mi');
                 posTd.innerText = 'play_arrow';
             }
         }
         tr.classList.add('font-weight-bold');
+    }
+
+    //synced lyrics
+    if (showSyncedLyrics === true && settings.colsPlayback.includes('Lyrics')) {
+        const sl = document.getElementById('currentLyrics');
+        const toHighlight = sl.querySelector('[data-sec="' + elapsedTime + '"]');
+        const highlighted = sl.getElementsByClassName('highlight')[0];
+        if (highlighted !== toHighlight) {
+            if (toHighlight !== null) {
+                toHighlight.classList.add('highlight');
+                toHighlight.scrollIntoView();
+                if (highlighted !== undefined) {
+                    highlighted.classList.remove('highlight');
+                }
+            }
+        }
     }
 
     if (progressTimer) {
@@ -227,23 +246,24 @@ function parseState(obj) {
     }
     //Clear playback card if no current song
     if (obj.result.songPos === '-1') {
-        domCache.currentTitle.innerText = 'Not playing';
+        document.getElementById('currentTitle').innerText = 'Not playing';
         document.title = 'Ideon';
-        domCache.footerTitle.innerText = '';
-        domCache.footerTitle.removeAttribute('title');
-        domCache.footerTitle.classList.remove('clickable');
-        domCache.footerCover.classList.remove('clickable');
+        document.getElementById('footerTitle').innerText = '';
+        document.getElementById('footerTitle').removeAttribute('title');
+        document.getElementById('footerTitle').classList.remove('clickable');
+        document.getElementById('footerCover').classList.remove('clickable');
+        document.getElementById('currentTitle').classList.remove('clickable');
         clearCurrentCover();
         if (settings.bgCover === true) {
             clearBackgroundImage();
         }
-        let pb = document.getElementById('cardPlaybackTags').getElementsByTagName('span');
+        const pb = document.getElementById('cardPlaybackTags').getElementsByTagName('span');
         for (let i = 0; i < pb.length; i++) {
             pb[i].innerText = '';
         }
     }
     else {
-        let cff = document.getElementById('currentFileformat');
+        const cff = document.getElementById('currentFileformat');
         if (cff) {
             cff.getElementsByTagName('span')[0].innerText = fileformat(obj.result.audioFormat);
         }
@@ -251,6 +271,8 @@ function parseState(obj) {
 
     lastState = obj.result;
 
+    //refresh settings if mpd is not connected or ui is disabled
+    //true on startup
     if (settings.mpdConnected === false || uiEnabled === false) {
         getSettings(true);
     }
@@ -258,23 +280,23 @@ function parseState(obj) {
 
 function parseVolume(obj) {
     if (obj.result.volume === -1) {
-        domCache.volumePrct.innerText = t('Volumecontrol disabled');
-        domCache.volumeControl.classList.add('hide');
+        document.getElementById('volumePrct').innerText = t('Volumecontrol disabled');
+        document.getElementById('volumeControl').classList.add('hide');
     }
     else {
-        domCache.volumeControl.classList.remove('hide');
-        domCache.volumePrct.innerText = obj.result.volume + ' %';
+        document.getElementById('volumeControl').classList.remove('hide');
+        document.getElementById('volumePrct').innerText = obj.result.volume + ' %';
         if (obj.result.volume === 0) {
-            domCache.volumeMenu.firstChild.innerText = 'volume_off';
+            document.getElementById('volumeMenu').firstChild.innerText = 'volume_off';
         }
         else if (obj.result.volume < 50) {
-            domCache.volumeMenu.firstChild.innerText = 'volume_down';
+            document.getElementById('volumeMenu').firstChild.innerText = 'volume_down';
         }
         else {
-            domCache.volumeMenu.firstChild.innerText = 'volume_up';
+            document.getElementById('volumeMenu').firstChild.innerText = 'volume_up';
         }
     }
-    domCache.volumeBar.value = obj.result.volume;
+    document.getElementById('volumeBar').value = obj.result.volume;
 }
 
 function setBackgroundImage(url) {
@@ -282,7 +304,12 @@ function setBackgroundImage(url) {
         clearBackgroundImage();
         return;
     }
-    let old = document.querySelectorAll('.albumartbg');
+    const bgImageUrl = 'url("' + subdir + '/albumart/' + url + '")';
+    const old = document.querySelectorAll('.albumartbg');
+    if (old[0] && old[0].style.backgroundImage === bgImageUrl) {
+        logDebug('Background image already set');
+        return;
+    }
     for (let i = 0; i < old.length; i++) {
         if (old[i].style.zIndex === '-10') {
             old[i].remove();
@@ -290,18 +317,16 @@ function setBackgroundImage(url) {
         else {
             old[i].style.zIndex = '-10';
             old[i].style.opacity = '0';
-            //old[i].style.filter = '';
         }
     }
-    let div = document.createElement('div');
+    const div = document.createElement('div');
     div.classList.add('albumartbg');
     div.style.filter = settings.bgCssFilter;
-    div.style.backgroundImage = 'url("' + subdir + '/albumart/' + url + '")';
+    div.style.backgroundImage = bgImageUrl;
     div.style.opacity = 0;
-    let body = document.getElementsByTagName('body')[0];
-    body.insertBefore(div, body.firstChild);
+    domCache.body.insertBefore(div, domCache.body.firstChild);
 
-    let img = new Image();
+    const img = new Image();
     img.onload = function () {
         document.querySelector('.albumartbg').style.opacity = 1;
     };
@@ -309,7 +334,7 @@ function setBackgroundImage(url) {
 }
 
 function clearBackgroundImage() {
-    let old = document.querySelectorAll('.albumartbg');
+    const old = document.querySelectorAll('.albumartbg');
     for (let i = 0; i < old.length; i++) {
         if (old[i].style.zIndex === '-10') {
             old[i].remove();
@@ -317,14 +342,13 @@ function clearBackgroundImage() {
         else {
             old[i].style.zIndex = '-10';
             old[i].style.opacity = '0';
-            //old[i].style.filter = '';
         }
     }
 }
 
 function setCurrentCover(url) {
-    _setCurrentCover(url, domCache.currentCover);
-    _setCurrentCover(url, domCache.footerCover);
+    _setCurrentCover(url, document.getElementById('currentCover'));
+    _setCurrentCover(url, document.getElementById('footerCover'));
 }
 
 function _setCurrentCover(url, el) {
@@ -332,7 +356,7 @@ function _setCurrentCover(url, el) {
         clearCurrentCover();
         return;
     }
-    let old = el.querySelectorAll('.coverbg');
+    const old = el.querySelectorAll('.coverbg');
     for (let i = 0; i < old.length; i++) {
         if (old[i].style.zIndex === '2') {
             old[i].remove();
@@ -342,14 +366,14 @@ function _setCurrentCover(url, el) {
         }
     }
 
-    let div = document.createElement('div');
+    const div = document.createElement('div');
     div.classList.add('coverbg', 'carousel');
     div.style.backgroundImage = 'url("' + subdir + '/albumart/' + url + '")';
     div.style.opacity = 0;
-    div.setAttribute('data-uri', url);
+    setAttEnc(div, 'data-uri', url);
     el.insertBefore(div, el.firstChild);
 
-    let img = new Image();
+    const img = new Image();
     img.onload = function () {
         el.querySelector('.coverbg').style.opacity = 1;
     };
@@ -357,12 +381,12 @@ function _setCurrentCover(url, el) {
 }
 
 function clearCurrentCover() {
-    _clearCurrentCover(domCache.currentCover);
-    _clearCurrentCover(domCache.footerCover);
+    _clearCurrentCover(document.getElementById('currentCover'));
+    _clearCurrentCover(document.getElementById('footerCover'));
 }
 
 function _clearCurrentCover(el) {
-    let old = el.querySelectorAll('.coverbg');
+    const old = el.querySelectorAll('.coverbg');
     for (let i = 0; i < old.length; i++) {
         if (old[i].style.zIndex === '2') {
             old[i].remove();
@@ -379,12 +403,11 @@ function songChange(obj) {
         getQueueMini(obj.result.pos);
     }
 
-    let curSong = obj.result.Title + ':' + obj.result.Artist + ':' + obj.result.Album + ':' + obj.result.uri + ':' + obj.result.currentSongId;
+    const curSong = obj.result.Title + ':' + obj.result.Artist + ':' + obj.result.Album + ':' + obj.result.uri + ':' + obj.result.currentSongId;
     if (lastSong === curSong) {
         return;
     }
     let textNotification = '';
-    let htmlNotification = '';
     let pageTitle = '';
 
     mediaSessionSetMetadata(obj.result.Title, obj.result.Artist, obj.result.Album, obj.result.uri);
@@ -394,73 +417,73 @@ function songChange(obj) {
         setBackgroundImage(obj.result.uri);
     }
 
-    domCache.footerArtist.classList.remove('clickable');
-    domCache.footerAlbum.classList.remove('clickable');
-    domCache.footerCover.classList.remove('clickable');
+    for (const elName of ['footerArtist', 'footerAlbum', 'footerCover', 'currentTitle']) {
+        document.getElementById(elName).classList.remove('clickable');
+    }
 
     if (obj.result.Artist !== undefined && obj.result.Artist.length > 0 && obj.result.Artist !== '-') {
         textNotification += obj.result.Artist;
-        htmlNotification += obj.result.Artist;
         pageTitle += obj.result.Artist + ' - ';
-        domCache.footerArtist.innerText = obj.result.Artist;
-        domCache.footerArtist.setAttribute('data-name', encodeURI(obj.result.Artist));
+        document.getElementById('footerArtist').innerText = obj.result.Artist;
+        setAttEnc(document.getElementById('footerArtist'), 'data-name', obj.result.Artist);
         if (settings.featAdvsearch === true) {
-            domCache.footerArtist.classList.add('clickable');
+            document.getElementById('footerArtist').classList.add('clickable');
         }
     }
     else {
-        domCache.footerArtist.innerText = '';
-        domCache.footerArtist.setAttribute('data-name', '');
+        document.getElementById('footerArtist').innerText = '';
+        setAttEnc(document.getElementById('footerArtist'), 'data-name', '');
     }
 
     if (obj.result.Album !== undefined && obj.result.Album.length > 0 && obj.result.Album !== '-') {
         textNotification += ' - ' + obj.result.Album;
-        htmlNotification += '<br/>' + obj.result.Album;
-        domCache.footerAlbum.innerText = obj.result.Album;
-        domCache.footerAlbum.setAttribute('data-name', encodeURI(obj.result.Album));
-        domCache.footerAlbum.setAttribute('data-albumartist', encodeURI(obj.result[tagAlbumArtist]));
+        document.getElementById('footerAlbum').innerText = obj.result.Album;
+        setAttEnc(document.getElementById('footerAlbum'), 'data-name', obj.result.Album);
+        setAttEnc(document.getElementById('footerAlbum'), 'data-albumartist', obj.result[tagAlbumArtist]);
         if (settings.featAdvsearch === true) {
-            domCache.footerAlbum.classList.add('clickable');
+            document.getElementById('footerAlbum').classList.add('clickable');
         }
     }
     else {
-        domCache.footerAlbum.innerText = '';
-        domCache.footerAlbum.setAttribute('data-name', '');
+        document.getElementById('footerAlbum').innerText = '';
+        setAttEnc(document.getElementById('footerAlbum'), 'data-name', '');
     }
 
     if (obj.result.Title !== undefined && obj.result.Title.length > 0) {
         pageTitle += obj.result.Title;
-        domCache.currentTitle.innerText = obj.result.Title;
-        domCache.currentTitle.setAttribute('data-uri', encodeURI(obj.result.uri));
-        domCache.footerTitle.innerText = obj.result.Title;
-        domCache.footerTitle.classList.add('clickable');
-        domCache.footerCover.classList.add('clickable');
+        document.getElementById('currentTitle').innerText = obj.result.Title;
+        setAttEnc(document.getElementById('currentTitle'), 'data-uri', obj.result.uri);
+        document.getElementById('footerTitle').innerText = obj.result.Title;
+        document.getElementById('footerCover').classList.add('clickable');
     }
     else {
-        domCache.currentTitle.innerText = '';
-        domCache.currentTitle.setAttribute('data-uri', '');
-        domCache.footerTitle.innerText = '';
-        domCache.footerTitle.setAttribute('data-name', '');
-        domCache.footerTitle.classList.remove('clickable');
-        domCache.footerCover.classList.remove('clickable');
+        document.getElementById('currentTitle').innerText = '';
+        setAttEnc(document.getElementById('currentTitle'), 'data-uri', '');
+        document.getElementById('footerTitle').innerText = '';
+        setAttEnc(document.getElementById('footerTitle'), 'data-name', '');
+        document.getElementById('currentTitle').classList.remove('clickable');
+        document.getElementById('footerTitle').classList.remove('clickable');
+        document.getElementById('footerCover').classList.remove('clickable');
     }
     document.title = 'Ideon: ' + pageTitle;
-    domCache.footerCover.title = pageTitle;
+    document.getElementById('footerCover').title = pageTitle;
 
-    if (obj.result.uri !== undefined && obj.result.uri !== '' && obj.result.uri.indexOf('://') === -1) {
-        domCache.footerTitle.classList.add('clickable');
+    if (isValidUri(obj.result.uri) === true && isStreamUri(obj.result.uri) === false) {
+        document.getElementById('footerTitle').classList.add('clickable');
+        document.getElementById('currentTitle').classList.add('clickable');
     }
     else {
-        domCache.footerTitle.classList.remove('clickable');
+        document.getElementById('footerTitle').classList.remove('clickable');
+        document.getElementById('currentTitle').classList.remove('clickable');
     }
 
     if (obj.result.uri !== undefined) {
         obj.result['Filetype'] = filetype(obj.result.uri);
-        document.getElementById('addCurrentSongToPlaylist').removeAttribute('disabled');
+        enableEl('addCurrentSongToPlaylist');
     }
     else {
         obj.result['Filetype'] = '';
-        document.getElementById('addCurrentSongToPlaylist').setAttribute('disabled', 'disabled');
+        disableEl('addCurrentSongToPlaylist');
     }
 
     if (settings.featStickers === true) {
@@ -474,75 +497,83 @@ function songChange(obj) {
         obj.result['Fileformat'] = '';
     }
 
-    for (let i = 0; i < settings.colsPlayback.length; i++) {
-        let c = document.getElementById('current' + settings.colsPlayback[i]);
-        if (c && settings.colsPlayback[i] === 'Lyrics') {
-            getLyrics(obj.result.uri, c.getElementsByTagName('p')[0]);
-        }
-        else if (c) {
-            let value = obj.result[settings.colsPlayback[i]];
-            if (value === undefined) {
-                value = '';
-            }
-            if (settings.colsPlayback[i] === 'Duration') {
-                value = beautifySongDuration(value);
-            }
-            else if (settings.colsPlayback[i] === 'LastModified') {
-                value = localeDate(value);
-            }
-            c.getElementsByTagName('span')[0].innerText = value;
-            c.setAttribute('data-name', encodeURI(value));
-            if (settings.colsPlayback[i] === 'Album' && obj.result[tagAlbumArtist] !== null) {
-                c.setAttribute('data-albumartist', encodeURI(obj.result[tagAlbumArtist]));
-            }
-        }
-    }
+    setPlaybackCardTags(obj.result);
 
     document.getElementById('currentBooklet').innerHTML = obj.result.bookletPath === '' || obj.result.bookletPath === undefined || settings.featBrowse === false ? '' :
-        '<span class="text-light material-icons">description</span>&nbsp;<a class="text-light" target="_blank" href="' + subdir + '/browse/music/' +
+        '<span class="text-light mi">description</span>&nbsp;<a class="text-light" target="_blank" href="' + subdir + '/browse/music/' +
         e(obj.result.bookletPath) + '">' + t('Download booklet') + '</a>';
 
-    //Update Artist in queue view for http streams
-    let playingTr = document.getElementById('queueTrackId' + obj.result.currentSongId);
+    //Update title in queue view for http streams
+    const playingTr = document.getElementById('queueTrackId' + obj.result.currentSongId);
     if (playingTr) {
-        playingTr.getElementsByTagName('td')[2].innerText = obj.result.Title;
+        const titleCol = playingTr.querySelector('[data-col=Title');
+        if (titleCol) {
+            titleCol.innerText = obj.result.Title;
+        }
     }
 
     if (playstate === 'play') {
-        showNotification(obj.result.Title, textNotification, htmlNotification, 'success');
+        showNotification(obj.result.Title, textNotification, 'player', 'info');
     }
 
+    //remember lastSong
     lastSong = curSong;
     lastSongObj = obj.result;
 }
 
+function setPlaybackCardTags(songObj) {
+    for (const col of settings.colsPlayback) {
+        const c = document.getElementById('current' + col);
+        if (c && col === 'Lyrics') {
+            getLyrics(songObj.uri, c.getElementsByTagName('span')[0]);
+        }
+        else if (c) {
+            let value = songObj[col];
+            if (value === undefined) {
+                value = '-';
+            }
+            c.getElementsByTagName('span')[0].innerHTML = printValue(col, value);
+            if (value === '-' || settings.browsetags.includes(col) === false) {
+                c.getElementsByTagName('span')[0].classList.remove('clickable');
+            }
+            else {
+                c.getElementsByTagName('span')[0].classList.add('clickable');
+            }
+            setAttEnc(c, 'data-name', value);
+            if (col === 'Album' && songObj[tagAlbumArtist] !== null) {
+                setAttEnc(c, 'data-albumartist', songObj[tagAlbumArtist]);
+            }
+        }
+    }
+}
+
 //eslint-disable-next-line no-unused-vars
 function gotoTagList() {
-    appGoto(app.current.app, app.current.tab, app.current.view, '0', '-', '-', '-', '');
+    appGoto(app.current.app, app.current.tab, app.current.view, '0', undefined, '-', '-', '-', '');
 }
 
 //eslint-disable-next-line no-unused-vars
 function volumeStep(dir) {
-    let inc = dir === 'up' ? settings.volumeStep : 0 - settings.volumeStep;
-    chVolume(inc);
+    chVolume(dir === 'up' ? settings.volumeStep : 0 - settings.volumeStep);
 }
 
 function chVolume(increment) {
-    let newValue = parseInt(domCache.volumeBar.value) + increment;
+    const volumeBar = document.getElementById('volumeBar');
+    let newValue = parseInt(volumeBar.value) + increment;
     if (newValue < settings.volumeMin) {
         newValue = settings.volumeMin;
     }
     else if (newValue > settings.volumeMax) {
         newValue = settings.volumeMax;
     }
-    domCache.volumeBar.value = newValue;
+    volumeBar.value = newValue;
     sendAPI("MPD_API_PLAYER_VOLUME_SET", { "volume": newValue });
 }
 
 //eslint-disable-next-line no-unused-vars
 function clickTitle() {
-    let uri = decodeURI(domCache.currentTitle.getAttribute('data-uri'));
-    if (uri !== '' && uri.indexOf('://') === -1) {
+    const uri = getAttDec(document.getElementById('currentTitle'), 'data-uri');
+    if (isValidUri(uri) === true && isStreamUri(uri) === false) {
         songDetails(uri);
     }
 }
@@ -572,10 +603,8 @@ function mediaSessionSetState() {
 
 function mediaSessionSetMetadata(title, artist, album, url) {
     if (settings.mediaSession === true && 'mediaSession' in navigator) {
-        let hostname = window.location.hostname;
-        let protocol = window.location.protocol;
-        let port = window.location.port;
-        let artwork = protocol + '//' + hostname + (port !== '' ? ':' + port : '') + subdir + '/albumart/' + url;
+        const artwork = window.location.protocol + '//' + window.location.hostname +
+            (window.location.port !== '' ? ':' + window.location.port : '') + subdir + '/albumart/' + url;
 
         if (settings.coverimage === true) {
             //eslint-disable-next-line no-undef

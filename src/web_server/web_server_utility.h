@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-2.0-or-later
- myMPD (c) 2018-2020 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -25,7 +25,7 @@
 
 #define EXTRA_HEADERS_CACHE "Cache-Control: max-age=604800"
 
-#define CUSTOM_MIME_TYPES ".html=text/html; charset=utf-8,.manifest=application/manifest+json,.woff2=application/font-woff"
+#define CUSTOM_MIME_TYPES ".html=text/html; charset=utf-8,.manifest=application/manifest+json,.woff2=application/font-woff,.tiff=image/tiff"
 
 typedef struct t_mg_user_data
 {
