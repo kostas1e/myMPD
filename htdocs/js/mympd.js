@@ -531,6 +531,7 @@ function appInit() {
     initPlayback();
     initNavs();
     initPlaylists();
+    initIdeon();
     //init drag and drop
     dragAndDropTable('QueueCurrentList');
     dragAndDropTable('BrowsePlaylistsDetailList');
