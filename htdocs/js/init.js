@@ -83,7 +83,7 @@ function checkInit() {
 
         currentTab = 0;
         showTab(currentTab);
-        modalInit.show();
+        uiElements.modalInit.show();
     }
 }
 
@@ -160,5 +160,5 @@ function saveInitSettings() {
         "nsPassword": document.getElementById('inputNsPassword1').value,
         "init": true
     }, getSettings);
-    modalInit.hide();
+    uiElements.modalInit.hide();
 }
