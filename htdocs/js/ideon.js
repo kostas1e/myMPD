@@ -202,10 +202,8 @@ function saveIdeonSettings() {
 }
 
 function confirmReset() {
-    sendAPI("MYMPD_API_SETTINGS_RESET", {}, closeReset);
-}
-
-function closeReset() {
-    resetFlag = false;
-    modalResetSettings.hide();
+    sendAPI("MYMPD_API_SETTINGS_RESET", {}, function () {
+        resetFlag = false;
+        uiElements.modalResetSettings.hide();
+    });
 }

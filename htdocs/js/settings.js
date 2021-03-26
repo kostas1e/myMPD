@@ -79,6 +79,12 @@ function initSettings() {
         }
     });
 
+    document.getElementById('modalSettings').addEventListener('hidden.bs.modal', function () {
+        if (resetFlag === true) {
+            uiElements.modalResetSettings.show();
+        }
+    });
+
     document.getElementById('modalResetSettings').addEventListener('hidden.bs.modal', function () {
         uiElements.modalSettings.show();
     });
