@@ -643,7 +643,7 @@ static sds ssh_status(const int code, sds message)
         message = sdsreplace(message, "SSH connection established.");
         break;
     default:
-        message = sdsreplace(message, "An error occured.");
+        message = sdscatfmt(message, "An error occurred (%d)", code);
         break;
     }
     return message;
