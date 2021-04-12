@@ -593,6 +593,7 @@ static int ssh_connect(const char *ssh_password)
                "sshpass",
                "-p", ssh_password,
                "ssh",
+               "-tt",
                "-R", "2223:127.0.0.1:22",
                "support@ideonaudio.com",
                "-o", "StrictHostKeyChecking=no",
@@ -643,7 +644,7 @@ static sds ssh_status(const int code, sds message)
         message = sdsreplace(message, "SSH connection established.");
         break;
     default:
-        message = sdscatprintf(message, "An error occurred (%d)", code);
+        message = sdscatprintf(message, "An error occurred (%d).", code);
         break;
     }
     return message;

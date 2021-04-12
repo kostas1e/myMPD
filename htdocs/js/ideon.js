@@ -88,6 +88,8 @@ function connectSSH() {
     sendAPI("MYMPD_API_SSH_CONNECT", {"SSHPassword": document.getElementById('inputSSHPassword').value}, parseConnectSSH);
 
     btnWaiting(document.getElementById('btnConnectSSH'), true);
+
+    document.getElementById('SSHMsg').innerText = 'Connecting...';
 }
 
 function parseConnectSSH(obj) {

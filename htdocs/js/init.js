@@ -11,7 +11,7 @@ function checkInit() {
         document.getElementById('selectTheme1').value = settings.theme;
 
         document.getElementById('selectTheme1').addEventListener('change', function (event) {
-            const value = getSelectValue(event.target);
+            let value = getSelectValue(event.target);
             if (value === 'theme-autodetect') {
                 value = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'theme-dark' : 'theme-default';
             }

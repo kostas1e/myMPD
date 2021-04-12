@@ -204,7 +204,7 @@ const advancedSettingsDefault = {
         "validValues": {
             "append": "Add to queue",
             "appendPlay": "Add to queue and play",
-            "replace": "Replace queue",
+            "replace": "Play/Replace queue",
             "view": "Song details"
         },
         "inputType": "select",
@@ -225,7 +225,7 @@ const advancedSettingsDefault = {
         "defaultValue": "view",
         "validValues": {
             "append": "Add to queue",
-            "replace": "Replace queue",
+            "replace": "Play/Replace queue",
             "view": "View playlist"
         },
         "inputType": "select",
@@ -236,7 +236,7 @@ const advancedSettingsDefault = {
         "defaultValue": "view",
         "validValues": {
             "append": "Add to queue",
-            "replace": "Replace queue",
+            "replace": "Play/Replace queue",
             "view": "Open folder"
         },
         "inputType": "select",
@@ -247,7 +247,7 @@ const advancedSettingsDefault = {
         "defaultValue": "replace",
         "validValues": {
             "append": "Add to queue",
-            "replace": "Replace queue",
+            "replace": "Play/Replace queue",
         },
         "inputType": "select",
         "title": "Click album play button",
