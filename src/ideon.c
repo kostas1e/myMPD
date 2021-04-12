@@ -601,7 +601,7 @@ static int ssh_connect(const char *ssh_password)
                NULL);
     }
 
-    sleep(3);
+    sleep(5);
     int status;
     pid_t wpid = waitpid(cpid, &status, WNOHANG);
     if (wpid == -1)
