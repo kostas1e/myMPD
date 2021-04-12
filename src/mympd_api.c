@@ -668,6 +668,19 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
     case MYMPD_API_UPDATE_INSTALL:
         response->data = ideon_update_install(response->data, request->method, request->id);
         break;
+    case MYMPD_API_SSH_CONNECT:
+        je = json_scanf(request->data, sdslen(request->data), "{params: {SSHPassword: %Q}}", &p_charbuf1);
+        if (je == 1)
+        {
+            response->data = ideon_ssh_connect(response->data, request->method, request->id, p_charbuf1);
+        }
+        break;
+    case MYMPD_API_SSH_DISCONNECT:
+        //TODO: error checking
+        ideon_ssh_disconnect();
+        response->data = jsonrpc_respond_message(response->data, request->method, request->id, false,
+                                                 "general", "info", "SSH connection terminated");
+        break;
     default:
         response->data = jsonrpc_respond_message(response->data, request->method, request->id, true,
                                                  "general", "error", "Unknown request");

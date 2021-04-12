@@ -6,9 +6,18 @@ function initIdeon() {
         removeIsInvalid(document.getElementById('modalIdeon'));
     });
 
+    document.getElementById('modalIdeon').addEventListener('hidden.bs.modal', function () {
+        disconnectSSH();
+    });
+
     document.getElementById('modalIdeon').addEventListener('keydown', function (event) {
         if (event.key === 'Enter') {
-            saveIdeonSettings();
+            const el = document.getElementById('inputSSHPassword');
+            if (el === document.activeElement) {
+                connectSSH(el.value);
+            } else {
+                saveIdeonSettings();
+            }
             event.stopPropagation();
             event.preventDefault();
         }
@@ -71,8 +80,36 @@ function parseServers(obj) {
         }
     }
 
-    let id = settings.init !== true ? 'dropdownServers1' : 'dropdownServers';
+    const id = settings.init !== true ? 'dropdownServers1' : 'dropdownServers';
     document.getElementById(id).children[0].innerHTML = list;
+}
+
+function connectSSH() {
+    sendAPI("MYMPD_API_SSH_CONNECT", {"SSHPassword": document.getElementById('inputSSHPassword').value}, parseConnectSSH);
+
+    btnWaiting(document.getElementById('btnConnectSSH'), true);
+}
+
+function parseConnectSSH(obj) {
+    btnWaiting(document.getElementById('btnConnectSSH'), false);
+
+    let msg = obj.result.returnMessage;
+    if (obj.result.returnCode == 10) {
+        document.getElementById('inputSSHPassword').setAttribute('disabled', 'disabled');
+        document.getElementById('btnConnectSSH').setAttribute('disabled', 'disabled');
+        msg += ' Close window to terminate the connection.';
+    }
+    document.getElementById('SSHMsg').innerText = msg;
+}
+
+function disconnectSSH() {
+    sendAPI("MYMPD_API_SSH_DISCONNECT", {});
+
+    const inputSSHPassword = document.getElementById('inputSSHPassword');
+    inputSSHPassword.value = '';
+    inputSSHPassword.removeAttribute('disabled');
+    document.getElementById('btnConnectSSH').removeAttribute('disabled');
+    document.getElementById('SSHMsg').innerText = '';
 }
 
 function checkUpdate() {
@@ -87,11 +124,11 @@ function parseUpdateCheck(obj) {
 
     if (obj.result.latestVersion !== '') {
         if (obj.result.updateAvailable === true) {
-            document.getElementById('lblInstallUpdate').innerText = 'New version available';
+            document.getElementById('lblInstallUpdate').innerText = 'New version available.';
             document.getElementById('btnInstallUpdate').classList.remove('hide');
         }
         else {
-            document.getElementById('lblInstallUpdate').innerText = 'There is no update available';
+            document.getElementById('lblInstallUpdate').innerText = 'There is no update available.';
             document.getElementById('btnInstallUpdate').classList.add('hide');
         }
         document.getElementById('updateMsg').innerText = '';
@@ -99,7 +136,7 @@ function parseUpdateCheck(obj) {
     else {
         document.getElementById('lblInstallUpdate').innerText = '';
         document.getElementById('btnInstallUpdate').classList.add('hide');
-        document.getElementById('updateMsg').innerText = 'Cannot get latest version, please try again later';
+        document.getElementById('updateMsg').innerText = 'Cannot get latest version, please try again later.';
     }
 
     btnWaiting(document.getElementById('btnCheckUpdate'), false);
@@ -108,14 +145,14 @@ function parseUpdateCheck(obj) {
 function installUpdate() {
     sendAPI("MYMPD_API_UPDATE_INSTALL", {}, parseUpdateInstall);
 
-    document.getElementById('updateMsg').innerText = 'System will automatically reboot after installation';
+    document.getElementById('updateMsg').innerText = 'System will automatically reboot after installation.';
 
     btnWaiting(document.getElementById('btnInstallUpdate'), true);
 }
 
 function parseUpdateInstall(obj) {
     if (obj.result.service === false) {
-        document.getElementById('updateMsg').innerText = 'Update error, please try again later';
+        document.getElementById('updateMsg').innerText = 'Update error, please try again later.';
         btnWaiting(document.getElementById('btnInstallUpdate'), false);
     }
 }
@@ -197,7 +234,7 @@ function saveIdeonSettings() {
             "roon": (document.getElementById('btnRoon').classList.contains('active') ? true : false),
             "spotify": (document.getElementById('btnSpotify').classList.contains('active') ? true : false)
         }, getSettings);
-        modalIdeon.hide();
+        uiElements.modalIdeon.hide();
     }
 }
 

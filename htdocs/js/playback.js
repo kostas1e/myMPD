@@ -47,10 +47,13 @@ function playbackRoute() {
 function getQueueMini(pos) {
     const colsQueueMini = ["Pos", "Title", "Artist", "Album", "Duration"];
     // list
-    if (pos !== undefined && pos !== -1) {
+    if (pos !== undefined) {
+        if (pos === -1) {
+            pos = 0;
+        }
         sendAPI("MPD_API_QUEUE_MINI", { "pos": pos, "cols": colsQueueMini }, parseQueueMini);
     }
-    else if (pos === undefined) {
+    else {
         const table = document.getElementById('QueueMiniList');
         const tbody = table.getElementsByTagName('tbody')[0];
         for (let i = tbody.rows.length - 1; i >= 0; i--) {
@@ -59,7 +62,7 @@ function getQueueMini(pos) {
         table.classList.add('opacity05');
     }
     // footer
-    sendAPI("MPD_API_QUEUE_LIST", {"offset": app.apps.Queue.tabs.Current.offset, "limit": app.apps.Queue.tabs.Current.limit, "cols": settings.colsQueueCurrent}, parseQueueList, false);
+    sendAPI("MPD_API_QUEUE_LIST", { "offset": app.apps.Queue.tabs.Current.offset, "limit": app.apps.Queue.tabs.Current.limit, "cols": settings.colsQueueCurrent }, parseQueueList, false);
 }
 
 function parseQueueMini(obj) {

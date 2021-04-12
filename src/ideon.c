@@ -5,6 +5,10 @@
 #include <curl/curl.h>
 #include <mntent.h>
 #include <pthread.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <signal.h>
 
 #include "../dist/src/sds/sds.h"
 #include "list.h"
@@ -18,6 +22,7 @@
 #define IDEONAUDIO_REPO "https://ideonaudio.com/repo/ideonOS/system/web_version"
 
 pthread_mutex_t lock;
+pid_t cpid = -1; // ssh process id
 
 static bool output_name_init(void);
 static sds device_name_get(sds name);
@@ -29,8 +34,10 @@ static int ns_set(int type, const char *server, const char *share, const char *v
 static sds web_version_get(sds version);
 static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp);
 static bool validate_version(const char *data);
+static int ssh_connect(const char *ssh_password);
+static sds ssh_status(const int code, sds message);
 
-void ideon_init(void) // todo: change return type to bool
+void ideon_init(void) // TODO: change return type to bool
 {
     if (curl_global_init(CURL_GLOBAL_ALL) != 0)
     {
@@ -49,7 +56,7 @@ void ideon_cleanup(void)
     pthread_mutex_destroy(&lock);
 }
 
-void ideon_dc_handle(int *dc) // todo: change return type to bool
+void ideon_dc_handle(int *dc) // TODO: change return type to bool
 {
     static bool handled = false;
 
@@ -90,7 +97,8 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed, bool n
 
         if (dc != 0)
         {
-            if (syscmd("mount -a") == true) {
+            if (syscmd("mount -a") == true)
+            {
                 dc = 0;
             }
         }
@@ -206,7 +214,7 @@ sds ideon_ns_server_list(sds buffer, sds method, int request_id)
         {
             free(line);
         }
-        fclose(fp);
+        pclose(fp);
         sdsfree(ip_address);
         sdsfree(name);
         sdsfree(workgroup);
@@ -249,6 +257,31 @@ sds ideon_update_install(sds buffer, sds method, int request_id)
     buffer = tojson_bool(buffer, "service", service, false);
     buffer = jsonrpc_result_end(buffer);
     return buffer;
+}
+
+sds ideon_ssh_connect(sds buffer, sds method, int request_id, const char *ssh_password)
+{
+    int rc = ssh_connect(ssh_password);
+    sds rm = ssh_status(rc, sdsempty());
+    buffer = jsonrpc_result_start(buffer, method, request_id);
+    buffer = tojson_long(buffer, "returnCode", rc, true);
+    buffer = tojson_char(buffer, "returnMessage", rm, false);
+    buffer = jsonrpc_result_end(buffer);
+    sdsfree(rm);
+    return buffer;
+}
+
+int ideon_ssh_disconnect(void)
+{
+    if (cpid == -1)
+    {
+        return 1;
+    }
+    kill(cpid, SIGTERM);
+    sleep(1);
+    waitpid(cpid, NULL, WNOHANG);
+    cpid = -1;
+    return 0;
 }
 
 // Compare output_name w/ device_name and set
@@ -436,8 +469,7 @@ static int ns_set(int type, const char *server, const char *share, const char *v
         endmntent(tmp);
         endmntent(org);
 
-        int rc = rename(tmp_file, org_file);
-        if (rc == -1)
+        if (rename(tmp_file, org_file) == -1)
         {
             MYMPD_LOG_ERROR("Renaming file from %s to %s failed", tmp_file, org_file);
             me = 0; // old table
@@ -541,4 +573,78 @@ static bool validate_version(const char *data)
         }
     }
     return rc;
+}
+
+//wip use signalaction and send res to front end on signal
+// TODO: use anonymous pipe for password
+static int ssh_connect(const char *ssh_password)
+{
+    cpid = fork();
+    if (cpid == -1)
+    {
+        MYMPD_LOG_ERROR("fork");
+        return 7;
+    }
+
+    if (cpid == 0)
+    {
+        //wip redirect output to hide from terminal
+        execlp("sshpass",
+               "sshpass",
+               "-p", ssh_password,
+               "ssh",
+               "-R", "2223:127.0.0.1:22",
+               "support@ideonaudio.com",
+               "-o", "StrictHostKeyChecking=no",
+               "-o", "UserKnownHostsFile=/dev/null",
+               NULL);
+    }
+
+    sleep(3);
+    int status;
+    pid_t wpid = waitpid(cpid, &status, WNOHANG);
+    if (wpid == -1)
+    {
+        MYMPD_LOG_ERROR("waitpid");
+        return 8;
+    }
+    else if (wpid == 0)
+    {
+        MYMPD_LOG_DEBUG("SSH connection established");
+        return 10;
+    }
+    else // wpid == cpid
+    {
+        if (WIFEXITED(status))
+        {
+            int exit_status = WEXITSTATUS(status);
+            MYMPD_LOG_DEBUG("exited, status=%d", exit_status);
+            return exit_status;
+        }
+        else if (WIFSIGNALED(status))
+        {
+            int signal_number = WTERMSIG(status);
+            MYMPD_LOG_DEBUG("killed by signal %d", signal_number);
+            return 9; // signal_number
+        }
+    }
+
+    return 0; // wpid > 0 && not exited & not signaled ?
+}
+
+static sds ssh_status(const int code, sds message)
+{
+    switch (code)
+    {
+    case 5:
+        message = sdsreplace(message, "Invalid/incorrect password.");
+        break;
+    case 10:
+        message = sdsreplace(message, "SSH connection established.");
+        break;
+    default:
+        message = sdsreplace(message, "An error occured.");
+        break;
+    }
+    return message;
 }

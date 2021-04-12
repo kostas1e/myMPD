@@ -620,11 +620,11 @@ installdeps() {
     apt-get update
     apt-get install -y --no-install-recommends \
 	gcc cmake perl libssl-dev libid3tag0-dev libflac-dev \
-	build-essential liblua5.3-dev pkg-config libpcre3-dev libcurl4-gnutls-dev
+	build-essential liblua5.3-dev pkg-config libpcre3-dev libcurl4-gnutls-dev sshpass
   elif [ -f /etc/arch-release ]
   then
     #arch
-    pacman -S gcc cmake perl openssl libid3tag flac lua pkgconf pcre curl
+    pacman -S gcc cmake perl openssl libid3tag flac lua pkgconf pcre curl sshpass
   elif [ -f /etc/alpine-release ]
   then
     #alpine

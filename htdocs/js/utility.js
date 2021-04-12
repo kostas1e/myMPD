@@ -15,6 +15,8 @@ function showConfirm(text, btnText, callback) {
         }
         uiElements.modalConfirm.hide();
     }, false);
+    // Overwrite custom button text
+    btnText = 'Yes';
     yesBtn.innerText = btnText;
     document.getElementById('modalConfirmYesBtn').replaceWith(yesBtn);
     uiElements.modalConfirm.show();

@@ -133,7 +133,9 @@
     X(MPD_API_QUEUE_MINI)                    \
     X(MYMPD_API_NS_SERVER_LIST)              \
     X(MYMPD_API_UPDATE_CHECK)                \
-    X(MYMPD_API_UPDATE_INSTALL)
+    X(MYMPD_API_UPDATE_INSTALL)              \
+    X(MYMPD_API_SSH_CONNECT)                 \
+    X(MYMPD_API_SSH_DISCONNECT)
 
 #define GEN_ENUM(X) X,
 #define GEN_STR(X) #X,

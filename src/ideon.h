@@ -17,4 +17,6 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed, bool n
 sds ideon_ns_server_list(sds buffer, sds method, int request_id);
 sds ideon_update_check(sds buffer, sds method, int request_id);
 sds ideon_update_install(sds buffer, sds method, int request_id);
+sds ideon_ssh_connect(sds buffer, sds method, int request_id, const char *ssh_password);
+int ideon_ssh_disconnect(void);
 #endif

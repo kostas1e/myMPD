@@ -832,7 +832,7 @@ void mpd_client_api(t_config *config, t_mpd_client_state *mpd_client_state, void
             if (uint_buf2 > 999)
             {
                 response->data = jsonrpc_respond_message(response->data, request->method, request->id, true,
-                                                         "queue", "error", "Number of songs to high");
+                                                         "queue", "error", "Number of songs too high");
                 break;
             }
             rc = mpd_client_jukebox_add_to_queue(config, mpd_client_state, uint_buf2, uint_buf1, p_charbuf1, true);

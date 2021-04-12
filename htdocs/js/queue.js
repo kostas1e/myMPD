@@ -83,7 +83,7 @@ function initQueue() {
 }
 
 function parseUpdateQueue(obj) {
-    //Set playstate
+    // Set playstate
     if (obj.result.state === 1) {
         document.getElementById('btnPlay').innerText = 'play_arrow';
         playstate = 'stop';

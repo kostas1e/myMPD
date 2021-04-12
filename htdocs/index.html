@@ -764,7 +764,7 @@
           <button type="button" class="close" data-dismiss="modal">&times;</button>
         </div>
         <div class="modal-body">
-          <p data-phrase="Dependent on the size of your music collection this can take a while"></p>
+          <p data-phrase="Depending on the size of your music collection this can take a while"></p>
           <div class="progress">
             <div id="updateDBprogress" class="progress-bar bg-success" role="progressbar"></div>
           </div>
@@ -1485,7 +1485,7 @@
     </div>
   </div>
 
-  <div id="modalIdeon" class="modal fade" tabindex="-1">
+  <div id="modalIdeon" class="modal fade" data-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header pb-0">
@@ -1640,14 +1640,18 @@
                   </div>
                 </div>
                 <small id="updateMsg"></small>
-                <!-- <hr>
+                <hr>
                 <h4 data-phrase="Technical assistance"></h4>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="btnSupport" data-phrase="..."></label>
-                  <div class="col-sm-8">
-                    <button type="button" id="btnSupport" class="btn btn-secondary btnCleanup" data-href='{"cmd": "", "options": []}' data-phrase="Support"></button>
+                  <div class="col-sm-4">
+                    <input id="inputSSHPassword" class="form-control border-secondary" type="password" data-placeholder-phrase="Password">
+                    <!-- <div class="invalid-feedback" data-phrase="Password cannot be blank"></div> -->
                   </div>
-                </div> -->
+                  <div class="col-sm-8">
+                    <button type="button" id="btnConnectSSH" class="btn btn-secondary btnCleanup" data-href='{"cmd": "connectSSH", "options": []}' data-phrase="Connect"></button>
+                  </div>
+                </div>
+                <small id="SSHMsg"></small>
               </form>
             </div>
           </div>
