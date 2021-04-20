@@ -125,7 +125,7 @@ function parseSongDetails(obj) {
         for (const sticker of stickerList) {
             if (sticker === 'stickerLike') {
                 songDetailsHTML += '<tr><th>' + t('Like') + '</th><td><div class="btn-group btn-group-sm" data-uri="' + encodeURI(obj.result.uri) + '">' +
-                    '<button title="' + t('Dislike song') + '" data-href=\'{"cmd": "voteSong", "options": [0]}\' class="btn btn-sm btn-secondary mi' + (obj.result[sticker] === 0 ? ' active' : '') + '">thumb_down</button>' +
+                    // '<button title="' + t('Dislike song') + '" data-href=\'{"cmd": "voteSong", "options": [0]}\' class="btn btn-sm btn-secondary mi' + (obj.result[sticker] === 0 ? ' active' : '') + '">thumb_down</button>' +
                     '<button title="' + t('Like song') + '" data-href=\'{"cmd": "voteSong", "options": [2]}\' class="btn btn-sm btn-secondary mi' + (obj.result[sticker] === 2 ? ' active' : '') + '">thumb_up</button>' +
                     '</div></td></tr>';
             }
@@ -340,6 +340,7 @@ function voteSong(el, vote) {
     }
     const uri = getAttDec(el.parentNode, 'data-uri');
     sendAPI("MPD_API_LIKE", { "uri": uri, "like": vote });
+    setVoteSongBtns(vote, uri);
 }
 
 //eslint-disable-next-line no-unused-vars

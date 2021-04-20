@@ -266,9 +266,9 @@ button {
   white-space: nowrap;
 }
 
-#mainMenu::after {
+/* #mainMenu::after {
   display: none !important;
-}
+} */
 
 @media only screen and (max-width: 440px) {
   #volumeMenu::after,
@@ -1115,4 +1115,16 @@ img.covergrid-header {
   display: block;
   float: left;
   margin-right: 1rem;
+}
+
+#mainMenu {
+  color: #fff;
+}
+
+#btnVoteUp {
+  border-radius: .25rem;
+}
+
+.btnUpdate {
+  min-width: 12rem;
 }

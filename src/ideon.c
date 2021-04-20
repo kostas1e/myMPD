@@ -575,7 +575,7 @@ static bool validate_version(const char *data)
     return rc;
 }
 
-//wip use signalaction and send res to front end on signal
+//wip use signalaction
 // TODO: use anonymous pipe for password
 static int ssh_connect(const char *ssh_password)
 {
@@ -588,7 +588,7 @@ static int ssh_connect(const char *ssh_password)
 
     if (cpid == 0)
     {
-        //wip redirect output to hide from terminal
+        //wip redirect output
         execlp("sshpass",
                "sshpass",
                "-p", ssh_password,
@@ -616,6 +616,7 @@ static int ssh_connect(const char *ssh_password)
     }
     else // wpid == cpid
     {
+        cpid = -1;
         if (WIFEXITED(status))
         {
             int exit_status = WEXITSTATUS(status);

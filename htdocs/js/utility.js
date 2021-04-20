@@ -15,7 +15,7 @@ function showConfirm(text, btnText, callback) {
         }
         uiElements.modalConfirm.hide();
     }, false);
-    // Overwrite custom button text
+    // Overwrite custom button text w/ 'Yes'
     btnText = 'Yes';
     yesBtn.innerText = btnText;
     document.getElementById('modalConfirmYesBtn').replaceWith(yesBtn);
@@ -812,7 +812,8 @@ function printValue(key, value) {
             return value === 0 ? t('never') : localeDate(value);
         case 'stickerLike':
             return '<span class="mi mi-small">' +
-                (value === 0 ? 'thumb_down' : value === 1 ? 'radio_button_unchecked' : 'thumb_up') +
+                // (value === 0 ? 'thumb_down' : value === 1 ? 'radio_button_unchecked' : 'thumb_up') +
+                (value === 2 ? 'thumb_up' : '') +
                 '</span>';
         default:
             if (key.indexOf('MUSICBRAINZ') === 0) {

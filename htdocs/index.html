@@ -122,14 +122,14 @@
     <div class="card" id="cardPlayback">
       <div class="card-body">
         <div class="btn-toolbar card-toolbar" id="PlaybackButtonsTop">
-          <div class="btn-group btn-group featStickers">
-            <button disabled="disabled" data-title-phrase="Dislike song" id="btnVoteDown" data-href='{"cmd": "voteCurrentSong", "options": [0]}' class="btn btn-secondary mi">thumb_down</button>
+          <div class="btn-group featStickers">
+            <button disabled="disabled" data-title-phrase="Dislike song" id="btnVoteDown" data-href='{"cmd": "voteCurrentSong", "options": [0]}' class="btn btn-secondary mi hide">thumb_down</button>
             <button disabled="disabled" data-title-phrase="Like song" id="btnVoteUp" data-href='{"cmd": "voteCurrentSong", "options": [2]}' class="btn btn-secondary mi">thumb_up</button>
           </div>
-          <div class="btn-group btn-group featLove ml-2">
+          <div class="btn-group featLove ml-2">
             <button disabled="disabled" data-title-phrase="Love song" data-href='{"cmd": "loveSong", "options": []}' class="btn btn-secondary mi">favorite</button>
           </div>
-          <div class="btn-group btn-group featPlaylists ml-2">
+          <div class="btn-group featPlaylists ml-2">
             <button disabled="disabled" id="addCurrentSongToPlaylist" data-title-phrase="Add to playlist" data-href='{"cmd": "showAddToPlaylistCurrentSong", "options": []}' class="btn btn-secondary mi">playlist_add</button>
           </div>
           <div class="btn-group ml-2">
@@ -237,7 +237,7 @@
             <div class="dropdown-menu bg-lite-dark px-2">
               <button data-phrase="Queue" class="btn btn-sm btn-block btn-secondary" data-href='{"cmd": "appGoto", "options": ["Queue", "Current"]}'></button>
               <button data-phrase="LastPlayed" class="btn btn-sm btn-block btn-secondary active" data-href='{"cmd": "appGoto", "options": ["Queue", "LastPlayed"]}'></button>
-              <button data-phrase="Jukebox" class="btn btn-sm btn-block btn-secondary" data-href='{"cmd": "appGoto", "options": ["Queue", "Jukebox"]}'></button>
+              <button data-phrase="Jukebox" class="btn btn-sm btn-block btn-secondary hide" data-href='{"cmd": "appGoto", "options": ["Queue", "Jukebox"]}'></button>
             </div>
           </div>
           <div class="btn-group mr-2 featHome">
@@ -1349,7 +1349,7 @@
             <li class="nav-item">
               <a class="nav-link active text-dark" href="#tabQueueSettings" data-toggle="tab" data-height="true" data-phrase="Playback"></a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item hide">
               <a class="nav-link text-dark" href="#tabJukeboxSettings" data-toggle="tab" data-height="true" data-phrase="Jukebox"></a>
             </li>
           </ul>
@@ -1628,15 +1628,14 @@
                   <li><span data-phrase="Latest version"></span>: <span id="latestVersion"></span></li>
                 </ul>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="btnCheckUpdate" data-phrase="Check for update"></label>
-                  <div class="col-sm-8">
-                    <button type="button" id="btnCheckUpdate" class="btn btn-secondary btnCleanup" data-href='{"cmd": "checkUpdate", "options": []}' data-phrase="Check"></button>
+                  <div class="col-sm-4">
+                    <button type="button" id="btnCheckUpdate" class="btn btn-secondary btnUpdate" data-href='{"cmd": "checkUpdate", "options": []}' data-phrase="Check for update"></button>
                   </div>
+                  <label id="lblInstallUpdate" class="col-sm-8 col-form-label"></label>
                 </div>
                 <div class="form-group row">
-                  <label id="lblInstallUpdate" class="col-sm-4 col-form-label"></label>
-                  <div class="col-sm-8">
-                    <button type="button" id="btnInstallUpdate" class="btn btn-secondary btnCleanup hide" data-href='{"cmd": "installUpdate", "options": []}' data-phrase="Install"></button>
+                  <div class="col-sm-4">
+                    <button type="button" id="btnInstallUpdate" class="btn btn-secondary btnUpdate hide" data-href='{"cmd": "installUpdate", "options": []}' data-phrase="Install update"></button>
                   </div>
                 </div>
                 <small id="updateMsg"></small>
@@ -1645,7 +1644,6 @@
                 <div class="form-group row">
                   <div class="col-sm-4">
                     <input id="inputSSHPassword" class="form-control border-secondary" type="password" data-placeholder-phrase="Password">
-                    <!-- <div class="invalid-feedback" data-phrase="Password cannot be blank"></div> -->
                   </div>
                   <div class="col-sm-8">
                     <button type="button" id="btnConnectSSH" class="btn btn-secondary btnCleanup" data-href='{"cmd": "connectSSH", "options": []}' data-phrase="Connect"></button>
@@ -1658,14 +1656,11 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal" data-phrase="Cancel"></button>
-          <button type="button" class="btn btn-success" data-href='{"cmd": "saveIdeonSettings", "options": []}' data-phrase="Save"></button>
+          <button id="btnSaveIdeonSettings" type="button" class="btn btn-success" data-href='{"cmd": "saveIdeonSettings", "options": []}' data-phrase="Save"></button>
         </div>
       </div>
     </div>
   </div>
-
-  <!-- <div class="modal fade" id="modalSupport" tabindex="-1">
-  </div> -->
 
   <div class="modal fade" id="modalResetSettings" data-backdrop="static" tabindex="-1" role="dialog">
     <div class="modal-dialog">

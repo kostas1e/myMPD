@@ -451,7 +451,8 @@ function updateSmartPlaylistClick() {
 
 //eslint-disable-next-line no-unused-vars
 function showDelPlaylist(uri) {
-    showConfirm(t('Do you really want to delete the playlist?', { "playlist": uri }), "Yes, delete it", function () {
+    // showConfirm(t('Do you really want to delete the playlist?', { "playlist": uri }), "Yes, delete it", function () {
+    showConfirm('This will delete the playlist "' + uri + '"!', "Yes", function () {
         sendAPI("MPD_API_PLAYLIST_RM", { "uri": uri });
     });
 }

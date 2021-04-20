@@ -96,9 +96,10 @@ function parseConnectSSH(obj) {
     btnWaiting(document.getElementById('btnConnectSSH'), false);
 
     let msg = obj.result.returnMessage;
-    if (obj.result.returnCode == 10) {
+    if (obj.result.returnCode === 10) {
         document.getElementById('inputSSHPassword').setAttribute('disabled', 'disabled');
         document.getElementById('btnConnectSSH').setAttribute('disabled', 'disabled');
+        document.getElementById('btnSaveIdeonSettings').innerText = 'Close';
         msg += ' Close window to terminate the connection.';
     }
     document.getElementById('SSHMsg').innerText = msg;
@@ -130,7 +131,7 @@ function parseUpdateCheck(obj) {
             document.getElementById('btnInstallUpdate').classList.remove('hide');
         }
         else {
-            document.getElementById('lblInstallUpdate').innerText = 'There is no update available.';
+            document.getElementById('lblInstallUpdate').innerText = 'System is up to date.';
             document.getElementById('btnInstallUpdate').classList.add('hide');
         }
         document.getElementById('updateMsg').innerText = '';

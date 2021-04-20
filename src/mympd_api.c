@@ -677,9 +677,13 @@ static void mympd_api(t_config *config, t_mympd_state *mympd_state, t_work_reque
         break;
     case MYMPD_API_SSH_DISCONNECT:
         //TODO: error checking
-        ideon_ssh_disconnect();
-        response->data = jsonrpc_respond_message(response->data, request->method, request->id, false,
-                                                 "general", "info", "SSH connection terminated");
+        if (ideon_ssh_disconnect() == 0) {
+            response->data = jsonrpc_respond_message(response->data, request->method, request->id, false,
+                                                     "general", "info", "SSH connection terminated");
+        }
+        else {
+            response->data = jsonrpc_respond_ok(response->data, request->method, request->id, "general");
+        }
         break;
     default:
         response->data = jsonrpc_respond_message(response->data, request->method, request->id, true,
