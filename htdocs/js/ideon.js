@@ -24,7 +24,7 @@ function initIdeon() {
     });
 
     document.getElementById('selectNsType').addEventListener('change', function () {
-        let value = this.options[this.selectedIndex].value;
+        const value = this.options[this.selectedIndex].value;
         if (value === '0') {
             document.getElementById('nsServerShare').classList.add('hide');
             document.getElementById('sambaVersion').classList.add('hide');
@@ -200,12 +200,12 @@ function parseIdeonSettings() {
 function saveIdeonSettings() {
     let formOK = true;
 
-    let selectNsType = document.getElementById('selectNsType');
-    let selectNsTypeValue = selectNsType.options[selectNsType.selectedIndex].value;
-    let inputNsServer = document.getElementById('inputNsServer');
-    let inputNsShare = document.getElementById('inputNsShare');
-    let inputNsUsername = document.getElementById('inputNsUsername');
-    let inputNsPassword = document.getElementById('inputNsPassword');
+    const selectNsType = document.getElementById('selectNsType');
+    const selectNsTypeValue = selectNsType.options[selectNsType.selectedIndex].value;
+    const inputNsServer = document.getElementById('inputNsServer');
+    const inputNsShare = document.getElementById('inputNsShare');
+    const inputNsUsername = document.getElementById('inputNsUsername');
+    const inputNsPassword = document.getElementById('inputNsPassword');
 
     if (selectNsTypeValue !== '0') {
         if (!validateIPAddress(inputNsServer)) {
@@ -222,8 +222,8 @@ function saveIdeonSettings() {
     }
 
     if (formOK === true) {
-        let selectMixerType = document.getElementById('selectMixerType');
-        let selectSambaVersion = document.getElementById('selectSambaVersion');
+        const selectMixerType = document.getElementById('selectMixerType');
+        const selectSambaVersion = document.getElementById('selectSambaVersion');
         sendAPI("MYMPD_API_SETTINGS_SET", {
             "mixerType": selectMixerType.options[selectMixerType.selectedIndex].value,
             "dop": (document.getElementById('btnDop').classList.contains('active') ? true : false),

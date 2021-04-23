@@ -41,7 +41,7 @@ function checkInit() {
         }, false);
 
         document.getElementById('selectNsType1').addEventListener('change', function () {
-            let value = this.options[this.selectedIndex].value;
+            const value = this.options[this.selectedIndex].value;
             if (value === '0') {
                 document.getElementById('nsServerShare1').classList.add('hide');
                 document.getElementById('sambaVersion1').classList.add('hide');
@@ -88,7 +88,7 @@ function checkInit() {
 }
 
 function showTab(n) {
-    let x = document.getElementsByClassName("tab");
+    const x = document.getElementsByClassName("tab");
     x[n].style.display = "block";
     if (n == 0) {
         document.getElementById("prevBtn").style.display = "none";
@@ -103,7 +103,7 @@ function showTab(n) {
 }
 
 function nextPrev(n) {
-    let x = document.getElementsByClassName("tab");
+    const x = document.getElementsByClassName("tab");
     if (n == 1 && currentTab == 1 && !validateForm()) {
         return;
     }
@@ -119,12 +119,12 @@ function nextPrev(n) {
 function validateForm() {
     let formOK = true;
 
-    let selectNsType = document.getElementById('selectNsType1');
-    let selectNsTypeValue = selectNsType.options[selectNsType.selectedIndex].value;
-    let inputNsServer = document.getElementById('inputNsServer1');
-    let inputNsShare = document.getElementById('inputNsShare1');
-    let inputNsUsername = document.getElementById('inputNsUsername1');
-    let inputNsPassword = document.getElementById('inputNsPassword1');
+    const selectNsType = document.getElementById('selectNsType1');
+    const selectNsTypeValue = selectNsType.options[selectNsType.selectedIndex].value;
+    const inputNsServer = document.getElementById('inputNsServer1');
+    const inputNsShare = document.getElementById('inputNsShare1');
+    const inputNsUsername = document.getElementById('inputNsUsername1');
+    const inputNsPassword = document.getElementById('inputNsPassword1');
 
     if (selectNsTypeValue !== '0') {
         if (!validateIPAddress(inputNsServer)) {
@@ -144,10 +144,10 @@ function validateForm() {
 }
 
 function saveInitSettings() {
-    // let selectLocale = document.getElementById('selectLocale1');
-    let selectTheme = document.getElementById('selectTheme1');
-    let selectNsType = document.getElementById('selectNsType1');
-    let selectSambaVersion = document.getElementById('selectSambaVersion1');
+    // const selectLocale = document.getElementById('selectLocale1');
+    const selectTheme = document.getElementById('selectTheme1');
+    const selectNsType = document.getElementById('selectNsType1');
+    const selectSambaVersion = document.getElementById('selectSambaVersion1');
     sendAPI("MYMPD_API_SETTINGS_SET", {
         // "locale": selectLocale.options[selectLocale.selectedIndex].value,
         "theme": selectTheme.options[selectTheme.selectedIndex].value,

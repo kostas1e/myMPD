@@ -588,7 +588,7 @@ static int ssh_connect(const char *ssh_password)
 
     if (cpid == 0)
     {
-        //wip redirect output
+        //wip dup2
         execlp("sshpass",
                "sshpass",
                "-p", ssh_password,
@@ -645,7 +645,7 @@ static sds ssh_status(const int code, sds message)
         message = sdsreplace(message, "SSH connection established.");
         break;
     default:
-        message = sdscatprintf(message, "An error occurred (%d).", code);
+        message = sdscatprintf(message, "An error occurred (code: %d).", code);
         break;
     }
     return message;
