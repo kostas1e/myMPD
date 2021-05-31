@@ -970,9 +970,9 @@
           <div class="tab-content">
             <div class="tab-pane" id="tabInterfaceSettings">
               <form id="InterfaceSettingsFrm">
-                <h4 data-phrase="Theme"></h4>
+                <h4 data-phrase="Skin"></h4>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="selectTheme" data-phrase="Theme"></label>
+                  <label class="col-sm-4 col-form-label" for="selectTheme" data-phrase="Skin"></label>
                   <div class="col-sm-8 ">
                     <select id="selectTheme" class="form-control custom-select border-secondary">
                     </select>
@@ -993,10 +993,10 @@
                   </div>
                 </div>
                 <hr/>
-                <h4 data-phrase="Albumart"></h4>
+                <h4 data-phrase="Artwork"></h4>
                 <div id="warnAlbumart" class="alert alert-warning hide" data-phrase="Can't access music directory"></div>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="btnCoverimage" data-phrase="Albumart"></label>
+                  <label class="col-sm-4 col-form-label" for="btnCoverimage" data-phrase="Album artwork"></label>
                   <div class="col-sm-8 ">
                     <button data-toggle="collapse" data-target="#collapseAlbumart" data-href='{"cmd": "toggleBtnChk", "options": []}' type="button" class="btn btn-sm btn-secondary mi" id="btnCoverimage"></button>
                   </div>
@@ -1010,14 +1010,14 @@
                     </div>
                   </div>
                   <div class="form-group row">
-                    <label class="col-sm-4 col-form-label" for="inputCoverimageSize" data-phrase="Size normal"></label>
+                    <label class="col-sm-4 col-form-label" for="inputCoverimageSize" data-phrase="Playback size"></label>
                     <div class="col-sm-8 ">
                       <input id="inputCoverimageSize" type="text" class="form-control border-secondary" value="250" data-placeholder-phrase="Size in px"/>
                       <div class="invalid-feedback" data-phrase="Invalid size"></div>
                     </div>
                   </div>
                   <div class="form-group row">
-                    <label class="col-sm-4 col-form-label" for="inputCoverimageSizeSmall" data-phrase="Size small"></label>
+                    <label class="col-sm-4 col-form-label" for="inputCoverimageSizeSmall" data-phrase="Thumbnail size"></label>
                     <div class="col-sm-8 ">
                       <input id="inputCoverimageSizeSmall" type="text" class="form-control border-secondary" value="190" data-placeholder-phrase="Size in px"/>
                       <div class="invalid-feedback" data-phrase="Invalid size"></div>
@@ -1040,7 +1040,7 @@
                   </div>
                 </div>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="btnBgCover" data-phrase="Albumart"></label>
+                  <label class="col-sm-4 col-form-label" for="btnBgCover" data-phrase="Album artwork"></label>
                   <div class="col-sm-8 ">
                     <button data-toggle="collapse" data-target="#collapseBackground" data-href='{"cmd": "toggleBtnChk", "options": []}' type="button" class="btn btn-sm btn-secondary mi" id="btnBgCover"></button>
                   </div>
@@ -1106,7 +1106,7 @@
                   <h4 data-phrase="Tags"></h4>
                   <div class="form-group row">
                     <label class="col-sm-4 col-form-label" for="btnEnabledTags">
-                      <span data-phrase="Tags to use"></span>
+                      <span data-phrase="System tags"></span>
                       <small class="mi mi-small ml-1" data-title-phrase="MaintainEnableTagsText">help</small>
                     </label>
                     <div class="col-sm-8 input-group">
@@ -1118,7 +1118,7 @@
                     </div>
                   </div>
                   <div class="form-group row">
-                    <label class="col-sm-4 col-form-label" for="btnSearchTags" data-phrase="Tags to search"></label>
+                    <label class="col-sm-4 col-form-label" for="btnSearchTags" data-phrase="Search tags"></label>
                     <div class="col-sm-8 input-group">
                       <input type="text" class="form-control border-secondary" id="inputSearchTags" readonly="readonly"/>
                       <div class="input-group-append">
@@ -1128,7 +1128,7 @@
                     </div>
                   </div>
                   <div class="form-group row">
-                    <label class="col-sm-4 col-form-label" for="btnBrowseTags" data-phrase="Tags to browse"></label>
+                    <label class="col-sm-4 col-form-label" for="btnBrowseTags" data-phrase="Library tags"></label>
                     <div class="col-sm-8 input-group">
                       <input type="text" class="form-control border-secondary" id="inputBrowseTags" readonly="readonly"/>
                       <div class="input-group-append">
@@ -1197,6 +1197,7 @@
                   </div>
                 </div>
                 <hr/>
+              <div class="hide">
                 <h4 data-phrase="Local playback"></h4>
                 <div class="form-group row">
                   <label class="col-sm-4 col-form-label" for="btnFeatLocalplayer" data-phrase="Local playback"></label>
@@ -1221,8 +1222,8 @@
                     </div>
                   </div>
                 </div>
-
                 <hr/>
+              </div>
                 <h4 data-phrase="Other features"></h4>
                 <div class="warnReadonly alert alert-warning hide" data-phrase="Ideon software is in readonly mode"></div>
                 <div class="form-group row">
@@ -1256,7 +1257,7 @@
               <form id="MaintenanceFrm">
                 <h4 data-phrase="Maintenance"></h4>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="btnResetSettings" data-phrase="Reset settings"></label>
+                  <label class="col-sm-4 col-form-label" for="btnResetSettings" data-phrase="Reset to factory defaults"></label>
                   <div class="col-sm-8">
                     <button type="button" id="btnResetSettings" class="btn btn-secondary btnCleanup" data-href='{"cmd": "resetSettings", "options": []}' data-phrase="Reset"></button>
                   </div>
@@ -1268,7 +1269,7 @@
                   </div>
                 </div>
                 <div class="form-group row groupClearCovercache">
-                  <label class="col-sm-4 col-form-label" for="btnClearCovercache" data-phrase="Clear covercache"></label>
+                  <label class="col-sm-4 col-form-label" for="btnClearCovercache" data-phrase="Clear artwork cache"></label>
                   <div class="col-sm-8">
                     <button type="button" id="btnClearCovercache" class="btn btn-secondary btnCleanup" data-href='{"cmd": "clearCovercache", "options": []}' data-phrase="Clear"></button>
                     &nbsp;
@@ -1367,7 +1368,10 @@
                   </div>
                 </div>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="btnConsume" data-phrase="Consume"></label>
+                  <label class="col-sm-4 col-form-label" for="btnConsume">
+                    <span data-phrase="Consume"></span>
+                    <small class="mi mi-small ml-1" data-title-phrase="Remove track from queue after played.">help</small>
+                  </label>
                   <div class="col-sm-8">          
                     <button data-href='{"cmd": "toggleBtnChk", "options": []}' id="btnConsume" type="button" class="btn btn-secondary btn-sm mi"></button>
                   </div>
@@ -1383,13 +1387,13 @@
                   </div>
                 </div>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="btnRepeat" data-phrase="Repeat"></label>
+                  <label class="col-sm-4 col-form-label" for="btnRepeat" data-phrase="Repeat track"></label>
                   <div class="col-sm-8">
                     <button data-href='{"cmd": "toggleBtnChk", "options": []}' id="btnRepeat" type="button" class="btn btn-secondary btn-sm mi"></button>
                   </div>
                 </div>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="inputCrossfade" data-phrase="Crossfade"></label>
+                  <label class="col-sm-4 col-form-label" for="inputCrossfade" data-phrase="Fade out (seconds)"></label>
                   <div class="col-sm-8">
                     <input id="inputCrossfade" type="text" class="form-control border-secondary" value=""/>
                     <div class="invalid-feedback" data-phrase="Must be a number"></div>
@@ -1421,7 +1425,7 @@
                   </div>
                 </div>
                 <div class="form-group row">
-                  <label class="col-sm-4 col-form-label" for="btnAutoPlay" data-phrase="Autoplay"></label>
+                  <label class="col-sm-4 col-form-label" for="btnAutoPlay" data-phrase="Autoplay at startup"></label>
                   <div class="col-sm-8">          
                     <button data-href='{"cmd": "toggleBtnChk", "options": []}' id="btnAutoPlay" type="button" class="btn btn-secondary btn-sm mi"></button>
                   </div>
@@ -1701,7 +1705,7 @@
                 </div>
               </div> -->
               <div class="form-group row">
-                <label class="col-sm-4 col-form-label" for="selectTheme1" data-phrase="Skin color"></label>
+                <label class="col-sm-4 col-form-label" for="selectTheme1" data-phrase="Skin"></label>
                 <div class="col-sm-8">
                   <select id="selectTheme1" class="form-control custom-select border-secondary">
                   </select>
