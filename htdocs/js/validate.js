@@ -1,61 +1,247 @@
 "use strict";
-// SPDX-License-Identifier: GPL-2.0-or-later
-// myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
+// SPDX-License-Identifier: GPL-3.0-or-later
+// myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
+/** @module validate_js */
+
+/**
+ * Highlight the input element with the invalid value
+ * @param {string} prefix prefix for the input fields
+ * @param {object} obj the jsonrpc error object
+ * @returns {boolean} true if input element was found, else false
+ */
+function highlightInvalidInput(prefix, obj) {
+    if (obj.error.data.path === undefined) {
+        return false;
+    }
+    // try to find the input element
+    const id = ucFirst(obj.error.data.path.split('.').pop());
+    const el = document.querySelector('#' + prefix + id + 'Input');
+    if (el) {
+        let col = el.closest('.col-sm-8');
+        if (col === null) {
+            col = el.parentNode;
+        }
+        setIsInvalid(el);
+        // append error message if there is no client-side invalid feedback defined
+        if (col.querySelector('.invalid-feedback') === null) {
+            const invalidServerEl = col.querySelector('.invalid-server');
+            if (invalidServerEl === null) {
+                // Create new invalid feedback element
+                col.appendChild(
+                    elCreateTextTn('div', {"class": ["invalid-feedback", "invalid-server"]}, tn(obj.error.message, obj.error.data))
+                );
+                return true;
+            }
+        }
+        const invalidServerEl = col.querySelector('.invalid-server');
+        if (invalidServerEl !== null) {
+            // Update invalid feedback from server
+            invalidServerEl.textContent = tn(obj.error.message, obj.error.data);
+        }
+        return true;
+    }
+    logWarn('Element not found: #' + prefix + id + 'Input');
+    return false;
+}
+
+/**
+ * Removes all is-invalid classes
+ * @param {Element} el element
+ * @returns {void}
+ */
+function removeIsInvalid(el) {
+    const els = el.querySelectorAll('.is-invalid');
+    for (let i = 0, j = els.length; i < j; i++) {
+        els[i].classList.remove('is-invalid');
+    }
+}
+
+/**
+ * Marks an element as invalid
+ * @param {string} id element id
+ * @returns {void}
+ */
+function setIsInvalidId(id) {
+    setIsInvalid(elGetById(id));
+}
+
+/**
+ * Marks an element as invalid
+ * @param {Element} el element
+ * @returns {void}
+ */
+function setIsInvalid(el) {
+    //set is-invalid also on parent node
+    el.classList.add('is-invalid');
+    const col = el.closest('.col-sm-8');
+    col.classList.add('is-invalid');
+}
+
+/**
+ * Checks if string is a valid uri (not empty)
+ * @param {string} uri uri to check 
+ * @returns {boolean} true = valid uri, else false
+ */
 function isValidUri(uri) {
-    if (uri === '' || uri === undefined || uri === null) {
+    if (uri === '' ||
+        uri === undefined ||
+        uri === null ||
+        uri.match(/^\s*$/) !== null)
+    {
         return false;
     }
     return true;
 }
 
+/**
+ * Checks if string is a stream uri
+ * @param {string} uri uri to check
+ * @returns {boolean} true = stream uri, else false
+ */
 function isStreamUri(uri) {
+    if (uri === undefined) {
+        return false;
+    }
     if (uri.indexOf('://') > -1) {
         return true;
     }
     return false;
 }
 
-function removeIsInvalid(parentEl) {
-    const els = parentEl.getElementsByClassName('is-invalid');
-    for (let i = 0; i < els.length; i++) {
-        els[i].classList.remove('is-invalid');
-    }
-}
-
-function validateFilenameString(str) {
-    if (str === '') {
-        return false;
-    }
-    if (str.match(/^[\w-.]+$/) !== null) {
+/**
+ * Checks if string is a http uri
+ * @param {string} uri uri to check
+ * @returns {boolean} true = http uri, else false
+ */
+function isHttpUri(uri) {
+    if (uri.indexOf('http://') === 0 ||
+        uri.indexOf('https://') === 0)
+    {
         return true;
     }
     return false;
 }
 
-function validateFilename(el) {
-    if (validateFilenameString(el.value) === false) {
-        el.classList.add('is-invalid');
+/**
+ * Checks if the value of the input element is a valid playlist name
+ * @param {Element} el input element
+ * @returns {boolean} true = valid playlist name, else false
+ */
+//eslint-disable-next-line no-unused-vars
+function validatePlistEl(el) {
+    if (validatePlist(el.value) === false) {
+        setIsInvalid(el);
         return false;
     }
-    el.classList.remove('is-invalid');
     return true;
 }
 
-function validateFilenameList(el) {
-    el.classList.remove('is-invalid');
+/**
+ * Checks if the string is a valid playlist name
+ * @param {string} str input element
+ * @returns {boolean} true = valid playlist name, else false
+ */
+function validatePlist(str) {
+    if (str === '') {
+        return false;
+    }
+    if (str.match(/\/|\r|\n|"|'/) === null) {
+        return true;
+    }
+    return false;
+}
 
-    const filenames = el.value.split(',');
-    for (let i = 0; i < filenames.length; i++) {
-        if (validateFilenameString(filenames[i].trim()) === false) {
-            el.classList.add('is-invalid');
-            return false;
-        }
+/**
+ * Checks if the the value of the input element is an unsigned integer
+ * @param {Element} el input element
+ * @returns {boolean} true = unsigned integer, else false
+ */
+//eslint-disable-next-line no-unused-vars
+function validateUintEl(el) {
+    const value = el.value.replace(/[\d]/g, '');
+    if (value !== '') {
+        setIsInvalid(el);
+        return false;
     }
     return true;
 }
 
+/**
+ * Checks if the the value of the input element is a float
+ * @param {Element} el input element
+ * @returns {boolean} true = float, else false
+ */
+//eslint-disable-next-line no-unused-vars
+function validateFloatEl(el) {
+    const value = el.value.replace(/[\d-.]/g, '');
+    if (value !== '') {
+        setIsInvalid(el);
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Checks if the the value of the input element is a valid stream uri
+ * @param {Element} el input element
+ * @returns {boolean} true = valid stream uri, else false
+ */
+function validateStreamEl(el) {
+    if (el.value.length === 0) {
+        return true;
+    }
+    if (isStreamUri(el.value) === true) {
+        return true;
+    }
+    setIsInvalid(el);
+    return false;
+}
+
+/**
+ * Checks if the value of the input element contains only printable characters
+ * @param {Element} el input element
+ * @returns {boolean} true = only printable characters, else false
+ */
+function validatePrintableEl(el) {
+    const value = el.value.replace(/[\w-]+/g, '');
+    if (value !== '') {
+        setIsInvalid(el);
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Checks if the the value of the input element is a hex color
+ * @param {Element} el input element
+ * @returns {boolean} true = valid stream uri, else false
+ */
+//eslint-disable-next-line no-unused-vars
+function validateColorEl(el) {
+    if (el.value.match(/^#[a-f\d]+$/i) !== null) {
+        return true;
+    }
+    setIsInvalid(el);
+    return false;
+}
+
+/**
+ * Checks if the value of the input element is a valid ip address
+ * @param {Element} el input element 
+ * @returns {boolean} true = valid ip address, else false
+ */
+function validateIPAddressEl(el) { // TODO refactor
+    if (el.value.match(/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/) !== null) {
+        el.classList.remove('is-invalid');
+        return true;
+    }
+    el.classList.add('is-invalid');
+    return false;
+}
+
+// FIXME temp functions, replace
 function validatePath(el) {
     if (el.value === '') {
         el.classList.add('is-invalid');
@@ -69,25 +255,6 @@ function validatePath(el) {
     return false;
 }
 
-function validatePlnameEl(el) {
-    if (validatePlname(el.value) === false) {
-        el.classList.add('is-invalid');
-        return false;
-    }
-    el.classList.remove('is-invalid');
-    return true;
-}
-
-function validatePlname(x) {
-    if (x === '') {
-        return false;
-    }
-    if (x.match(/\/|\r|\n|"|'/) === null) {
-        return true;
-    }
-    return false;
-}
-
 function validateNotBlank(el) {
     const value = el.value.replace(/\s/g, '');
     if (value === '') {
@@ -96,60 +263,4 @@ function validateNotBlank(el) {
     }
     el.classList.remove('is-invalid');
     return true;
-}
-
-function validateInt(el) {
-    const value = el.value.replace(/\d/g, '');
-    if (value !== '') {
-        el.classList.add('is-invalid');
-        return false;
-    }
-    el.classList.remove('is-invalid');
-    return true;
-}
-
-function validateFloat(el) {
-    const value = el.value.replace(/[\d-.]/g, '');
-    if (value !== '') {
-        el.classList.add('is-invalid');
-        return false;
-    }
-    el.classList.remove('is-invalid');
-    return true;
-}
-
-function validateStream(el) {
-    if (isStreamUri(el.value) === true) {
-        el.classList.remove('is-invalid');
-        return true;
-    }
-    el.classList.add('is-invalid');
-    return false;
-}
-
-function validateHost(el) {
-    if (el.value.match(/^([\w-.]+)$/) !== null) {
-        el.classList.remove('is-invalid');
-        return true;
-    }
-    el.classList.add('is-invalid');
-    return false;
-}
-
-function validateSelect(el) {
-    if (getSelectValue(el) !== undefined) {
-        el.classList.remove('is-invalid');
-        return true;
-    }
-    el.classList.add('is-invalid');
-    return false;
-}
-
-function validateIPAddress(el) {
-    if (el.value.match(/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/) !== null) {
-        el.classList.remove('is-invalid');
-        return true;
-    }
-    el.classList.add('is-invalid');
-    return false;
 }

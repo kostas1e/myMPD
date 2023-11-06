@@ -1,360 +1,323 @@
 "use strict";
-// SPDX-License-Identifier: GPL-2.0-or-later
-// myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
+// SPDX-License-Identifier: GPL-3.0-or-later
+// myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
-function initQueue() {
-    document.getElementById('searchqueuestr').addEventListener('keyup', function (event) {
-        if (event.key === 'Escape') {
-            this.blur();
-        }
-        else {
-            appGoto(app.current.app, app.current.tab, app.current.view, '0', app.current.limit, app.current.filter, app.current.sort, '-', this.value);
-        }
-    }, false);
+/** @module queue_js */
 
-    document.getElementById('searchqueuetags').addEventListener('click', function (event) {
-        if (event.target.nodeName === 'BUTTON') {
-            appGoto(app.current.app, app.current.tab, app.current.view,
-                app.current.offset, app.current.limit, getAttDec(event.target, 'data-tag'), app.current.sort, '-', app.current.search);
-        }
-    }, false);
-
-    document.getElementById('QueueCurrentList').addEventListener('click', function (event) {
-        if (event.target.parentNode.parentNode.nodeName === 'TFOOT') {
-            return;
-        }
-        else if (event.target.nodeName === 'TD') {
-            clickQueueSong(getAttDec(event.target.parentNode, 'data-trackid'), getAttDec(event.target.parentNode, 'data-uri'));
-        }
-        else if (event.target.nodeName === 'IMG') {
-            clickQueueSong(getAttDec(event.target.parentNode.parentNode, 'data-trackid'), getAttDec(event.target.parentNode.parentNode, 'data-uri'));
-        }
-        else if (event.target.nodeName === 'A') {
-            showMenu(event.target, event);
-        }
-    }, false);
-
-    document.getElementById('QueueMiniList').addEventListener('click', function (event) {
-        if (event.target.nodeName === 'TD') {
-            sendAPI("MPD_API_PLAYER_PLAY_TRACK", { "track": getAttDec(event.target.parentNode, 'data-trackid') });
-        }
-    }, false);
-
-    document.getElementById('QueueLastPlayedList').addEventListener('click', function (event) {
-        if (event.target.nodeName === 'TD') {
-            clickSong(getAttDec(event.target.parentNode, 'data-uri'), getAttDec(event.target.parentNode, 'data-name'));
-        }
-        else if (event.target.nodeName === 'A') {
-            showMenu(event.target, event);
-        }
-    }, false);
-
-    document.getElementById('selectAddToQueueMode').addEventListener('change', function () {
-        const value = getSelectValue(this);
-        if (value === '2') {
-            disableEl('inputAddToQueueQuantity');
-            document.getElementById('inputAddToQueueQuantity').value = '1';
-            disableEl('selectAddToQueuePlaylist');
-            document.getElementById('selectAddToQueuePlaylist').value = 'Database';
-        }
-        else if (value === '1') {
-            enableEl('inputAddToQueueQuantity');
-            enableEl('selectAddToQueuePlaylist');
-        }
-    });
-
-    document.getElementById('modalAddToQueue').addEventListener('shown.bs.modal', function () {
-        removeIsInvalid(document.getElementById('modalAddToQueue'));
-        document.getElementById('warnJukeboxPlaylist2').classList.add('hide');
-        if (settings.featPlaylists === true) {
-            sendAPI("MPD_API_PLAYLIST_LIST", { "searchstr": "", "offset": 0, "limit": 0 }, function (obj) {
-                getAllPlaylists(obj, 'selectAddToQueuePlaylist');
-            });
-        }
-    });
-
-    document.getElementById('modalSaveQueue').addEventListener('shown.bs.modal', function () {
-        const plName = document.getElementById('saveQueueName');
-        plName.focus();
-        plName.value = '';
-        removeIsInvalid(document.getElementById('modalSaveQueue'));
-    });
-}
-
-function parseUpdateQueue(obj) {
-    // Set playstate
-    if (obj.result.state === 1) {
-        document.getElementById('btnPlay').innerText = 'play_arrow';
-        playstate = 'stop';
-        domCache.progressBar.style.transition = 'none';
-        domCache.progressBar.style.width = '0';
-        setTimeout(function () {
-            domCache.progressBar.style.transition = progressBarTransition;
-        }, 10);
-    }
-    else if (obj.result.state === 2) {
-        document.getElementById('btnPlay').innerText = settings.advanced.uiFooterPlaybackControls === 'stop' ? 'stop' : 'pause';
-        playstate = 'play';
-    }
-    else {
-        document.getElementById('btnPlay').innerText = 'play_arrow';
-        playstate = 'pause';
-    }
-
-    if (obj.result.queueLength === 0) {
-        disableEl('btnPlay');
-    }
-    else {
-        enableEl('btnPlay');
-    }
-
-    mediaSessionSetState();
-    mediaSessionSetPositionState(obj.result.totalTime, obj.result.elapsedTime);
-
-    const badgeQueueItemsEl = document.getElementById('badgeQueueItems');
-    if (badgeQueueItemsEl) {
-        badgeQueueItemsEl.innerText = obj.result.queueLength;
-    }
-
-    if (obj.result.nextSongPos === -1 && settings.jukeboxMode === false) {
-        disableEl('btnNext');
-    }
-    else {
-        enableEl('btnNext');
-    }
-
-    if (obj.result.songPos < 0) {
-        disableEl('btnPrev');
-    }
-    else {
-        enableEl('btnPrev');
-    }
-}
-
-function getQueue() {
-    if (app.current.search.length >= 2) {
-        sendAPI("MPD_API_QUEUE_SEARCH", { "filter": app.current.filter, "offset": app.current.offset, "limit": app.current.limit, "searchstr": app.current.search, "cols": settings.colsQueueCurrent }, parseQueue, false);
-    }
-    else {
-        sendAPI("MPD_API_QUEUE_LIST", { "offset": app.current.offset, "limit": app.current.limit, "cols": settings.colsQueueCurrent }, parseQueue, false);
-    }
-}
-
-function parseQueue(obj) {
-    if (obj.result.offset < app.current.offset) {
-        gotoPage(obj.result.offset);
-        return;
-    }
-
-    //goto playing song button
-    if (obj.result.totalEntities > app.current.limit && app.current.limit !== 0) {
-        document.getElementById('btnQueueGotoPlayingSong').parentNode.classList.remove('hide');
-    }
-    else {
-        document.getElementById('btnQueueGotoPlayingSong').parentNode.classList.add('hide');
-    }
-
-    const rowTitle = advancedSettingsDefault.clickQueueSong.validValues[settings.advanced.clickQueueSong];
-    updateTable(obj, 'QueueCurrent', function (row, data) {
-        data.Pos++;
-        row.setAttribute('draggable', 'true');
-        row.setAttribute('id', 'queueTrackId' + data.id);
-        row.setAttribute('tabindex', 0);
-        row.setAttribute('title', t(rowTitle));
-        setAttEnc(row, 'data-trackid', data.id);
-        setAttEnc(row, 'data-songpos', data.Pos);
-        setAttEnc(row, 'data-duration', data.Duration);
-        setAttEnc(row, 'data-uri', data.uri);
-        setAttEnc(row, 'data-type', 'song');
-    });
-
-    const table = document.getElementById('QueueCurrentList');
-    setAttEnc(table, 'data-version', obj.result.queueVersion);
-    const colspan = settings['colsQueueCurrent'].length;
-    const tfoot = table.getElementsByTagName('tfoot')[0];
-    if (obj.result.totalTime && obj.result.totalTime > 0 && obj.result.totalEntities <= app.current.limit) {
-        tfoot.innerHTML = '<tr><td colspan="' + (colspan + 1) + '"><small>' + t('Num songs', obj.result.totalEntities) + '&nbsp;&ndash;&nbsp;' + beautifyDuration(obj.result.totalTime) + '</small></td></tr>';
-    }
-    else if (obj.result.totalEntities > 0) {
-        tfoot.innerHTML = '<tr><td colspan="' + (colspan + 1) + '"><small>' + t('Num songs', obj.result.totalEntities) + '</small></td></tr>';
-    }
-    else {
-        tfoot.innerHTML = '';
-    }
-}
-
-function setRowImage(changes, observer) {
-    changes.forEach(change => {
-        if (change.intersectionRatio > 0) {
-            observer.unobserve(change.target);
-            const uri = change.target.getAttribute('data-uri');
-            change.target.firstChild.firstChild.src = subdir + '/albumart/' + uri;
-        }
-    });
-}
-
-function parseLastPlayed(obj) {
-    const rowTitle = advancedSettingsDefault.clickSong.validValues[settings.advanced.clickSong];
-    updateTable(obj, 'QueueLastPlayed', function (row, data) {
-        setAttEnc(row, 'data-uri', data.uri);
-        setAttEnc(row, 'data-name', data.Title);
-        setAttEnc(row, 'data-type', 'song');
-        row.setAttribute('tabindex', 0);
-        row.setAttribute('title', t(rowTitle));
-    });
-}
-
+/**
+ * Removes a song range from the queue
+ * @param {number} start start of the range (including)
+ * @param {number} [end] end of the range (excluding), -1 for open end
+ * @returns {void}
+ */
 //eslint-disable-next-line no-unused-vars
-function queueSelectedItem(append) {
-    const item = document.activeElement;
-    if (item) {
-        if (item.parentNode.parentNode.id === 'QueueCurrentList') {
-            return;
-        }
-        if (append === true) {
-            appendQueue(getAttDec(item, 'data-type'), getAttDec(item, 'data-uri'), getAttDec(item, 'data-name'));
-        }
-        else {
-            replaceQueue(getAttDec(item, 'data-type'), getAttDec(item, 'data-uri'), getAttDec(item, 'data-name'));
-        }
-    }
+function removeFromQueueRange(start, end) {
+    sendAPI("MYMPD_API_QUEUE_RM_RANGE", {
+        "start": start,
+        "end": end
+    }, null, false);
 }
 
+/**
+ * Removes song ids from the queue
+ * @param {Array} ids MPD queue song ids
+ * @returns {void}
+ */
 //eslint-disable-next-line no-unused-vars
-function dequeueSelectedItem() {
-    const item = document.activeElement;
-    if (item) {
-        if (item.parentNode.parentNode.id !== 'QueueCurrentList') {
-            return;
-        }
-        delQueueSong('single', getAttDec(item, 'data-trackid'));
-    }
+function removeFromQueueIDs(ids) {
+    sendAPI("MYMPD_API_QUEUE_RM_IDS", {
+        "songIds": ids
+    }, null, false);
 }
 
-function appendQueue(type, uri, name) {
-    switch (type) {
-        case 'song':
-        case 'dir':
-            sendAPI("MPD_API_QUEUE_ADD_TRACK", { "uri": uri });
-            showNotification(t('%{name} added to queue', { "name": name }), '', 'queue', 'info');
-            break;
-        case 'plist':
-        case 'smartpls':
-            sendAPI("MPD_API_QUEUE_ADD_PLAYLIST", { "plist": uri });
-            showNotification(t('%{name} added to queue', { "name": name }), '', 'queue', 'info');
-            break;
-    }
+/**
+ * Moves a entry in the queue
+ * @param {number} from from position
+ * @param {number} to to position
+ * @returns {void}
+ */
+function queueMoveSong(from, to) {
+    sendAPI("MYMPD_API_QUEUE_MOVE_POSITION", {
+        "from": from,
+        "to": to
+    }, null, false);
 }
 
+/**
+ * Plays the selected song(s) after the current song.
+ * Sets the priority if MPD is in random mode, else moves the song(s) after current playing song.
+ * @param {Array} songIds current playing song ids
+ * @returns {void}
+ */
 //eslint-disable-next-line no-unused-vars
-function appendAfterQueue(type, uri, to, name) {
-    switch (type) {
-        case 'song':
-            sendAPI("MPD_API_QUEUE_ADD_TRACK_AFTER", { "uri": uri, "to": to });
-            to++;
-            showNotification(t('%{name} added to queue position %{to}', { "name": name, "to": to }), '', 'queue', 'info');
-            break;
-    }
-}
-
-function appendPlayQueue(type, uri, name) {
-    switch (type) {
-        case 'song':
-            sendAPI("MPD_API_QUEUE_ADD_PLAY_TRACK", { "uri": uri });
-            showNotification(t('%{name} added to queue', { "name": name }), '', 'queue', 'info');
-            break;
-    }
-}
-
-function replaceQueue(type, uri, name) {
-    switch (type) {
-        case 'song':
-        case 'dir':
-            sendAPI("MPD_API_QUEUE_REPLACE_TRACK", { "uri": uri });
-            showNotification(t('Queue replaced with %{name}', { "name": name }), '', 'queue', 'info');
-            break;
-        case 'plist':
-        case 'smartpls':
-            sendAPI("MPD_API_QUEUE_REPLACE_PLAYLIST", { "plist": uri });
-            showNotification(t('Queue replaced with %{name}', { "name": name }), '', 'queue', 'info');
-            break;
-    }
-}
-
-//eslint-disable-next-line no-unused-vars
-function addToQueue() {
-    let formOK = true;
-    const inputAddToQueueQuantityEl = document.getElementById('inputAddToQueueQuantity');
-    if (!validateInt(inputAddToQueueQuantityEl)) {
-        formOK = false;
-    }
-
-    const jukeboxMode = getSelectValue('selectAddToQueueMode');
-    const jukeboxPlaylist = getSelectValue('selectAddToQueuePlaylist');
-
-    if (jukeboxMode === '1' && settings.featSearchwindow === false && jukeboxPlaylist === 'Database') {
-        document.getElementById('warnJukeboxPlaylist2').classList.remove('hide');
-        formOK = false;
-    }
-
-    if (formOK === true) {
-        sendAPI("MPD_API_QUEUE_ADD_RANDOM", {
-            "mode": jukeboxMode,
-            "playlist": jukeboxPlaylist,
-            "quantity": document.getElementById('inputAddToQueueQuantity').value
-        });
-        uiElements.modalAddToQueue.hide();
-    }
-}
-
-//eslint-disable-next-line no-unused-vars
-function saveQueue() {
-    const plName = document.getElementById('saveQueueName').value;
-    if (validatePlname(plName) === true) {
-        sendAPI("MPD_API_QUEUE_SAVE", { "plist": plName });
-        uiElements.modalSaveQueue.hide();
-    }
-    else {
-        document.getElementById('saveQueueName').classList.add('is-invalid');
-    }
-}
-
-function delQueueSong(mode, start, end) {
-    if (mode === 'range') {
-        sendAPI("MPD_API_QUEUE_RM_RANGE", { "start": start, "end": end });
-    }
-    else if (mode === 'single') {
-        sendAPI("MPD_API_QUEUE_RM_TRACK", { "track": start });
-    }
-}
-
-//eslint-disable-next-line no-unused-vars
-function gotoPlayingSong() {
-    if (app.current.limit === 0) {
-        return;
-    }
-    gotoPage(lastState.songPos < app.current.limit ? 0 : Math.floor(lastState.songPos / app.current.limit) * app.current.limit);
-}
-
-//eslint-disable-next-line no-unused-vars
-function playAfterCurrent(trackid, songpos) {
-    if (settings.random === 0) {
-        //not in random mode - move song after current playling song
-        sendAPI("MPD_API_QUEUE_MOVE_TRACK", {
-            "from": songpos,
-            "to": lastState.songPos !== undefined ? lastState.songPos + 2 : 0
-        });
+function playAfterCurrent(songIds) {
+    if (settings.partition.random === false) {
+        //not in random mode - move song after current playing song
+        sendAPI("MYMPD_API_QUEUE_MOVE_RELATIVE", {
+            "songIds": songIds,
+            "to": 0,
+            "whence": 1
+        }, null, false);
     }
     else {
         //in random mode - set song priority
-        sendAPI("MPD_API_QUEUE_PRIO_SET_HIGHEST", { "trackid": trackid });
+        sendAPI("MYMPD_API_QUEUE_PRIO_SET_HIGHEST", {
+            "songIds": songIds
+        }, null, false);
     }
 }
 
+/**
+ * Clears or crops the queue after confirmation
+ * @returns {void}
+ */
 //eslint-disable-next-line no-unused-vars
 function clearQueue() {
-    showConfirm(t('Do you really want to clear the queue?'), "Yes, clear it", function () {
-        sendAPI("MPD_API_QUEUE_CROP_OR_CLEAR", {});
+    showConfirm(tn('Do you really want to clear the queue?'), tn('Yes, clear it'), function() {
+        sendAPI("MYMPD_API_QUEUE_CROP_OR_CLEAR", {}, null, false);
     });
+}
+
+/**
+ * Appends an element to the queue
+ * @param {string} type element type: song, dir, stream, plist, smartpls, webradio, search, album, disc
+ * @param {Array} uris element uris
+ * @param {Function} [callback] callback function
+ * @returns {void}
+ */
+function appendQueue(type, uris, callback) {
+    _appendQueue(type, uris, false, callback);
+}
+
+/**
+ * Appends an element to the queue and plays it
+ * @param {string} type element type: song, dir, stream, plist, smartpls, webradio, search, album, disc
+ * @param {Array} uris element uris
+ * @param {Function} [callback] callback function
+ * @returns {void}
+ */
+function appendPlayQueue(type, uris, callback) {
+    _appendQueue(type, uris, true, callback);
+}
+
+/**
+ * Appends elements to the queue
+ * @param {string} type element type: song, dir, stream, plist, smartpls, webradio, search, album, disc
+ * @param {Array} uris element uris
+ * @param {boolean} play true = play added entry, false = append only
+ * @param {Function} callback callback function
+ * @returns {void}
+ */
+function _appendQueue(type, uris, play, callback) {
+    if (type === 'webradio') {
+        uris = getRadioFavoriteUris(uris);
+    }
+    switch(type) {
+        case 'song':
+        case 'dir':
+        case 'stream':
+            sendAPI("MYMPD_API_QUEUE_APPEND_URIS", {
+                "uris": uris,
+                "play": play
+            }, callback, true);
+            break;
+        case 'plist':
+        case 'smartpls':
+        case 'webradio':
+            sendAPI("MYMPD_API_QUEUE_APPEND_PLAYLISTS", {
+                "plists": uris,
+                "play": play
+            }, callback, true);
+            break;
+        case 'search':
+            //search is limited to one at a time
+            sendAPI("MYMPD_API_QUEUE_APPEND_SEARCH", {
+                "expression": uris[0],
+                "play": play
+            }, callback, true);
+            break;
+        case 'album':
+            sendAPI("MYMPD_API_QUEUE_APPEND_ALBUMS", {
+                "albumids": uris,
+                "play": play
+            }, callback, true);
+            break;
+        case 'disc':
+            //disc is limited to one at a time
+            sendAPI("MYMPD_API_QUEUE_APPEND_ALBUM_DISC", {
+                "albumid": uris[0],
+                "disc": uris[1].toString(),
+                "play": play
+            }, callback, true);
+            break;
+        default:
+            logError('Invalid type: ' + type);
+    }
+}
+
+/**
+ * Inserts the element after the current playing song
+ * @param {string} type element type: song, dir, stream, plist, smartpls, webradio, search, album, disc
+ * @param {Array} uris element uris
+ * @param {Function} [callback] callback function
+ * @returns {void}
+ */
+//eslint-disable-next-line no-unused-vars
+function insertAfterCurrentQueue(type, uris, callback) {
+    insertQueue(type, uris, 0, 1, false, callback);
+}
+
+/**
+ * Inserts the element after the current playing song
+ * @param {string} type element type: song, dir, stream, plist, smartpls, webradio, search, album, disc
+ * @param {Array} uris element uris
+ * @param {Function} [callback] callback function
+ * @returns {void}
+ */
+//eslint-disable-next-line no-unused-vars
+function insertPlayAfterCurrentQueue(type, uris, callback) {
+    insertQueue(type, uris, 0, 1, true, callback);
+}
+
+/**
+ * Inserts elements into the queue
+ * @param {string} type element type: song, dir, stream, plist, smartpls, webradio, search, album, disc
+ * @param {Array} uris element uris
+ * @param {number} to position to insert
+ * @param {number} whence how t interpret the to parameter: 0 = absolute, 1 = after, 2 = before current song
+ * @param {boolean} play true = play added entry, false = insert only
+ * @param {Function} callback callback function
+ * @returns {void}
+ */
+function insertQueue(type, uris, to, whence, play, callback) {
+    if (type === 'webradio') {
+        uris = getRadioFavoriteUris(uris);
+    }
+    switch(type) {
+        case 'song':
+        case 'dir':
+        case 'stream':
+            sendAPI("MYMPD_API_QUEUE_INSERT_URIS", {
+                "uris": uris,
+                "to": to,
+                "whence": whence,
+                "play": play
+            }, callback, true);
+            break;
+        case 'plist':
+        case 'smartpls':
+        case 'webradio':
+            sendAPI("MYMPD_API_QUEUE_INSERT_PLAYLISTS", {
+                "plists": uris,
+                "to": to,
+                "whence": whence,
+                "play": play
+            }, callback, true);
+            break;
+        case 'search':
+            //search is limited to one at a time
+            sendAPI("MYMPD_API_QUEUE_INSERT_SEARCH", {
+                "expression": uris[0],
+                "to": to,
+                "whence": whence,
+                "play": play
+            }, callback, true);
+            break;
+        case 'album':
+            sendAPI("MYMPD_API_QUEUE_INSERT_ALBUMS", {
+                "albumids": uris,
+                "to": to,
+                "whence": whence,
+                "play": play
+            }, callback, true);
+            break;
+        case 'disc':
+            sendAPI("MYMPD_API_QUEUE_INSERT_ALBUM_DISC", {
+                "albumid": uris[0],
+                "disc": uris[1].toString(),
+                "to": to,
+                "whence": whence,
+                "play": play
+            }, callback, true);
+            break;
+        default:
+            logError('Invalid type: ' + type);
+    }
+}
+
+/**
+ * Replaces the queue with the element
+ * @param {string} type element type: song, dir, stream, plist, smartpls, webradio, search, album, disc
+ * @param {Array} uris element uris
+ * @param {Function} [callback] callback function
+ * @returns {void}
+ */
+function replaceQueue(type, uris, callback) {
+    _replaceQueue(type, uris, false, callback);
+}
+
+/**
+ * Replaces the queue with the element and plays it
+ * @param {string} type element type: song, dir, stream, plist, smartpls, webradio, search, album, disc
+ * @param {Array} uris element uris
+ * @param {Function} [callback] callback function
+ * @returns {void}
+ */
+function replacePlayQueue(type, uris, callback) {
+    _replaceQueue(type, uris, true, callback);
+}
+
+/**
+ * Replaces the queue with the elements
+ * @param {string} type element type: song, dir, stream, plist, smartpls, webradio, search, album, disc
+ * @param {Array} uris element uris
+ * @param {boolean} play true = play added entry, false = insert only
+ * @param {Function} callback callback function
+ * @returns {void}
+ */
+function _replaceQueue(type, uris, play, callback) {
+    if (type === 'webradio') {
+        uris = getRadioFavoriteUris(uris);
+    }
+    switch(type) {
+        case 'song':
+        case 'stream':
+        case 'dir':
+            sendAPI("MYMPD_API_QUEUE_REPLACE_URIS", {
+                "uris": uris,
+                "play": play
+            }, callback, true);
+            break;
+        case 'plist':
+        case 'smartpls':
+        case 'webradio':
+            sendAPI("MYMPD_API_QUEUE_REPLACE_PLAYLISTS", {
+                "plists": uris,
+                "play": play
+            }, callback, true);
+            break;
+        case 'search':
+            //search is limited to one at a time
+            sendAPI("MYMPD_API_QUEUE_REPLACE_SEARCH", {
+                "expression": uris[0],
+                "play": play
+            }, callback, true);
+            break;
+        case 'album':
+            sendAPI("MYMPD_API_QUEUE_REPLACE_ALBUMS", {
+                "albumids": uris,
+                "play": play
+            }, callback, true);
+            break;
+        case 'disc':
+            sendAPI("MYMPD_API_QUEUE_REPLACE_ALBUM_DISC", {
+                "albumid": uris[0],
+                "disc": uris[1].toString(),
+                "play": play
+            }, callback, true);
+            break;
+        default:
+            logError('Invalid type: ' + type);
+    }
 }

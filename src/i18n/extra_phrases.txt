@@ -1,84 +1,265 @@
+AlbumArtistSort
+Album details
+AlbumSort
+alsa
+any
+ao
+App
 Artist
 ArtistSort
-Album
-AlbumSort
-AlbumArtist
-AlbumArtistSort
-Title
-Track
-Name
-Genre
-Date
-Composer
-Performer
-Work
-Grouping
-Comment
-Disc
-Label
-Conductor
-MUSICBRAINZ_ALBUMARTISTID
-MUSICBRAINZ_ALBUMID
-MUSICBRAINZ_ARTISTID
-MUSICBRAINZ_RELEASETRACKID
-MUSICBRAINZ_TRACKID
-MUSICBRAINZ_WORKID
-ComposerSort
-Ensemble
-Movement
-MovementNumber
-Location
-Type
-Pos
-Fileformat
-Dark
-Default
-Light
-search
-newest
-sticker
-Info
-Error
-No such directory
-No lyrics found
-Error executing script %{script}: Syntax error during precompilation
-Error executing script %{script}: Memory allocation error
-Error executing script %{script}: Error in garbage collector
-Error executing script %{script}: Can not open or read script file
-Error executing script %{script}: Runtime error
-Error executing script %{script}: Error while running the message handler
-Error executing script %{script}
-HTTPS Port
-HTTP Port
+AudioFormat
+Authentication required
 Browse
-Home
-App
-Filter
-Offset
-Sort
-Tab
-Open parent folder
+Browser default
+Browser has no MediaSession support
 Click album play button
+clickcount
+Click filesystem playlist
 Click folder
 Click playlist
-Click song in queue
+Click quick play button
 Click song
-Play
-Num entries
-Song change
-Use ligature
-Show playback settings in footer
-LastPlayed
-stickerPlayCount
-stickerSkipCount
-stickerLastPlayed
-stickerLastSkipped
-stickerLike
-Playback controls
-pause and stop
-pause only
-stop only
-Facilities
+Click song in queue
+Click webradio
+Click webradio favorite
+Comment
+Compact grids
+Composer
+ComposerSort
+Conductor
+Context menu
+country
+CSS filter
+Dark
+Default
 Default image
 Default image dark
 Default image light
+Delete home icon
+Delete playlist
+Delete webradio favorite
+Disable consume mode
+Disable random
+Disable repeat
+Disable single mode
+Disable single oneshot
+Disc
+Discs
+Display tags in rows for small displays
+Duplicate home icon
+Each 1
+Each 3600
+Each 60
+Each 604800
+Each 86400
+Edit playlist
+Edit script
+Enable consume mode
+Enable consume oneshot
+Enable random
+Enable repeat
+Enable single mode
+Enable single oneshot
+Ensemble
+Error
+Error executing script %{script}
+Error executing script %{script}: Can not open or read script file
+Error executing script %{script}: Error in garbage collector
+Error executing script %{script}: Error while running the message handler
+Error executing script %{script}: Memory allocation error
+Error executing script %{script}: Runtime error
+Error executing script %{script}: Syntax error during precompilation
+Facilities
+fifo
+Fileformat
+Filetype
+Fingerprint
+Goto artist
+Grouping
+Home
+homepage
+httpd
+icon-action
+icon-alert
+icon-av
+icon-communication
+icon-content
+icon-device
+icon-editor
+icon-file
+icon-hardware
+icon-home
+icon-image
+icon-maps
+icon-navigation
+icon-notification
+icon-places
+icon-search
+icon-social
+icon-toggle
+Image
+Info
+Invalid response
+jack
+Jukebox Queue
+Label
+language
+lastchangetime
+lastcheckok
+LastModified
+Last played list count
+Light
+Location
+Lua is not compiled in
+Media session
+Modal
+modalAbout
+modalConnection
+modalMaintenance
+modalMounts
+modalScripts
+modalSettings
+modalTimer
+modalTrigger
+Movement
+MovementNumber
+MPD
+mpd_database
+MPD does not support mounts
+MPD does not support partitions
+mpd_message
+mpd_mixer
+mpd_mount
+mpd_neighbor
+mpd_options
+mpd_output
+mpd_partition
+mpd_player
+mpd_queue
+mpd_sticker
+mpd_stored_playlist
+mpd_subscription
+MUSICBRAINZ_ALBUMARTISTID
+MUSICBRAINZ_ALBUMID
+MUSICBRAINZ_ARTISTID
+MUSICBRAINZ_RELEASEGROUPID
+MUSICBRAINZ_RELEASETRACKID
+MUSICBRAINZ_TRACKID
+MUSICBRAINZ_WORKID
+mympd_connected
+mympd_disconnected
+mympd_feedback
+mympd_scrobble
+mympd_start
+mympd_stop
+name
+newest
+null
+Offset
+On page notifications
+openal
+Open directory
+OriginalDate
+oss
+osx
+pause and stop
+pause only
+Performer
+pipe
+pipewire
+Play
+Play after current playing song
+Playback controls
+Player
+Playlist successfully copied
+Playlist successfully moved
+Playlist successfully replaced
+plugin
+Pos
+pulse
+Quick play button
+Quick remove button
+recorder
+Remove all downwards
+Remove all upwards
+Repeat current song
+Repeat current song once
+Replace queue with playlist
+Rescan database
+Rescan directory
+Scripting
+Script syntax is valid
+search
+Session
+Set priority
+shout
+Show
+Show all albums from AlbumArtist
+Show all albums from artist
+Show all albums from Composer
+Show all albums from Conductor
+Show all albums from Ensemble
+Show all albums from Performer
+Show attributes
+History back button
+Show help
+Show MusicBrainz links
+Notification icon
+Playback settings
+Volume level
+sles
+snapcast
+sndio
+solaris
+Song change
+SongCount
+Startup view
+state
+sticker
+stickerElapsed
+stickerLastPlayed
+stickerLastSkipped
+stickerLike
+stickerPlayCount
+stickerSkipCount
+stop only
+Stop playback after current song
+Stream
+Synced lyrics extension
+Synced lyrics vorbis comment
+Tab
+tags
+Thumbnail size
+Title
+Too many results, list is cropped
+Track
+Unsynced lyrics extension
+Unsynced lyrics vorbis comment
+Update database
+Update directory
+url_resolved
+View
+View playlist
+Volume max.
+Volume min.
+Volume step
+votes
+Warning
+wasapi
+Web notifications
+Work
+Invalid json value type: MJSON_TOK_NULL
+Invalid json value type: MJSON_TOK_INVALID
+Invalid json value type: MJSON_TOK_UNKNOWN
+Loglevel set to EMERG
+Loglevel set to ALERT
+Loglevel set to CRITICAL
+Loglevel set to ERROR
+Loglevel set to WARN
+Loglevel set to NOTICE
+Loglevel set to INFO
+Loglevel set to DEBUG
+Value length for JSON path \"$.params.newName\" is too short
+Value length for JSON path \"$.params.plist\" is too short
+Number is out of valid range
+Can not parse script arguments

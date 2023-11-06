@@ -1,130 +1,191 @@
 "use strict";
-// SPDX-License-Identifier: GPL-2.0-or-later
-// myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
+// SPDX-License-Identifier: GPL-3.0-or-later
+// myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
-//escapes html characters to avoid xss
-function e(x) {
-    if (isNaN(x)) {
-        return x.replace(/([<>"'])/g, function (m0, m1) {
-            if (m1 === '<') return '&lt;';
-            else if (m1 === '>') return '&gt;';
-            else if (m1 === '"') return '&quot;';
-            else if (m1 === '\'') return '&apos;';
-        }).replace(/\\u(003C|003E|0022|0027)/gi, function (m0, m1) {
-            if (m1 === '003C') return '&lt;';
-            else if (m1 === '003E') return '&gt;';
-            else if (m1 === '0022') return '&quot;';
-            else if (m1 === '0027') return '&apos;';
-        }).replace(/\[\[(\w+)\]\]/g, function (m0, m1) {
-            return '<span class="mi">' + m1 + '</span>';
-        });
-    }
-    return x;
+/** @module locale_js */
+
+/**
+ * Checks for singular or plural
+ * @param {number} number number to check
+ * @returns {number} 0 = singular, 1 = plural
+ */
+function checkSmartCount(number) {
+    if (number === 1) { return 0; }
+    return 1;
 }
 
-//removes special characters
-function r(x) {
-    return x.replace(/[^\w-]/g, '_');
-}
-
-function smartCount(number) {
-    if (number === 0) { return 1; }
-    else if (number === 1) { return 0; }
-    else { return 1; }
-}
-
-function t(phrase, number, data) {
-    let result = undefined;
-    if (isNaN(number)) {
-        data = number;
+/**
+ * Translates the phrase and resolves variables
+ * Variables are in the format %{name}
+ * Phrase can include singular and plural separated by ||||
+ * Singular or plural is detected by the special data key smartCount
+ * @param {string} phrase the prase to translate
+ * @param {object} [data] variable data
+ * @returns {string} translated phrase
+ */
+function tn(phrase, data) {
+    // @ts-ignore
+    if (isNaN(phrase) === false) {
+        //do not translate numbers
+        return phrase;
     }
-
-    if (phrases[phrase]) {
-        result = phrases[phrase][locale];
-        if (result === undefined) {
-            if (locale !== 'en-US') {
-                logWarn('Phrase "' + phrase + '" for locale ' + locale + ' not found');
-            }
-            result = phrases[phrase]['en-US'];
-        }
+    if (phrase === undefined) {
+        logError('Phrase is undefined');
+        return 'undefinedPhrase';
     }
+    //translate
+    let result = phrases[phrase];
+/*debug*/    if (result === undefined &&
+/*debug*/        locale !== 'en-US')
+/*debug*/    {
+/*debug*/        logDebug('Phrase "' + phrase + '" for locale ' + locale + ' not found');
+/*debug*/    }
+
+    //fallback if phrase is not translated
     if (result === undefined) {
-        result = phrase;
+        result = phrasesDefault[phrase] !== undefined ? phrasesDefault[phrase] : phrase;
     }
-
-    if (isNaN(number) === false) {
+    //check for smartCount
+    if (data !== undefined &&
+        data.smartCount !== undefined)
+    {
         const p = result.split(' |||| ');
         if (p.length > 1) {
-            result = p[smartCount(number)];
+            result = p[checkSmartCount(data.smartCount)];
         }
-        result = result.replace('%{smart_count}', number);
+        result = result.replace('%{smart_count}', data.smartCount);
     }
-
-    if (data !== null) {
-        result = result.replace(/%\{(\w+)\}/g, function (m0, m1) {
+    //replace variables
+    if (data !== undefined) {
+        //eslint-disable-next-line no-useless-escape
+        const tnRegex = /%\{(\w+)\}/g;
+        result = result.replace(tnRegex, function(m0, m1) {
             return data[m1];
         });
     }
-
-    return e(result);
+    return result;
 }
 
-function localeDate(secs) {
-    let d;
-    if (secs === undefined) {
-        d = new Date();
-    }
-    else {
-        d = new Date(secs * 1000);
-    }
-    return d.toLocaleString(locale);
+/**
+ * Returns timestamp as formatted date string
+ * @param {number} secs unix timestamp
+ * @returns {string} formatted date
+ */
+function fmtDate(secs) {
+    return new Date(secs * 1000).toLocaleString(locale);
 }
 
-function beautifyDuration(x) {
-    const days = Math.floor(x / 86400);
-    const hours = Math.floor(x / 3600) - days * 24;
-    const minutes = Math.floor(x / 60) - hours * 60 - days * 1440;
-    const seconds = x - days * 86400 - hours * 3600 - minutes * 60;
-
-    return (days > 0 ? days + '\u2009' + t('Days') + ' ' : '') +
-        (hours > 0 ? hours + '\u2009' + t('Hours') + ' ' +
-            (minutes < 10 ? '0' : '') : '') + minutes + '\u2009' + t('Minutes') + ' ' +
-        (seconds < 10 ? '0' : '') + seconds + '\u2009' + t('Seconds');
+/**
+ * Returns timestamp as formatted time string
+ * @param {number} secs unix timestamp
+ * @returns {string} formatted date
+ */
+function fmtTime(secs) {
+    return new Date(secs * 1000).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
-function beautifySongDuration(x) {
-    const hours = Math.floor(x / 3600);
-    const minutes = Math.floor(x / 60) - hours * 60;
-    const seconds = x - hours * 3600 - minutes * 60;
+/**
+ * Returns seconds as formatted duration string
+ * @param {number} secs duration to format
+ * @returns {string} formatted duration
+ */
+function fmtDuration(secs) {
+    const days = Math.floor(secs / 86400);
+    const hours = Math.floor(secs / 3600) - days * 24;
+    const minutes = Math.floor(secs / 60) - hours * 60 - days * 1440;
+    const seconds = secs - days * 86400 - hours * 3600 - minutes * 60;
+
+    return (days > 0 ? days + smallSpace + tn('Days') + ' ' : '') +
+        (hours > 0 ? hours + smallSpace + tn('Hours') + ' ' +
+        (minutes < 10 ? '0' : '') : '') + minutes + smallSpace + tn('Minutes') + ' ' +
+        (seconds < 10 ? '0' : '') + seconds + smallSpace + tn('Seconds');
+}
+
+/**
+ * Returns seconds as formatted song duration string
+ * @param {number} secs duration to format
+ * @returns {string} formatted song duration
+ */
+function fmtSongDuration(secs) {
+    const hours = Math.floor(secs / 3600);
+    const minutes = Math.floor(secs / 60) - hours * 60;
+    const seconds = Math.floor(secs - hours * 3600 - minutes * 60);
 
     return (hours > 0 ? hours + ':' + (minutes < 10 ? '0' : '') : '') +
         minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
 }
 
-//eslint-disable-next-line no-unused-vars
-function gtPage(phrase, returnedEntities, totalEntities, maxElements) {
-    if (totalEntities > -1) {
-        return t(phrase, totalEntities);
-    }
-    else if (returnedEntities + app.current.offset < maxElements) {
-        return t(phrase, returnedEntities);
+/**
+ * Sets and fetches the locale and translates the dom
+ * @param {string} newLocale locale to set
+ * @returns {void}
+ */
+function setLocale(newLocale) {
+    if (newLocale === 'default') {
+        //auto detection
+        locale = navigator.language || navigator.userLanguage;
+        const shortLocale = locale.substring(0, 2);
+        locale = localeMap[locale] === undefined
+            ? localeMap[shortLocale] === undefined
+                ? locale
+                : localeMap[shortLocale]
+            : localeMap[locale];
     }
     else {
-        return '> ' + t(phrase, maxElements);
+        locale = newLocale;
     }
+
+    //check if locale is available
+    if (i18n[locale] === undefined) {
+        //fallback to default locale
+        logError('Locale "' + locale + '" not defined');
+        locale = 'en-US';
+    }
+
+    if (getData(domCache.body, 'locale') === locale) {
+        //locale already set
+        logDebug('Locale already set');
+        return;
+    }
+
+    //get phrases and translate dom
+    httpGet(subdir + '/assets/i18n/' + locale + '.json', function(obj) {
+        phrases = obj;
+        i18nHtml(domCache.body);
+        setData(domCache.body, 'locale', locale);
+    }, true);
 }
 
+/**
+ * Translates all phrases in the dom
+ * @param {HTMLElement} root root element to translate
+ * @returns {void}
+ */
 function i18nHtml(root) {
-    const attributes = [['data-phrase', 'innerHTML'],
-    ['data-title-phrase', 'title'],
-    ['data-placeholder-phrase', 'placeholder']
+    const attributes = [
+        ['data-phrase', 'textContent'],
+        ['data-title-phrase', 'title'],
+        ['data-label-phrase', 'label'],
+        ['data-placeholder-phrase', 'placeholder']
     ];
-    for (let i = 0; i < attributes.length; i++) {
+    for (let i = 0, j = attributes.length; i < j; i++) {
         const els = root.querySelectorAll('[' + attributes[i][0] + ']');
         const elsLen = els.length;
-        for (let j = 0; j < elsLen; j++) {
-            els[j][attributes[i][1]] = t(els[j].getAttribute(attributes[i][0]));
+        for (let k = 0; k < elsLen; k++) {
+            //get phrase data
+            const data = els[k].getAttribute('data-phrase-data');
+            let dataObj = {};
+            if (data !== null) {
+                dataObj = JSON.parse(data);
+            }
+            //add smartCount to data from data-phrase-number attribute
+            const smartCount = els[k].getAttribute('data-phrase-number');
+            if (smartCount !== null) {
+                dataObj.smartCount = Number(smartCount);
+            }
+            //translate
+            els[k][attributes[i][1]] = tn(els[k].getAttribute(attributes[i][0]), dataObj);
         }
     }
 }

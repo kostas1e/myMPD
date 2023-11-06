@@ -1,26 +1,37 @@
 #
-# SPDX-License-Identifier: GPL-2.0-or-later
-# myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
+# SPDX-License-Identifier: GPL-3.0-or-later
+# myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
 # https://github.com/jcorporation/mympd
 #
 [Unit]
 Description=myMPD server daemon
+Documentation=man:mympd(1)
 Requires=network.target local-fs.target
 After=mpd.service
 
 [Service]
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+DynamicUser=yes
 ExecStart=@CMAKE_INSTALL_FULL_BINDIR@/mympd
-Type=simple
-
-# disallow writing to /usr, /bin, /sbin, ...
-ProtectSystem=yes
-
-# more paranoid security settings
-ProtectKernelTunables=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+PrivateDevices=yes
+ProtectClock=yes
 ProtectControlGroups=yes
+ProtectHome=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
 ProtectKernelModules=yes
-#RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ProtectKernelTunables=yes
+ProtectProc=invisible
+RestrictRealtime=yes
+StateDirectory=mympd
+CacheDirectory=mympd
+RestrictAddressFamilies=AF_INET AF_INET6 AF_NETLINK AF_UNIX
 RestrictNamespaces=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
 
 [Install]
 WantedBy=multi-user.target

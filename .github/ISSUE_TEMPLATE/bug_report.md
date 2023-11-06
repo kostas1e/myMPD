@@ -4,7 +4,7 @@ about: Create a report to help us improve
 
 ---
 
-myMPD version: [e.g. 5.6.2]
+myMPD version: [e.g. 8.1.0]
 
 **Describe the bug**
 
@@ -14,8 +14,8 @@ A clear and concise description of what the bug is.
 
 Steps to reproduce the behavior:
 1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
+2. Click on '...'
+3. Scroll down to '...'
 4. See error
 
 **Expected behavior**
@@ -38,20 +38,21 @@ If applicable, add screenshots to help explain your problem.
  - Browser [e.g. chrome, safari]
  - Browser version [e.g. 22]
 
-**Debug logs (please attach if it can be usefull)**
+**Debug logs (please attach if it can be useful)**
 
-See https://github.com/jcorporation/myMPD/wiki/Debug
+Look at https://jcorporation.github.io/myMPD/debug
 
  - myMPD debug log
  - MPD verbose log
  - Browser error console
  - Browser network console
  
- **Configuration (please attach if it can be usefull)**
+**Configuration (please attach if it can be useful)**
 
- - /etc/mympd.conf
  - tarball of /var/lib/mympd/state (``tar -cf mympd_state.tar /var/lib/mympd/state``)
- 
- **Additional context**
+ - tarball of /var/lib/mympd/config (``tar -cf mympd_config.tar /var/lib/mympd/config``)
+ - `mpd.conf` 
+
+**Additional context**
 
 Add any other context about the problem here.

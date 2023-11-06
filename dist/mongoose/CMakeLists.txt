@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+# https://github.com/jcorporation/mympd
+
+add_library(mongoose "")
+
+target_sources(mongoose
+  PRIVATE
+    mongoose.c
+  PUBLIC
+    mongoose.h
+)
+
+target_compile_options(mongoose
+  PRIVATE
+    "-DMG_ENABLE_DIRECTORY_LISTING=1"
+    "-DMG_ENABLE_SSI=0"
+    "-DMG_ENABLE_OPENSSL=1"
+    "-Wno-unused-parameter"
+)
+
+if(MYMPD_ENABLE_IPV6)
+  message("Mongoose: IPv6 is enabled")
+  target_compile_options(mongoose
+    PUBLIC
+      "-DMG_ENABLE_IPV6=1"
+  )
+else()
+  message("Mongoose: IPv6 is disabled")
+endif()
+
+target_include_directories(mongoose SYSTEM
+  PRIVATE
+    ${OPENSSL_INCLUDE_DIR}
+)

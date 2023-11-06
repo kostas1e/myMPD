@@ -1,244 +1,243 @@
 "use strict";
-// SPDX-License-Identifier: GPL-2.0-or-later
-// myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
+// SPDX-License-Identifier: GPL-3.0-or-later
+// myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
-const ignoreMessages = ['No current song', 'No lyrics found'];
+/** @module api_js */
 
+/**
+ * This messages are hidden from notifications.
+ */
+/** @type {object} */
+const ignoreMessages = [
+    'ok',
+    'No current song',
+    'No lyrics found'
+];
+
+/**
+ * Sends a JSON-RPC API request to the selected partition and handles the response.
+ * @param {string} method jsonrpc api method
+ * @param {object} params jsonrpc parameters
+ * @param {Function} callback callback function
+ * @param {boolean} onerror true = execute callback also on error
+ * @returns {void}
+ */
 function sendAPI(method, params, callback, onerror) {
-    const request = { "jsonrpc": "2.0", "id": 0, "method": method, "params": params };
-    const ajaxRequest = new XMLHttpRequest();
-    ajaxRequest.open('POST', subdir + '/api', true);
-    ajaxRequest.setRequestHeader('Content-type', 'application/json');
-    ajaxRequest.onreadystatechange = function () {
-        if (ajaxRequest.readyState === 4) {
-            if (ajaxRequest.responseText !== '') {
-                let obj;
-                try {
-                    obj = JSON.parse(ajaxRequest.responseText);
-                }
-                catch (error) {
-                    showNotification(t('Can not parse response to json object'), '', 'general', 'error');
-                    logError('Can not parse response to json object:' + ajaxRequest.responseText);
-                }
-                if (obj.error) {
-                    showNotification(t(obj.error.message, obj.error.data), '', obj.error.facility, obj.error.severity);
-                    logError(JSON.stringify(obj.error));
-                }
-                else if (obj.result && obj.result.message && obj.result.message !== 'ok') {
-                    logDebug('Got API response: ' + JSON.stringify(obj.result));
-                    if (ignoreMessages.includes(obj.result.message) === false) {
-                        showNotification(t(obj.result.message, obj.result.data), '', obj.result.facility, obj.result.severity);
-                    }
-                }
-                else if (obj.result && obj.result.message && obj.result.message === 'ok') {
-                    logDebug('Got API response: ' + JSON.stringify(obj.result));
-                }
-                else if (obj.result && obj.result.method) {
-                    logDebug('Got API response of type: ' + obj.result.method);
-                }
-                else {
-                    logError('Got invalid API response: ' + ajaxRequest.responseText);
-                    if (onerror !== true) {
-                        return;
-                    }
-                }
-                if (callback !== undefined && typeof (callback) === 'function') {
-                    if (obj.result !== undefined || onerror === true) {
-                        logDebug('Calling ' + callback.name);
-                        callback(obj);
-                    }
-                    else {
-                        logDebug('Undefined resultset, skip calling ' + callback.name);
-                    }
-                }
-            }
-            else {
-                logError('Empty response for request: ' + JSON.stringify(request));
-                if (onerror === true) {
-                    if (callback !== undefined && typeof (callback) === 'function') {
-                        logDebug('Got empty API response calling ' + callback.name);
-                        callback('');
-                    }
-                }
-            }
-        }
-    };
-    ajaxRequest.send(JSON.stringify(request));
+    sendAPIpartition(localSettings.partition, method, params, callback, onerror);
+}
+
+/**
+ * Updates the jsonrpc error object
+ * @param {number} id jsonrpc id
+ * @param {string} method myMPD api method
+ * @param {string} error the error message
+ * @returns {void}
+ */
+function setJsonRpcError(id, method, error) {
+    jsonRpcError.id = id;
+    jsonRpcError.error.method = method;
+    jsonRpcError.error.message = error;
+}
+
+/**
+ * Sends a JSON-RPC API request and handles the response.
+ * @param {string} partition partition endpoint
+ * @param {string} method jsonrpc api method
+ * @param {object} params jsonrpc parameters
+ * @param {Function} callback callback function
+ * @param {boolean} onerror true = execute callback also on error
+ * @returns {Promise<void>}
+ */
+async function sendAPIpartition(partition, method, params, callback, onerror) {
+    if (APImethods[method] === undefined) {
+        logError('Method "' + method + '" is not defined');
+    }
+    if (settings.pin === true &&
+        session.token === '' &&
+        session.timeout < getTimestamp() &&
+        APImethods[method].protected === true)
+    {
+        logDebug('Request must be authorized but we have no session');
+        enterPin(method, params, callback, onerror);
+        return;
+    }
+
     logDebug('Send API request: ' + method);
-}
-
-function webSocketConnect() {
-    if (socket !== null && socket.readyState === WebSocket.OPEN) {
-        logInfo('Socket already connected');
-        websocketConnected = true;
-        return;
+    const uri = subdir + '/api/' + partition;
+    const headers = {'Content-Type': 'application/json'};
+    if (session.token !== '') {
+        headers['X-myMPD-Session'] = session.token;
     }
-    else if (socket !== null && socket.readyState === WebSocket.CONNECTING) {
-        logInfo('Socket connection in progress');
-        websocketConnected = false;
-        return;
-    }
-
-    websocketConnected = false;
-    const wsUrl = (window.location.protocol === 'https:' ? 'wss://' : 'ws://') +
-        window.location.hostname +
-        (window.location.port !== '' ? ':' + window.location.port : '') + subdir + '/ws/';
-    socket = new WebSocket(wsUrl);
-    logInfo('Connecting to ' + wsUrl);
-
+    // generate uniq id for this request
+    const id = generateJsonrpcId();
+    // fetch response
+    let response = null;
     try {
-        socket.onopen = function () {
-            logInfo('Websocket is connected');
-            websocketConnected = true;
-            if (websocketTimer !== null) {
-                clearTimeout(websocketTimer);
-                websocketTimer = null;
-            }
-        };
-
-        socket.onmessage = function (msg) {
-            let obj;
-            try {
-                obj = JSON.parse(msg.data);
-                logDebug('Websocket notification: ' + JSON.stringify(obj));
-                let currentVersion = document.getElementById('currentVersion').innerText;
-                if (obj.method === 'welcome' && currentVersion !== '' && obj.params.ideonVersion !== currentVersion) {
-                    clearAndReload();
-                }
-            }
-            catch (error) {
-                logError('Invalid JSON data received: ' + msg.data);
-                return;
-            }
-
-            switch (obj.method) {
-                case 'welcome':
-                    websocketConnected = true;
-                    showNotification(t('Connected to Ideon software'), wsUrl, 'general', 'info');
-                    appRoute();
-                    sendAPI('MPD_API_PLAYER_STATE', {}, parseState, true);
-                    break;
-                case 'update_state':
-                    obj.result = obj.params;
-                    parseState(obj);
-                    break;
-                case 'mpd_disconnected':
-                    if (progressTimer) {
-                        clearTimeout(progressTimer);
-                    }
-                    getSettings(true);
-                    break;
-                case 'mpd_connected':
-                    //MPD connection established get state and settings
-                    showNotification(t('Connected to Streamer'), '', 'general', 'info');
-                    sendAPI('MPD_API_PLAYER_STATE', {}, parseState);
-                    getSettings(true);
-                    break;
-                case 'update_queue':
-                    if (app.current.app === 'Queue') {
-                        getQueue();
-                    }
-                    else if (app.current.app === 'Playback') {
-                        getQueueMini(obj.params.songPos);
-                    }
-                    obj.result = obj.params;
-                    parseUpdateQueue(obj);
-                    break;
-                case 'update_options':
-                    getSettings();
-                    break;
-                case 'update_outputs':
-                    sendAPI('MPD_API_PLAYER_OUTPUT_LIST', {}, parseOutputs);
-                    break;
-                case 'update_started':
-                    updateDBstarted(false);
-                    break;
-                case 'update_database':
-                //fall through
-                case 'update_finished':
-                    updateDBfinished(obj.method);
-                    updateDBStats();
-                    break;
-                case 'update_volume':
-                    obj.result = obj.params;
-                    parseVolume(obj);
-                    break;
-                case 'update_stored_playlist':
-                    if (app.current.app === 'Browse' && app.current.tab === 'Playlists' && app.current.view === 'List') {
-                        sendAPI('MPD_API_PLAYLIST_LIST', { "offset": app.current.offset, "limit": app.current.limit, "searchstr": app.current.search }, parsePlaylistsList);
-                    }
-                    else if (app.current.app === 'Browse' && app.current.tab === 'Playlists' && app.current.view === 'Detail') {
-                        sendAPI('MPD_API_PLAYLIST_CONTENT_LIST', { "offset": app.current.offset, "limit": app.current.limit, "searchstr": app.current.search, "uri": app.current.filter, "cols": settings.colsBrowsePlaylistsDetail }, parsePlaylistsDetail);
-                    }
-                    break;
-                case 'update_lastplayed':
-                    if (app.current.app === 'Queue' && app.current.tab === 'LastPlayed') {
-                        sendAPI('MPD_API_QUEUE_LAST_PLAYED', { "offset": app.current.offset, "limit": app.current.limit, "cols": settings.colsQueueLastPlayed }, parseLastPlayed);
-                    }
-                    break;
-                case 'update_jukebox':
-                    if (app.current.app === 'Queue' && app.current.tab === 'Jukebox') {
-                        sendAPI('MPD_API_JUKEBOX_LIST', { "offset": app.current.offset, "limit": app.current.limit, "cols": settings.colsQueueJukebox }, parseJukeboxList);
-                    }
-                    break;
-                case 'notify':
-                    if (document.getElementById('alertMpdState').classList.contains('hide')) {
-                        showNotification(t(obj.params.message, obj.params.data), '', obj.params.facility, obj.params.severity);
-                    }
-                    break;
-                default:
-                    break;
-            }
-        };
-
-        socket.onclose = function (event) {
-            logError('Websocket is disconnected');
-            websocketConnected = false;
-            if (appInited === true) {
-                toggleUI();
-                if (progressTimer) {
-                    clearTimeout(progressTimer);
-                }
-            }
-            else {
-                showAppInitAlert(t('Websocket connection failed'));
-                logError('Websocket connection failed: ' + event.code);
-            }
-            if (websocketTimer !== null) {
-                clearTimeout(websocketTimer);
-                websocketTimer = null;
-            }
-            websocketTimer = setTimeout(function () {
-                logInfo('Reconnecting websocket');
-                toggleAlert('alertMympdState', true, t('Websocket connection failed, trying to reconnect') + '&nbsp;&nbsp;<div class="spinner-border spinner-border-sm"></div>');
-                webSocketConnect();
-            }, 3000);
-            socket = null;
-        };
-
-        socket.onerror = function () {
-            logError('Websocket error occured');
-            if (socket !== null) {
-                socket.close();
-            }
-        };
+        response = await fetch(uri, {
+            method: 'POST',
+            mode: 'same-origin',
+            credentials: 'same-origin',
+            cache: 'no-store',
+            redirect: 'follow',
+            headers: headers,
+            body: JSON.stringify(
+                {"jsonrpc": "2.0", "id": id, "method": method, "params": params}
+            )
+        });
     }
-    catch (error) {
+    catch(error) {
+        showNotification(tn('API error') + '\n' +
+            tn('Error accessing %{uri}', {"uri": uri}),
+            'general', 'error'
+        );
+        logError('Error posting to ' + uri);
         logError(error);
+        if (onerror === true) {
+            setJsonRpcError(id, method, tn("Error posting to %{uri}", {"uri": uri}));
+            callback(jsonRpcError);
+        }
+        return;
+    }
+
+    if (response.redirected === true) {
+        logError('Request was redirect, reloading application');
+        window.location.reload();
+        return;
+    }
+    if (response.status === 403 &&
+        method !== 'MYMPD_API_SESSION_VALIDATE')
+    {
+        //myMPD session authentication
+        logDebug('Authorization required for ' + method);
+        enterPin(method, params, callback, onerror);
+        return;
+    }
+    if (response.ok === false) {
+        showNotification(tn('API error') + '\n' +
+            tn('Error accessing %{uri}', {"uri": uri}) + '\n' +
+            tn('Response code: %{code}', {"code": response.status + ' - ' + response.statusText}),
+            'general', 'error'
+        );
+        logError('Error accessing ' + uri + ', code ' + response.status + ' - ' + response.statusText);
+        if (onerror === true) {
+            setJsonRpcError(id, method, tn("Response error: %{status}", response.status + ' - ' + response.statusText));
+            callback(jsonRpcError);
+        }
+        return;
+    }
+    
+    //successful http response - extend session
+    if (settings.pin === true &&
+        session.token !== '' &&
+        APImethods[method].protected === true)
+    {
+        //session was extended through request
+        session.timeout = getTimestamp() + sessionLifetime;
+        resetSessionTimer();
+    }
+
+    //parse response
+    let obj;
+    try {
+        obj = await response.json();
+    }
+    catch(error) {
+        showNotification(tn('API error') + '\n' +
+            tn('Failed to parse response from %{uri}', {"uri": uri}),
+            'general', 'error'
+        );
+        logError('Failed to parse response from ' + uri);
+        logError(error);
+        if (onerror === true) {
+            setJsonRpcError(id, method, tn("Failed to parse response from %{uri}", {"uri": uri}));
+            callback(jsonRpcError);
+        }
+        return;
+    }
+    checkAPIresponse(obj, callback, onerror);
+}
+
+/**
+ * Validates the JSON-RPC API response and calls the callback function
+ * @param {object} obj parsed json rpc response object
+ * @param {Function} callback callback function
+ * @param {boolean} onerror true = execute callback also on error
+ * @returns {void}
+ */
+function checkAPIresponse(obj, callback, onerror) {
+    logDebug('Got API response: ' + JSON.stringify(obj));
+    myMPDready = true;
+
+    if (obj.error &&
+        typeof obj.error.message === 'string')
+    {
+        if (obj.error.method === 'GENERAL_API_NOT_READY') {
+            myMPDready = false;
+            toggleUI();
+        }
+        else {
+            //show and log message
+            showNotification(tn(obj.error.message, obj.error.data), obj.error.facility, obj.error.severity);
+            logSeverity(obj.error.severity, JSON.stringify(obj));
+        }
+    }
+    else if (obj.result &&
+             typeof obj.result.message === 'string')
+    {
+        //show message
+        if (ignoreMessages.includes(obj.result.message) === false) {
+            showNotification(tn(obj.result.message, obj.result.data), obj.result.facility, obj.result.severity);
+        }
+    }
+    else if (obj.result &&
+             typeof obj.result.method === 'string')
+    {
+        //result is used in callback
+    }
+    else {
+        //remaining results are invalid
+        logError('Got invalid API response: ' + JSON.stringify(obj));
+        //set generic error
+        setJsonRpcError(0, "MYMPD_API_UNKNOWN", tn("Invalid response"));
+        obj = jsonRpcError;
+    }
+    if (callback !== undefined &&
+        typeof(callback) === 'function')
+    {
+        if (obj.result !== undefined ||
+            onerror === true)
+        {
+            logDebug('Calling ' + callback.name);
+            callback(obj);
+        }
+        else {
+            logDebug('Result is undefined, skip calling ' + callback.name);
+        }
     }
 }
 
-function webSocketClose() {
-    if (websocketTimer !== null) {
-        clearTimeout(websocketTimer);
-        websocketTimer = null;
+/**
+ * Gets the callback for an jsonrpc method.
+ * Used for async jsonrpc responses.
+ * @param {string} method jsonrpc method
+ * @returns {Function} the function that can parse the response, or null
+ */
+function getResponseCallback(method) {
+    switch(method) {
+        default:
+            return null;
     }
-    if (socket !== null) {
-        // disable onclose handler first
-        socket.onclose = function () { };
-        socket.close();
-        socket = null;
-    }
-    websocketConnected = false;
+}
+
+/**
+ * Generates a uniq jsonrpcid, keeping the clientId the same.
+ * Wraps around the requestId.
+ * @returns {number} the jsonrpcid
+ */
+function generateJsonrpcId() {
+    jsonrpcRequestId = jsonrpcRequestId === 999
+        ? 0
+        : ++jsonrpcRequestId;
+    return jsonrpcClientId * 1000 + jsonrpcRequestId;
 }

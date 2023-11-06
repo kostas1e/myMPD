@@ -1,7 +1,10 @@
 {
+  "name": "Ideon",
+  "short_name": "Ideon",
+  "description": "Ideon Audio - Absolute Stream",
+  "start_url": ".",
   "background_color": "#343a40",
   "theme_color": "#343a40",
-  "description": "Ideon Audio - Absolute Stream",
   "display": "standalone",
   "icons": [
     {
@@ -17,7 +20,18 @@
       "purpose": "any maskable"
     }
   ],
-  "name": "Ideon",
-  "short_name": "Ideon",
-  "start_url": "."
+  "shortcuts": [
+    {
+      "name": "Play",
+      "url": "./?action=clickPlay"
+    },
+    {
+      "name": "Stop",
+      "url": "./?action=clickStop"
+    },
+    {
+      "name": "Next",
+      "url": "./?action=clickNext"
+    }
+  ]
 }

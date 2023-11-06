@@ -1,28 +1,27 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
+#include "compile_time.h"
+#include "src/ideon.h"
+
+#include "src/lib/jsonrpc.h"
+#include "src/lib/list.h"
+#include "src/lib/log.h"
+#include "src/lib/sds_extras.h"
+#include "src/lib/utility.h"
+
 #include <curl/curl.h>
 #include <mntent.h>
 #include <pthread.h>
-#include <unistd.h>
+#include <signal.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <signal.h>
-
-#include "../dist/src/sds/sds.h"
-#include "list.h"
-#include "mympd_config_defs.h"
-#include "log.h"
-#include "mympd_api/mympd_api_utility.h"
-#include "sds_extras.h"
-#include "utility.h"
-#include "ideon.h"
+#include <unistd.h>
 
 #define IDEONAUDIO_REPO "https://ideonaudio.com/repo/ideonOS/system/web_version"
 
 pthread_mutex_t lock;
-pid_t cpid = -1; // ssh process id
 
 static bool output_name_init(void);
 static sds device_name_get(sds name);
@@ -34,18 +33,16 @@ static int ns_set(int type, const char *server, const char *share, const char *v
 static sds web_version_get(sds version);
 static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp);
 static bool validate_version(const char *data);
-static int ssh_connect(const char *ssh_password);
-static sds ssh_status(const int code, sds message);
 
 void ideon_init(void) // TODO: change return type to bool
 {
     if (curl_global_init(CURL_GLOBAL_ALL) != 0)
     {
-        MYMPD_LOG_ERROR("curl global init has failed");
+        MYMPD_LOG_ERROR(NULL, "curl global init has failed");
     }
     if (pthread_mutex_init(&lock, NULL) != 0)
     {
-        MYMPD_LOG_ERROR("mutex init has failed");
+        MYMPD_LOG_ERROR(NULL, "mutex init has failed");
     }
     output_name_init();
 }
@@ -64,11 +61,11 @@ void ideon_dc_handle(int *dc) // TODO: change return type to bool
 
     if (handled == true)
     {
-        MYMPD_LOG_DEBUG("Handled dc %d", *dc);
+        MYMPD_LOG_DEBUG(NULL, "Handled dc %d", *dc);
     }
     else
     {
-        MYMPD_LOG_DEBUG("Handling dc %d", *dc);
+        MYMPD_LOG_DEBUG(NULL, "Handling dc %d", *dc);
         if (*dc != 3)
         {
             syscmd("reboot");
@@ -84,14 +81,55 @@ void ideon_dc_handle(int *dc) // TODO: change return type to bool
     pthread_mutex_unlock(&lock);
 }
 
-int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed, bool ns_changed, bool airplay_changed,
-                       bool roon_changed, bool spotify_changed)
+// int ideon_settings_set(struct t_mympd_state *mympd_state, bool mpd_conf_changed, bool ns_changed, bool airplay_changed,
+//                        bool roon_changed, bool spotify_changed)
+int ideon_settings_set(struct t_mympd_state *mympd_state, struct t_mympd_state *old_mympd_state)
 {
     // TODO: error checking, revert to old values on fail
     int dc = 0;
 
+    // FIXME
+    bool mpd_conf_changed = false;
+    bool ns_changed = false;
+    bool airplay_changed = false;
+    bool roon_changed = false;
+    bool spotify_changed = false;
+
+    if (mympd_state->mixer_type != old_mympd_state->mixer_type || mympd_state->dop != old_mympd_state->dop) {
+        mpd_conf_changed = true;
+    }
+    if (mympd_state->ns_type != old_mympd_state->ns_type) {
+        ns_changed = true;
+    }
+    if (mympd_state->ns_server != old_mympd_state->ns_server) {
+        ns_changed = true;
+    }
+    if (mympd_state->ns_share != old_mympd_state->ns_share) {
+        ns_changed = true;
+    }
+    if (mympd_state->samba_version != old_mympd_state->samba_version) {
+        ns_changed = true;
+    }
+    if (mympd_state->ns_username != old_mympd_state->ns_password) {
+        ns_changed = true;
+    }
+    if (mympd_state->ns_password != old_mympd_state->ns_password) {
+        ns_changed = true;
+    }
+    if (mympd_state->airplay != old_mympd_state->airplay) {
+        airplay_changed = true;
+    }
+    if (mympd_state->roon != old_mympd_state->roon) {
+        roon_changed = true;
+    }
+    if (mympd_state->spotify != old_mympd_state->spotify) {
+        spotify_changed = true;
+    }
+
     if (ns_changed == true)
     {
+        MYMPD_LOG_DEBUG(NULL, "ns changed");
+
         dc = ns_set(mympd_state->ns_type, mympd_state->ns_server, mympd_state->ns_share, mympd_state->samba_version,
                     mympd_state->ns_username, mympd_state->ns_password);
 
@@ -106,7 +144,7 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed, bool n
 
     if (mpd_conf_changed == true)
     {
-        MYMPD_LOG_DEBUG("mpd conf changed");
+        MYMPD_LOG_DEBUG(NULL, "mpd conf changed");
 
         const char *dop = mympd_state->dop == true ? "yes" : "no";
         sds conf = sdsnew("/etc/mpd.conf");
@@ -114,6 +152,7 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed, bool n
                                 mympd_state->mixer_type, dop, conf);
         if (syscmd(cmdline) == true && dc == 0)
         {
+            // FIXME dc overwrite
             dc = 3;
         }
 
@@ -160,18 +199,18 @@ int ideon_settings_set(t_mympd_state *mympd_state, bool mpd_conf_changed, bool n
     return dc;
 }
 
-sds ideon_ns_server_list(sds buffer, sds method, int request_id)
+sds ideon_ns_server_list(sds buffer, enum mympd_cmd_ids cmd_id, long request_id)
 {
     FILE *fp = popen("/usr/bin/nmblookup -S '*' | grep \"<00>\" | awk '{print $1}'", "r");
     // returns three lines per server found - 1st line ip address 2nd line name 3rd line workgroup
     if (fp == NULL)
     {
-        MYMPD_LOG_ERROR("Failed to get server list");
-        buffer = jsonrpc_respond_message(buffer, method, request_id, true, "general", "error", "Failed to get server list");
+        MYMPD_LOG_ERROR(NULL, "Failed to get server list");
+        buffer = jsonrpc_respond_message(buffer, cmd_id, request_id, JSONRPC_FACILITY_GENERAL, JSONRPC_SEVERITY_ERROR, "Failed to get server list");
     }
     else
     {
-        buffer = jsonrpc_result_start(buffer, method, request_id);
+        buffer = jsonrpc_respond_start(buffer, cmd_id, request_id);
         buffer = sdscat(buffer, "\"data\":[");
         unsigned entity_count = 0;
         char *line = NULL;
@@ -181,19 +220,19 @@ sds ideon_ns_server_list(sds buffer, sds method, int request_id)
         sds workgroup = sdsempty();
         while (getline(&line, &n, fp) > 0)
         {
-            ip_address = sdsreplace(ip_address, line);
+            ip_address = sds_replace(ip_address, line);
             sdstrim(ip_address, "\n");
             if (getline(&line, &n, fp) < 0)
             {
                 break;
             }
-            name = sdsreplace(name, line);
+            name = sds_replace(name, line);
             sdstrim(name, "\n");
             if (getline(&line, &n, fp) < 0)
             {
                 break;
             }
-            workgroup = sdsreplace(workgroup, line);
+            workgroup = sds_replace(workgroup, line);
             sdstrim(workgroup, "\n");
 
             if (entity_count++)
@@ -209,7 +248,7 @@ sds ideon_ns_server_list(sds buffer, sds method, int request_id)
         buffer = sdscat(buffer, "],");
         buffer = tojson_long(buffer, "totalEntities", entity_count, true);
         buffer = tojson_long(buffer, "returnedEntities", entity_count, false);
-        buffer = jsonrpc_result_end(buffer);
+        buffer = jsonrpc_end(buffer);
         if (line != NULL)
         {
             free(line);
@@ -222,13 +261,13 @@ sds ideon_ns_server_list(sds buffer, sds method, int request_id)
     return buffer;
 }
 
-sds ideon_update_check(sds buffer, sds method, int request_id)
+sds ideon_update_check(sds buffer, enum mympd_cmd_ids cmd_id, long request_id)
 {
     sds latest_version = web_version_get(sdsempty());
     sdstrim(latest_version, " \n");
     if (validate_version(latest_version) == false)
     {
-        sdsreplace(latest_version, sdsempty());
+        sds_replace(latest_version, sdsempty());
     }
     bool update_available;
     if (sdslen(latest_version) > 0)
@@ -240,48 +279,23 @@ sds ideon_update_check(sds buffer, sds method, int request_id)
         update_available = false;
     }
 
-    buffer = jsonrpc_result_start(buffer, method, request_id);
+    buffer = jsonrpc_respond_start(buffer, cmd_id, request_id);
     buffer = tojson_char(buffer, "currentVersion", IDEON_VERSION, true);
     buffer = tojson_char(buffer, "latestVersion", latest_version, true);
     buffer = tojson_bool(buffer, "updateAvailable", update_available, false);
-    buffer = jsonrpc_result_end(buffer);
+    buffer = jsonrpc_end(buffer);
     sdsfree(latest_version);
     return buffer;
 }
 
-sds ideon_update_install(sds buffer, sds method, int request_id)
+sds ideon_update_install(sds buffer, enum mympd_cmd_ids cmd_id, long request_id)
 {
     bool service = syscmd("systemctl start ideon_update");
 
-    buffer = jsonrpc_result_start(buffer, method, request_id);
+    buffer = jsonrpc_respond_start(buffer, cmd_id, request_id);
     buffer = tojson_bool(buffer, "service", service, false);
-    buffer = jsonrpc_result_end(buffer);
+    buffer = jsonrpc_end(buffer);
     return buffer;
-}
-
-sds ideon_ssh_connect(sds buffer, sds method, int request_id, const char *ssh_password)
-{
-    int rc = ssh_connect(ssh_password);
-    sds rm = ssh_status(rc, sdsempty());
-    buffer = jsonrpc_result_start(buffer, method, request_id);
-    buffer = tojson_long(buffer, "returnCode", rc, true);
-    buffer = tojson_char(buffer, "returnMessage", rm, false);
-    buffer = jsonrpc_result_end(buffer);
-    sdsfree(rm);
-    return buffer;
-}
-
-int ideon_ssh_disconnect(void)
-{
-    if (cpid == -1)
-    {
-        return 1;
-    }
-    kill(cpid, SIGTERM);
-    sleep(1);
-    waitpid(cpid, NULL, WNOHANG);
-    cpid = -1;
-    return 0;
 }
 
 // Compare output_name w/ device_name and set
@@ -308,7 +322,7 @@ static sds device_name_get(sds name)
     FILE *fp = popen("/usr/bin/aplay -l | grep \"card 0.*device 0\"", "r");
     if (fp == NULL)
     {
-        MYMPD_LOG_ERROR("Failed to get device name");
+        MYMPD_LOG_ERROR(NULL, "Failed to get device name");
     }
     else
     {
@@ -339,7 +353,7 @@ static sds output_name_get(sds name)
     FILE *fp = popen("grep \"^name\" /etc/mpd.conf", "r");
     if (fp == NULL)
     {
-        MYMPD_LOG_ERROR("Failed to get output name");
+        MYMPD_LOG_ERROR(NULL, "Failed to get output name");
     }
     else
     {
@@ -379,7 +393,7 @@ static bool output_name_set(const char *name)
 
 static bool syscmd(const char *cmdline)
 {
-    MYMPD_LOG_DEBUG("Executing syscmd \"%s\"", cmdline);
+    MYMPD_LOG_DEBUG(NULL, "Executing syscmd \"%s\"", cmdline);
     const int rc = system(cmdline);
     if (rc == 0)
     {
@@ -387,7 +401,7 @@ static bool syscmd(const char *cmdline)
     }
     else
     {
-        MYMPD_LOG_ERROR("Executing syscmd \"%s\" failed", cmdline);
+        MYMPD_LOG_ERROR(NULL, "Executing syscmd \"%s\" failed", cmdline);
         return false;
     }
 }
@@ -395,6 +409,7 @@ static bool syscmd(const char *cmdline)
 static int ns_set(int type, const char *server, const char *share, const char *vers, const char *username,
                   const char *password)
 {
+    // FIXME
     // sds tmp_file = sdsnew("/tmp/fstab.XXXXXX");
     // int fd = mkstemp(tmp_file);
     // if (fd < 0)
@@ -471,7 +486,7 @@ static int ns_set(int type, const char *server, const char *share, const char *v
 
         if (rename(tmp_file, org_file) == -1)
         {
-            MYMPD_LOG_ERROR("Renaming file from %s to %s failed", tmp_file, org_file);
+            MYMPD_LOG_ERROR(NULL, "Renaming file from %s to %s failed", tmp_file, org_file);
             me = 0; // old table
         }
         sdsfree(mnt_fsname);
@@ -488,7 +503,7 @@ static int ns_set(int type, const char *server, const char *share, const char *v
         }
         else
         {
-            MYMPD_LOG_ERROR("Can't open %s for write", tmp_file);
+            MYMPD_LOG_ERROR(NULL, "Can't open %s for write", tmp_file);
         }
         if (org)
         {
@@ -496,7 +511,7 @@ static int ns_set(int type, const char *server, const char *share, const char *v
         }
         else
         {
-            MYMPD_LOG_ERROR("Can't open %s for read", org_file);
+            MYMPD_LOG_ERROR(NULL, "Can't open %s for read", org_file);
         }
     }
     sdsfree(tmp_file);
@@ -522,19 +537,19 @@ static sds web_version_get(sds version)
         CURLcode res = curl_easy_perform(curl_handle);
         if (res != CURLE_OK)
         {
-            MYMPD_LOG_ERROR("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            MYMPD_LOG_ERROR(NULL, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
         }
         else
         {
             version = sdscatlen(version, chunk.memory, chunk.size);
-            MYMPD_LOG_DEBUG("%lu bytes retrieved", (unsigned long)chunk.size);
+            MYMPD_LOG_DEBUG(NULL, "%lu bytes retrieved", (unsigned long)chunk.size);
         }
 
         curl_easy_cleanup(curl_handle);
     }
     else
     {
-        MYMPD_LOG_ERROR("curl_easy_init");
+        MYMPD_LOG_ERROR(NULL, "curl_easy_init");
     }
     free(chunk.memory);
     return version;
@@ -549,7 +564,7 @@ static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, v
     if (ptr == NULL)
     {
         // out of memory
-        MYMPD_LOG_ERROR("not enough memory (realloc returned NULL)");
+        MYMPD_LOG_ERROR(NULL, "not enough memory (realloc returned NULL)");
         return 0;
     }
 
@@ -563,7 +578,13 @@ static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, v
 
 static bool validate_version(const char *data)
 {
-    bool rc = validate_string_not_empty(data);
+    // FIXME
+    // bool rc = validate_string_not_empty(data);
+    bool rc = false;
+    if (data != NULL && data[0] != '\0')
+    {
+        rc = true;
+    }
     if (rc == true)
     {
         char *p_end;
@@ -573,80 +594,4 @@ static bool validate_version(const char *data)
         }
     }
     return rc;
-}
-
-//wip use signalaction
-// TODO: use anonymous pipe for password
-static int ssh_connect(const char *ssh_password)
-{
-    cpid = fork();
-    if (cpid == -1)
-    {
-        MYMPD_LOG_ERROR("fork");
-        return 7;
-    }
-
-    if (cpid == 0)
-    {
-        //wip dup2
-        execlp("sshpass",
-               "sshpass",
-               "-p", ssh_password,
-               "ssh",
-               "-tt",
-               "-R", "2223:127.0.0.1:22",
-               "support@ideonaudio.com",
-               "-o", "StrictHostKeyChecking=no",
-               "-o", "UserKnownHostsFile=/dev/null",
-               NULL);
-    }
-
-    sleep(5);
-    int status;
-    pid_t wpid = waitpid(cpid, &status, WNOHANG);
-    if (wpid == -1)
-    {
-        MYMPD_LOG_ERROR("waitpid");
-        return 8;
-    }
-    else if (wpid == 0)
-    {
-        MYMPD_LOG_DEBUG("SSH connection established");
-        return 10;
-    }
-    else // wpid == cpid
-    {
-        cpid = -1;
-        if (WIFEXITED(status))
-        {
-            int exit_status = WEXITSTATUS(status);
-            MYMPD_LOG_DEBUG("exited, status=%d", exit_status);
-            return exit_status;
-        }
-        else if (WIFSIGNALED(status))
-        {
-            int signal_number = WTERMSIG(status);
-            MYMPD_LOG_DEBUG("killed by signal %d", signal_number);
-            return 9; // signal_number
-        }
-    }
-
-    return 0; // wpid > 0 && not exited & not signaled ?
-}
-
-static sds ssh_status(const int code, sds message)
-{
-    switch (code)
-    {
-    case 5:
-        message = sdsreplace(message, "Invalid/incorrect password.");
-        break;
-    case 10:
-        message = sdsreplace(message, "SSH connection established.");
-        break;
-    default:
-        message = sdscatprintf(message, "An error occurred (code: %d).", code);
-        break;
-    }
-    return message;
 }

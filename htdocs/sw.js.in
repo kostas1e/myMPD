@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
-// myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
+// SPDX-License-Identifier: GPL-3.0-or-later
+// myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
 const CACHE = 'myMPD-cache-v__VERSION__';
@@ -12,29 +12,33 @@ const urlsToCache = [
     subdir + '/assets/appicon-512.png',
     subdir + '/assets/coverimage-stream.svg',
     subdir + '/assets/coverimage-notavailable.svg',
-    subdir + '/assets/coverimage-loading.svg',
-	subdir + '/assets/coverimage-mympd.svg',
-    subdir + '/assets/favicon.ico',
+    subdir + '/assets/coverimage-mympd.svg',
+    __I18NASSETS__
+    subdir + '/assets/ligatures.json',
     subdir + '/assets/MaterialIcons-Regular.woff2',
-	subdir + '/assets/mympd-background-dark.svg',
-	subdir + '/assets/mympd-background-default.svg',
-	subdir + '/assets/mympd-background-light.svg',
+    subdir + '/assets/mympd-background-dark.svg',
+    subdir + '/assets/mympd-background-light.svg',
+    subdir + '/assets/mympd-background-maroon.svg',
     subdir + '/assets/ideon-logo.png'
 ];
 
-const ignoreRequests = new RegExp('(' + [
-  subdir + '/api',
-  subdir + '/ca.crt',
-  subdir + '/ws',
-  subdir + '/tagpics/(.*)',
-  subdir + '/albumart/(.*)',
-  subdir + '/browse/(.*)'].join('(/?)|\\') + ')$');
+const ignoreRequests = new RegExp(subdir + '/(' + [
+    'api/.*',
+    'script-api',
+    'serverinfo',
+    'ca.crt',
+    'ws/.*',
+    'stream/.*',
+    'albumart.*',
+    'tagart.*',
+    'proxy.*',
+    'browse/.*'].join('|') + ')$');
 
 self.addEventListener('install', function(event) {
     event.waitUntil(
         caches.open(CACHE).then(function(cache) {
             urlsToCache.map(function(url) {
-		return cache.add(url).catch(function (reason) {
+                return cache.add(url).catch(function (reason) {
                     return console.log('ServiceWorker: ' + String(reason) + ' ' + url);
                 });
             });
@@ -43,13 +47,9 @@ self.addEventListener('install', function(event) {
 });
 
 self.addEventListener('fetch', function(event) {
-    if (event.request.url.match('^http://')) {
-        return false;
-    }
-    if (event.request.destination === 'audio') {
-        return false;    
-    }
-    if (ignoreRequests.test(event.request.url)) {
+    if (event.request.url.indexOf('https://' + self.location.hostname + '/') !== 0 ||
+        ignoreRequests.test(event.request.url))
+    {
         return false;
     }
     event.respondWith(

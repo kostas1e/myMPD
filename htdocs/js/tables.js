@@ -1,362 +1,419 @@
 "use strict";
-// SPDX-License-Identifier: GPL-2.0-or-later
-// myMPD (c) 2018-2021 Juergen Mang <mail@jcgames.de>
+// SPDX-License-Identifier: GPL-3.0-or-later
+// myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
-function focusTable(rownr, table) {
-    if (table === undefined) {
-        table = document.getElementById(app.current.app + (app.current.tab !== undefined ? app.current.tab : '') + (app.current.view !== undefined ? app.current.view : '') + 'List');
-    }
+/** @module tables_js */
 
-    if (app.current.app === 'Browse' && app.current.tab === 'Database' && app.current.view === 'List') {
-        const tables = document.getElementsByClassName('card-grid');
-        if (tables.length === 0) {
-            return;
-        }
-        table = tables[0];
-        for (let i = 0; i < tables.length; i++) {
-            if (tables[i].classList.contains('selected')) {
-                table = tables[i];
-                break;
-            }
-        }
-        table.focus();
-        return;
-    }
-    else if (app.current.app === 'Home') {
-        const tables = document.getElementsByClassName('home-icons');
-        if (tables.length === 0) {
-            return;
-        }
-        table = tables[0];
-        for (let i = 0; i < tables.length; i++) {
-            if (tables[i].classList.contains('selected')) {
-                table = tables[i];
-                break;
-            }
-        }
-        table.focus();
-        return;
-    }
+/**
+ * Switches the select mode of current displayed table
+ * @param {EventTarget} target triggering button
+ * @returns {void}
+ */
+//eslint-disable-next-line no-unused-vars
+function switchTableMode(target) {
+    const table = elGetById(app.id + 'List');
+    const mode = table.getAttribute('data-mode');
 
-    if (table !== null) {
-        const sel = table.getElementsByClassName('selected');
-        if (rownr === undefined) {
-            if (sel.length === 0) {
-                let row = table.getElementsByTagName('tbody')[0].rows[0];
-                if (row === null) {
-                    return;
-                }
-                if (row.classList.contains('not-clickable')) {
-                    row = table.getElementsByTagName('tbody')[0].rows[1];
-                }
-                if (row === null) {
-                    return;
-                }
-                row.focus();
-                row.classList.add('selected');
-            }
-            else {
-                sel[0].focus();
-            }
+    if (mode === null) {
+        table.setAttribute('data-mode', 'select');
+        target.classList.add('selected');
+        target.classList.remove('rounded-end');
+        target.nextElementSibling.classList.remove('d-none');
+    }
+    else {
+        table.removeAttribute('data-mode');
+        target.classList.remove('selected');
+        target.classList.add('rounded-end');
+        target.nextElementSibling.classList.add('d-none');
+        selectAllRows(table, false);
+    }
+}
+
+/**
+ * Selects all rows in table body
+ * @param {HTMLElement} table table element
+ * @param {boolean} select true = select all rows, false = clear selection
+ * @returns {void}
+ */
+function selectAllRows(table, select) {
+    const rows = table.querySelectorAll('tbody > tr');
+    let firstType = undefined;
+    for (const row of rows) {
+        if (row.lastElementChild.lastElementChild !== null) {
+            firstType = getData(row, 'type');
+            break;
+        }
+    }
+    for (const row of rows) {
+        const check = row.lastElementChild.lastElementChild;
+        if (check === null ||
+            row.classList.contains('not-clickable') ||
+            (getData(row, 'type') !== firstType && select === true))
+        {
+            continue;
+        }
+        if (select === true) {
+            row.classList.add('selected');
+            check.textContent = ligatures['checked'];
         }
         else {
-            if (sel && sel.length > 0) {
-                sel[0].classList.remove('selected');
-            }
-            const rows = table.getElementsByTagName('tbody')[0].rows;
-            const rowsLen = rows.length;
-            if (rowsLen < rownr) {
-                rownr = 0;
-            }
-            if (rowsLen > rownr) {
-                rows[rownr].focus();
-                rows[rownr].classList.add('selected');
-            }
+            row.classList.remove('selected');
+            check.textContent = ligatures['unchecked'];
         }
-        scrollFocusIntoView();
+    }
+    showTableSelectionCount();
+}
+
+/**
+ * Checks if table is in select mode and selects the row(s)
+ * @param {Event} event triggering event
+ * @returns {boolean} true if table in select mode, else false
+ */
+function selectRow(event) {
+    const table = event.target.closest('TABLE');
+    const mode = table.getAttribute('data-mode');
+    if (event.ctrlKey &&
+        mode === null)
+    {
+        //enable select mode
+        switchTableMode(elGetById(app.id + 'SelectModeBtn'));
+    }
+    else if (mode === null) {
+        return false;
+    }
+    //in row select mode
+    const row = event.target.closest('TR');
+    if (row.classList.contains('not-clickable') &&
+        event.target.parentNode.nodeName !== 'TH') {
+        return true;
+    }
+    if (event.target.parentNode.nodeName === 'TH') {
+        const select = event.target.textContent === ligatures['unchecked']
+            ? true
+            : false;
+        event.target.textContent = select === true
+            ? ligatures['checked']
+            : ligatures['unchecked'];
+        selectAllRows(table, select);
+    }
+    else if (event.shiftKey) {
+        let lastPos = getData(table, 'last-selected');
+        if (lastPos === undefined) {
+            lastPos = 0;
+        }
+        const pos = elGetIndex(row);
+        setData(table, 'last-selected', pos);
+        let first;
+        let last;
+        if (lastPos < pos) {
+            first = lastPos;
+            last = pos;
+        }
+        else {
+            first = pos;
+            last = lastPos;
+        }
+        const rows = table.querySelector('tbody').querySelectorAll('tr');
+        const firstType = getData(rows[first], 'type');
+        for (let i = first; i <= last; i++) {
+            if (getData(rows[i], 'type') !== firstType) {
+                continue;
+            }
+            selectSingleRow(rows[i], true);
+        }
+    }
+    else {
+        selectSingleRow(row, null);
+        setData(table, 'last-selected', elGetIndex(row));
+    }
+    showTableSelectionCount();
+    event.preventDefault();
+    event.stopPropagation();
+    return true;
+}
+
+/**
+ * Selects / unselects a single row
+ * @param {HTMLElement} row row to select or unselect
+ * @param {boolean} [select] true = select, false = unselect, null = toggle
+ * @returns {void}
+ */
+function selectSingleRow(row, select) {
+    const check = row.lastElementChild.lastElementChild;
+    if (check === null) {
+        return;
+    }
+    if ((select === null && row.classList.contains('selected')) ||
+        select === false)
+    {
+        check.textContent = ligatures['unchecked'];
+        row.classList.remove('selected');
+    }
+    else {
+        check.textContent = ligatures['checked'];
+        row.classList.add('selected');
     }
 }
 
-function scrollFocusIntoView() {
-    const el = document.activeElement;
-    const posY = el.getBoundingClientRect().top;
-    const height = el.offsetHeight;
-    let headerHeight = el.parentNode.parentNode.offsetTop;
-    if (window.innerHeight > window.innerWidth) {
-        headerHeight += document.getElementById('header').offsetHeight;
+/**
+ * Shows the number of selections in the dropdown
+ * @returns {void}
+ */
+function showTableSelectionCount() {
+    const table = elGetById(app.id + 'List');
+    const dropdown = document.querySelector('#' + app.id + 'SelectionDropdown');
+    const rows = table.querySelectorAll('tbody > tr.selected');
+    const count = rows.length;
+    let validSelection = true;
+    if (count > 1) {
+        const firstType = getData(rows[0], 'type');
+        for (const row of rows) {
+            if (getData(row, 'type') !== firstType) {
+                validSelection = false;
+                break;
+            }
+        }
     }
-    const footerHeight = document.getElementsByTagName('footer')[0].offsetHeight;
-    const parentHeight = window.innerHeight - headerHeight - footerHeight;
-    const treshold = height / 2;
-    //console.log('posY: ' + posY);
-    //console.log('height: ' + height);
-    //console.log('treshold: ' + treshold);
-    //console.log('parentHeight: ' + parentHeight);
-    //console.log('headerHeight:' + headerHeight);
-    //console.log('footerHeight:' + footerHeight);
-    if (posY <= headerHeight + treshold) {
-        //console.log('0, - height');
-        window.scrollBy(0, - height);
+    if (validSelection === true) {
+        dropdown.querySelector('small').textContent = count + ' ' + tn('selected');
     }
-    else if (posY + height > parentHeight - treshold) {
-        //console.log('0, height');
-        window.scrollBy(0, height);
+    else {
+        dropdown.querySelector('small').textContent = tn('Invalid selection');
     }
-}
-
-function navigateTable(table, keyCode) {
-    const cur = document.activeElement;
-    if (cur) {
-        let next = null;
-        let handled = false;
-        if (keyCode === 'ArrowDown') {
-            next = cur.nextElementSibling;
-            if (next === null) {
-                return;
-            }
-            if (next.classList.contains('not-clickable')) {
-                next = next.nextElementSibling;
-            }
-            handled = true;
+    const btns = dropdown.querySelectorAll('button');
+    for (const btn of btns) {
+        if (count === 0 ||
+            validSelection === false)
+        {
+            btn.setAttribute('disabled', 'disabled');
         }
-        else if (keyCode === 'ArrowUp') {
-            next = cur.previousElementSibling;
-            if (next === null) {
-                return;
-            }
-            if (next.classList.contains('not-clickable')) {
-                next = next.previousElementSibling;
-            }
-            handled = true;
-        }
-        else if (keyCode === ' ') {
-            const popupBtn = cur.lastChild.firstChild;
-            if (popupBtn.nodeName === 'A') {
-                popupBtn.click();
-            }
-            handled = true;
-        }
-        else if (keyCode === 'Enter') {
-            cur.firstChild.click();
-            handled = true;
-        }
-        else if (keyCode === 'Escape') {
-            cur.blur();
-            cur.classList.remove('selected');
-            handled = true;
-        }
-        if (handled === true) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-        if (next) {
-            cur.classList.remove('selected');
-            next.classList.add('selected');
-            next.focus();
-            scrollFocusIntoView();
+        else {
+            btn.removeAttribute('disabled');
         }
     }
 }
 
-function dragAndDropTable(table) {
-    const tableBody = document.getElementById(table).getElementsByTagName('tbody')[0];
-    tableBody.addEventListener('dragstart', function (event) {
+/**
+ * Initializes a table body for drag and drop of rows
+ * @param {string} tableId table id
+ * @returns {void}
+ */
+function dragAndDropTable(tableId) {
+    const tableBody = document.querySelector('#' + tableId + ' > tbody');
+    tableBody.addEventListener('dragstart', function(event) {
         if (event.target.nodeName === 'TR') {
-            hideMenu();
             event.target.classList.add('opacity05');
+            // @ts-ignore
             event.dataTransfer.setDragImage(event.target, 0, 0);
             event.dataTransfer.effectAllowed = 'move';
-            event.dataTransfer.setData('Text', event.target.getAttribute('id'));
-            dragEl = event.target.cloneNode(true);
+            dragEl = event.target;
         }
     }, false);
-    tableBody.addEventListener('dragleave', function (event) {
-        event.preventDefault();
-        if (dragEl === undefined || dragEl.nodeName !== 'TR') {
-            return;
+
+    tableBody.addEventListener('dragenter', function(event) {
+        const target = event.target.nodeName === 'TD'
+            ? event.target.parentNode
+            : event.target;
+        if (dragEl !== undefined &&
+            dragEl.nodeName === target.nodeName)
+        {
+            target.classList.add('dragover');
         }
-        let target = event.target;
-        if (event.target.nodeName === 'TD') {
-            target = event.target.parentNode;
-        }
-        if (target.nodeName === 'TR') {
+    }, false);
+
+    tableBody.addEventListener('dragleave', function(event) {
+        const target = event.target.nodeName === 'TD'
+            ? event.target.parentNode
+            : event.target;
+        if (dragEl !== undefined &&
+            dragEl.nodeName === target.nodeName)
+        {
             target.classList.remove('dragover');
         }
     }, false);
-    tableBody.addEventListener('dragover', function (event) {
+
+    tableBody.addEventListener('dragover', function(event) {
         event.preventDefault();
-        if (dragEl === undefined || dragEl.nodeName !== 'TR') {
-            return;
-        }
-        const tr = tableBody.getElementsByClassName('dragover');
-        const trLen = tr.length;
-        for (let i = 0; i < trLen; i++) {
-            tr[i].classList.remove('dragover');
-        }
-        let target = event.target;
-        if (event.target.nodeName === 'TD') {
-            target = event.target.parentNode;
-        }
-        if (target.nodeName === 'TR') {
-            target.classList.add('dragover');
-        }
         event.dataTransfer.dropEffect = 'move';
     }, false);
-    tableBody.addEventListener('dragend', function (event) {
-        event.preventDefault();
-        if (dragEl === undefined || dragEl.nodeName !== 'TR') {
-            return;
-        }
-        const tr = tableBody.getElementsByClassName('dragover');
-        const trLen = tr.length;
-        for (let i = 0; i < trLen; i++) {
-            tr[i].classList.remove('dragover');
-        }
-        if (document.getElementById(event.dataTransfer.getData('Text'))) {
-            document.getElementById(event.dataTransfer.getData('Text')).classList.remove('opacity05');
-        }
-        dragEl = undefined;
-    }, false);
-    tableBody.addEventListener('drop', function (event) {
+
+    tableBody.addEventListener('drop', function(event) {
         event.stopPropagation();
         event.preventDefault();
-        if (dragEl === undefined || dragEl.nodeName !== 'TR') {
+        if (dragEl === undefined ||
+            dragEl.nodeName !== 'TR')
+        {
             return;
         }
-        let target = event.target;
-        if (event.target.nodeName === 'TD') {
-            target = event.target.parentNode;
+        const target = event.target.closest('TR');
+        target.classList.remove('dragover');
+        const newSongPos = getData(target, 'pos');
+        const oldSongPos = getData(dragEl, 'pos');
+        if (oldSongPos === newSongPos) {
+            return;
         }
-        const oldSongpos = getAttDec(document.getElementById(event.dataTransfer.getData('Text')), 'data-songpos');
-        const newSongpos = getAttDec(target, 'data-songpos');
-        document.getElementById(event.dataTransfer.getData('Text')).remove();
+        // set dragged element uri to undefined to force table row replacement
+        setData(dragEl, 'uri', undefined);
+        elHide(dragEl);
+        // apply new order
+        setUpdateViewId(tableId);
+        switch(app.id) {
+            case 'QueueCurrent': {
+                queueMoveSong(oldSongPos, newSongPos);
+                break;
+            }
+            case 'BrowsePlaylistDetail': {
+                currentPlaylistMoveSong(oldSongPos, newSongPos);
+                break;
+            }
+            // No Default
+        }
+    }, false);
+
+    tableBody.addEventListener('dragend', function() {
         dragEl.classList.remove('opacity05');
-        tableBody.insertBefore(dragEl, target);
-        const tr = tableBody.getElementsByClassName('dragover');
-        const trLen = tr.length;
-        for (let i = 0; i < trLen; i++) {
-            tr[i].classList.remove('dragover');
-        }
-        document.getElementById(table).classList.add('opacity05');
-        if (app.current.app === 'Queue' && app.current.tab === 'Current') {
-            sendAPI("MPD_API_QUEUE_MOVE_TRACK", { "from": oldSongpos, "to": newSongpos });
-        }
-        else if (app.current.app === 'Browse' && app.current.tab === 'Playlists' && app.current.view === 'Detail') {
-            playlistMoveTrack(oldSongpos, newSongpos);
-        }
+        dragEl = undefined;
     }, false);
 }
 
-function dragAndDropTableHeader(table) {
-    let tableHeader;
-    if (document.getElementById(table + 'List')) {
-        tableHeader = document.getElementById(table + 'List').getElementsByTagName('tr')[0];
-    }
-    else {
-        tableHeader = table.getElementsByTagName('tr')[0];
-        table = 'BrowseDatabase';
-    }
+/**
+ * Initializes a table header for drag and drop of columns
+ * @param {string} tableName table name
+ * @returns {void}
+ */
+function dragAndDropTableHeader(tableName) {
+    const tableHeader = document.querySelector('#' + tableName + 'List > thead > tr');
 
-    tableHeader.addEventListener('dragstart', function (event) {
+    tableHeader.addEventListener('dragstart', function(event) {
         if (event.target.nodeName === 'TH') {
             event.target.classList.add('opacity05');
+            // @ts-ignore
             event.dataTransfer.setDragImage(event.target, 0, 0);
             event.dataTransfer.effectAllowed = 'move';
             event.dataTransfer.setData('Text', event.target.getAttribute('data-col'));
-            dragEl = event.target.cloneNode(true);
+            dragEl = event.target;
         }
     }, false);
-    tableHeader.addEventListener('dragleave', function (event) {
-        event.preventDefault();
-        if (dragEl === undefined || dragEl.nodeName !== 'TH') {
-            return;
+
+    tableHeader.addEventListener('dragenter', function(event) {
+        if (dragEl !== undefined &&
+            dragEl.nodeName === event.target.nodeName)
+        {
+            event.target.classList.add('dragover-th');
         }
-        if (event.target.nodeName === 'TH') {
+    }, false);
+
+    tableHeader.addEventListener('dragleave', function(event) {
+        if (dragEl !== undefined &&
+            dragEl.nodeName === event.target.nodeName)
+        {
             event.target.classList.remove('dragover-th');
         }
     }, false);
-    tableHeader.addEventListener('dragover', function (event) {
+
+    tableHeader.addEventListener('dragover', function(event) {
+        // prevent default to allow drop
         event.preventDefault();
-        if (dragEl === undefined || dragEl.nodeName !== 'TH') {
-            return;
-        }
-        const th = tableHeader.getElementsByClassName('dragover-th');
-        const thLen = th.length;
-        for (let i = 0; i < thLen; i++) {
-            th[i].classList.remove('dragover-th');
-        }
-        if (event.target.nodeName === 'TH') {
-            event.target.classList.add('dragover-th');
-        }
         event.dataTransfer.dropEffect = 'move';
     }, false);
-    tableHeader.addEventListener('dragend', function (event) {
-        event.preventDefault();
-        if (dragEl === undefined || dragEl.nodeName !== 'TH') {
-            return;
-        }
-        const th = tableHeader.getElementsByClassName('dragover-th');
-        const thLen = th.length;
-        for (let i = 0; i < thLen; i++) {
-            th[i].classList.remove('dragover-th');
-        }
-        if (this.querySelector('[data-col=' + event.dataTransfer.getData('Text') + ']')) {
-            this.querySelector('[data-col=' + event.dataTransfer.getData('Text') + ']').classList.remove('opacity05');
-        }
-        dragEl = undefined;
-    }, false);
-    tableHeader.addEventListener('drop', function (event) {
+
+    tableHeader.addEventListener('drop', function(event) {
         event.stopPropagation();
         event.preventDefault();
-        if (dragEl === undefined || dragEl.nodeName !== 'TH') {
+        if (dragEl === undefined ||
+            dragEl.nodeName !== 'TH')
+        {
             return;
         }
-        this.querySelector('[data-col=' + event.dataTransfer.getData('Text') + ']').remove();
-        dragEl.classList.remove('opacity05');
+        event.target.classList.remove('dragover-th');
+        if (event.dataTransfer.getData('Text') === event.target.getAttribute('data-col')) {
+            return;
+        }
+        // move element
+        // @ts-ignore
         tableHeader.insertBefore(dragEl, event.target);
-        const th = tableHeader.getElementsByClassName('dragover-th');
-        const thLen = th.length;
-        for (let i = 0; i < thLen; i++) {
-            th[i].classList.remove('dragover-th');
-        }
-        if (document.getElementById(table + 'List')) {
-            document.getElementById(table + 'List').classList.add('opacity05');
-            saveCols(table);
-        }
-        else {
-            saveCols(table, this.parentNode.parentNode);
-        }
+        // save this state
+        setUpdateViewId(tableName + 'List');
+        saveCols(tableName);
+    }, false);
+
+    tableHeader.addEventListener('dragend', function() {
+        dragEl.classList.remove('opacity05');
+        dragEl = undefined;
     }, false);
 }
 
-function setColTags(table) {
-    const tags = settings.tags.slice();
-    if (settings.featTags === false) {
+/**
+ * Sets the available table columns
+ * @param {string} tableName table name
+ * @returns {object} array of available columns
+ */
+function setColTags(tableName) {
+    switch(tableName) {
+        case 'BrowseRadioWebradiodb':
+            return ["Country", "Description", "Genre", "Homepage", "Languages", "Name", "StreamUri", "Codec", "Bitrate"];
+        case 'BrowseRadioRadiobrowser':
+            return ["clickcount", "country", "homepage", "language", "lastchangetime", "lastcheckok", "tags", "url_resolved", "votes"];
+        case 'BrowseDatabaseAlbumList': {
+            const tags = settings.tagListAlbum.slice();
+            tags.push('Discs', 'SongCount', 'Duration', 'LastModified');
+            return tags.filter(function(value) {
+                return value !== 'Disc';
+            });
+        }
+        case 'BrowseDatabaseAlbumDetailInfo': {
+            const tags = settings.tagListAlbum.slice();
+            tags.push('Discs', 'SongCount', 'Duration', 'LastModified');
+            return tags.filter(function(value) {
+                return value !== 'Disc' &&
+                       value !== 'Album';
+            });
+        }
+        case 'QueueJukeboxAlbum': {
+            const tags = settings.tagListAlbum.slice();
+            tags.push('Pos', 'Discs', 'SongCount', 'Duration', 'LastModified');
+            return tags.filter(function(value) {
+                return value !== 'Disc';
+            });
+        }
+        // No Default
+    }
+
+    const tags = settings.tagList.slice();
+    if (features.featTags === false) {
         tags.push('Title');
     }
-    tags.push('Duration');
-    tags.push('LastModified');
-    if (table === 'QueueCurrent' || table === 'BrowsePlaylistsDetail' || table === 'QueueLastPlayed' || table === 'QueueJukebox') {
-        tags.push('Pos');
+    tags.push('Duration', 'LastModified');
+
+    switch(tableName) {
+        case 'QueueCurrent':
+            tags.push('AudioFormat', 'Priority');
+            //fall through
+        case 'BrowsePlaylistDetail':
+        case 'QueueJukeboxSong':
+        case 'QueueJukeboxAlbum':
+            tags.push('Pos');
+            break;
+        case 'BrowseFilesystem':
+            tags.push('Type', 'Filename');
+            break;
+        case 'Playback':
+            tags.push('AudioFormat', 'Filetype');
+            if (features.featLyrics === true) {
+                tags.push('Lyrics');
+            }
+            break;
+        case 'QueueLastPlayed':
+            tags.push('Pos', 'LastPlayed');
+            break;
+        // No Default
     }
-    if (table === 'BrowseFilesystem') {
-        tags.push('Type');
-        tags.push('Filename');
-    }
-    if (table === 'Playback') {
-        tags.push('Filetype');
-        tags.push('Fileformat');
-        if (settings.featLyrics === true) {
-            // tags.push('Lyrics');
-        }
-    }
-    if (table === 'QueueLastPlayed') {
-        tags.push('LastPlayed');
-    }
+    //sort tags 
     tags.sort();
-    tags.push('dropdownTitleSticker');
-    if (settings.featStickers === true) {
+    //append stickers
+    if (features.featStickers === true) {
+        tags.push('dropdownTitleSticker');
         for (const sticker of stickerList) {
             tags.push(sticker);
         }
@@ -364,94 +421,144 @@ function setColTags(table) {
     return tags;
 }
 
-function setColsChecklist(table) {
-    let tagChks = '';
-    const tags = setColTags(table);
-    for (let i = 0; i < tags.length; i++) {
-        if (table === 'Playback' && tags[i] === 'Title') {
+/**
+ * Creates the select columns checkbox list
+ * @param {string} tableName table name
+ * @param {HTMLElement} menu element to populate
+ * @returns {void}
+ */
+function setColsChecklist(tableName, menu) {
+    const tags = setColTags(tableName);
+    for (let i = 0, j = tags.length; i < j; i++) {
+        if (tableName === 'Playback' &&
+            (tags[i] === 'Title' || tags[i].indexOf('MUSICBRAINZ_') === 0))
+        {
             continue;
         }
         if (tags[i] === 'dropdownTitleSticker') {
-            tagChks += '<h6 class="dropdown-header pl-0">' + t('Sticker') + '</h6>';
+            menu.appendChild(
+                elCreateTextTn('h6', {"class": ["dropdown-header"]}, 'Sticker')
+            );
         }
         else {
-            tagChks += '<div>' +
-                '<button class="btn btn-secondary btn-xs clickable mi mi-small' +
-                (settings['cols' + table].includes(tags[i]) ? ' active' : '') + '" name="' + tags[i] + '">' +
-                (settings['cols' + table].includes(tags[i]) ? 'check' : 'radio_button_unchecked') + '</button>' +
-                '<label class="form-check-label" for="' + tags[i] + '">&nbsp;&nbsp;' + t(tags[i]) + '</label>' +
-                '</div>';
-        }
-    }
-    return tagChks;
-}
-
-function setCols(table) {
-    const colsChkList = document.getElementById(table + 'ColsDropdown');
-    if (colsChkList) {
-        colsChkList.firstChild.innerHTML = setColsChecklist(table);
-    }
-    let sort = app.current.sort;
-
-    if (table === 'Search' && app.apps.Search.sort === 'Title') {
-        if (settings.tags.includes('Title')) {
-            sort = 'Title';
-        }
-        else if (settings.featTags === false) {
-            sort = 'Filename';
-        }
-        else {
-            sort = '-';
-        }
-    }
-
-    if (table !== 'Playback') {
-        let heading = '';
-        if (table === 'QueueCurrent') {
-            heading += '<th data-col="Img"></th>';
-        }
-        for (let i = 0; i < settings['cols' + table].length; i++) {
-            let h = settings['cols' + table][i];
-            heading += '<th draggable="true" data-col="' + h + '">';
-            if (h === 'Track' || h === 'Pos') {
-                h = '#';
+            const btnId = tableName + tags[i] + 'Col';
+            const btn = elCreateText('button', {"class": ["btn", "btn-secondary", "btn-xs", "clickable", "mi", "mi-sm", "me-2"],
+                "id": btnId, "name": tags[i]}, 'radio_button_unchecked');
+            if (settings['cols' + tableName].includes(tags[i])) {
+                btn.classList.add('active');
+                btn.textContent = 'check';
             }
-            heading += t(h);
-
-            if (table === 'Search' && (h === sort || '-' + h === sort)) {
-                let sortdesc = false;
-                if (app.current.sort.indexOf('-') === 0) {
-                    sortdesc = true;
-                }
-                heading += '<span class="sort-dir mi pull-right">' + (sortdesc === true ? 'arrow_drop_up' : 'arrow_drop_down') + '</span>';
-            }
-            heading += '</th>';
+            const div = elCreateNodes('div', {"class": ["form-check"]}, [
+                btn,
+                elCreateTextTn('label', {"class": ["form-check-label"], "for": btnId}, tags[i])
+            ]);
+            menu.appendChild(div);
         }
-        if (settings.featTags === true) {
-            heading += '<th data-col="Action"><a data-title-phrase="' + t('Columns') + '" href="#" class="text-secondary align-middle mi mi-small">settings</a></th>';
-        }
-        else {
-            heading += '<th></th>';
-        }
-        document.getElementById(table + 'List').getElementsByTagName('tr')[0].innerHTML = heading;
     }
 }
 
-function saveCols(table, tableEl) {
-    const colsDropdown = document.getElementById(table + 'ColsDropdown');
-    let header;
+/**
+ * Checks if a table column is sortable
+ * @param {string} tableName name of the table
+ * @param {string} colName name of the column
+ * @returns {boolean} true if clickable, else false
+ */
+function isColSortable(tableName, colName) {
+    if (tableName === 'QueueCurrent' &&
+        features.featAdvqueue === false)
+    {
+        return false;
+    }
+    if (tableName !== 'Search' &&
+        tableName !== 'QueueCurrent')
+    {
+        return false;
+    }
+    if (colName === 'Duration' ||
+        colName === 'AudioFormat' ||
+        colName.indexOf('sticker') === 0)
+    {
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Sets the table header columns
+ * @param {string} tableName table name
+ * @returns {void}
+ */
+function setCols(tableName) {
+    if (tableName === 'Search' &&
+        app.cards.Search.sort.tag === 'Title')
+    {
+        if (settings.tagList.includes('Title')) {
+            app.cards.Search.sort.tag = 'Title';
+        }
+        else if (features.featTags === false) {
+            app.cards.Search.sort.tag = 'Filename';
+        }
+        else {
+            app.cards.Search.sort.tag = '-';
+        }
+    }
+
+    const thead = document.querySelector('#' + tableName + 'List > thead > tr');
+    elClear(thead);
+
+    for (let i = 0, j = settings['cols' + tableName].length; i < j; i++) {
+        const hname = settings['cols' + tableName][i];
+        const clickable = isColSortable(tableName, hname)
+            ? 'clickable'
+            : 'not-clickable';
+        const th = elCreateTextTn('th', {"class": [clickable], "draggable": "true", "data-col": settings['cols' + tableName][i]}, hname);
+        thead.appendChild(th);
+
+        const sort = tableName === 'Search'
+            ? app.cards.Search.sort
+            : tableName === 'BrowseRadioWebradiodb'
+                ? app.cards.Browse.tabs.Radio.views.Webradiodb.sort
+                : tableName === 'QueueCurrent'
+                    ? app.cards.Queue.tabs.Current.sort
+                    : undefined;
+        if ((tableName === 'Search' && hname === sort.tag) ||
+            (tableName === 'BrowseRadioWebradiodb' && hname === sort.tag) ||
+            (tableName === 'QueueCurrent' && hname === sort.tag)
+           )
+        {
+            addSortIndicator(th, sort.desc);
+        }
+    }
+    //append action column
+    const th = elCreateEmpty('th', {"data-col": "Action"});
+    if (features.featTags === true) {
+        th.appendChild(
+            pEl.columnsBtn.cloneNode(true)
+        );
+    }
+    th.appendChild(
+        pEl.selectAllBtn.cloneNode(true)
+    );
+    thead.appendChild(th);
+}
+
+/**
+ * Saves the selected columns for the table
+ * @param {string} tableName table name
+ * @param {HTMLElement} [tableEl] table element or undefined
+ * @returns {void}
+ */
+function saveCols(tableName, tableEl) {
+    const colsDropdown = elGetById(tableName + 'ColsDropdown');
     if (tableEl === undefined) {
-        header = document.getElementById(table + 'List').getElementsByTagName('tr')[0];
+        //select the table by name
+        tableEl = elGetById(tableName + 'List');
     }
-    else if (typeof (tableEl) === 'string') {
-        header = document.querySelector(tableEl).getElementsByTagName('tr')[0];
-    }
-    else {
-        header = tableEl.getElementsByTagName('tr')[0];
-    }
-    if (colsDropdown) {
-        const colInputs = colsDropdown.firstChild.getElementsByTagName('button');
-        for (let i = 0; i < colInputs.length; i++) {
+    const header = tableEl.querySelector('tr');
+    if (colsDropdown !== null) {
+        //apply the columns select list to the table header
+        const colInputs = colsDropdown.firstChild.querySelectorAll('button');
+        for (let i = 0, j = colInputs.length; i < j; i++) {
             if (colInputs[i].getAttribute('name') === null) {
                 continue;
             }
@@ -462,98 +569,177 @@ function saveCols(table, tableEl) {
                 }
             }
             else if (!th) {
-                th = document.createElement('th');
-                th.innerText = colInputs[i].name;
-                th.setAttribute('data-col', colInputs[i].name);
+                th = elCreateTextTn('th', {"data-col": colInputs[i].name}, colInputs[i].name);
                 header.insertBefore(th, header.lastChild);
             }
         }
     }
-
-    const params = { "table": "cols" + table, "cols": [] };
-    const ths = header.getElementsByTagName('th');
-    for (let i = 0; i < ths.length; i++) {
+    //construct columns to save from actual table header
+    const params = {"table": "cols" + tableName, "cols": []};
+    const ths = header.querySelectorAll('th');
+    for (let i = 0, j = ths.length; i < j; i++) {
         const name = ths[i].getAttribute('data-col');
-        if (name !== 'Action' && name !== null && name !== 'Img') {
+        if (name !== 'Action' &&
+            name !== null)
+        {
             params.cols.push(name);
         }
     }
-    sendAPI("MYMPD_API_COLS_SAVE", params, getSettings);
+    sendAPI("MYMPD_API_COLS_SAVE", params, saveColsCheckError, true);
 }
 
+/**
+ * Saves the fields for the playback card
+ * @param {string} tableName table name
+ * @param {string} dropdownId id fo the column select dropdown
+ * @returns {void}
+ */
 //eslint-disable-next-line no-unused-vars
-function saveColsPlayback(table) {
-    const colInputs = document.getElementById(table + 'ColsDropdown').firstChild.getElementsByTagName('button');
-    const header = document.getElementById('cardPlaybackTags');
-
-    for (let i = 0; i < colInputs.length; i++) {
-        let th = document.getElementById('current' + colInputs[i].name);
-        if (colInputs[i].classList.contains('active') === false) {
-            if (th) {
-                th.remove();
-            }
-        }
-        else if (!th) {
-            th = document.createElement('div');
-            th.innerHTML = '<small>' + t(colInputs[i].name) + ' &bull; </small><span></span>';
-            th.setAttribute('id', 'current' + colInputs[i].name);
-            setAttEnc(th, 'data-tag', colInputs[i].name);
-            header.appendChild(th);
-        }
-    }
-
-    const params = { "table": "cols" + table, "cols": [] };
-    const ths = header.getElementsByTagName('div');
-    for (let i = 0; i < ths.length; i++) {
-        const name = getAttDec(ths[i], 'data-tag');
+function saveColsDropdown(tableName, dropdownId) {
+    const params = {"table": tableName, "cols": []};
+    const colInputs = document.querySelectorAll('#' + dropdownId + ' button.active');
+    for (let i = 0, j = colInputs.length; i < j; i++) {
+        const name = colInputs[i].getAttribute('name');
         if (name) {
             params.cols.push(name);
         }
     }
-    sendAPI("MYMPD_API_COLS_SAVE", params, getSettings);
+    sendAPI("MYMPD_API_COLS_SAVE", params, saveColsCheckError, true);
 }
 
-function replaceTblRow(row, el) {
-    const menuEl = row.querySelector('[data-popover]');
-    let result = false;
-    if (menuEl) {
-        hideMenu();
-    }
-    if (row.classList.contains('selected')) {
-        el.classList.add('selected');
-        el.focus();
-        result = true;
-    }
-    row.replaceWith(el);
-    return result;
+/**
+ * Handles the jsonrpc response for MYMPD_API_COLS_SAVE
+ * @returns {void}
+ */
+function saveColsCheckError() {
+    // refresh the settings
+    getSettings(parseSettings);
 }
 
-function updateTable(obj, list, perRowCallback, createRowCellsCallback) {
-    const table = document.getElementById(list + 'List');
-    const tbody = table.getElementsByTagName('tbody')[0];
-    const colspan = settings['cols' + list] !== undefined ? settings['cols' + list].length : 0;
-
-    if (obj.error) {
-        tbody.innerHTML = '<tr class="not-clickable"><td colspan="' + (colspan + 1) + '">' +
-            '<div class="alert alert-danger">' +
-            '<span class="mi">error_outline</span>&nbsp;&nbsp;' + t(obj.error.message, obj.error.data) + '</div></td></tr>';
-        table.classList.remove('opacity05');
+/**
+ * Toggles the sorting of the table
+ * @param {EventTarget} th clicked table header column
+ * @param {string} colName column name
+ * @returns {void}
+ */
+function toggleSort(th, colName) {
+    if (th.nodeName !== 'TH' ||
+        th.textContent === '' ||
+        th.getAttribute('data-col') === 'Action')
+    {
         return;
     }
 
+    if (app.current.sort.tag === colName) {
+        //toggle sort direction
+        app.current.sort.desc = app.current.sort.desc === false
+            ? true
+            : false;
+    }
+    else {
+        //sort by new colum ascending
+        app.current.sort.desc = false;
+        app.current.sort.tag = colName;
+    }
+    addSortIndicator(th, app.current.sort.desc);
+}
+
+/**
+ * Add the sort indicator and removes old ones.
+ * @param {HTMLElement | EventTarget} th header element
+ * @param {boolean} desc descending?
+ * @returns {void}
+ */
+function addSortIndicator(th, desc) {
+    // remove old sort indicator
+    const oldIndicators = th.parentNode.querySelectorAll('.sort-dir');
+    for (const i of oldIndicators) {
+        i.classList.remove('sort-dir', 'sort-desc', 'sort-asc');
+    }
+    const order = desc === false
+        ? 'asc'
+        : 'desc';
+    // add new sort indicator
+    th.classList.add('sort-dir', 'sort-' + order);
+}
+
+/**
+ * Replaces a table row and tries to keep the selection state
+ * @param {boolean} mode the selection mode
+ * @param {HTMLElement} row row to replace
+ * @param {HTMLElement} el replacement row
+ * @returns {void}
+ */
+function replaceTblRow(mode, row, el) {
+    if (getData(row, 'uri') === getData(el, 'uri') &&
+        mode === true &&
+        row.lastElementChild.lastElementChild.textContent === ligatures.checked)
+    {
+        el.lastElementChild.lastElementChild.textContent = ligatures.checked;
+        el.classList.add('selected');
+    }
+    row.replaceWith(el);
+}
+
+/**
+ * Adds a row with discnumber to the table
+ * @param {number} disc discnumber
+ * @param {string} albumId the albumid
+ * @param {number} colspan column count
+ * @returns {HTMLElement} the created row
+ */
+function addDiscRow(disc, albumId, colspan) {
+    const row = elCreateNodes('tr', {"class": ["not-clickable"]}, [
+        elCreateNode('td', {},
+            elCreateText('span', {"class": ["mi"]}, 'album')
+        ),
+        elCreateTextTnNr('td', {"colspan": (colspan - 1)}, 'Discnum', disc),
+        elCreateNode('td', {"data-col": "Action"},
+            elCreateText('a', {"data-action": "popover", "data-contextmenu": "disc", "href": "#", "class": ["mi", "color-darkgrey"],
+                "data-title-phrase":"Actions"}, ligatures['more'])
+        )
+    ]);
+    setData(row, 'Disc', disc);
+    setData(row, 'AlbumId', albumId);
+    return row;
+}
+
+/**
+ * Updates the table from the jsonrpc response
+ * @param {object} obj jsonrpc response
+ * @param {string} list table name to populate
+ * @param {Function} [perRowCallback] callback per row
+ * @param {Function} [createRowCellsCallback] callback to create the row
+ * @returns {void}
+ */
+function updateTable(obj, list, perRowCallback, createRowCellsCallback) {
+    const table = elGetById(list + 'List');
+    const mode = table.getAttribute('data-mode') === 'select' 
+        ? true
+        : false;
+    const tbody = table.querySelector('tbody');
+    const colspan = settings['cols' + list] !== undefined
+        ? settings['cols' + list].length
+        : 0;
+
     const nrItems = obj.result.returnedEntities;
-    const tr = tbody.getElementsByTagName('tr');
-    const navigate = document.activeElement.parentNode.parentNode === table ? true : false;
-    let activeRow = 0;
+    let tr = tbody.querySelectorAll('tr');
+    const smallWidth = uiSmallWidthTagRows();
+
+    if (smallWidth === true) {
+        table.classList.add('smallWidth');
+    }
+    else {
+        table.classList.remove('smallWidth');
+    }
+
     //disc handling for album view
     let z = 0;
-    let lastDisc = obj.result.data.length > 0 && obj.result.data[0].Disc !== undefined ? parseInt(obj.result.data[0].Disc) : 0;
+    let lastDisc = obj.result.data.length > 0 && obj.result.data[0].Disc !== undefined ? Number(obj.result.data[0].Disc) : 0;
     if (obj.result.Discs !== undefined && obj.result.Discs > 1) {
-        const row = document.createElement('tr');
-        row.classList.add('not-clickable');
-        row.innerHTML = '<td><span class="mi">album</span></td><td colspan="' + colspan + '">' + t('Disc 1') + '</td>';
+        const row = addDiscRow(1, obj.result.AlbumId, colspan);
         if (z < tr.length) {
-            activeRow = replaceTblRow(tr[z], row) === true ? z : activeRow;
+            replaceTblRow(mode, tr[z], row);
         }
         else {
             tbody.append(row);
@@ -561,13 +747,11 @@ function updateTable(obj, list, perRowCallback, createRowCellsCallback) {
         z++;
     }
     for (let i = 0; i < nrItems; i++) {
-        if (obj.result.data[0].Disc !== undefined && lastDisc < parseInt(obj.result.data[i].Disc)) {
-            const row = document.createElement('tr');
-            row.classList.add('not-clickable');
-            row.innerHTML = '<td><span class="mi">album</span></td><td colspan="' + colspan + '">' +
-                t('Disc') + ' ' + e(obj.result.data[i].Disc) + '</td></tr>';
+        //disc handling for album view
+        if (obj.result.data[0].Disc !== undefined && lastDisc < Number(obj.result.data[i].Disc)) {
+            const row = addDiscRow(obj.result.data[i].Disc, obj.result.AlbumId, colspan);
             if (i + z < tr.length) {
-                activeRow = replaceTblRow(tr[i + z], row) === true ? i + z : activeRow;
+                replaceTblRow(mode, tr[i + z], row);
             }
             else {
                 tbody.append(row);
@@ -575,74 +759,304 @@ function updateTable(obj, list, perRowCallback, createRowCellsCallback) {
             z++;
             lastDisc = obj.result.data[i].Disc;
         }
-        const row = document.createElement('tr');
-        if (perRowCallback !== undefined && typeof (perRowCallback) === 'function') {
+        const row = elCreateEmpty('tr', {});
+        if (perRowCallback !== undefined && typeof(perRowCallback) === 'function') {
             perRowCallback(row, obj.result.data[i]);
         }
-        let tds = '';
-        row.setAttribute('tabindex', 0);
+        //data row
+        //set AlbumId
+        if (obj.result.data[i].AlbumId !== undefined) {
+            setData(row, 'AlbumId', obj.result.data[i].AlbumId);
+        }
+        //and browse tags
+        for (const tag of settings.tagListBrowse) {
+            if (albumFilters.includes(tag) &&
+                isEmptyTag(obj.result.data[i][tag]) === false)
+            {
+                setData(row, tag, obj.result.data[i][tag]);
+            }
+        }
         //set Title to name if not defined - for folders and playlists
         if (obj.result.data[i].Title === undefined) {
             obj.result.data[i].Title = obj.result.data[i].name;
         }
 
-        if (createRowCellsCallback !== undefined && typeof (createRowCellsCallback) === 'function') {
+        if (createRowCellsCallback !== undefined && typeof(createRowCellsCallback) === 'function') {
             //custom row content
             createRowCellsCallback(row, obj.result.data[i]);
         }
         else {
             //default row content
-            if (obj.result.data[i].Type === 'parentDir') {
-                row.innerHTML = '<td colspan="' + (colspan + 1) + '">..</td>';
-                row.setAttribute('title', t('Open parent folder'));
-            }
-            else {
-                if (list === 'QueueCurrent') {
-                    tds += '<td data-col="Img"><img class="covergrid-header mr-0"/></td>';
-                }
-                for (let c = 0; c < settings['cols' + list].length; c++) {
-                    tds += '<td data-col="' + encodeURI(settings['cols' + list][c]) + '">' +
-                        printValue(settings['cols' + list][c], obj.result.data[i][settings['cols' + list][c]]) +
-                        '</td>';
-                }
-                tds += '<td data-col="Action"><a href="#" class="mi color-darkgrey">' + ligatureMore + '</a></td>';
-                row.innerHTML = tds;
-            }
+            tableRow(row, obj.result.data[i], list, colspan, smallWidth);
         }
         if (i + z < tr.length) {
-            activeRow = replaceTblRow(tr[i + z], row) === true ? i + z : activeRow;
+            replaceTblRow(mode, tr[i + z], row);
         }
         else {
             tbody.append(row);
         }
-        if (list === 'QueueCurrent') {
-            if ('IntersectionObserver' in window) {
-                let options = {
-                    root: null,
-                    rootMargin: '0px',
-                };
-                let observer = new IntersectionObserver(setRowImage, options);
-                observer.observe(row);
-            }
-            else {
-                row.firstChild.firstChild.src = subdir + '/albumart/' + obj.result.data[i].uri;
-            }
-        }
     }
-    const trLen = tr.length - 1;
-    for (let i = trLen; i >= nrItems + z; i--) {
+    //remove obsolete lines
+    tr = tbody.querySelectorAll('tr');
+    for (let i = tr.length - 1; i >= nrItems + z; i --) {
         tr[i].remove();
-    }
-
-    if (navigate === true) {
-        focusTable(activeRow);
     }
 
     setPagination(obj.result.totalEntities, obj.result.returnedEntities);
 
     if (nrItems === 0) {
-        tbody.innerHTML = '<tr class="not-clickable"><td colspan="' + (colspan + 1) + '">' +
-            '<span class="mi">info</span>&nbsp;&nbsp;' + t('Empty list') + '</td></tr>';
+        tbody.appendChild(emptyRow(colspan + 1));
     }
-    table.classList.remove('opacity05');
+    unsetUpdateView(table);
+    setScrollViewHeight(table);
+    scrollToPosY(table.parentNode, app.current.scrollPos);
+}
+
+/**
+ * Creates the columns in the row
+ * @param {HTMLElement} row the row to populate
+ * @param {object} data data to populate
+ * @param {string} list table name
+ * @param {number} colspan number of columns
+ * @param {boolean} smallWidth true = print data in rows, false = print data in columns
+ * @returns {void}
+ */
+function tableRow(row, data, list, colspan, smallWidth) {
+    if (data.Type === 'parentDir') {
+        row.appendChild(elCreateText('td', {"colspan": (colspan + 1), "data-title-phrase": "Open parent folder"}, '..'));
+    }
+    else {
+        if (smallWidth === true) {
+            const td = elCreateEmpty('td', {"colspan": colspan});
+            for (let c = 0, d = settings['cols' + list].length; c < d; c++) {
+                td.appendChild(
+                    elCreateNodes('div', {"class": ["row"]}, [
+                        elCreateTextTn('small', {"class": ["col-3"]}, settings['cols' + list][c]),
+                        elCreateNode('span', {"data-col": settings['cols' + list][c], "class": ["col-9"]},
+                            printValue(settings['cols' + list][c], data[settings['cols' + list][c]])
+                        )
+                    ])
+                );
+            }
+            row.appendChild(td);
+        }
+        else {
+            for (let c = 0, d = settings['cols' + list].length; c < d; c++) {
+                row.appendChild(
+                    elCreateNode('td', {"data-col": settings['cols' + list][c]},
+                        printValue(settings['cols' + list][c], data[settings['cols' + list][c]])
+                    )
+                );
+            }
+        }
+        switch(app.id) {
+            case 'BrowsePlaylistDetail':
+                // add quick play and remove action
+                row.appendChild(
+                    pEl.actionPlaylistDetailTd.cloneNode(true)
+                );
+                break;
+            case 'QueueCurrent':
+                // add quick remove action
+                row.appendChild(
+                    pEl.actionQueueTd.cloneNode(true)
+                );
+                break;
+            case 'QueueJukeboxSong':
+            case 'QueueJukeboxAlbum':
+                // add quick play and remove action
+                row.appendChild(
+                    pEl.actionJukeboxTd.cloneNode(true)
+                );
+                break;
+            default:
+                // add quick play action
+                row.appendChild(
+                    pEl.actionTd.cloneNode(true)
+                );
+        }
+    }
+}
+
+/**
+ * Creates an empty list hint
+ * @param {number} colspan column count
+ * @returns {HTMLElement} created row
+ */
+function emptyRow(colspan) {
+    return elCreateNode('tr', {"class": ["not-clickable"]},
+        elCreateNode('td', {"colspan": colspan},
+            elCreateTextTn('div', {"class": ["alert", "alert-secondary"]}, 'Empty list')
+        )
+    );
+}
+
+/**
+ * Creates a loading list hint
+ * @param {number} colspan column count
+ * @returns {HTMLElement} created row
+ */
+function loadingRow(colspan) {
+    return elCreateNode('tr', {"class": ["not-clickable"]},
+        elCreateNode('td', {"colspan": colspan},
+            elCreateTextTn('div', {"class": ["alert", "alert-secondary"]}, 'Loading...')
+        )
+    );
+}
+
+/**
+ * Creates a row with the error message
+ * @param {object} obj jsonrpc error object
+ * @param {number} colspan column count
+ * @returns {HTMLElement} created row
+ */
+function errorRow(obj, colspan) {
+    return elCreateNode('tr', {"class": ["not-clickable"]},
+        elCreateNode('td', {"colspan": colspan},
+            elCreateTextTn('div', {"class": ["alert", "alert-danger"]}, obj.error.message, obj.error.data)
+        )
+    );
+}
+
+/**
+ * Creates a row with the warning message
+ * @param {string} message phrase to display
+ * @param {number} colspan column count
+ * @returns {HTMLElement} created row
+ */
+//eslint-disable-next-line no-unused-vars
+function warningRow(message, colspan) {
+    return elCreateNode('tr', {"class": ["not-clickable"]},
+        elCreateNode('td', {"colspan": colspan},
+            elCreateTextTn('div', {"class": ["alert", "alert-warning"]}, message)
+        )
+    );
+}
+
+/**
+ * Wrapper for checkResult with id selector
+ * @param {object} obj jsonrpc object to check
+ * @param {string} id table id
+ * @returns {boolean} true = result is not an error, else false
+ */
+function checkResultId(obj, id) {
+    return checkResult(obj, document.querySelector('#' + id + ' > tbody'));
+}
+
+/**
+ * Checks the json response for an error object and displays the error in the table body
+ * @param {object} obj jsonrpc object to check
+ * @param {HTMLElement} tbody body of the table
+ * @returns {boolean} false = result is  empty or an error, else true
+ */
+function checkResult(obj, tbody) {
+    //remove old alerts
+    const alert = tbody.querySelector('.alert');
+    if (alert) {
+        alert.parentNode.parentNode.remove();
+    }
+    if (obj.error ||
+        obj.result.returnedEntities === 0)
+    {
+        const thead = tbody.parentNode.querySelector('tr');
+        const colspan = thead !== null
+            ? thead.querySelectorAll('th').length
+            : 0;
+        elClear(tbody);
+        const tfoot = tbody.parentNode.querySelector('tfoot');
+        if (tfoot !== null) {
+            elClear(tfoot);
+        }
+        if (obj.error) {
+            tbody.appendChild(errorRow(obj, colspan));
+        }
+        else {
+            tbody.appendChild(emptyRow(colspan));
+        }
+        unsetUpdateView(tbody.parentNode);
+        setPagination(0, 0);
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Checks if we should display data in rows or cols
+ * @returns {boolean} true if window is small and the uiSmallWidthTagRows settings is true, else false
+ */
+function uiSmallWidthTagRows() {
+    if (settings.webuiSettings.smallWidthTagRows === true) {
+        return window.innerWidth < 576 ? true : false;
+    }
+    return false;
+}
+
+/**
+ * Handles the click on the actions column
+ * @param {MouseEvent} event click event
+ * @returns {void}
+ */
+function handleActionTdClick(event) {
+    event.preventDefault();
+    const action = event.target.getAttribute('data-action');
+    switch(action) {
+        case 'popover':
+            showContextMenu(event);
+            break;
+        case 'quickPlay':
+            clickQuickPlay(event.target);
+            break;
+        case 'quickRemove':
+            clickQuickRemove(event.target);
+            break;
+        default:
+            logError('Invalid action: ' + action);
+    }
+}
+
+/**
+ * Central table click handler.
+ * Handles clicks on table header and body.
+ * @param {MouseEvent} event the event to handle
+ * @returns {HTMLElement} the event target (row) to handle or null if it was handled or should not be handled
+ */
+function tableClickHandler(event) {
+    if (event.target.nodeName === 'CAPTION') {
+        return null;
+    }
+    //select mode
+    if (selectRow(event) === true) {
+        return null;
+    }
+    //action td
+    if (event.target.nodeName === 'A') {
+        handleActionTdClick(event);
+        return null;
+    }
+    //table header
+    if (event.target.nodeName === 'TH') {
+        if (features.featAdvqueue === false) {
+            return null;
+        }
+        const colName = event.target.getAttribute('data-col');
+        if (isColSortable(app.id, colName) === false) {
+            //by this fields can not be sorted
+            return null;
+        }
+        toggleSort(event.target, colName);
+        appGoto(app.current.card, app.current.tab, app.current.view,
+            app.current.offset, app.current.limit, app.current.filter, app.current.sort, app.current.tag, app.current.search);
+        return null;
+    }
+    //table body
+    const target = event.target.closest('TR');
+    if (target === null) {
+        return null;
+    }
+    if (target.parentNode.nodeName === 'TBODY' &&
+        checkTargetClick(target) === true)
+    {
+        return target;
+    }
+    return null;
 }

@@ -1,27 +1,19 @@
 "use strict";
 
-function initIdeon() {
-    document.getElementById('modalIdeon').addEventListener('shown.bs.modal', function () {
+function initModalIdeonSettings() {
+    document.getElementById('modalIdeonSettings').addEventListener('shown.bs.modal', function () {
+        // TODO pass callback to parse only ideon settings
         getSettings();
-        removeIsInvalid(document.getElementById('modalIdeon'));
+        removeIsInvalid(document.getElementById('modalIdeonSettings'));
     });
 
-    document.getElementById('modalIdeon').addEventListener('hidden.bs.modal', function () {
-        disconnectSSH();
-    });
-
-    document.getElementById('modalIdeon').addEventListener('keydown', function (event) {
-        if (event.key === 'Enter') {
-            const el = document.getElementById('inputSSHPassword');
-            if (el === document.activeElement) {
-                connectSSH(el.value);
-            } else {
-                saveIdeonSettings();
-            }
-            event.stopPropagation();
-            event.preventDefault();
-        }
-    });
+    // document.getElementById('modalIdeonSettings').addEventListener('keydown', function (event) {
+    //     if (event.key === 'Enter') {
+    //         saveIdeonSettings();
+    //         event.stopPropagation();
+    //         event.preventDefault();
+    //     }
+    // });
 
     document.getElementById('selectNsType').addEventListener('change', function () {
         const value = this.options[this.selectedIndex].value;
@@ -51,24 +43,32 @@ function initIdeon() {
             document.getElementById('inputNsUsername').value = '';
             document.getElementById('inputNsPassword').value = '';
         }
-    });
+    }, false);
 
     document.getElementById('btnDropdownServers').parentNode.addEventListener('show.bs.dropdown', function () {
-        sendAPI("MYMPD_API_NS_SERVER_LIST", {}, parseServers, true);
-    });
+        sendAPI("MYMPD_API_IDEON_NS_SERVER_LIST", {}, parseListServers, true);
+    }, false);
 
-    document.getElementById('dropdownServers').children[0].addEventListener('click', function (event) {
+    document.getElementById('dropdownServers').addEventListener('click', function (event) {
         event.preventDefault();
-        if (event.target.nodeName === 'A') {
-            document.getElementById('inputNsServer').value = event.target.getAttribute('data-value');
+        const target = event.target.nodeName === 'A'
+            ? event.target
+            : event.target.parentNode;
+        if (target.nodeName === 'A') {
+            document.getElementById('inputNsServer').value = getData(target, 'value');
+            uiElements.dropdownServers.hide();
         }
-    });
+    }, false);
 }
 
-function parseServers(obj) {
+/**
+ * Parses the MYMPD_API_IDEON_NS_SERVER_LIST
+ * @param {object} obj jsonrpc response object
+ */
+function parseListServers(obj) {
     let list = '';
     if (obj.error) {
-        list = '<div class="list-group-item"><span class="mi">error_outline</span> ' + t(obj.error.message) + '</div>';
+        list = '<div class="list-group-item"><span class="mi">error_outline</span> ' + tn(obj.error.message) + '</div>';
     }
     else {
         for (let i = 0; i < obj.result.returnedEntities; i++) {
@@ -76,47 +76,18 @@ function parseServers(obj) {
                 obj.result.data[i].ipAddress + '<br/><small>' + obj.result.data[i].name + '</small></a>';
         }
         if (obj.result.returnedEntities === 0) {
-            list = '<div class="list-group-item"><span class="mi">error_outline</span>&nbsp;' + t('Empty list') + '</div>';
+            list = '<div class="list-group-item"><span class="mi">error_outline</span>&nbsp;' + tn('Empty list') + '</div>';
         }
     }
 
     const id = settings.init !== true ? 'dropdownServers1' : 'dropdownServers';
-    document.getElementById(id).children[0].innerHTML = list;
-}
-
-function connectSSH() {
-    sendAPI("MYMPD_API_SSH_CONNECT", {"SSHPassword": document.getElementById('inputSSHPassword').value}, parseConnectSSH);
-
-    btnWaiting(document.getElementById('btnConnectSSH'), true);
-
-    document.getElementById('SSHMsg').innerText = 'Connecting...';
-}
-
-function parseConnectSSH(obj) {
-    btnWaiting(document.getElementById('btnConnectSSH'), false);
-
-    let msg = obj.result.returnMessage;
-    if (obj.result.returnCode === 10) {
-        document.getElementById('inputSSHPassword').setAttribute('disabled', 'disabled');
-        document.getElementById('btnConnectSSH').setAttribute('disabled', 'disabled');
-        document.getElementById('btnSaveIdeonSettings').innerText = 'Close';
-        msg += ' Close window to terminate the connection.';
-    }
-    document.getElementById('SSHMsg').innerText = msg;
-}
-
-function disconnectSSH() {
-    sendAPI("MYMPD_API_SSH_DISCONNECT", {});
-
-    const inputSSHPassword = document.getElementById('inputSSHPassword');
-    inputSSHPassword.value = '';
-    inputSSHPassword.removeAttribute('disabled');
-    document.getElementById('btnConnectSSH').removeAttribute('disabled');
-    document.getElementById('SSHMsg').innerText = '';
+    // TODO replace
+    // const id = document.querySelectorAll('#modalIdeonSetup.show').length > 0 ? 'dropdownServers1' : 'dropdownServers';
+    document.getElementById(id).innerHTML = list;
 }
 
 function checkUpdate() {
-    sendAPI("MYMPD_API_UPDATE_CHECK", {}, parseUpdateCheck);
+    sendAPI("MYMPD_API_IDEON_UPDATE_CHECK", {}, parseUpdateCheck, false);
 
     btnWaiting(document.getElementById('btnCheckUpdate'), true);
 }
@@ -146,7 +117,7 @@ function parseUpdateCheck(obj) {
 }
 
 function installUpdate() {
-    sendAPI("MYMPD_API_UPDATE_INSTALL", {}, parseUpdateInstall);
+    sendAPI("MYMPD_API_IDEON_UPDATE_INSTALL", {}, parseUpdateInstall, false);
 
     document.getElementById('updateMsg').innerText = 'System will automatically reboot after installation.';
 
@@ -162,7 +133,7 @@ function parseUpdateInstall(obj) {
 
 function parseIdeonSettings() {
     document.getElementById('selectMixerType').value = settings.mixerType;
-    toggleBtnChk('btnDop', settings.dop);
+    toggleBtnChkId('btnDop', settings.dop);
 
     document.getElementById('selectNsType').value = settings.nsType;
     document.getElementById('inputNsServer').value = settings.nsServer;
@@ -192,12 +163,13 @@ function parseIdeonSettings() {
         document.getElementById('nsCredentials').classList.add('hide');
     }
 
-    toggleBtnChk('btnAirplay', settings.airplay);
-    toggleBtnChk('btnRoon', settings.roon);
-    toggleBtnChk('btnSpotify', settings.spotify);
+    toggleBtnChkId('btnAirplay', settings.airplay);
+    toggleBtnChkId('btnRoon', settings.roon);
+    toggleBtnChkId('btnSpotify', settings.spotify);
 }
 
 function saveIdeonSettings() {
+    // TODO use cleanupModalId, formToJson, modalClose, btnWaiting
     let formOK = true;
 
     const selectNsType = document.getElementById('selectNsType');
@@ -207,8 +179,9 @@ function saveIdeonSettings() {
     const inputNsUsername = document.getElementById('inputNsUsername');
     const inputNsPassword = document.getElementById('inputNsPassword');
 
+    // TODO use new validate methods
     if (selectNsTypeValue !== '0') {
-        if (!validateIPAddress(inputNsServer)) {
+        if (!validateIPAddressEl(inputNsServer)) {
             formOK = false;
         }
         if (!validatePath(inputNsShare)) {
@@ -236,14 +209,15 @@ function saveIdeonSettings() {
             "airplay": (document.getElementById('btnAirplay').classList.contains('active') ? true : false),
             "roon": (document.getElementById('btnRoon').classList.contains('active') ? true : false),
             "spotify": (document.getElementById('btnSpotify').classList.contains('active') ? true : false)
-        }, getSettings);
-        uiElements.modalIdeon.hide();
+        }, getSettings, true);
+        // TODO add spinner, support apply
+        uiElements.modalIdeonSettings.hide();
     }
 }
 
-function confirmReset() {
-    sendAPI("MYMPD_API_SETTINGS_RESET", {}, function () {
-        resetFlag = false;
-        uiElements.modalResetSettings.hide();
-    });
-}
+// function confirmReset() {
+//     sendAPI("MYMPD_API_SETTINGS_RESET", {}, function () {
+//         resetFlag = false;
+//         uiElements.modalResetSettings.hide();
+//     });
+// }

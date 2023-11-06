@@ -8,8 +8,7 @@ build-arch: build
 build-indep: build
 
 build:
-	./build.sh createassets
-	cd $(BUILDDIR); cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_BUILD_TYPE=RELEASE ..
+	cmake -B $(BUILDDIR) -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_BUILD_TYPE=Release -DMYMPD_STRIP_BINARY=OFF .
 	make -C $(BUILDDIR)
 
 binary: binary-indep binary-arch
@@ -17,13 +16,18 @@ binary: binary-indep binary-arch
 binary-indep:
 
 binary-arch:
-	cd $(BUILDDIR); make install DESTDIR=../debian/tmp
-	mkdir -p debian/tmp/DEBIAN
-	cp debian/postinst debian/tmp/DEBIAN
-	cp debian/postrm debian/tmp/DEBIAN
-	cp debian/conffiles debian/tmp/DEBIAN
-	dpkg-gencontrol -pmympd
-	dpkg --build debian/tmp ..
+	make -C $(BUILDDIR) install DESTDIR=../debian/mympd
+	mkdir -p debian/mympd/DEBIAN
+	cp debian/postinst debian/mympd/DEBIAN
+	echo 10 > debian/compat
+	dh_installdocs
+	dh_installchangelogs
+	dh_compress
+	dh_makeshlibs
+	dh_shlibdeps
+	dh_strip
+	dh_gencontrol
+	dh_builddeb
 
 clean:
 	rm -rf $(BUILDDIR)

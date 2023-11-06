@@ -1,0 +1,15 @@
+bg-BG:Bulgarian
+de-DE:Deutsch
+en-US:English
+es-AR:Español
+es-ES:Español
+es-VE:Español
+fi-FI:Finnish
+fr-FR:Français
+it-IT:Italiano
+ja-JP:日本語
+ko-KR:한국어
+nl-NL:Nederlands
+pl-PL:Polish
+ru-RU:Russian
+zh-Hans:简体中文
