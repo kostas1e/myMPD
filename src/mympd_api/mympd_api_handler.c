@@ -8,6 +8,7 @@
 #include "src/mympd_api/mympd_api_handler.h"
 
 #include "src/ideon.h"
+#include "src/ideon/qobuz.h"
 #include "src/lib/album_cache.h"
 #include "src/lib/api.h"
 #include "src/lib/covercache.h"
@@ -1556,6 +1557,13 @@ void mympd_api_handler(struct t_partition_state *partition_state, struct t_work_
         case MYMPD_API_IDEON_UPDATE_INSTALL:
             response->data = ideon_update_install(response->data, request->cmd_id, request->id);
             break;
+        case MYMPD_API_IDEON_QOBUZ_SEARCH: {
+            // FIXME MYMPD_API_DATABASE_SEARCH
+            if (json_get_string(request->data, "$.params.expression", 0, EXPRESSION_LEN_MAX, &sds_buf1, vcb_isname, &parse_error) == true) {
+                response->data = qobuz_track_search(response->data, request->cmd_id, request->id, sds_buf1);
+            }
+            break;
+        }
     // unhandled method
         default:
             response->data = jsonrpc_respond_message(response->data, request->cmd_id, request->id,

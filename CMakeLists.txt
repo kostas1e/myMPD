@@ -404,6 +404,7 @@ target_link_libraries(mympd
   ${PCRE2_LIBRARIES}
   ${OPENSSL_LIBRARIES}
   ${CURL_LIBRARIES}
+  # OpenSSL::Crypto
 )
 
 # link optional dependencies

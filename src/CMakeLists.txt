@@ -36,6 +36,7 @@ endif()
 target_sources(mympd PRIVATE
   main.c
   ideon.c
+  ideon/qobuz.c
   lib/album_cache.c
   lib/api.c
   lib/cert.c

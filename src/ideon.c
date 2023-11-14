@@ -406,6 +406,7 @@ static bool syscmd(const char *cmdline)
     }
 }
 
+// TODO support multiple mounts
 static int ns_set(int type, const char *server, const char *share, const char *vers, const char *username,
                   const char *password)
 {

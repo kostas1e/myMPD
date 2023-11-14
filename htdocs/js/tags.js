@@ -296,7 +296,7 @@ function printValue(key, value) {
             //multi value tags - print one line per value
             const span = elCreateEmpty('span', {});
             for (let i = 0, j = value.length; i < j; i++) {
-                if (i > 0) {
+                if (i > 0 && app.current.filter !== 'qobuz') { // FIXME change ret obj to match orig
                     span.appendChild(
                         elCreateEmpty('br', {})
                     );

@@ -2196,5 +2196,11 @@ const APImethods = {
     "MYMPD_API_IDEON_UPDATE_INSTALL": {
         "desc": "",
         "params": {}
-    }
+    },
+    "MYMPD_API_IDEON_QOBUZ_SEARCH": {
+        "desc": "",
+        "params": {
+            "expression": APIparams.expression,
+        }
+    },
 };

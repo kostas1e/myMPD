@@ -60,6 +60,11 @@ struct t_config {
     sds user;                       //!< username to drop privileges
     sds workdir;                    //!< working directory
     time_t startup_time;            //!< unix timestamp of startup (not configurable)
+    // ideon
+    sds qobuz_app_id;
+    sds qobuz_app_secret;
+    sds qobuz_username;
+    sds qobuz_password;
 };
 
 #endif

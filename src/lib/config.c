@@ -51,6 +51,10 @@ void *mympd_config_free(struct t_config *config) {
     FREE_SDS(config->ssl_san);
     FREE_SDS(config->user);
     FREE_SDS(config->workdir);
+    FREE_SDS(config->qobuz_app_id);
+    FREE_SDS(config->qobuz_app_secret);
+    FREE_SDS(config->qobuz_username);
+    FREE_SDS(config->qobuz_password);
     FREE_PTR(config);
     return NULL;
 }
@@ -80,6 +84,10 @@ void mympd_config_defaults_initial(struct t_config *config) {
     config->ssl_cert = NULL;
     config->ssl_key = NULL;
     config->ssl_san = NULL;
+    config->qobuz_app_id = NULL;
+    config->qobuz_app_secret = NULL;
+    config->qobuz_username = NULL;
+    config->qobuz_password = NULL;
 }
 
 /**
@@ -143,6 +151,8 @@ void mympd_config_defaults(struct t_config *config) {
     sds album_group_tag_str = startup_getenv_string("MYMPD_ALBUM_GROUP_TAG", CFG_MYMPD_ALBUM_GROUP_TAG, vcb_isname, config->first_startup);
     config->albums.group_tag = mpd_tag_name_iparse(album_group_tag_str);
     FREE_SDS(album_group_tag_str);
+    config->qobuz_app_id = startup_getenv_string("QOBUZ_APP_ID", CFG_IDEON_QOBUZ_APP_ID, vcb_isname, config->first_startup);
+    config->qobuz_app_secret = startup_getenv_string("QOBUZ_APP_SECRET", CFG_IDEON_QOBUZ_APP_SECRET, vcb_isname, config->first_startup);
 }
 
 /**
@@ -192,6 +202,12 @@ bool mympd_config_rw(struct t_config *config, bool write) {
 
     //overwrite configured loglevel
     config->loglevel = getenv_int("MYMPD_LOGLEVEL", config->loglevel, LOGLEVEL_MIN, LOGLEVEL_MAX);
+
+    //ideon
+    config->qobuz_app_id = state_file_rw_string_sds(config->workdir, DIR_WORK_CONFIG, "qobuz_app_id", config->qobuz_app_id, vcb_isname, write);
+    config->qobuz_app_secret = state_file_rw_string_sds(config->workdir, DIR_WORK_CONFIG, "qobuz_app_secret", config->qobuz_app_secret, vcb_isname, write);
+    config->qobuz_username = state_file_rw_string_sds(config->workdir, DIR_WORK_CONFIG, "qobuz_username", config->qobuz_username, vcb_isname, write);
+    config->qobuz_password = state_file_rw_string_sds(config->workdir, DIR_WORK_CONFIG, "qobuz_password", config->qobuz_password, vcb_isname, write);
     return true;
 }
 

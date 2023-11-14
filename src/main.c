@@ -10,6 +10,7 @@
 #include "dist/mongoose/mongoose.h"
 #include "dist/sds/sds.h"
 #include "src/ideon.h"
+#include "src/ideon/qobuz.h" // FIXME move to ideon
 #include "src/lib/api.h"
 #include "src/lib/cert.h"
 #include "src/lib/config.h"
@@ -535,6 +536,7 @@ int main(int argc, char **argv) {
 
     //curl global, mutex lock, output name
     ideon_init();
+    qobuz_init(config);
 
     //Create working threads
     //mympd api
@@ -583,6 +585,7 @@ int main(int argc, char **argv) {
     }
 
     //curl global, mutex lock
+    qobuz_cleanup();
     ideon_cleanup();
 
     //free queues

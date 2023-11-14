@@ -221,3 +221,51 @@ function saveIdeonSettings() {
 //         uiElements.modalResetSettings.hide();
 //     });
 // }
+
+// FIXME mv
+function handleQobuzSearch() {
+    handleSearchExpression('Search');
+    const searchStrEl = elGetById(app.id + 'SearchStr');
+    const searchCrumbEl = elGetById(app.id + 'SearchCrumb');
+    if (searchStrEl.value.length >= 2 ||
+        searchCrumbEl.children.length > 0)
+    {
+        // FIXME timeout/ wds
+        if (app.current.sort.tag === '') {
+            app.current.sort.tag = settings.tagList.includes('Title')
+                ? 'Title'
+                : '';
+        }
+        // sendAPI("MYMPD_API_DATABASE_SEARCH", {
+        //     "offset": app.current.offset,
+        //     "limit": app.current.limit,
+        //     "sort": app.current.sort.tag,
+        //     "sortdesc": app.current.sort.desc,
+        //     "expression": app.current.search,
+        //     "cols": settings.colsSearchFetch
+        // }, parseSearch, true);
+        const searchStrEl = elGetById(app.id + 'SearchStr');
+        let b =[
+            "Title",
+            "Artist",
+            "Album",
+            "Duration",
+            "AlbumArtist",
+            "Genre"
+        ]
+        // FIXME encodeURIComponent()
+        sendAPI("MYMPD_API_IDEON_QOBUZ_SEARCH", {
+            "expression": searchStrEl.value
+        }, parseSearch, true);
+    }
+    else {
+        // clear list if no search is defined
+        const SearchListEl = elGetById('SearchList');
+        elClear(SearchListEl.querySelector('tbody'));
+        elClear(SearchListEl.querySelector('tfoot'));
+        elDisableId('SearchAddAllSongsBtn');
+        elDisableId('SearchAddAllSongsDropdownBtn');
+        unsetUpdateViewId('SearchList');
+        setPagination(0, 0);
+    }
+}

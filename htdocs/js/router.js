@@ -268,7 +268,15 @@ function appRoute(card, tab, view, offset, limit, filter, sort, tag, search) {
         case 'BrowseRadioFavorites':      handleBrowseRadioFavorites(); break;
         case 'BrowseRadioWebradiodb':     handleBrowseRadioWebradiodb(); break;
         case 'BrowseRadioRadiobrowser':   handleBrowseRadioRadiobrowser(); break;
-        case 'Search':                    handleSearch(); break;
+        case 'Search':                    
+            if (app.current.filter === 'qobuz') {
+                // FIXME tmp
+                handleQobuzSearch();
+            }
+            else {
+                handleSearch();
+            }
+            break;
         default: {
             let initialStartupView = settings.webuiSettings.startupView;
             if (initialStartupView === undefined ||
