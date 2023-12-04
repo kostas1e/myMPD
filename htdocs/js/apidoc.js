@@ -2189,18 +2189,36 @@ const APImethods = {
     "MYMPD_API_IDEON_NS_SERVER_LIST": {
         "desc": "",
         "params": {}
-    },"MYMPD_API_IDEON_UPDATE_CHECK": {
+    },
+    // TODO reorder, rename, vs song-details
+    "MYMPD_API_IDEON_QOBUZ_SONG_DETAILS": {
+        "desc": "",
+        "params": {
+            "uri": APIparams.uri
+        }
+    },
+    // TODO use list songIds
+    "MYMPD_API_IDEON_QOBUZ_TRACK_GET_LIST": {
+        "desc": "",
+        "params": {
+            "tracksId": APIparams.songIds
+        }
+    },
+    // TODO rename track-search, vs db-search
+    "MYMPD_API_IDEON_QOBUZ_TRACK_SEARCH": {
+        "desc": "",
+        "params": {
+            "offset": APIparams.offset,
+            "limit": APIparams.limit,
+            "query": APIparams.expression
+        }
+    },
+    "MYMPD_API_IDEON_UPDATE_CHECK": {
         "desc": "",
         "params": {}
     },
     "MYMPD_API_IDEON_UPDATE_INSTALL": {
         "desc": "",
         "params": {}
-    },
-    "MYMPD_API_IDEON_QOBUZ_SEARCH": {
-        "desc": "",
-        "params": {
-            "expression": APIparams.expression,
-        }
     },
 };

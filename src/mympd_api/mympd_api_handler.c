@@ -1551,19 +1551,38 @@ void mympd_api_handler(struct t_partition_state *partition_state, struct t_work_
         case MYMPD_API_IDEON_NS_SERVER_LIST:
             response->data = ideon_ns_server_list(response->data, request->cmd_id, request->id);
             break;
+        case MYMPD_API_IDEON_QOBUZ_SONG_DETAILS:
+            if (json_get_string(request->data, "$.params.uri", 1, FILEPATH_LEN_MAX, &sds_buf1, vcb_isstreamuri, &parse_error) == true) {
+                response->data = qobuz_track_get(response->data, request->cmd_id, request->id, sds_buf1);
+            }
+            break;
+        case MYMPD_API_IDEON_QOBUZ_TRACK_GET_LIST: {
+            struct t_list tracks_id;
+            list_init(&tracks_id);
+            if (json_get_array_llong(request->data, "$.params.tracksId", &tracks_id, 100, &parse_error) == true) {
+                response->data = qobuz_track_get_list(response->data, request->cmd_id, request->id, &tracks_id);
+                // FIXME get params instead
+                // response->data = qobuz_track_get_list(response->data, request->cmd_id, request->id, "{\"tracks_id\":[110333,38993849]}");
+            }
+            list_clear(&tracks_id);
+            break;
+        }
+        case MYMPD_API_IDEON_QOBUZ_TRACK_SEARCH:
+            // FIXME check vs MYMPD_API_DATABASE_SEARCH, rename, reorder, use constants/defines, add more params
+            if (json_get_string(request->data, "$.params.query", 0, EXPRESSION_LEN_MAX, &sds_buf1, vcb_isname, &parse_error) == true &&
+                json_get_uint(request->data, "$.params.offset", 0, 1000, &uint_buf1, &parse_error) == true &&
+                json_get_uint(request->data, "$.params.limit", 0, 500, &uint_buf2, &parse_error) == true)
+            {
+                // TODO set returncode
+                response->data = qobuz_track_search(response->data, request->cmd_id, request->id, sds_buf1, uint_buf1, uint_buf2);
+            }
+            break;
         case MYMPD_API_IDEON_UPDATE_CHECK:
             response->data = ideon_update_check(response->data, request->cmd_id, request->id);
             break;
         case MYMPD_API_IDEON_UPDATE_INSTALL:
             response->data = ideon_update_install(response->data, request->cmd_id, request->id);
             break;
-        case MYMPD_API_IDEON_QOBUZ_SEARCH: {
-            // FIXME MYMPD_API_DATABASE_SEARCH
-            if (json_get_string(request->data, "$.params.expression", 0, EXPRESSION_LEN_MAX, &sds_buf1, vcb_isname, &parse_error) == true) {
-                response->data = qobuz_track_search(response->data, request->cmd_id, request->id, sds_buf1);
-            }
-            break;
-        }
     // unhandled method
         default:
             response->data = jsonrpc_respond_message(response->data, request->cmd_id, request->id,

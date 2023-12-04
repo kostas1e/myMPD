@@ -26,7 +26,29 @@ function handleQueueCurrent() {
         "sortdesc": app.current.sort.desc,
         "expression": app.current.search,
         "cols": settings.colsQueueCurrentFetch
-    }, parseQueue, true);
+    }, function (response) {
+        // FIXME: alt call parsequeue again to update qobuz tracks, time it
+        const tracks = response.result.data;
+        const qobuzTracksId = new Set(
+            tracks
+                .filter(track => track.uri.startsWith("qobuz://track/"))
+                .map(track => parseInt(track.uri.split("/").pop()))
+        );
+
+        if (qobuzTracksId.size > 0) {
+            sendAPI("MYMPD_API_IDEON_QOBUZ_TRACK_GET_LIST", {
+                "tracksId": Array.from(qobuzTracksId)
+            }, function (qobuz_response) {
+                const { updatedArray, totalDuration } = updateArray2(response.result.data, qobuz_response.result.data);
+                response.result.data = updatedArray;
+                response.result.totalTime += totalDuration;
+                parseQueue(response);
+            }, true);
+        }
+        else {
+            parseQueue(response);
+        }
+    }, true);
 
     if (app.current.filter === 'prio') {
         elShowId('QueueCurrentSearchPriorityMatch');

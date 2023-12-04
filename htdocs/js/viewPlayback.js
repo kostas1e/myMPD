@@ -10,7 +10,7 @@
  * @returns {void}
  */
 function handlePlayback() {
-    sendAPI("MYMPD_API_PLAYER_CURRENT_SONG", {}, parseCurrentSong, false);
+    sendAPI("MYMPD_API_PLAYER_CURRENT_SONG", {}, updateSongDetails, false);
 }
 
 /**
@@ -127,7 +127,7 @@ function parseCurrentSong(obj) {
         }
         setData(PlaybackTitleEl, 'uri', '');
     }
-    document.title = 'myMPD: ' + pageTitle.join(smallSpace + nDash + smallSpace);
+    document.title = 'Ideon: ' + pageTitle.join(smallSpace + nDash + smallSpace);
     footerCoverEl.title = pageTitle.join(smallSpace + nDash + smallSpace);
 
     if (isValidUri(obj.result.uri) === true &&

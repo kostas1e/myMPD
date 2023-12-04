@@ -52,6 +52,9 @@ function addTagList(elId, list) {
             stack.appendChild(
                 elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "base"}, 'Path')
             );
+            stack.appendChild(
+                elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "qobuz"}, 'Qobuz')
+            );
         }
     }
     if (elId === 'BrowseDatabaseAlbumListSearchTags') {
@@ -296,7 +299,7 @@ function printValue(key, value) {
             //multi value tags - print one line per value
             const span = elCreateEmpty('span', {});
             for (let i = 0, j = value.length; i < j; i++) {
-                if (i > 0 && app.current.filter !== 'qobuz') { // FIXME change ret obj to match orig
+                if (i > 0) {
                     span.appendChild(
                         elCreateEmpty('br', {})
                     );

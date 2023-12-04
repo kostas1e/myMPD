@@ -222,40 +222,25 @@ function saveIdeonSettings() {
 //     });
 // }
 
-// FIXME mv
 function handleQobuzSearch() {
+    // FIXME
+    // mv, timeout / wds, encodeURIComponent()
+    // support for sort/sortdesc/expression of app.current.search/cols
     handleSearchExpression('Search');
     const searchStrEl = elGetById(app.id + 'SearchStr');
     const searchCrumbEl = elGetById(app.id + 'SearchCrumb');
     if (searchStrEl.value.length >= 2 ||
         searchCrumbEl.children.length > 0)
     {
-        // FIXME timeout/ wds
         if (app.current.sort.tag === '') {
             app.current.sort.tag = settings.tagList.includes('Title')
                 ? 'Title'
                 : '';
         }
-        // sendAPI("MYMPD_API_DATABASE_SEARCH", {
-        //     "offset": app.current.offset,
-        //     "limit": app.current.limit,
-        //     "sort": app.current.sort.tag,
-        //     "sortdesc": app.current.sort.desc,
-        //     "expression": app.current.search,
-        //     "cols": settings.colsSearchFetch
-        // }, parseSearch, true);
-        const searchStrEl = elGetById(app.id + 'SearchStr');
-        let b =[
-            "Title",
-            "Artist",
-            "Album",
-            "Duration",
-            "AlbumArtist",
-            "Genre"
-        ]
-        // FIXME encodeURIComponent()
-        sendAPI("MYMPD_API_IDEON_QOBUZ_SEARCH", {
-            "expression": searchStrEl.value
+        sendAPI("MYMPD_API_IDEON_QOBUZ_TRACK_SEARCH", {
+            "offset": app.current.offset,
+            "limit": app.current.limit,
+            "query": searchStrEl.value
         }, parseSearch, true);
     }
     else {
@@ -267,5 +252,82 @@ function handleQobuzSearch() {
         elDisableId('SearchAddAllSongsDropdownBtn');
         unsetUpdateViewId('SearchList');
         setPagination(0, 0);
+    }
+}
+
+function updateArray(firstArray, secondArray) {
+    const updatedArray = firstArray.map(item => {
+        const matchingItem = secondArray.find(obj => obj.uri === item.uri);
+        return matchingItem ? { ...item, ...matchingItem } : item;
+    });
+    return updatedArray;
+}
+
+function updateArray2(firstArray, secondArray) {
+    let totalDuration = 0;
+    const updatedArray = firstArray.map(item => {
+        const matchingItem = secondArray.find(obj => obj.uri === item.uri);
+        if (matchingItem) {
+            const updatedItem = { ...item };
+            Object.keys(updatedItem).forEach(key => {
+                if (matchingItem.hasOwnProperty(key)) {
+                    if (key === 'Title') {
+                        updatedItem[key] = '[Qobuz] ' + matchingItem[key];
+                    } else {
+                        updatedItem[key] = matchingItem[key];
+                    }
+                }
+            });
+            totalDuration += matchingItem.Duration;
+            return updatedItem;
+        } else {
+            return item;
+        }
+    });
+    return { updatedArray, totalDuration };
+}
+
+function updateObject(obj1, obj2) {
+    const updatedObject = { ...obj1 };
+
+    Object.keys(updatedObject).forEach(key => {
+        if (obj2.hasOwnProperty(key)) {
+            if (key === 'Title') {
+                updatedObject[key] = '[Qobuz] ' + obj2[key];
+            } else {
+                updatedObject[key] = obj2[key];
+            }
+        }
+    });
+
+    return updatedObject;
+}
+
+function updateObject2(result1, result2) {
+    Object.keys(result2).forEach(key => {
+        if (result1.hasOwnProperty(key)) {
+            // FIXME ignore method only
+            if (key === 'Title') {
+                result1[key] = '[Qobuz] ' + result2[key];
+            }
+            else if (key === 'Duration') {
+                result1[key] = result2[key];
+            }
+        }
+    });
+}
+
+function updateSongDetails(obj) {
+    const uri = obj.result.uri;
+    if (uri.startsWith("qobuz://track/")) {
+        sendAPI("MYMPD_API_IDEON_QOBUZ_SONG_DETAILS", {
+            "uri": uri
+        }, function (qobuz_obj) {
+            updateObject2(obj.result, qobuz_obj.result);
+            parseCurrentSong(obj);
+        }, false);
+    }
+    else {
+        parseCurrentSong(obj);
     }
 }

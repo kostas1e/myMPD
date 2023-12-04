@@ -117,7 +117,7 @@ function parseState(obj) {
     if (currentState.currentSongId !== obj.result.currentSongId ||
         currentState.queueVersion !== obj.result.queueVersion)
     {
-        sendAPI("MYMPD_API_PLAYER_CURRENT_SONG", {}, parseCurrentSong, false);
+        sendAPI("MYMPD_API_PLAYER_CURRENT_SONG", {}, updateSongDetails, false);
     }
     //save state
     currentState = obj.result;
@@ -143,7 +143,7 @@ function parseState(obj) {
     setCounter();
     //clear playback card if no current song
     if (obj.result.songPos === -1) {
-        document.title = 'myMPD';
+        document.title = 'Ideon';
         elGetById('PlaybackTitle').textContent = tn('Not playing');
         const footerTitleEl = elGetById('footerTitle');
         footerTitleEl.textContent = tn('Not playing');
