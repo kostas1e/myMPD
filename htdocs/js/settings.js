@@ -135,7 +135,23 @@ function parseSettings(obj) {
     else {
         elHideId('footerStopBtn');
     }
-    
+
+    if (settings.webuiSettings.footerSeek === true) {
+        elShowId('footerFastRewindBtn');
+        elShowId('footerFastForwardBtn');
+    }
+    else {
+        elHideId('footerFastRewindBtn');
+        elHideId('footerFastForwardBtn');
+    }
+
+    if (settings.webuiSettings.footerPlaybackControlsPopover === true) {
+        elShowId('advPlaybackControlsBtn');
+    }
+    else {
+        elHideId('advPlaybackControlsBtn');
+    }
+
     if (settings.partition.jukeboxMode !== 'off') {
         elGetById('footerNextBtn').removeAttribute('disabled');
     }
@@ -356,7 +372,6 @@ function parseMPDSettings() {
     }
 
     if (features.featTags === false) {
-        app.cards.Browse.active = 'Filesystem';
         app.cards.Search.sort.tag = 'filename';
         app.cards.Search.filter = 'filename';
         app.cards.Queue.tabs.Current.filter = 'filename';
@@ -402,6 +417,10 @@ function parseMPDSettings() {
         setColsChecklist('Playback', menu);
     }
 
+    if (features.featTags === false) {
+        app.cards.Browse.active = 'Filesystem';
+    }
+
     if (settings.tagList.includes('Title')) {
         app.cards.Search.sort.tag = 'Title';
     }
@@ -434,8 +453,18 @@ function parseMPDSettings() {
     addTagList('QueueJukeboxAlbumSearchTags', 'tagListSearch');
     addTagList('BrowsePlaylistDetailSearchTags', 'tagListSearch');
     addTagList('SearchSearchTags', 'tagListSearch');
-    addTagList('BrowseDatabaseAlbumListSearchTags', 'tagListBrowse');
-    addTagList('BrowseDatabaseAlbumListSortTagsList', 'tagListBrowse');
+    if (settings.albumMode === 'adv') {
+        addTagList('BrowseDatabaseAlbumListSearchTags', 'tagListBrowse');
+    }
+    else {
+        addTagList('BrowseDatabaseAlbumListSearchTags', 'tagListAlbum');
+    }
+    if (settings.albumMode === 'adv') {
+        addTagList('BrowseDatabaseAlbumListSortTagsList', 'tagListBrowse');
+    }
+    else {
+        addTagList('BrowseDatabaseAlbumListSortTagsList', 'tagListAlbum');
+    }
     addTagList('BrowsePlaylistDetailSortTagsDropdown', 'tagList');
 
     addTagListSelect('modalSmartPlaylistEditSortInput', 'tagList');

@@ -136,11 +136,15 @@ function populateSettingsFrm() {
     jsonToForm(settings.webuiSettings, settingsWebuiFields, 'modalSettings');
     jsonToForm(settings.partition, settingsPartitionFields, 'modalSettings');
     jsonToForm(localSettings, settingsLocalFields, 'modalSettings');
+
     // background image select
     getBgImageList();
     const bgImageInput = elGetById('modalSettingsBgImageInput');
     setData(bgImageInput, 'value', settings.webuiSettings.bgImage);
     bgImageInput.value = getBgImageText(settings.webuiSettings.bgImage);
+
+    // home
+    elGetById('modalSettingsStartupViewInput').options[0].classList.add('featHome');
 
     // theme
     toggleThemeInputs(settings.webuiSettings.theme);
@@ -226,6 +230,7 @@ function populateSettingsFrm() {
     // handle features: show or hide warnings - use the settings object
     setFeatureBtnId('modalSettingsEnableLyricsInput', settings.features.featLibrary);
     setFeatureBtnId('modalSettingsEnableScriptingInput', settings.features.featScripting);
+    setFeatureBtnId('modalSettingsEnableTimerInput', settings.features.featTimer);
     setFeatureBtnId('modalSettingsEnableMountsInput', settings.features.featMounts);
     setFeatureBtnId('modalSettingsEnablePartitionsInput', settings.features.featPartitions);
 }

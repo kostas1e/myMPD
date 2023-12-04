@@ -5,18 +5,21 @@
 */
 
 #include "compile_time.h"
+#include "mpd/tag.h"
 #include "src/mympd_api/browse.h"
 
 #include "dist/utf8/utf8.h"
 #include "src/lib/album_cache.h"
+#include "src/lib/filehandler.h"
 #include "src/lib/jsonrpc.h"
 #include "src/lib/log.h"
 #include "src/lib/rax_extras.h"
 #include "src/lib/sds_extras.h"
-#include "src/lib/sticker_cache.h"
+#include "src/lib/sticker.h"
 #include "src/mpd_client/errorhandler.h"
 #include "src/mpd_client/search.h"
 #include "src/mpd_client/search_local.h"
+#include "src/mpd_client/stickerdb.h"
 #include "src/mpd_client/tags.h"
 #include "src/mympd_api/extra_media.h"
 #include "src/mympd_api/sticker.h"
@@ -24,6 +27,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <stdbool.h>
 #include <string.h>
 
 /**
@@ -46,7 +50,8 @@ sds mympd_api_browse_album_detail(struct t_partition_state *partition_state, sds
             JSONRPC_FACILITY_DATABASE, JSONRPC_SEVERITY_ERROR, "Could not find album");
     }
 
-    sds expression = get_search_expression_album(partition_state->mpd_state->tag_albumartist, mpd_album);
+    sds expression = get_search_expression_album(partition_state->mpd_state->tag_albumartist, mpd_album,
+        &partition_state->mympd_state->config->albums);
 
     if (mpd_search_db_songs(partition_state->conn, true) == false ||
         mpd_search_add_expression(partition_state->conn, expression) == false ||
@@ -59,53 +64,83 @@ sds mympd_api_browse_album_detail(struct t_partition_state *partition_state, sds
             JSONRPC_SEVERITY_ERROR, "Error creating MPD search command");
     }
     FREE_SDS(expression);
+    int entities_returned = 0;
     time_t last_played_max = 0;
+    sds first_song_uri = sdsempty();
     sds last_played_song_uri = sdsempty();
+    if (partition_state->mympd_state->config->albums.mode == ALBUM_MODE_SIMPLE) {
+        // reset album values for simple album mode
+        album_cache_set_total_time(mpd_album, 0);
+        album_cache_set_disc_count(mpd_album, 0);
+        album_cache_set_song_count(mpd_album, 0);
+    }
     if (mpd_search_commit(partition_state->conn)) {
         buffer = jsonrpc_respond_start(buffer, cmd_id, request_id);
         buffer = sdscat(buffer, "\"data\":[");
 
         struct mpd_song *song;
-        int entities_returned = 0;
-
+        if (partition_state->mpd_state->feat_stickers == true &&
+            tagcols->stickers_len > 0)
+        {
+            stickerdb_exit_idle(partition_state->mympd_state->stickerdb);
+        }
         while ((song = mpd_recv_song(partition_state->conn)) != NULL) {
             if (entities_returned++) {
                 buffer = sdscatlen(buffer, ",", 1);
             }
+            else {
+                first_song_uri = sdscat(first_song_uri, mpd_song_get_uri(song));
+            }
             buffer = sdscat(buffer, "{\"Type\": \"song\",");
-            buffer = print_song_tags(buffer, partition_state->mpd_state->feat_tags, tagcols, song);
-            if (partition_state->mpd_state->feat_stickers) {
-                buffer = sdscatlen(buffer, ",", 1);
-                struct t_sticker *sticker = get_sticker_from_cache(&partition_state->mpd_state->sticker_cache, mpd_song_get_uri(song));
-                buffer = mympd_api_sticker_print(buffer, sticker);
-                if (sticker != NULL &&
-                    sticker->last_played > last_played_max)
-                {
-                    last_played_max = sticker->last_played;
+            buffer = print_song_tags(buffer, partition_state->mpd_state->feat_tags, tagcols, song,
+                &partition_state->mympd_state->config->albums);
+            if (partition_state->mpd_state->feat_stickers == true &&
+                tagcols->stickers_len > 0)
+            {
+                struct t_sticker sticker;
+                stickerdb_get_all_batch(partition_state->mympd_state->stickerdb, mpd_song_get_uri(song), &sticker, false);
+                buffer = mympd_api_sticker_print(buffer, &sticker, tagcols);
+
+                if (sticker.mympd[STICKER_LAST_PLAYED] > last_played_max) {
+                    last_played_max = (time_t)sticker.mympd[STICKER_LAST_PLAYED];
                     last_played_song_uri = sds_replace(last_played_song_uri, mpd_song_get_uri(song));
                 }
+                sticker_struct_clear(&sticker);
             }
             buffer = sdscatlen(buffer, "}", 1);
+            if (partition_state->mympd_state->config->albums.mode == ALBUM_MODE_SIMPLE) {
+                // calculate some album values for simple album mode
+                album_cache_inc_total_time(mpd_album, song);
+                album_cache_set_discs(mpd_album, song);
+                album_cache_inc_song_count(mpd_album);
+            }
             mpd_song_free(song);
         }
     }
     mpd_response_finish(partition_state->conn);
+    if (partition_state->mpd_state->feat_stickers == true &&
+        tagcols->stickers_len > 0)
+    {
+        stickerdb_enter_idle(partition_state->mympd_state->stickerdb);
+    }
     if (mympd_check_error_and_recover_respond(partition_state, &buffer, cmd_id, request_id, "mpd_search_commit") == false) {
+        FREE_SDS(first_song_uri);
         FREE_SDS(last_played_song_uri);
         return buffer;
     }
 
     buffer = sdscatlen(buffer, "],", 2);
-    buffer = mympd_api_get_extra_media(partition_state->mpd_state, buffer, mpd_song_get_uri(mpd_album), false);
+    buffer = mympd_api_get_extra_media(partition_state->mpd_state, buffer, first_song_uri, false);
     buffer = sdscatlen(buffer, ",", 1);
-    buffer = tojson_uint(buffer, "returnedEntities", album_get_song_count(mpd_album), true);
-    buffer = print_album_tags(buffer, &partition_state->mpd_state->tags_album, mpd_album);
+    buffer = tojson_int(buffer, "returnedEntities", entities_returned, true);
+    buffer = print_album_tags(buffer, &partition_state->mpd_state->tags_album, mpd_album, &partition_state->mympd_state->config->albums);
     buffer = sdscat(buffer, ",\"lastPlayedSong\":{");
     buffer = tojson_time(buffer, "time", last_played_max, true);
     buffer = tojson_sds(buffer, "uri", last_played_song_uri, false);
     buffer = sdscatlen(buffer, "}", 1);
     buffer = jsonrpc_end(buffer);
 
+    FREE_SDS(first_song_uri);
     FREE_SDS(last_played_song_uri);
     return buffer;
 }
@@ -144,7 +179,7 @@ sds mympd_api_browse_album_list(struct t_partition_state *partition_state, sds b
         if (sort_tag != MPD_TAG_UNKNOWN) {
             sort_tag = get_sort_tag(sort_tag, &partition_state->mpd_state->tags_mympd);
         }
-        else if (strcmp(sort, "LastModified") == 0) {
+        else if (strcmp(sort, "Last-Modified") == 0) {
             sort_by_last_modified = true;
             //swap order
             sortdesc = sortdesc == false ? true : false;
@@ -199,21 +234,23 @@ sds mympd_api_browse_album_list(struct t_partition_state *partition_state, sds b
     long entity_count = 0;
     long entities_returned = 0;
     raxStart(&iter, albums);
-
+    int (*iterator)(struct raxIterator *iter);
     if (sortdesc == false) {
         raxSeek(&iter, "^", NULL, 0);
+        iterator = &raxNext;
     }
     else {
         raxSeek(&iter, "$", NULL, 0);
+        iterator = &raxPrev;
     }
-    while (sortdesc == false ? raxNext(&iter) : raxPrev(&iter)) {
+    while (iterator(&iter)) {
         if (entity_count >= offset) {
             if (entities_returned++) {
                 buffer = sdscatlen(buffer, ",", 1);
             }
             struct mpd_song *album = (struct mpd_song *)iter.data;
             buffer = sdscat(buffer, "{\"Type\": \"album\",");
-            buffer = print_album_tags(buffer, tagcols, album);
+            buffer = print_album_tags(buffer, tagcols, album, &partition_state->mympd_state->config->albums);
             buffer = sdscatlen(buffer, ",", 1);
             buffer = tojson_char(buffer, "FirstSongUri", mpd_song_get_uri(album), false);
             buffer = sdscatlen(buffer, "}", 1);
@@ -305,14 +342,16 @@ sds mympd_api_browse_tag_list(struct t_partition_state *partition_state, sds buf
     long entities_returned = 0;
     raxIterator iter;
     raxStart(&iter, taglist);
-
+    int (*iterator)(struct raxIterator *iter);
     if (sortdesc == false) {
         raxSeek(&iter, "^", NULL, 0);
+        iterator = &raxNext;
     }
     else {
         raxSeek(&iter, "$", NULL, 0);
+        iterator = &raxPrev;
     }
-    while (sortdesc == false ? raxNext(&iter) : raxPrev(&iter)) {
+    while (iterator(&iter)) {
         if (entity_count >= offset &&
             entity_count < real_limit)
         {
@@ -327,22 +366,12 @@ sds mympd_api_browse_tag_list(struct t_partition_state *partition_state, sds buf
         FREE_SDS(iter.data);
     }
     raxStop(&iter);
+
     //checks if this tag has a directory with pictures in /src/lib/mympd/pics
     sds pic_path = sdscatfmt(sdsempty(), "%S/%s/%s", partition_state->mympd_state->config->workdir, DIR_WORK_PICS, tag);
-    bool pic = false;
-    errno = 0;
-    DIR* dir = opendir(pic_path);
-    if (dir != NULL) {
-        closedir(dir);
-        pic = true;
-    }
-    else {
-        MYMPD_LOG_DEBUG(partition_state->name, "Can not open directory \"%s\"", pic_path);
-        if (errno != ENOENT) {
-            MYMPD_LOG_ERRNO(partition_state->name, errno);
-        }
-        //ignore error
-    }
+    bool pic =  testdir("Tag pics folder", pic_path, false, true) == DIR_EXISTS
+        ? true
+        : false;
     FREE_SDS(pic_path);
 
     buffer = sdscatlen(buffer, "],", 2);

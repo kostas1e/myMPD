@@ -72,7 +72,7 @@ function gotoBrowse(event) {
     let target = event.target;
     let tag = getData(target, 'tag');
     if (tag === 'undefined') {
-        // string undefined means do not go further down the dom
+        // String undefined means do not go further down the dom
         return;
     }
     let name = getData(target, 'name');
@@ -86,28 +86,40 @@ function gotoBrowse(event) {
             break;
         }
     }
-    if (tag !== '' &&
-        name !== '' &&
-        settings.tagListBrowse.includes(tag))
+    if (tag === '' ||
+        name === '')
     {
+        return;
+    }
+    if (settings.albumMode === 'simple' &&
+        settings.tagListAlbum.includes(tag) === false)
+    {
+        // The tag is not available in simple album mode
+        gotoSearch(tag, name);
+    }
+    else if (settings.tagListBrowse.includes(tag)) {
         if (tag === 'Album') {
             let albumId = getData(target, 'AlbumId');
             if (albumId === undefined) {
                 albumId = getData(target.parentNode, 'AlbumId');
             }
             if (albumId !== null) {
-                //Show album details
+                // Show album details
                 gotoAlbum(albumId);
             }
             else {
-                //show filtered album list
+                // Show filtered album list
                 gotoAlbumList(tag, name);
             }
         }
         else {
-            //show filtered album list
+            // Show filtered album list
             gotoAlbumList(tag, name);
         }
+    }
+    else {
+        // The tag is not available for albums
+        gotoSearch(tag, name);
     }
 }
 
@@ -155,6 +167,26 @@ function gotoAlbumList(tag, value) {
 function gotoFilesystem(uri, type) {
     elGetById('BrowseFilesystemSearchStr').value = '';
     appGoto('Browse', 'Filesystem', undefined, 0, undefined, uri, {'tag':'', 'desc': false}, type, '');
+}
+
+/**
+ * Go's to the search view
+ * @param {string} tag tag to search
+ * @param {string|Array} value value to search
+ * @returns {void}
+ */
+function gotoSearch(tag, value) {
+    const filters = [];
+    if (typeof(value) === 'string') {
+        filters.push(_createSearchExpression(tag, '==', value));
+    }
+    else {
+        for (const v of value) {
+            filters.push(_createSearchExpression(tag, '==', v));
+        }
+    }
+    const expression = '(' + filters.join(' AND ') + ')';
+    appGoto('Search', undefined, undefined, 0, undefined, tag, {'tag':'', 'desc': false}, tag, expression);
 }
 
 /**

@@ -319,6 +319,87 @@ function clickNext() {
 }
 
 /**
+ * Handler for click on fast rewind button
+ * @returns {void}
+ */
+//eslint-disable-next-line no-unused-vars
+function clickFastRewind() {
+    clickSeek(-settings.webuiSettings.seekStep, true);
+}
+
+/**
+ * Handler for click on fast rewind button in playback controls popover
+ * @returns {void}
+ */
+//eslint-disable-next-line no-unused-vars
+function clickFastRewindValue() {
+    lastSeekStep = parseToSeconds(elGetById('popoverFooterSeekInput').value);
+    clickSeek(-lastSeekStep, true);
+}
+
+/**
+ * Handler for click on fast rewind button
+ * @returns {void}
+ */
+//eslint-disable-next-line no-unused-vars
+function clickFastForward() {
+    clickSeek(settings.webuiSettings.seekStep, true);
+}
+
+/**
+ * Handler for click on fast rewind button in playback controls popover
+ * @returns {void}
+ */
+//eslint-disable-next-line no-unused-vars
+function clickFastForwardValue() {
+    lastSeekStep = parseToSeconds(elGetById('popoverFooterSeekInput').value);
+    clickSeek(lastSeekStep, true);
+}
+
+/**
+ * Handler for click on goto position button in playback controls popover
+ * @returns {void}
+ */
+//eslint-disable-next-line no-unused-vars
+function clickGotoPos() {
+    const seekToPos = parseToSeconds(elGetById('popoverFooterGotoInput').value);
+    clickSeek(seekToPos, false);
+}
+
+/**
+ * Shows the advanced playback control popover
+ * @param {Event} event triggering event
+ * @returns {void}
+ */
+function toggleAdvPlaycontrolsPopover(event) {
+    console.log(event.target.closest('.dropdown'));
+    if (event.target.closest('.dropdown-menu') !== null) {
+        return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    if (domCache.footer.getAttribute('aria-describedby') === null) {
+        showPopover(domCache.footer, 'footer');
+    }
+    else {
+        hidePopover();
+    }
+}
+
+/**
+ * Seek handler
+ * @param {number} value seek by/to value
+ * @param {boolean} relative true = number is relative
+ * @returns {void}
+ */
+function clickSeek(value, relative) {
+    sendAPI("MYMPD_API_PLAYER_SEEK_CURRENT", {
+        "seek": value,
+        "relative": relative
+    }, null, false);
+}
+
+/**
  * Handler for click on single button
  * @param {string} mode single mode: "0" = off, "1" = single, "oneshot" = single one shot
  * @returns {void}

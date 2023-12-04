@@ -15,6 +15,7 @@
 #include "src/lib/smartpls.h"
 #include "src/lib/utility.h"
 #include "src/mpd_client/errorhandler.h"
+#include "src/mpd_client/stickerdb.h"
 #include "src/mpd_client/tags.h"
 #include "src/mympd_api/extra_media.h"
 #include "src/mympd_api/sticker.h"
@@ -121,20 +122,15 @@ sds mympd_api_browse_filesystem(struct t_partition_state *partition_state, sds b
 
     long entity_count = 0;
     long entities_returned = 0;
-    if (sdslen(path) > 1) {
-        char *path_cpy = strdup(path);
-        char *parent_dir = dirname(path_cpy);
-        buffer = sdscat(buffer, "{\"Type\":\"parentDir\",\"name\":\"parentDir\",");
-        buffer = tojson_char(buffer, "uri", (parent_dir[0] == '.' ? "/" : parent_dir), false);
-        buffer = sdscatlen(buffer, "}", 1);
-        entity_count++;
-        entities_returned++;
-        FREE_PTR(path_cpy);
-    }
 
     raxIterator iter;
     raxStart(&iter, entity_list);
     raxSeek(&iter, "^", NULL, 0);
+    if (partition_state->mpd_state->feat_stickers == true &&
+        tagcols->stickers_len > 0)
+    {
+        stickerdb_exit_idle(partition_state->mympd_state->stickerdb);
+    }
     while (raxNext(&iter)) {
         struct t_dir_entry *entry_data = (struct t_dir_entry *)iter.data;
         if (entity_count >= offset &&
@@ -147,15 +143,16 @@ sds mympd_api_browse_filesystem(struct t_partition_state *partition_state, sds b
                 case MPD_ENTITY_TYPE_SONG: {
                     const struct mpd_song *song = mpd_entity_get_song(entry_data->entity);
                     buffer = sdscat(buffer, "{\"Type\":\"song\",");
-                    buffer = print_song_tags(buffer, partition_state->mpd_state->feat_tags, tagcols, song);
+                    buffer = print_song_tags(buffer, partition_state->mpd_state->feat_tags, tagcols, song, &partition_state->mympd_state->config->albums);
                     buffer = sdscatlen(buffer, ",", 1);
                     sds filename = sdsnew(mpd_song_get_uri(song));
                     basename_uri(filename);
                     buffer = tojson_sds(buffer, "Filename", filename, false);
                     FREE_SDS(filename);
-                    if (partition_state->mpd_state->feat_stickers) {
-                        buffer = sdscatlen(buffer, ",", 1);
-                        buffer = mympd_api_sticker_get_print(buffer, &partition_state->mpd_state->sticker_cache, mpd_song_get_uri(song));
+                    if (partition_state->mpd_state->feat_stickers == true &&
+                        tagcols->stickers_len > 0)
+                    {
+                        buffer = mympd_api_sticker_get_print_batch(buffer, partition_state->mympd_state->stickerdb, mpd_song_get_uri(song), tagcols);
                     }
                     buffer = sdscatlen(buffer, "}", 1);
                     break;
@@ -189,10 +186,15 @@ sds mympd_api_browse_filesystem(struct t_partition_state *partition_state, sds b
         entity_count++;
     }
     raxStop(&iter);
+    if (partition_state->mpd_state->feat_stickers == true &&
+        tagcols->stickers_len > 0)
+    {
+        stickerdb_enter_idle(partition_state->mympd_state->stickerdb);
+    }
     buffer = sdscatlen(buffer, "],", 2);
     buffer = mympd_api_get_extra_media(partition_state->mpd_state, buffer, path, true);
     buffer = sdscatlen(buffer, ",", 1);
-    buffer = tojson_llong(buffer, "totalEntities", (long long)entity_list->numele, true);
+    buffer = tojson_long(buffer, "totalEntities", entity_count, true);
     buffer = tojson_long(buffer, "returnedEntities", entities_returned, true);
     buffer = tojson_long(buffer, "offset", offset, true);
     buffer = tojson_sds(buffer, "search", searchstr, false);

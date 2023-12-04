@@ -7,14 +7,18 @@
 #include "compile_time.h"
 #include "src/lib/config.h"
 
+#include "src/lib/album_cache.h"
 #include "src/lib/env.h"
+#include "src/lib/filehandler.h"
 #include "src/lib/log.h"
 #include "src/lib/mem.h"
 #include "src/lib/sds_extras.h"
 #include "src/lib/state_files.h"
+#include "src/lib/utility.h"
 #include "src/lib/validate.h"
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include <string.h>
 #include <time.h>
 
@@ -92,7 +96,12 @@ void mympd_config_defaults(struct t_config *config) {
     //configurable with environment variables at first startup
     config->http = startup_getenv_bool("MYMPD_HTTP", CFG_MYMPD_HTTP, config->first_startup);
     #ifdef MYMPD_ENABLE_IPV6
-        config->http_host = startup_getenv_string("MYMPD_HTTP_HOST", CFG_MYMPD_HTTP_HOST_IPV6, vcb_isname, config->first_startup);
+        if (get_ipv6_support() == true) {
+            config->http_host = startup_getenv_string("MYMPD_HTTP_HOST", CFG_MYMPD_HTTP_HOST_IPV6, vcb_isname, config->first_startup);
+        }
+        else {
+            config->http_host = startup_getenv_string("MYMPD_HTTP_HOST", CFG_MYMPD_HTTP_HOST_IPV4, vcb_isname, config->first_startup);
+        }
     #else
         config->http_host = startup_getenv_string("MYMPD_HTTP_HOST", CFG_MYMPD_HTTP_HOST_IPV4, vcb_isname, config->first_startup);
     #endif
@@ -125,6 +134,15 @@ void mympd_config_defaults(struct t_config *config) {
     config->covercache_keep_days = startup_getenv_int("MYMPD_COVERCACHE_KEEP_DAYS", CFG_MYMPD_COVERCACHE_KEEP_DAYS, COVERCACHE_AGE_MIN, COVERCACHE_AGE_MAX, config->first_startup);
     config->save_caches = startup_getenv_bool("MYMPD_SAVE_CACHES", CFG_MYMPD_SAVE_CACHES, config->first_startup);
     config->mympd_uri = startup_getenv_string("MYMPD_URI", CFG_MYMPD_URI, vcb_isname, config->first_startup);
+    config->stickers = startup_getenv_bool("MYMPD_STICKERS", CFG_MYMPD_STICKERS, config->first_startup);
+
+    sds album_mode_str = startup_getenv_string("MYMPD_ALBUM_MODE", CFG_MYMPD_ALBUM_MODE, vcb_isname, config->first_startup);
+    config->albums.mode = parse_album_mode(album_mode_str);
+    FREE_SDS(album_mode_str);
+
+    sds album_group_tag_str = startup_getenv_string("MYMPD_ALBUM_GROUP_TAG", CFG_MYMPD_ALBUM_GROUP_TAG, vcb_isname, config->first_startup);
+    config->albums.group_tag = mpd_tag_name_iparse(album_group_tag_str);
+    FREE_SDS(album_group_tag_str);
 }
 
 /**
@@ -162,9 +180,50 @@ bool mympd_config_rw(struct t_config *config, bool write) {
     config->loglevel = state_file_rw_int(config->workdir, DIR_WORK_CONFIG, "loglevel", config->loglevel, LOGLEVEL_MIN, LOGLEVEL_MAX, write);
     config->save_caches = state_file_rw_bool(config->workdir, DIR_WORK_CONFIG, "save_caches", config->save_caches, write);
     config->mympd_uri = state_file_rw_string_sds(config->workdir, DIR_WORK_CONFIG, "mympd_uri", config->mympd_uri, vcb_isname, write);
+    config->stickers = state_file_rw_bool(config->workdir, DIR_WORK_CONFIG, "stickers", config->stickers, write);
+
+    sds album_mode_str = state_file_rw_string(config->workdir, DIR_WORK_CONFIG, "album_mode", lookup_album_mode(config->albums.mode), vcb_isname, write);
+    config->albums.mode = parse_album_mode(album_mode_str);
+    FREE_SDS(album_mode_str);
+
+    sds album_group_tag_str = state_file_rw_string(config->workdir, DIR_WORK_CONFIG, "album_group_tag", mpd_tag_name(config->albums.group_tag), vcb_isname, write);
+    config->albums.group_tag = mpd_tag_name_iparse(album_group_tag_str);
+    FREE_SDS(album_group_tag_str);
+
     //overwrite configured loglevel
     config->loglevel = getenv_int("MYMPD_LOGLEVEL", config->loglevel, LOGLEVEL_MIN, LOGLEVEL_MAX);
     return true;
+}
+
+/**
+ * Writes the current version to the version file
+ * @param workdir working directory
+ * @return true if file was written, else false
+ */
+bool mympd_version_set(sds workdir) {
+    sds version = sdsnew(MYMPD_VERSION);
+    sds filepath = sdscatfmt(sdsempty(), "%S/%s/version", workdir, DIR_WORK_CONFIG);
+    bool rc = write_data_to_file(filepath, version, sdslen(version));
+    FREE_SDS(version);
+    FREE_SDS(filepath);
+    return rc;
+}
+
+/**
+ * Checks the version of the configuration against current version
+ * @param workdir working directory
+ * @return true if version has not changed, else false
+ */
+bool mympd_version_check(sds workdir) {
+    sds version = sdsempty();
+    sds filepath = sdscatfmt(sdsempty(), "%S/%s/version", workdir, DIR_WORK_CONFIG);
+    sds_getfile(&version, filepath, 10, true, false);
+    bool rc = strcmp(version, MYMPD_VERSION) == 0
+        ? true
+        : false;
+    FREE_SDS(version);
+    FREE_SDS(filepath);
+    return rc;
 }
 
 /**

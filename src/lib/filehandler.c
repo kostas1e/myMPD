@@ -8,6 +8,7 @@
 #include "src/lib/filehandler.h"
 
 #include "src/lib/log.h"
+#include "src/lib/passwd.h"
 #include "src/lib/sds_extras.h"
 
 #include <dirent.h>
@@ -26,14 +27,6 @@
  */
 bool do_chown(const char *file_path, const char *username) {
     errno = 0;
-    struct passwd *pwd = getpwnam(username);
-    if (pwd == NULL) {
-        MYMPD_LOG_ERROR(NULL, "User \"%s\" does not exist", username);
-        MYMPD_LOG_ERRNO(NULL, errno);
-        return false;
-    }
-
-    errno = 0;
     int fd = open(file_path, O_RDONLY | O_CLOEXEC);
     if (fd == -1) {
         MYMPD_LOG_ERROR(NULL, "Can't open \"%s\"", file_path);
@@ -49,8 +42,14 @@ bool do_chown(const char *file_path, const char *username) {
         return false;
     }
 
-    if (status.st_uid == pwd->pw_uid &&
-        status.st_gid == pwd->pw_gid)
+    struct passwd pwd;
+    if (get_passwd_entry(&pwd, username) == NULL) {
+        MYMPD_LOG_ERROR(NULL, "User \"%s\" does not exist", username);
+        return false;
+    }
+
+    if (status.st_uid == pwd.pw_uid &&
+        status.st_gid == pwd.pw_gid)
     {
         //owner and group already set
         close(fd);
@@ -58,7 +57,7 @@ bool do_chown(const char *file_path, const char *username) {
     }
 
     errno = 0;
-    int rc = fchown(fd, pwd->pw_uid, pwd->pw_gid); /* Flawfinder: ignore */
+    int rc = fchown(fd, pwd.pw_uid, pwd.pw_gid); /* Flawfinder: ignore */
     close(fd);
     if (rc == -1) {
         MYMPD_LOG_ERROR(NULL, "Can't chown \"%s\" to \"%s\"", file_path, username);
@@ -161,7 +160,9 @@ int sds_getfile_from_fp(sds *s, FILE *fp, size_t max, bool remove_newline) {
         int c = fgetc(fp);
         if (c == EOF) {
             sdstrim(*s, "\r \t\n");
-            MYMPD_LOG_DEBUG(NULL, "Read %lu bytes from file", (unsigned long)sdslen(*s));
+            #ifdef MYMPD_DEBUG
+                MYMPD_LOG_DEBUG(NULL, "Read %lu bytes from file", (unsigned long)sdslen(*s));
+            #endif
             return (int)sdslen(*s);
         }
         if (remove_newline == true &&
@@ -221,12 +222,15 @@ int testdir(const char *desc, const char *dir_name, bool create, bool silent) {
             //directory does not exist and creating it failed
             return DIR_CREATE_FAILED;
         }
-        MYMPD_LOG_NOTICE(NULL, "%s: \"%s\" created", desc, dir_name);
+        if (silent == false) {
+            MYMPD_LOG_NOTICE(NULL, "%s: \"%s\" created", desc, dir_name);
+        }
         //directory successfully created
         return DIR_CREATED;
     }
-
-    MYMPD_LOG_ERROR(NULL, "%s: \"%s\" does not exist", desc, dir_name);
+    if (silent == false) {
+        MYMPD_LOG_ERROR(NULL, "%s: \"%s\" does not exist", desc, dir_name);
+    }
     //directory does not exist
     return DIR_NOT_EXISTS;
 }

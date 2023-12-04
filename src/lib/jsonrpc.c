@@ -11,6 +11,7 @@
 #include "src/lib/api.h"
 #include "src/lib/log.h"
 #include "src/lib/sds_extras.h"
+#include "src/lib/sticker.h"
 #include "src/mpd_client/tags.h"
 
 #include <errno.h>
@@ -356,6 +357,22 @@ sds jsonrpc_respond_message_phrase(sds buffer, enum mympd_cmd_ids cmd_id, long r
 /**
  * Json emmiting
  */
+
+/**
+ * Appends a comma on demand.
+ * Comma is ommited on start of string or end of string is already a comma.
+ * @param buffer sds string to append
+ * @return pointer to buffer
+ */
+sds json_comma(sds buffer) {
+    size_t len = sdslen(buffer);
+    if (len == 0 ||
+        buffer[len - 1] == ',')
+    {
+        return buffer;
+    }
+    return sdscatlen(buffer, ",", 1);
+}
 
 /**
  * Prints a json key/value pair for already encoded values
@@ -1277,7 +1294,12 @@ static bool icb_json_get_tag(const char *path, sds key, sds value, int vtype, va
     struct t_tags *tags = (struct t_tags *) userdata;
     enum mpd_tag_type tag = mpd_tag_name_iparse(value);
     if (tag != MPD_TAG_UNKNOWN) {
-        tags->tags[tags->len++] = tag;
+        tags->tags[tags->tags_len++] = tag;
+        return true;
+    }
+    enum mympd_sticker_types sticker = sticker_name_parse(value);
+    if (sticker != STICKER_UNKNOWN) {
+        tags->stickers[tags->stickers_len++] = sticker;
     }
     return true;
 }

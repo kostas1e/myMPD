@@ -7,6 +7,7 @@ configure_file(utility.h.in "${PROJECT_BINARY_DIR}/test/utility.h")
 
 set(TEST_SOURCES
   main.c
+  utility.c
   ../src/lib/album_cache.c
   ../src/lib/api.c
   ../src/lib/cert.c
@@ -19,21 +20,27 @@ set(TEST_SOURCES
   ../src/lib/lua_mympd_state.c
   ../src/lib/m3u.c
   ../src/lib/mimetype.c
+  ../src/lib/mpack.c
   ../src/lib/msg_queue.c
   ../src/lib/mympd_state.c
+  ../src/lib/passwd.c
   ../src/lib/random.c
   ../src/lib/sds_extras.c
   ../src/lib/state_files.c
-  ../src/lib/sticker_cache.c
+  ../src/lib/sticker.c
+  ../src/lib/tags.c
   ../src/lib/utility.c
   ../src/lib/validate.c
+  ../src/mpd_client/connection.c
   ../src/mpd_client/errorhandler.c
+  ../src/mpd_client/features.c
   ../src/mpd_client/jukebox.c
   ../src/mpd_client/presets.c
   ../src/mpd_client/queue.c
   ../src/mpd_client/search.c
   ../src/mpd_client/search_local.c
   ../src/mpd_client/shortcuts.c
+  ../src/mpd_client/stickerdb.c
   ../src/mpd_client/tags.c
   ../src/mpd_client/jukebox.c
   ../src/mpd_client/volume.c
@@ -100,6 +107,7 @@ target_compile_options(unit_test
 target_link_libraries(unit_test
   libmympdclient
   mjson
+  mpack
   mongoose
   rax
   sds
@@ -140,6 +148,7 @@ list(APPEND test_categories
   "mpd_client_tags"
   "mympd_queue"
   "mympd_state"
+  "passwd"
   "radix_sort"
   "random"
   "sds_extras"

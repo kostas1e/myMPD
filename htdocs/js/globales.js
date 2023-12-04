@@ -30,6 +30,7 @@ const jsonRpcError = {
 let socket = null;
 
 let websocketKeepAliveTimer = null;
+let websocketLastPong = null;
 let searchTimer = null;
 let resizeTimer = null;
 let progressTimer = null;
@@ -158,6 +159,8 @@ let materialIcons = {};
 let phrasesDefault = {};
 let phrases = {};
 
+let lastSeekStep = 10;
+
 /**
  * This settings are saved in the browsers localStorage
  */
@@ -266,21 +269,24 @@ const settingsFields = {
         "inputType": "text",
         "contentType": "number",
         "title": "Volume min.",
-        "form": "modalSettingsVolumeFrm"
+        "form": "modalSettingsVolumeFrm",
+        "invalid": "Must be a number"
     },
     "volumeMax": {
         "defaultValue": defaults["MYMPD_VOLUME_MAX"],
         "inputType": "text",
         "contentType": "number",
         "title": "Volume max.",
-        "form": "modalSettingsVolumeFrm"
+        "form": "modalSettingsVolumeFrm",
+        "invalid": "Must be a number"
     },
     "volumeStep": {
         "defaultValue": defaults["MYMPD_VOLUME_STEP"],
         "inputType": "text",
         "contentType": "number",
         "title": "Volume step",
-        "form": "modalSettingsVolumeFrm"
+        "form": "modalSettingsVolumeFrm",
+        "invalid": "Must be a number"
     },
     "lyricsUsltExt": {
         "defaultValue": defaults["MYMPD_LYRICS_USLT_EXT"],
@@ -568,6 +574,20 @@ const settingsWebuiFields = {
         "inputType": "checkbox",
         "title": "Playback settings",
         "form": "modalSettingsFooterFrm",
+        "sort": 2
+    },
+    "footerPlaybackControlsPopover": {
+        "defaultValue": false,
+        "inputType": "checkbox",
+        "title": "Advanced playback controls",
+        "form": "modalSettingsFooterFrm",
+        "sort": 1
+    },
+    "footerSeek": {
+        "defaultValue": false,
+        "inputType": "checkbox",
+        "title": "Seek",
+        "form": "modalSettingsFooterFrm",
         "sort": 1
     },
     "footerVolumeLevel": {
@@ -575,14 +595,14 @@ const settingsWebuiFields = {
         "inputType": "checkbox",
         "title": "Volume level",
         "form": "modalSettingsFooterFrm",
-        "sort": 2
+        "sort": 3
     },
     "footerNotifications": {
         "defaultValue": false,
         "inputType": "checkbox",
         "title": "Notification icon",
         "form": "modalSettingsFooterFrm",
-        "sort": 3
+        "sort": 4
     },
     "showHelp": {
         "defaultValue": true,
@@ -668,6 +688,7 @@ const settingsWebuiFields = {
         "inputType": "checkbox",
         "title": "Timer",
         "form": "modalSettingsFurtherFeaturesFrm",
+        "warn": "Timers are not supported by platform",
         "help": "helpSettingsEnableTimer"
     },
     "enableMounts": {
@@ -770,7 +791,7 @@ const settingsWebuiFields = {
         "onChange": "eventChangeLocale"
     },
     "startupView": {
-        "defaultValue": null,
+        "defaultValue": "Home",
         "validValues": {
             "Home": "Home",
             "Playback": "Playback",
@@ -795,6 +816,13 @@ const settingsWebuiFields = {
         "form": "modalSettingsCloudFrm",
         "help": "helpSettingsMusicBrainzLinks"
     },
+    "radiobrowserStationclicks": {
+        "defaultValue": false,
+        "inputType": "checkbox",
+        "title": "Submit station clicks to radiobrowser.info",
+        "form": "modalSettingsCloudFrm",
+        "help": "helpSettingsRadiobrowserStationclicks"
+    },
     "outputLigatures": {
         "defaultValue": {
             "default": "speaker",
@@ -807,7 +835,20 @@ const settingsWebuiFields = {
             "snapcast": "hub"
         },
         "inputType": "none"
-    }
+    },
+    "seekStep": {
+        "defaultValue": 10,
+        "inputType": "text",
+        "contentType": "number",
+        "title": "Seek step",
+        "unit": "Seconds",
+        "form": "modalSettingsSeekFrm",
+        "validate": {
+            "cmd": "validateUintEl",
+            "options": []
+        },
+        "invalid": "Must be a number"
+    },
 };
 
 const settingsConnectionFields = {
@@ -861,7 +902,49 @@ const settingsConnectionFields = {
         "help": "helpConnectionBinaryLimit",
         "unit": "kB",
         "class": ["alwaysEnabled"]
-    }
+    },
+    "stickerdbMpdHost": {
+        "defaultValue": defaults["MYMPD_MPD_HOST"],
+        "inputType": "text",
+        "title": "MPD host",
+        "form": "modalConnectionStickerdbFrm",
+        "help": "helpConnectionMPDHost",
+        "class": ["alwaysEnabled"]
+    },
+    "stickerdbMpdPort": {
+        "defaultValue": defaults["MYMPD_MPD_PORT"],
+        "inputType": "text",
+        "contentType": "number",
+        "title": "MPD port",
+        "form": "modalConnectionStickerdbFrm",
+        "help": "helpConnectionMPDPort",
+        "class": ["alwaysEnabled"]
+    },
+    "stickerdbMpdPass": {
+        "defaultValue": defaults["MYMPD_MPD_PASS"],
+        "inputType": "password",
+        "title": "MPD password",
+        "form": "modalConnectionStickerdbFrm",
+        "help": "helpConnectionMPDPassword",
+        "class": ["alwaysEnabled"]
+    },
+    "stickerdbMpdTimeout": {
+        "defaultValue": defaults["MYMPD_MPD_TIMEOUT_SEC"],
+        "inputType": "text",
+        "title": "Timeout",
+        "form": "modalConnectionStickerdbFrm",
+        "help": "helpConnectionTimeout",
+        "unit": "Seconds",
+        "class": ["alwaysEnabled"]
+    },
+    "stickerdbMpdKeepalive": {
+        "defaultValue": defaults["MYMPD_MPD_KEEPALIVE"],
+        "inputType": "checkbox",
+        "title": "Keepalive",
+        "form": "modalConnectionStickerdbFrm",
+        "help": "helpConnectionKeepalive",
+        "class": ["alwaysEnabled"]
+    },
 };
 
 const settingsPlaybackFields = {
@@ -918,7 +1001,8 @@ const settingsPlaybackFields = {
         "cbCallbackOptions": [0, 'selectJukeboxPlaylist'],
         "title": "Playlist",
         "form": "modalPlaybackJukeboxCollapse",
-        "help": "helpJukeboxPlaylist"
+        "help": "helpJukeboxPlaylist",
+        "class": ["jukeboxSongOnly"]
     },
     "jukeboxQueueLength": {
         "inputType": "text",
@@ -926,7 +1010,8 @@ const settingsPlaybackFields = {
         "contentType": "number",
         "title": "Keep queue length",
         "form": "modalPlaybackJukeboxCollapse",
-        "help": "helpJukeboxQueueLength"
+        "help": "helpJukeboxQueueLength",
+        "class": ["jukeboxSongOnly"]
     },
     "jukeboxUniqueTag": {
         "inputType": "select",
@@ -942,14 +1027,40 @@ const settingsPlaybackFields = {
         "title": "Song was played last",
         "form": "modalPlaybackJukeboxCollapse",
         "help": "helpJukeboxLastPlayed",
-        "unit": "Hours ago"
+        "unit": "Hours ago",
+        "class": ["featAdvAlbum"]
     },
     "jukeboxIgnoreHated": {
         "inputType": "checkbox",
         "defaultValue": defaults["MYMPD_JUKEBOX_IGNORE_HATED"],
         "title": "Ignore hated songs",
         "form": "modalPlaybackJukeboxCollapse",
-        "help": "helpJukeboxIgnoreHated"
+        "help": "helpJukeboxIgnoreHated",
+        "class": ["jukeboxSongOnly"]
+    },
+    "jukeboxMinSongDuration": {
+        "inputType": "text",
+        "contentType": "number",
+        "defaultValue": defaults["MYMPD_JUKEBOX_MIN_SONG_DURATION"],
+        "title": "Min. song duration",
+        "form": "modalPlaybackJukeboxCollapse",
+        "help": "helpJukeboxMinSongDuration",
+        "class": ["jukeboxSongOnly"],
+        "unit": "Seconds"
+    },
+    "jukeboxFilterInclude": {
+        "inputType": "text",
+        "defaultValue": "",
+        "title": "Include expression",
+        "form": "modalPlaybackJukeboxCollapse",
+        "help": "helpJukeboxFilterInclude"
+    },
+    "jukeboxFilterExclude": {
+        "inputType": "text",
+        "defaultValue": "",
+        "title": "Exclude expression",
+        "form": "modalPlaybackJukeboxCollapse",
+        "help": "helpJukeboxFilterExclude"
     }
 };
 
@@ -1024,13 +1135,14 @@ const mpdVersion = {
 const browseFilesystemHistory = {};
 
 //list of stickers
+/** @type {Array} */
 const stickerList = [
-    'stickerPlayCount',
-    'stickerSkipCount',
-    'stickerLastPlayed',
-    'stickerLastSkipped',
-    'stickerLike',
-    'stickerElapsed'
+    'playCount',
+    'skipCount',
+    'lastPlayed',
+    'lastSkipped',
+    'like',
+    'elapsed'
 ];
 
 //application state

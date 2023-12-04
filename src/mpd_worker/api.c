@@ -41,7 +41,7 @@ void mpd_worker_api(struct t_mpd_worker_state *mpd_worker_state) {
 
     switch(request->cmd_id) {
         case MYMPD_API_SONG_FINGERPRINT:
-            if (json_get_string(request->data, "$.params.uri", 1, FILEPATH_LEN_MAX, &sds_buf1, vcb_isfilepath, &parse_error) == true) {
+            if (json_get_string(request->data, "$.params.uri", 1, FILEPATH_LEN_MAX, &sds_buf1, vcb_ispathfilename, &parse_error) == true) {
                 response->data = mpd_worker_song_fingerprint(partition_state, response->data, request->id, sds_buf1);
             }
             break;
@@ -65,9 +65,10 @@ void mpd_worker_api(struct t_mpd_worker_state *mpd_worker_state) {
             break;
         case MYMPD_API_PLAYLIST_CONTENT_SORT:
             if (json_get_string(request->data, "$.params.plist", 1, FILENAME_LEN_MAX, &sds_buf1, vcb_isfilename, &parse_error) == true &&
-                json_get_string(request->data, "$.params.tag", 1, NAME_LEN_MAX, &sds_buf2, vcb_ismpdtag, &parse_error) == true)
+                json_get_string(request->data, "$.params.tag", 1, NAME_LEN_MAX, &sds_buf2, vcb_ismpdtag, &parse_error) == true &&
+                json_get_bool(request->data, "$.params.sortdesc", &bool_buf1, NULL) == true)
             {
-                rc = mpd_client_playlist_sort(partition_state, sds_buf1, sds_buf2, &error);
+                rc = mpd_client_playlist_sort(partition_state, sds_buf1, sds_buf2, bool_buf1, &error);
                 response->data = rc == true
                     ? jsonrpc_respond_message_phrase(response->data, request->cmd_id, request->id,
                           JSONRPC_FACILITY_PLAYLIST, JSONRPC_SEVERITY_INFO, "Sorted playlist %{plist} successfully", 2, "plist", sds_buf1)

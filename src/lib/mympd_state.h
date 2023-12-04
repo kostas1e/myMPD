@@ -12,7 +12,7 @@
 #include "dist/sds/sds.h"
 #include "src/lib/config_def.h"
 #include "src/lib/list.h"
-
+#include "src/lib/tags.h"
 #include <poll.h>
 #include <time.h>
 
@@ -20,10 +20,10 @@
  * Jukebox state
  */
 enum jukebox_modes {
-    JUKEBOX_OFF,       //!< jukebox is disabled
-    JUKEBOX_ADD_SONG,  //!< jukebox adds single songs
-    JUKEBOX_ADD_ALBUM, //!< jukebox adds whole albums
-    JUKEBOX_UNKNOWN    //!< jukebox mode is unknown
+    JUKEBOX_OFF,        //!< jukebox is disabled
+    JUKEBOX_ADD_SONG,   //!< jukebox adds single songs
+    JUKEBOX_ADD_ALBUM,  //!< jukebox adds whole albums
+    JUKEBOX_UNKNOWN     //!< jukebox mode is unknown
 };
 
 /**
@@ -37,15 +37,6 @@ enum mpd_conn_states {
     MPD_DISCONNECT_INSTANT,  //!< disconnect mpd and reconnect as soon as possible
     MPD_WAIT,                //!< waiting for reconnection
     MPD_REMOVED              //!< connection was removed
-};
-
-/**
- * Struct for a mpd tag lists
- * libmpdclient uses the same declaration
- */
-struct t_tags {
-    size_t len;                 //!< number of tags in the array
-    enum mpd_tag_type tags[64]; //!< tags array
 };
 
 /**
@@ -100,10 +91,8 @@ struct t_mpd_state {
     bool feat_pcre;                     //!< mpd supports pcre for filter expressions
     //caches
     struct t_cache album_cache;         //!< the album cache created by the mpd_worker thread
-    struct t_cache sticker_cache;       //!< the sticker cache created by the mpd_worker thread
     //lists
     long last_played_count;             //!< number of songs to keep in the last played list (disk + memory)
-    struct t_list sticker_queue;        //!< queue for stickers to set (cache if sticker cache is rebuilding) 
     sds booklet_name;                   //!< name of the booklet files
     //ideon
     int dc;
@@ -152,6 +141,9 @@ struct t_partition_state {
     struct t_list jukebox_queue;           //!< the jukebox queue itself
     struct t_list jukebox_queue_tmp;       //!< temporary jukebox queue for the add random to queue function
     bool jukebox_ignore_hated;             //!< ignores hated songs for the jukebox mode
+    sds jukebox_filter_include;            //!< mpd search filter to include songs / albums
+    sds jukebox_filter_exclude;            //!< mpd search filter to exclude songs / albums
+    unsigned jukebox_min_song_duration;    //!< minimum song duration
     //partition
     sds name;                              //!< partition name
     sds highlight_color;                   //!< highlight color
@@ -188,18 +180,14 @@ struct t_timer_definition {
 };
 
 /**
- * forward declaration
- */
-struct t_timer_node;
-
-/**
- * Linked list of timers containing t_timer_nodes
+ * Struct for timers containing a t_list with t_timer_nodes
  */
 struct t_timer_list {
-    int length;                 //!< length of the timer list
-    int last_id;                //!< highest timer id in the list
-    int active;                 //!< number of enabled timers
-    struct t_timer_node *list;  //!< timer definition
+    long long last_id;                   //!< highest timer id in the list
+    int active;                          //!< number of enabled timers
+    struct t_list list;                  //!< timer definition
+    struct pollfd ufds[LIST_TIMER_MAX];  //!< timerfds to poll
+    nfds_t ufds_len;                     //!< number of fds in ufds
 };
 
 /**
@@ -219,6 +207,7 @@ struct t_mympd_state {
     struct t_config *config;                      //!< pointer to static config
     struct t_mpd_state *mpd_state;                //!< mpd state shared across partitions
     struct t_partition_state *partition_state;    //!< list of partition states
+    struct t_partition_state *stickerdb;          //!< states for stickerdb connection
     struct pollfd fds[MPD_CONNECTION_MAX];        //!< mpd connection fds
     nfds_t nfds;                                  //!< number of mpd connection fds
     struct t_timer_list timer_list;               //!< list of timers
@@ -288,8 +277,5 @@ void mpd_state_free(struct t_mpd_state *mpd_state);
 
 void partition_state_default(struct t_partition_state *partition_state, const char *name, struct t_mympd_state *mympd_state);
 void partition_state_free(struct t_partition_state *partition_state);
-
-void copy_tag_types(struct t_tags *src_tag_list, struct t_tags *dst_tag_list);
-void reset_t_tags(struct t_tags *tags);
 
 #endif

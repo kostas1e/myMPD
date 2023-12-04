@@ -48,6 +48,11 @@ function addTagList(elId, list) {
         stack.appendChild(
             elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "filename"}, 'Filename')
         );
+        if (elId === 'SearchSearchTags') {
+            stack.appendChild(
+                elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "base"}, 'Path')
+            );
+        }
     }
     if (elId === 'BrowseDatabaseAlbumListSearchTags') {
         stack.appendChild(
@@ -65,12 +70,10 @@ function addTagList(elId, list) {
         elId === 'BrowseRadioWebradiodbNavDropdown' ||
         elId === 'BrowseRadioRadiobrowserNavDropdown')
     {
-        if (features.featTags === true) {
-            elClear(stack);
-            stack.appendChild(
-                elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "Database"}, 'Database')
-            );
-        }
+        elClear(stack);
+        stack.appendChild(
+            elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "Database"}, 'Database')
+        );
     }
     if (elId === 'BrowseDatabaseAlbumListTagDropdown' ||
         elId === 'BrowseDatabaseTagListTagDropdown' ||
@@ -88,16 +91,18 @@ function addTagList(elId, list) {
             );
         }
         stack.appendChild(
-            elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "Playlist"}, 'Playlists')
-        );
-        if (elId === 'BrowsePlaylistListNavDropdown') {
-            stack.lastChild.classList.add('active');
-        }
-        stack.appendChild(
             elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "Filesystem"}, 'Filesystem')
         );
         if (elId === 'BrowseFilesystemNavDropdown') {
             stack.lastChild.classList.add('active');
+        }
+        if (features.featPlaylists === true) {
+            stack.appendChild(
+                elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "Playlist"}, 'Playlists')
+            );
+            if (elId === 'BrowsePlaylistListNavDropdown') {
+                stack.lastChild.classList.add('active');
+            }
         }
         stack.appendChild(
             elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "Radio"}, 'Webradios')
@@ -117,9 +122,11 @@ function addTagList(elId, list) {
                 elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "Date"}, 'Date')
             );
         }
-        stack.appendChild(
-            elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "LastModified"}, 'Last modified')
-        );
+        if (settings.albumMode === 'adv') {
+            stack.appendChild(
+                elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "Last-Modified"}, 'Last modified')
+            );
+        }
     }
     else if (elId === 'QueueCurrentSearchTags') {
         if (features.featAdvqueue === true)
@@ -151,24 +158,29 @@ function addTagListSelect(elId, list) {
         select.appendChild(
             elCreateTextTn('option', {"value": "shuffle"}, 'Shuffle')
         );
-        const optGroup = elCreateEmpty('optgroup', {"label": tn('Sort by tag'), "data-label-phrase": "Sort by tag"});
-        optGroup.appendChild(
+        select.appendChild(
+            elCreateTextTn('option', {"value": "Last-Modified"}, 'Last-Modified')
+        );
+        select.appendChild(
             elCreateTextTn('option', {"value": "filename"}, 'Filename')
         );
-        for (let i = 0, j = settings[list].length; i < j; i++) {
-            optGroup.appendChild(
-                elCreateTextTn('option', {"value": settings[list][i]}, settings[list][i])
+        if (features.featTags === true) {
+            const optGroup = elCreateEmpty('optgroup', {"label": tn('Sort by tag'), "data-label-phrase": "Sort by tag"});
+            for (let i = 0, j = settings[list].length; i < j; i++) {
+                optGroup.appendChild(
+                    elCreateTextTn('option', {"value": settings[list][i]}, settings[list][i])
+                );
+            }
+            select.appendChild(optGroup);
+        }
+    }
+    else if (elId === 'modalPlaybackJukeboxUniqueTagInput') {
+        if (settings.tagListBrowse.includes('Title') === false) {
+            //Title tag should be always in the list
+            select.appendChild(
+                elCreateTextTn('option', {"value": "Title"}, 'Song')
             );
         }
-        select.appendChild(optGroup);
-    }
-    else if (elId === 'modalPlaybackJukeboxUniqueTagInput' &&
-        settings.tagListBrowse.includes('Title') === false)
-    {
-        //Title tag should be always in the list
-        select.appendChild(
-            elCreateTextTn('option', {"value": "Title"}, 'Song')
-        );
         for (let i = 0, j = settings[list].length; i < j; i++) {
             select.appendChild(
                 elCreateTextTn('option', {"value": settings[list][i]}, settings[list][i])
@@ -255,12 +267,12 @@ function printValue(key, value) {
         case 'Pos':
             //mpd is 0-indexed but humans wants 1-indexed lists
             return document.createTextNode(value + 1);
-        case 'LastModified':
+        case 'Last-Modified':
         case 'LastPlayed':
-        case 'stickerLastPlayed':
-        case 'stickerLastSkipped':
+        case 'lastPlayed':
+        case 'lastSkipped':
             return document.createTextNode(value === 0 ? tn('never') : fmtDate(value));
-        case 'stickerLike':
+        case 'like':
             return elCreateText('span', {"class": ["mi"]},
                 value === 0
                     ? 'thumb_down'
@@ -268,7 +280,7 @@ function printValue(key, value) {
                         ? 'horizontal_rule'
                         : 'thumb_up'
             );
-        case 'stickerElapsed':
+        case 'elapsed':
             return document.createTextNode(fmtSongDuration(value));
         case 'Artist':
         case 'ArtistSort':

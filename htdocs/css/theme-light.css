@@ -61,6 +61,10 @@ html[data-bs-theme="light"] .form-range::-moz-range-track {
   background-color: var(--bs-gray-100);
 }
 
+html[data-bs-theme="light"] .card {
+  --bs-card-cap-bg: rgba(248, 249, 250, 60%);
+}
+
 /* ideon */
 
 html[data-bs-theme="light"] .ideon-logo {

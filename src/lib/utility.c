@@ -13,8 +13,11 @@
 #include <errno.h>
 #include <ifaddrs.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 
 /**
@@ -28,7 +31,7 @@ static sds get_local_ip(void);
  */
 
 /**
- * Sleep function
+ * Sleep function that is interuptable
  * @param msec milliseconds to sleep
  */
 void my_msleep(long msec) {
@@ -99,8 +102,8 @@ const char *get_extension_from_filename(const char *filename) {
 
 /**
  * Calculates the basename for files and uris
- * for files the path is removed
- * for uris the query string and hash is removed
+ * - for files the path is removed
+ * - for uris the query string and hash is removed
  * @param uri sds string to modify in place
  */
 void basename_uri(sds uri) {
@@ -185,7 +188,7 @@ sds replace_file_extension(sds filename, const char *ext) {
 static const char *invalid_filename_chars = "<>/.:?&$!#=;\a\b\f\n\r\t\v\\|";
 
 /**
- * Replaces invalid filename characters with "_"
+ * Replaces invalid and uncommon filename characters with "_"
  * @param filename sds string to sanitize
  */
 void sanitize_filename(sds filename) {
@@ -193,6 +196,24 @@ void sanitize_filename(sds filename) {
     for (size_t i = 0; i < len; i++) {
         for (size_t j = 0; j < sdslen(filename); j++) {
             if (filename[j] == invalid_filename_chars[i]) {
+                filename[j] = '_';
+            }
+        }
+    }
+}
+
+static const char *invalid_filename_chars2 = "\a\b\f\n\r\t\v/\\";
+
+/**
+ * Replaces invalid filename characters with "_",
+ * same chars as vcb_isfilename
+ * @param filename sds string to sanitize
+ */
+void sanitize_filename2(sds filename) {
+    const size_t len = strlen(invalid_filename_chars2);
+    for (size_t i = 0; i < len; i++) {
+        for (size_t j = 0; j < sdslen(filename); j++) {
+            if (filename[j] == invalid_filename_chars2[i]) {
                 filename[j] = '_';
             }
         }
@@ -249,6 +270,32 @@ sds resolv_mympd_uri(sds uri, sds mpd_host, struct t_config *config) {
     }
     //uri could not be resolved
     return uri;
+}
+
+/**
+ * Checks for IPv6 support by searching for an IPv6 adress on all interfaces
+ * @return true on IPv6 support, else false
+ */
+bool get_ipv6_support(void) {
+    struct ifaddrs *ifaddr;
+    struct ifaddrs *ifa;
+    bool rc = false;
+    errno = 0;
+    if (getifaddrs(&ifaddr) == -1) {
+        MYMPD_LOG_ERROR(NULL, "Can not get list of interface ip addresses");
+        MYMPD_LOG_ERRNO(NULL, errno);
+        return rc;
+    }
+    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+        if (ifa->ifa_addr != NULL &&
+            ifa->ifa_addr->sa_family == AF_INET6)
+        {
+            rc = true;
+            break;
+        }
+    }
+    freeifaddrs(ifaddr);
+    return rc;
 }
 
 /**

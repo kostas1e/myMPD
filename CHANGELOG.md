@@ -4,7 +4,164 @@ https://github.com/jcorporation/myMPD/
 
 ***
 
-## myMPD v12.0.2 (not yet released)
+## myMPD v13.0.5 (2023-11-19)
+
+This is a small bugfix release.
+
+### Changelog
+
+- Fix: Switch grid mode by Strg+Click #1169
+- Fix: Remove "parent dir" entry in filesystem view #1168
+- Fix: Add random songs to queue
+- Fix: Parse uniq jukebox mode from state file
+- Fix: Detection of folder for tag pictures #1172
+- Fix: set TFD_NONBLOCK | TFD_CLOEXEC for timerfds
+
+***
+
+## myMPD v13.0.4 (2023-11-11)
+
+This is a small bugfix release.
+
+### Changelog
+
+- Upd: Translations are now managed through poeditor.com api
+- Upd: Translations
+- Fix: Delete mpd playlist before creating the smart playlist
+- Fix: Remove unit tests execution order dependencies #1161
+- Fix: Update favorite from webradiodb
+- Fix: Show album from song details modal #1167
+
+***
+
+## myMPD v13.0.3 (2023-11-05)
+
+This is a small bugfix release.
+
+### Changelog
+
+- Fix: Read certificates after creation #1160
+
+***
+
+## myMPD v13.0.2 (2023-11-03)
+
+This is a small bugfix release.
+
+### Changelog
+
+- Fix: Compilation on FreeBSD
+- Fix: Search based smart playlists in shuffle mode
+- Fix: Round the volume for local playback to integer #1149
+- Fix: Do not modify dom properties in parseCmd
+- Fix: SEGVAULT creating album search expression #1151
+- Fix: Album details cover zoom #1153
+
+***
+
+## myMPD v13.0.1 (2023-11-01)
+
+This is a small bugfix release.
+
+### Changelog
+
+- Fix: Display selected jukebox uniq tag #1142
+- Fix: Jukebox internal queue randomness #1142
+
+***
+
+## myMPD v13.0.0 (2023-10-29)
+
+The album cache was reworked substantially. It uses now Album + AlbumArtist + Date tag to group albums as fallback for the MusicBrainz AlbumId, in earlier versions the fallback was Album + AlbumArtist.
+
+There is now also a simple album cache that can be created much faster than the traditional album cache. Enable the simple album mode is only reasonable, if you have a very big music collection. The simple album cache contains only the AlbumArtist, Album and Date tags.
+
+The sticker database was removed in this release. myMPD fetches now all stickers on demand from MPD. myMPD creates a separate MPD connection for the stickers. You can set this connection to another MPD instance to maintain central song statistics.
+
+## Notes
+
+- LastModified was renamed to Last-Modified. Home icons, column settings and links with references to the old name must be manually updated.
+- For packagers: cmake options are slightly changed and the new MYMPD_DOC options is enabled as default
+
+## Changelog
+
+- Feat: Add config option to disable sticker support
+- Feat: Replace sticker cache with central sticker database #1111
+- Feat: Use the MessagePack format to store caches on disc #1104
+- Feat: Improve album cache creation #1113
+- Feat: Add a simple album cache (fewer features, but much better performance) #113
+- Feat: Refresh status, if webui progress timer is greater than song length #1115
+- Feat: Add actions to the database tag view
+- Feat: Add option to display seek buttons in the footer #1110
+- Feat: Add advanced playback controls popover to footer #1110
+- Feat: Add exclude and include filter expression for jukebox mode #1098
+- Feat: Add min. duration option for jukebox mode #1098
+- Feat: Add Last-Modified option to playlist sorting
+- Feat: Respect search order for searches added to queue or playlist #1078
+- Feat: Add support for descending sort for smart playlists and playlists
+- Feat: Improve jukebox album mode
+- Feat: FreeBSD support #117
+- Upd: Use more standard cmake build types #1119
+- Upd: Rework timer implementation
+- Upd: Some websocket connection improvements
+- Upd: Mongoose 7.12 #1132
+
+***
+
+## myMPD v12.1.1 (2023-10-19)
+
+This is a small bug fix release.
+
+### Changelog
+
+- Fix: Smart playlist option disappears after it is turned off in settings #1133
+- Fix: Fill jukebox queue respects function should respect current length
+- Fix: sanitize only / and special escape values for tagart #1136
+
+***
+
+## myMPD v12.1.0 (2023-10-14)
+
+This version ships a few improvements and bug fixes.
+
+### Changelog
+
+- Feat: Add all from filesystem respects path and search, fixes #1123
+- Feat: Song search support for special tag 'base'
+- Feat: Disable click count submition to radiobrowser.info #1124
+- Fix: Restore maximum binary size to 5 MB #1125
+- Upd: remove default smart playlist generation tag #1131
+- Fix: Zoom coverimages
+- Fix: double free if trigger was not found
+- Fix: Increase LINE_LENGTH_MAX to 8192 #1129
+- Fix: Do not update album cache every time if stickers are disabled
+- Fix: handle tag values with special characters for tagart #1130
+
+***
+
+## myMPD v12.0.4 (2023-10-05)
+
+This is a small bug fix release.
+
+### Changelog
+
+- Fix: SEGV detecting IPv6 support #1121
+
+***
+
+## myMPD v12.0.3 (2023-10-04)
+
+This is a small bug fix release.
+
+## Changelog
+
+- Fix: check OS IPv6 support before enabling IPv6 listening socket #1118
+- Fix: correct calculation of myMPD uri
+- Fix: always replace cards of albumlist
+
+***
+
+## myMPD v12.0.2 (2023-09-22)
 
 This is a small bug fix release.
 

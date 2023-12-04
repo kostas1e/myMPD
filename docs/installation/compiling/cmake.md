@@ -22,7 +22,8 @@ sudo make -C build install
 | OPTION | DEFAULT | DESCRIPTION |
 | ------ | ------- | ----------- |
 | MYMPD_BUILD_TESTING | OFF | Enables building of unit tests |
-| MYMPD_DEBUG | OFF | Enables myMPD debug mode, default OFF, ON for Debug |
+| MYMPD_DOC | ON | Installs documentation |
+| MYMPD_DOC_HTML | OFF | Creates and installs the html documentation |
 | MYMPD_EMBEDDED_ASSETS | ON | Embed assets in binary, default ON, OFF for Debug |
 | MYMPD_ENABLE_FLAC | ON | Enables flac support |
 | MYMPD_ENABLE_IPV6 | ON | Enables IPv6 |
@@ -33,20 +34,27 @@ sudo make -C build install
 | MYMPD_ENABLE_UBSAN | OFF | Enables build with undefined behavior sanitizer |
 | MYMPD_MANPAGES | ON | Creates and installs manpages |
 | MYMPD_MINIMAL | OFF | Enables minimal myMPD build, disables all MYMPD_ENABLE_* flags |
-| MYMPD_STRIP_BINARY | ON | Enables stripping the binaries for Release |
 | MYMPD_STARTUP_SCRIPT | ON | Installs the startup script |
 {: .table .table-sm}
 
 ## cmake build types
 
-1. Release
+- **Release, MinSizeRel**
   - Uses predefined compile and link options for a release build
   - Embed assets in binary
+  - No debug output
   - Strips binary
-2. Debug
+- **RelWithDebInfo**
+  - Uses predefined compile and link options for a release build
+  - Embed assets in binary
+  - No debug output
+  - Included Debug info
+- **Debug**
   - Uses predefined compile and link options for a debug build
   - Assets are served from the `htdocs` folder in the source directory
-3. None:
+  - Debug output
+  - Included Debug info
+- **None**
   - Use this option to set your own compile and link options
 
 ## Unit tests

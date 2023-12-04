@@ -19,6 +19,26 @@ function handleSearchExpression(appid) {
         searchStrEl.value = '';
     }
     selectTag(appid + 'SearchTags', appid + 'SearchTagsDesc', app.current.filter);
+    selectSearchMatch(appid);
+}
+
+/**
+ * Toggles the state of the SearchMatch select, based on selected tag
+ * @param {string} appid the application id
+ * @returns {void}
+ */
+function selectSearchMatch(appid) {
+    const searchMatchEl = elGetById(appid + 'SearchMatch');
+    if (app.current.filter === 'base') {
+        elDisable(searchMatchEl);
+        searchMatchEl.value = '';
+    }
+    else {
+        elEnable(searchMatchEl);
+        if (getSelectValue(searchMatchEl) === undefined) {
+            searchMatchEl.value = 'contains';
+        }
+    }
 }
 
 /**
@@ -41,6 +61,7 @@ function initSearchExpression(appid) {
     elGetById(appid + 'SearchTags').addEventListener('click', function(event) {
         if (event.target.nodeName === 'BUTTON') {
             app.current.filter = getData(event.target, 'tag');
+            selectSearchMatch(appid);
             execSearchExpression(elGetById(appid + 'SearchStr').value);
         }
     }, false);
@@ -110,13 +131,47 @@ function initSearchExpression(appid) {
 }
 
 /**
- * Executes the search expression
+ * Executes the search expression for the current displayed view
  * @param {string} value search value
  * @returns {void}
  */
 function execSearchExpression(value) {
     const expression = createSearchExpression(elGetById(app.id + 'SearchCrumb'), app.current.filter, getSelectValueId(app.id + 'SearchMatch'), value);
     appGoto(app.current.card, app.current.tab, app.current.view, 0, app.current.limit, app.current.filter, app.current.sort, app.current.tag, expression, 0);
+}
+
+/**
+ * Parses a mpd filter expression
+ * @param {string} expression mpd filter
+ * @returns {object} parsed expression elements or null on error
+ */
+function parseExpression(expression) {
+    if (expression.length === 0) {
+        return null;
+    }
+    let fields = expression.match(/^\((\w+)\s+(\S+)\s+'(.*)'\)$/);
+    if (fields !== null &&
+        fields.length === 4)
+    {
+        return {
+            'tag': fields[1],
+            'op': fields[2],
+            'value': unescapeMPD(fields[3])
+        };
+    }
+    // support expressions without operator, e.g. base
+    fields = expression.match(/^\((\w+)\s+'(.*)'\)$/);
+    if (fields !== null &&
+        fields.length === 3)
+    {
+        return {
+            'tag': fields[1],
+            'op': '',
+            'value': unescapeMPD(fields[2])
+        };
+    }
+    logError('Failure parsing expression: ' + expression);
+    return null;
 }
 
 /**
@@ -131,21 +186,23 @@ function createSearchCrumbs(searchStr, searchEl, crumbEl) {
     const elements = searchStr.substring(1, app.current.search.length - 1).split(' AND ');
     //add all but last element to crumbs
     for (let i = 0, j = elements.length - 1; i < j; i++) {
-        const fields = elements[i].match(/^\((\w+)\s+(\S+)\s+'(.*)'\)$/);
-        if (fields !== null && fields.length === 4) {
-            crumbEl.appendChild(createSearchCrumb(fields[1], fields[2], unescapeMPD(fields[3])));
+        const fields = parseExpression(elements[i]);
+        if (fields !== null) {
+            crumbEl.appendChild(createSearchCrumb(fields.tag, fields.op, fields.value));
         }
     }
     //check if we should add the last element to the crumbs
     if (searchEl.value === '' &&
         elements.length >= 1)
     {
-        const fields = elements[elements.length - 1].match(/^\((\w+)\s+(\S+)\s+'(.*)'\)$/);
-        if (fields !== null && fields.length === 4) {
-            crumbEl.appendChild(createSearchCrumb(fields[1], fields[2], unescapeMPD(fields[3])));
+        const fields = parseExpression(elements[elements.length - 1]);
+        if (fields !== null) {
+            crumbEl.appendChild(createSearchCrumb(fields.tag, fields.op, fields.value));
         }
     }
-    crumbEl.childElementCount > 0 ? elShow(crumbEl) : elHide(crumbEl);
+    crumbEl.childElementCount > 0
+        ? elShow(crumbEl)
+        : elHide(crumbEl);
 }
 
 /**
@@ -156,6 +213,9 @@ function createSearchCrumbs(searchStr, searchEl, crumbEl) {
  * @returns {HTMLElement} search crumb element
  */
 function createSearchCrumb(filter, op, value) {
+    if (op === undefined) {
+        op = '';
+    }
     const btn = elCreateNodes('button', {"class": ["btn", "btn-dark", "me-2"]}, [
         document.createTextNode(tn(filter) + ' ' + tn(op) + ' \'' + value + '\''),
         elCreateText('span', {"class": ["ml-2", "badge", "bg-secondary"]}, '×')
@@ -189,9 +249,15 @@ function _createSearchExpression(tag, op, value) {
             op = 'contains';
         }
     }
+    if (tag === 'base') {
+        //this tag allows no operator
+        op = '';
+    }
     return '(' + tag + ' ' + op + ' ' +
-        (op === '>=' ? value : '\'' + escapeMPD(value) + '\'') +
-        ')';
+        (op === '>='
+            ? value
+            : '\'' + escapeMPD(value) + '\''
+        ) + ')';
 }
 
 /**
@@ -226,4 +292,18 @@ function createSearchExpression(crumbsEl, tag, op, value) {
         expression = '';
     }
     return expression;
+}
+
+/**
+ * Creates a mpd filter expression consisting of base and any tag search
+ * @param {string} base the base path
+ * @param {string} value value to search in any tag
+ * @returns {string} the mpd search expression
+ */
+function createBaseSearchExpression(base, value) {
+    let expression = '(base \'' + escapeMPD(base) + '\')';
+    if (isEmptyTag(value) === false) {
+        expression += ' AND ' + _createSearchExpression('any', 'contains', value);
+    }
+    return '(' + expression + ')';
 }

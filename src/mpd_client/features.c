@@ -17,6 +17,7 @@
 #include "src/mympd_api/settings.h"
 #include "src/mympd_api/status.h"
 
+#include <stdbool.h>
 #include <string.h>
 
 /**
@@ -26,6 +27,7 @@
 static void features_commands(struct t_partition_state *partition_state);
 static void features_mpd_tags(struct t_partition_state *partition_state);
 static void features_tags(struct t_partition_state *partition_state);
+static void set_simple_album_tags(struct t_partition_state *partition_state);
 static void set_album_tags(struct t_partition_state *partition_state);
 static void features_config(struct t_partition_state *partition_state);
 static sds set_directory(const char *desc, sds directory, sds value);
@@ -46,8 +48,10 @@ void mpd_client_mpd_features(struct t_partition_state *partition_state) {
         partition_state->mpd_state->protocol[2]
     );
 
-    //first disable all features
+    // first disable all features
     mpd_state_features_disable(partition_state->mpd_state);
+    // copy sticker feature flag from stickerdb connection
+    partition_state->mpd_state->feat_stickers = partition_state->mympd_state->stickerdb->mpd_state->feat_stickers;
 
     //get features
     features_commands(partition_state);
@@ -122,11 +126,7 @@ static void features_commands(struct t_partition_state *partition_state) {
     if (mpd_send_allowed_commands(partition_state->conn) == true) {
         struct mpd_pair *pair;
         while ((pair = mpd_recv_command_pair(partition_state->conn)) != NULL) {
-            if (strcmp(pair->value, "sticker") == 0) {
-                MYMPD_LOG_DEBUG(partition_state->name, "MPD supports stickers");
-                partition_state->mpd_state->feat_stickers = true;
-            }
-            else if (strcmp(pair->value, "listplaylists") == 0) {
+            if (strcmp(pair->value, "listplaylists") == 0) {
                 MYMPD_LOG_DEBUG(partition_state->name, "MPD supports playlists");
                 partition_state->mpd_state->feat_playlists = true;
             }
@@ -173,7 +173,12 @@ static void features_tags(struct t_partition_state *partition_state) {
     features_mpd_tags(partition_state);
     //parse the webui taglists and set the tag structs
     if (partition_state->mpd_state->feat_tags == true) {
-        set_album_tags(partition_state);
+        if (partition_state->mympd_state->config->albums.mode == ALBUM_MODE_ADV) {
+            set_album_tags(partition_state);
+        }
+        else {
+            set_simple_album_tags(partition_state);
+        }
         check_tags(partition_state->mympd_state->tag_list_search, "tag_list_search",
             &partition_state->mpd_state->tags_search, &partition_state->mpd_state->tags_mympd);
         check_tags(partition_state->mympd_state->tag_list_browse, "tag_list_browse",
@@ -189,7 +194,7 @@ static void features_tags(struct t_partition_state *partition_state) {
  */
 static void set_album_tags(struct t_partition_state *partition_state) {
     sds logline = sdscatfmt(sdsempty(), "Enabled tag_list_album: ");
-    for (size_t i = 0; i < partition_state->mpd_state->tags_mympd.len; i++) {
+    for (size_t i = 0; i < partition_state->mpd_state->tags_mympd.tags_len; i++) {
         switch(partition_state->mpd_state->tags_mympd.tags[i]) {
             case MPD_TAG_MUSICBRAINZ_RELEASETRACKID:
             case MPD_TAG_MUSICBRAINZ_TRACKID:
@@ -201,8 +206,34 @@ static void set_album_tags(struct t_partition_state *partition_state) {
                 //ignore this tags for albums
                 break;
             default:
-                partition_state->mpd_state->tags_album.tags[partition_state->mpd_state->tags_album.len++] = partition_state->mpd_state->tags_mympd.tags[i];
+                partition_state->mpd_state->tags_album.tags[partition_state->mpd_state->tags_album.tags_len++] = partition_state->mpd_state->tags_mympd.tags[i];
                 logline = sdscatfmt(logline, "%s ", mpd_tag_name(partition_state->mpd_state->tags_mympd.tags[i]));
+        }
+    }
+    MYMPD_LOG_NOTICE(partition_state->name, "%s", logline);
+    FREE_SDS(logline);
+}
+
+/**
+ * Sets the tags for simple albums
+ * @param partition_state pointer to partition state
+ */
+static void set_simple_album_tags(struct t_partition_state *partition_state) {
+    sds logline = sdscatfmt(sdsempty(), "Enabled tag_list_album: ");
+    for (size_t i = 0; i < partition_state->mpd_state->tags_mympd.tags_len; i++) {
+        switch(partition_state->mpd_state->tags_mympd.tags[i]) {
+            case MPD_TAG_ALBUM:
+            case MPD_TAG_ALBUM_ARTIST:
+                partition_state->mpd_state->tags_album.tags[partition_state->mpd_state->tags_album.tags_len++] = partition_state->mpd_state->tags_mympd.tags[i];
+                logline = sdscatfmt(logline, "%s ", mpd_tag_name(partition_state->mpd_state->tags_mympd.tags[i]));
+                break;
+            default:
+                if (partition_state->mpd_state->tags_mympd.tags[i] == partition_state->mympd_state->config->albums.group_tag) {
+                    // add album group tag
+                    partition_state->mpd_state->tags_album.tags[partition_state->mpd_state->tags_album.tags_len++] = partition_state->mpd_state->tags_mympd.tags[i];
+                    logline = sdscatfmt(logline, "%s ", mpd_tag_name(partition_state->mpd_state->tags_mympd.tags[i]));
+                }
+                // ignore all other tags
         }
     }
     MYMPD_LOG_NOTICE(partition_state->name, "%s", logline);
@@ -224,7 +255,7 @@ static void features_mpd_tags(struct t_partition_state *partition_state) {
             enum mpd_tag_type tag = mpd_tag_name_parse(pair->value);
             if (tag != MPD_TAG_UNKNOWN) {
                 logline = sdscatfmt(logline, "%s ", pair->value);
-                partition_state->mpd_state->tags_mpd.tags[partition_state->mpd_state->tags_mpd.len++] = tag;
+                partition_state->mpd_state->tags_mpd.tags[partition_state->mpd_state->tags_mpd.tags_len++] = tag;
             }
             else {
                 MYMPD_LOG_WARN(partition_state->name, "Unknown tag %s (libmpdclient too old)", pair->value);
@@ -235,7 +266,7 @@ static void features_mpd_tags(struct t_partition_state *partition_state) {
     mpd_response_finish(partition_state->conn);
     mympd_check_error_and_recover(partition_state, NULL, "mpd_send_list_tag_types");
 
-    if (partition_state->mpd_state->tags_mpd.len == 0) {
+    if (partition_state->mpd_state->tags_mpd.tags_len == 0) {
         logline = sdscatlen(logline, "none", 4);
         MYMPD_LOG_NOTICE(partition_state->name, "%s", logline);
         MYMPD_LOG_NOTICE(partition_state->name, "Tags are disabled");

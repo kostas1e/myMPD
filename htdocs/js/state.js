@@ -11,9 +11,7 @@
  */
 function clearMPDerror() {
     sendAPI('MYMPD_API_PLAYER_CLEARERROR',{}, function() {
-        sendAPI('MYMPD_API_PLAYER_STATE', {}, function(obj) {
-            parseState(obj);
-        }, false);
+        getState();
     }, false);
 }
 
@@ -82,11 +80,26 @@ function setCounter() {
         clearTimeout(progressTimer);
     }
     if (currentState.state === 'play') {
+        if (currentState.totalTime > 0 &&
+            currentState.totalTime < currentState.elapsedTime)
+        {
+            // this should not appear, update state
+            getState();
+            return;
+        }
         progressTimer = setTimeout(function() {
             currentState.elapsedTime += 1;
             setCounter();
         }, 1000);
     }
+}
+
+/**
+ * Gets the player state
+ * @returns {void}
+ */
+function getState() {
+    sendAPI("MYMPD_API_PLAYER_STATE", {}, parseState, false);
 }
 
 /**
@@ -108,46 +121,11 @@ function parseState(obj) {
     }
     //save state
     currentState = obj.result;
-    //Set playback buttons
-    if (obj.result.state === 'stop') {
-        elGetById('footerPlayBtn').textContent = 'play_arrow';
-        domCache.progressBar.style.width = '0';
-    }
-    else if (obj.result.state === 'play') {
-        elGetById('footerPlayBtn').textContent =
-            settings.webuiSettings.footerPlaybackControls === 'stop'
-                ? 'stop'
-                : 'pause';
-    }
-    else {
-        //pause
-        elGetById('footerPlayBtn').textContent = 'play_arrow';
-    }
+    // set state of playback controls
+    updatePlaybackControls();
+    // update playing row in current queue view
     if (app.id === 'QueueCurrent') {
         setPlayingRow();
-    }
-
-    if (obj.result.queueLength === 0) {
-        elDisableId('footerPlayBtn');
-    }
-    else {
-        elEnableId('footerPlayBtn');
-    }
-
-    if (obj.result.nextSongPos === -1 &&
-        settings.partition.jukeboxMode === 'off')
-    {
-        elDisableId('footerNextBtn');
-    }
-    else {
-        elEnableId('footerNextBtn');
-    }
-
-    if (obj.result.songPos < 0) {
-        elDisableId('footerPrevBtn');
-    }
-    else {
-        elEnableId('footerPrevBtn');
     }
     //media session
     mediaSessionSetState();
@@ -173,6 +151,7 @@ function parseState(obj) {
         footerTitleEl.classList.remove('clickable');
         elGetById('footerCover').classList.remove('clickable');
         elGetById('PlaybackTitle').classList.remove('clickable');
+        elGetById('PlaybackCover').classList.remove('clickable');
         clearCurrentCover();
         const pb = document.querySelectorAll('#PlaybackListTags p');
         for (let i = 0, j = pb.length; i < j; i++) {
@@ -212,6 +191,91 @@ function parseState(obj) {
         }
         logDebug('Refreshing settings');
         getSettings(parseSettings);
+    }
+}
+
+/**
+ * Sets the state of the playback control buttons
+ * @returns {void}
+ */
+function updatePlaybackControls() {
+    const prefixes = ['footer'];
+    if (document.querySelector('.playbackPopoverBtns') !== null) {
+        prefixes.push('popoverFooter');
+        if (currentState.songPos < 0 ||
+            currentState.totalTime === 0 ||
+            currentState.state === 'stop')
+        {
+            elDisableId('popoverFooterGotoBtn');
+        }
+        else {
+            elEnableId('popoverFooterGotoBtn');
+        }
+    }
+    for (const prefix of prefixes) {
+        if (currentState.state === 'stop') {
+            elGetById(prefix + 'PlayBtn').textContent = 'play_arrow';
+            domCache.progressBar.style.width = '0';
+            elDisableId(prefix + 'StopBtn');
+            elDisableId(prefix + 'NextBtn');
+            elDisableId(prefix + 'PrevBtn');
+        }
+        else if (currentState.state === 'play') {
+            elGetById(prefix + 'PlayBtn').textContent =
+                settings.webuiSettings.footerPlaybackControls === 'stop'
+                    ? 'stop'
+                    : 'pause';
+            elEnableId(prefix + 'StopBtn');
+            elEnableId(prefix + 'NextBtn');
+            elEnableId(prefix + 'PrevBtn');
+        }
+        else {
+            // pause
+            elGetById(prefix + 'PlayBtn').textContent = 'play_arrow';
+            elEnableId(prefix + 'StopBtn');
+            elEnableId(prefix + 'NextBtn');
+            elEnableId(prefix + 'PrevBtn');
+        }
+
+        if (currentState.songPos < 0 ||
+            currentState.totalTime === 0 ||
+            currentState.state === 'stop')
+        {
+            elDisableId(prefix + 'FastRewindBtn');
+            elDisableId(prefix + 'FastForwardBtn');
+        }
+        else {
+            // enable seeking only if totalTime is known
+            elEnableId(prefix + 'FastRewindBtn');
+            elEnableId(prefix + 'FastForwardBtn');
+        }
+
+        if (currentState.queueLength === 0) {
+            // no song in queue
+            elDisableId(prefix + 'PlayBtn');
+        }
+        else {
+            elEnableId(prefix + 'PlayBtn');
+        }
+
+        if (currentState.nextSongPos === -1 &&
+            settings.partition.jukeboxMode === 'off')
+        {
+            // last song in queue and disabled jukebox
+            elDisableId(prefix + 'NextBtn');
+        }
+        else if (currentState.state !== 'stop') {
+            // next button triggers jukebox
+            elEnableId(prefix + 'NextBtn');
+        }
+
+        if (currentState.songPos < 0) {
+            // no current song
+            elDisableId(prefix + 'PrevBtn');
+        }
+        else if (currentState.state !== 'stop') {
+            elEnableId(prefix + 'PrevBtn');
+        }
     }
 }
 
@@ -256,6 +320,7 @@ function setBackgroundImage(el, url) {
     el.insertBefore(div, el.firstChild);
     //create dummy img element for preloading and fade-in
     const img = new Image();
+    // add reference to image container
     setData(img, 'div', div);
     img.onload = function(event) {
         //fade-in current cover

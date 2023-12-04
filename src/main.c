@@ -20,6 +20,7 @@
 #include "src/lib/log.h"
 #include "src/lib/mem.h"
 #include "src/lib/msg_queue.h"
+#include "src/lib/passwd.h"
 #include "src/lib/sds_extras.h"
 #include "src/lib/smartpls.h"
 #include "src/mympd_api/mympd_api.h"
@@ -78,11 +79,6 @@ struct t_mympd_queue *mympd_script_queue;
  * @param sig_num the signal to handle
  */
 static void mympd_signal_handler(int sig_num) {
-    // Reinstantiate signal handler
-    if (signal(sig_num, mympd_signal_handler) == SIG_ERR) {
-        MYMPD_LOG_ERROR(NULL, "Could not set signal handler for %d", sig_num);
-    }
-
     switch(sig_num) {
         case SIGTERM:
         case SIGINT: {
@@ -109,6 +105,22 @@ static void mympd_signal_handler(int sig_num) {
 }
 
 /**
+ * Sets the mympd_signal_handler for the given signal
+ * @param sig_num signal to handle
+ * @return true on success, else false
+ */
+static bool set_signal_handler(int sig_num) {
+    struct sigaction sa;
+    sa.sa_handler = mympd_signal_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART; // Restart functions if interrupted by handler
+    if (sigaction(sig_num, &sa, NULL) == -1) {
+        return false;
+    }
+    return true;
+}
+
+/**
  * Drops the privileges and sets the new groups.
  * Ensures that myMPD does not run as root.
  * @param username drop privileges to this username
@@ -120,39 +132,19 @@ static bool drop_privileges(sds username, uid_t startup_uid) {
         sdslen(username) > 0)
     {
         MYMPD_LOG_NOTICE(NULL, "Dropping privileges to user \"%s\"", username);
-        //get user
-        errno = 0;
-        struct passwd *pw = getpwnam(username);
-        if (pw  == NULL) {
+        //get passwd entry
+        struct passwd pwd;
+        if (get_passwd_entry(&pwd, username) == NULL) {
             MYMPD_LOG_ERROR(NULL, "User \"%s\" does not exist", username);
-            MYMPD_LOG_ERRNO(NULL, errno);
             return false;
         }
-        //purge supplementary groups
         errno = 0;
-        if (setgroups(0, NULL) == -1) {
-            MYMPD_LOG_ERROR(NULL, "setgroups() failed");
-            MYMPD_LOG_ERRNO(NULL, errno);
-            return false;
-        }
-        //set new supplementary groups from target user
-        errno = 0;
-        if (initgroups(username, pw->pw_gid) == -1) {
-            MYMPD_LOG_ERROR(NULL, "initgroups() failed");
-            MYMPD_LOG_ERRNO(NULL, errno);
-            return false;
-        }
-        //change primary group to group of target user
-        errno = 0;
-        if (setgid(pw->pw_gid) == -1 ) {
-            MYMPD_LOG_ERROR(NULL, "setgid() failed");
-            MYMPD_LOG_ERRNO(NULL, errno);
-            return false;
-        }
-        //change user
-        errno = 0;
-        if (setuid(pw->pw_uid) == -1) {
-            MYMPD_LOG_ERROR(NULL, "setuid() failed");
+        if (setgroups(0, NULL) == -1 ||                 //purge supplementary groups
+            initgroups(username, pwd.pw_gid) == -1 ||  //set new supplementary groups from target user
+            setgid(pwd.pw_gid) == -1 ||                //change primary group to group of target user
+            setuid(pwd.pw_uid) == -1)                  //change user
+        {
+            MYMPD_LOG_ERROR(NULL, "Dropping privileges failed");
             MYMPD_LOG_ERRNO(NULL, errno);
             return false;
         }
@@ -177,9 +169,8 @@ static bool check_dirs_initial(struct t_config *config, uid_t startup_uid) {
     bool chown_dirs = false;
     if (startup_uid == 0) {
         //check for user
-        errno = 0;
-        struct passwd *pw = getpwnam(config->user);
-        if (pw == NULL) {
+        struct passwd pwd;
+        if (get_passwd_entry(&pwd, config->user) == NULL) {
             MYMPD_LOG_ERROR(NULL, "User \"%s\" does not exist", config->user);
             return false;
         }
@@ -450,9 +441,7 @@ int main(int argc, char **argv) {
     #endif
 
     //set loglevel
-    #ifdef MYMPD_DEBUG
-        set_loglevel(LOG_DEBUG);
-    #else
+    #ifndef MYMPD_DEBUG
         set_loglevel(config->loglevel);
     #endif
 
@@ -461,8 +450,14 @@ int main(int argc, char **argv) {
         log_to_syslog = true;
     }
 
-    #ifdef MYMPD_ENABLE_LIBASAN
-        MYMPD_LOG_NOTICE(NULL, "Running with libasan memory checker");
+    #ifdef MYMPD_ENABLE_ASAN
+        MYMPD_LOG_NOTICE(NULL, "Running with address sanitizer");
+    #endif
+    #ifdef MYMPD_ENABLE_UBSAN
+        MYMPD_LOG_NOTICE(NULL, "Running with undefined behavior sanitizer");
+    #endif
+    #ifdef MYMPD_ENABLE_TSAN
+        MYMPD_LOG_NOTICE(NULL, "Running with thread sanitizer");
     #endif
 
     MYMPD_LOG_NOTICE(NULL, "Starting myMPD %s", MYMPD_VERSION);
@@ -482,26 +477,19 @@ int main(int argc, char **argv) {
     #endif
 
     //set signal handler
-    if (signal(SIGTERM, mympd_signal_handler) == SIG_ERR) {
-        MYMPD_LOG_EMERG(NULL, "Could not set signal handler for SIGTERM");
-        goto cleanup;
-    }
-    if (signal(SIGINT, mympd_signal_handler) == SIG_ERR) {
-        MYMPD_LOG_EMERG(NULL, "Could not set signal handler for SIGINT");
-        goto cleanup;
-    }
-    if (signal(SIGHUP, mympd_signal_handler) == SIG_ERR) {
-        MYMPD_LOG_EMERG(NULL, "Could not set signal handler for SIGHUP");
+    if (set_signal_handler(SIGTERM) == false ||
+        set_signal_handler(SIGINT) == false ||
+        set_signal_handler(SIGHUP) == false)
+    {
+        MYMPD_LOG_EMERG(NULL, "Could not set signal handler for SIGTERM, SIGINT and SIGUP");
         goto cleanup;
     }
 
     //set output buffers
-    if (setvbuf(stdout, NULL, _IOLBF, 0) != 0) {
-        MYMPD_LOG_EMERG(NULL, "Could not set stdout buffer");
-        goto cleanup;
-    }
-    if (setvbuf(stderr, NULL, _IOLBF, 0) != 0) {
-        MYMPD_LOG_EMERG(NULL, "Could not set stderr buffer");
+    if (setvbuf(stdout, NULL, _IOLBF, 0) != 0 ||
+        setvbuf(stderr, NULL, _IOLBF, 0) != 0)
+    {
+        MYMPD_LOG_EMERG(NULL, "Could not set stdout and stderr buffer");
         goto cleanup;
     }
 
@@ -518,13 +506,20 @@ int main(int argc, char **argv) {
     }
 
     //saves the config to /var/lib/mympd/config folder
-    //at first startup of myMPD
-    if (config->first_startup == true) {
+    //at first startup of myMPD or if version has changed
+    if (config->first_startup == true ||
+        mympd_version_check(config->workdir) == false)
+    {
+        MYMPD_LOG_INFO(NULL, "Writing configuration files");
         mympd_config_rw(config, true);
+        MYMPD_LOG_INFO(NULL, "Setting myMPD version to %s", MYMPD_VERSION);
+        mympd_version_set(config->workdir);
     }
 
     //check ssl certificates
-    if (create_certificates(config) == false) {
+    if (create_certificates(config) == false ||
+        webserver_read_certs(mg_user_data, config) == false)
+    {
         goto cleanup;
     }
 
@@ -545,7 +540,8 @@ int main(int argc, char **argv) {
     //mympd api
     MYMPD_LOG_NOTICE(NULL, "Starting mympd api thread");
     if ((thread_rc = pthread_create(&mympd_api_thread, NULL, mympd_api_loop, config)) != 0) {
-        MYMPD_LOG_ERROR(NULL, "Can't create mympd api thread: %s", strerror(thread_rc));
+        MYMPD_LOG_ERROR(NULL, "Can't create mympd api thread");
+        MYMPD_LOG_ERRNO(NULL, thread_rc);
         mympd_api_thread = 0;
         s_signal_received = SIGTERM;
     }
@@ -553,7 +549,8 @@ int main(int argc, char **argv) {
     //webserver
     MYMPD_LOG_NOTICE(NULL, "Starting webserver thread");
     if ((thread_rc = pthread_create(&web_server_thread, NULL, web_server_loop, mgr)) != 0) {
-        MYMPD_LOG_ERROR(NULL, "Can't create webserver thread: %s", strerror(thread_rc));
+        MYMPD_LOG_ERROR(NULL, "Can't create webserver thread");
+        MYMPD_LOG_ERRNO(NULL, thread_rc);
         web_server_thread = 0;
         s_signal_received = SIGTERM;
     }
@@ -568,7 +565,8 @@ int main(int argc, char **argv) {
     //wait for threads
     if (web_server_thread > (pthread_t)0) {
         if ((thread_rc = pthread_join(web_server_thread, NULL)) != 0) {
-            MYMPD_LOG_ERROR(NULL, "Error stopping webserver thread: %s", strerror(thread_rc));
+            MYMPD_LOG_ERROR(NULL, "Error stopping webserver thread");
+            MYMPD_LOG_ERRNO(NULL, thread_rc);
         }
         else {
             MYMPD_LOG_NOTICE(NULL, "Finished web server thread");
@@ -576,7 +574,8 @@ int main(int argc, char **argv) {
     }
     if (mympd_api_thread > (pthread_t)0) {
         if ((thread_rc = pthread_join(mympd_api_thread, NULL)) != 0) {
-            MYMPD_LOG_ERROR(NULL, "Error stopping mympd api thread: %s", strerror(thread_rc));
+            MYMPD_LOG_ERROR(NULL, "Error stopping mympd api thread");
+            MYMPD_LOG_ERRNO(NULL, thread_rc);
         }
         else {
             MYMPD_LOG_NOTICE(NULL, "Finished mympd api thread");

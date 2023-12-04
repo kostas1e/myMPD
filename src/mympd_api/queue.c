@@ -5,8 +5,6 @@
 */
 
 #include "compile_time.h"
-#include "dist/sds/sds.h"
-#include "src/lib/mympd_state.h"
 #include "src/mympd_api/queue.h"
 
 #include "src/lib/album_cache.h"
@@ -18,6 +16,7 @@
 #include "src/mpd_client/queue.h"
 #include "src/mpd_client/search.h"
 #include "src/mpd_client/shortcuts.h"
+#include "src/mpd_client/stickerdb.h"
 #include "src/mpd_client/tags.h"
 #include "src/mympd_api/sticker.h"
 #include "src/mympd_api/webradios.h"
@@ -273,42 +272,52 @@ bool mympd_api_queue_replace(struct t_partition_state *partition_state, struct t
  * @param expression mpd search expression
  * @param to position to insert
  * @param whence how to interpret the to parameter
+ * @param sort sort by tag
+ * @param sort_desc sort descending?
  * @param error pointer to an already allocated sds string for the error message
  * @return true on success, else false
  */
-bool mympd_api_queue_insert_search(struct t_partition_state *partition_state, sds expression, unsigned to, unsigned whence, sds *error) {
+bool mympd_api_queue_insert_search(struct t_partition_state *partition_state, sds expression,
+        unsigned to, unsigned whence, const char *sort, bool sort_desc, sds *error)
+{
     if (whence != MPD_POSITION_ABSOLUTE &&
         partition_state->mpd_state->feat_whence == false)
     {
         *error = sdscat(*error, "Method not supported");
         return false;
     }
-    const char *sort = NULL;
-    bool sortdesc = false;
-    return mpd_client_search_add_to_queue(partition_state, expression, to, whence, sort, sortdesc, error);
+    return mpd_client_search_add_to_queue(partition_state, expression, to, whence, sort, sort_desc, error);
 }
 
 /**
  * Appends the search results to the queue
  * @param partition_state pointer to partition state
  * @param expression mpd search expression
+ * @param sort sort by tag
+ * @param sort_desc sort descending?
  * @param error pointer to an already allocated sds string for the error message
  * @return true on success, else false
  */
-bool mympd_api_queue_append_search(struct t_partition_state *partition_state, sds expression, sds *error) {
-    return mympd_api_queue_insert_search(partition_state, expression, UINT_MAX, MPD_POSITION_ABSOLUTE, error);
+bool mympd_api_queue_append_search(struct t_partition_state *partition_state, sds expression,
+        const char *sort, bool sort_desc, sds *error)
+{
+    return mympd_api_queue_insert_search(partition_state, expression, UINT_MAX, MPD_POSITION_ABSOLUTE, sort, sort_desc, error);
 }
 
 /**
  * Replaces the queue with the search result
  * @param partition_state pointer to partition state
  * @param expression mpd search expression
+ * @param sort sort by tag
+ * @param sort_desc sort descending?
  * @param error pointer to an already allocated sds string for the error message
  * @return true on success, else false
  */
-bool mympd_api_queue_replace_search(struct t_partition_state *partition_state, sds expression, sds *error) {
+bool mympd_api_queue_replace_search(struct t_partition_state *partition_state, sds expression,
+        const char *sort, bool sort_desc, sds *error)
+{
     return mpd_client_queue_clear(partition_state, error) &&
-        mympd_api_queue_append_search(partition_state, expression, error);
+        mympd_api_queue_append_search(partition_state, expression, sort, sort_desc, error);
 }
 
 /**
@@ -339,7 +348,8 @@ bool mympd_api_queue_insert_albums(struct t_partition_state *partition_state, st
             *error = sdscat(*error, "Album not found");
             return false;
         }
-        sds expression = get_search_expression_album(partition_state->mpd_state->tag_albumartist, mpd_album);
+        sds expression = get_search_expression_album(partition_state->mpd_state->tag_albumartist,
+            mpd_album, &partition_state->mympd_state->config->albums);
         const char *sort = NULL;
         bool sortdesc = false;
         rc = mpd_client_search_add_to_queue(partition_state, expression, to, whence, sort, sortdesc, error);
@@ -397,7 +407,8 @@ bool mympd_api_queue_insert_album_disc(struct t_partition_state *partition_state
         *error = sdscat(*error, "Album not found");
         return false;
     }
-    sds expression = get_search_expression_album_disc(partition_state->mpd_state->tag_albumartist, mpd_album, disc);
+    sds expression = get_search_expression_album_disc(partition_state->mpd_state->tag_albumartist,
+        mpd_album, disc, &partition_state->mympd_state->config->albums);
     const char *sort = NULL;
     bool sortdesc = false;
     bool rc = mpd_client_search_add_to_queue(partition_state, expression, to, whence, sort, sortdesc, error);
@@ -579,6 +590,11 @@ sds mympd_api_queue_list(struct t_partition_state *partition_state, sds buffer, 
         offset = 0;
     }
     //list the queue
+    if (partition_state->mpd_state->feat_stickers == true &&
+        tagcols->stickers_len > 0)
+    {
+        stickerdb_exit_idle(partition_state->mympd_state->stickerdb);
+    }
     unsigned real_limit = offset + limit;
     if (mpd_send_list_queue_range_meta(partition_state->conn, offset, real_limit) == true) {
         buffer = jsonrpc_respond_start(buffer, cmd_id, request_id);
@@ -603,6 +619,11 @@ sds mympd_api_queue_list(struct t_partition_state *partition_state, sds buffer, 
         buffer = jsonrpc_end(buffer);
     }
     mpd_response_finish(partition_state->conn);
+    if (partition_state->mpd_state->feat_stickers == true &&
+        tagcols->stickers_len > 0)
+    {
+        stickerdb_enter_idle(partition_state->mympd_state->stickerdb);
+    }
     mympd_check_error_and_recover_respond(partition_state, &buffer, cmd_id, request_id, "mpd_send_list_queue_range_meta");
     return buffer;
 }
@@ -642,6 +663,11 @@ sds mympd_api_queue_search(struct t_partition_state *partition_state, sds buffer
             JSONRPC_SEVERITY_ERROR, "Error creating MPD search queue command");
     }
     FREE_SDS(real_expression);
+    if (partition_state->mpd_state->feat_stickers == true &&
+        tagcols->stickers_len > 0)
+    {
+        stickerdb_exit_idle(partition_state->mympd_state->stickerdb);
+    }
     if (mpd_search_commit(partition_state->conn)) {
         buffer = jsonrpc_respond_start(buffer, cmd_id, request_id);
         buffer = sdscat(buffer, "\"data\":[");
@@ -684,6 +710,11 @@ sds mympd_api_queue_search(struct t_partition_state *partition_state, sds buffer
         buffer = jsonrpc_end(buffer);
     }
     mpd_response_finish(partition_state->conn);
+    if (partition_state->mpd_state->feat_stickers == true &&
+        tagcols->stickers_len > 0)
+    {
+        stickerdb_enter_idle(partition_state->mympd_state->stickerdb);
+    }
     if (mympd_check_error_and_recover_respond(partition_state, &buffer, cmd_id, request_id, "mpd_search_queue_songs") == false) {
         return buffer;
     }
@@ -715,7 +746,7 @@ static bool add_queue_search_adv_params(struct t_partition_state *partition_stat
             return false;
         }
     }
-    else if (strcmp(sort, "LastModified") == 0) {
+    else if (strcmp(sort, "Last-Modified") == 0) {
         //swap order
         sortdesc = sortdesc == false ? true : false;
         if (mpd_search_add_sort_name(partition_state->conn, "Last-Modified", sortdesc) == false) {
@@ -756,7 +787,7 @@ sds print_queue_entry(struct t_partition_state *partition_state, sds buffer,
     const struct mpd_audio_format *audioformat = mpd_song_get_audio_format(song);
     buffer = printAudioFormat(buffer, audioformat);
     buffer = sdscatlen(buffer, ",", 1);
-    buffer = print_song_tags(buffer, partition_state->mpd_state->feat_tags, tagcols, song);
+    buffer = print_song_tags(buffer, partition_state->mpd_state->feat_tags, tagcols, song, &partition_state->mympd_state->config->albums);
     const char *uri = mpd_song_get_uri(song);
     buffer = sdscatlen(buffer, ",", 1);
     if (is_streamuri(uri) == true) {
@@ -775,9 +806,10 @@ sds print_queue_entry(struct t_partition_state *partition_state, sds buffer,
     else {
         buffer = tojson_char(buffer, "Type", "song", false);
     }
-    if (partition_state->mpd_state->feat_stickers == true) {
-        buffer = sdscatlen(buffer, ",", 1);
-        buffer = mympd_api_sticker_get_print(buffer, &partition_state->mpd_state->sticker_cache, uri);
+    if (partition_state->mpd_state->feat_stickers == true &&
+        tagcols->stickers_len > 0)
+    {
+        buffer = mympd_api_sticker_get_print_batch(buffer, partition_state->mympd_state->stickerdb, uri, tagcols);
     }
     buffer = sdscatlen(buffer, "}", 1);
     return buffer;

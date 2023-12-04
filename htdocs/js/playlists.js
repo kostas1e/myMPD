@@ -162,7 +162,7 @@ function populatePlaylistSelect(obj, playlistSelectId, selectedPlaylist) {
 
 /**
  * Appends entries to a playlist
- * @param {string} type one of song, stream, dir, search
+ * @param {string} type one of song, stream, dir, search, album, disc, searchdir
  * @param {Array} uris uris to add
  * @param {string} plist playlist to append the uri
  * @param {Function} callback response handling callback
@@ -170,6 +170,14 @@ function populatePlaylistSelect(obj, playlistSelectId, selectedPlaylist) {
  */
 function appendPlaylist(type, uris, plist, callback) {
     switch(type) {
+        case 'searchdir':
+            sendAPI("MYMPD_API_PLAYLIST_CONTENT_APPEND_SEARCH", {
+                "expression": createBaseSearchExpression(uris[0], uris[1]),
+                "plist": plist,
+                "sort": uris[2],
+                "sortdesc": uris[3],
+            }, callback, true);
+            break;
         case 'song':
         case 'stream':
         case 'dir':
@@ -181,7 +189,9 @@ function appendPlaylist(type, uris, plist, callback) {
         case 'search':
             sendAPI("MYMPD_API_PLAYLIST_CONTENT_APPEND_SEARCH", {
                 "expression": uris[0],
-                "plist": plist
+                "plist": plist,
+                "sort": uris[1],
+                "sortdesc": uris[2],
             }, callback, true);
             break;
         case 'album':
@@ -204,7 +214,7 @@ function appendPlaylist(type, uris, plist, callback) {
 
 /**
  * Inserts entries into a playlist
- * @param {string} type one of song, stream, dir, search
+ * @param {string} type one of song, stream, dir, search, album, disc, searchdir
  * @param {Array} uris uris to add
  * @param {string} plist playlist to insert the uri
  * @param {number} to position to insert
@@ -213,6 +223,14 @@ function appendPlaylist(type, uris, plist, callback) {
  */
 function insertPlaylist(type, uris, plist, to, callback) {
     switch(type) {
+        case 'searchdir':
+            sendAPI("MYMPD_API_PLAYLIST_CONTENT_INSERT_SEARCH", {
+                "expression": createBaseSearchExpression(uris[0], uris[1]),
+                "plist": plist,
+                "sort": uris[2],
+                "sortdesc": uris[3],
+            }, callback, true);
+            break;
         case 'song':
         case 'stream':
         case 'dir':
@@ -226,7 +244,9 @@ function insertPlaylist(type, uris, plist, to, callback) {
             sendAPI("MYMPD_API_PLAYLIST_CONTENT_INSERT_SEARCH", {
                 "expression": uris[0],
                 "plist": plist,
-                "to": to
+                "to": to,
+                "sort": uris[1],
+                "sortdesc": uris[2],
             }, callback, true);
             break;
         case 'album':
@@ -251,7 +271,7 @@ function insertPlaylist(type, uris, plist, to, callback) {
 
 /**
  * Replaces a playlist
- * @param {string} type one of song, stream, dir, search
+ * @param {string} type one of song, stream, dir, search, album, disc, searchdir
  * @param {Array} uris uris to add
  * @param {string} plist playlist to replace
  * @param {Function} callback response handling callback
@@ -259,6 +279,14 @@ function insertPlaylist(type, uris, plist, to, callback) {
  */
 function replacePlaylist(type, uris, plist, callback) {
     switch(type) {
+        case 'searchdir':
+            sendAPI("MYMPD_API_PLAYLIST_CONTENT_REPLACE_SEARCH", {
+                "expression": createBaseSearchExpression(uris[0], uris[1]),
+                "plist": plist,
+                "sort": uris[2],
+                "sortdesc": uris[3]
+            }, callback, true);
+            break;
         case 'song':
         case 'stream':
         case 'dir':
@@ -270,7 +298,9 @@ function replacePlaylist(type, uris, plist, callback) {
         case 'search':
             sendAPI("MYMPD_API_PLAYLIST_CONTENT_REPLACE_SEARCH", {
                 "expression": uris[0],
-                "plist": plist
+                "plist": plist,
+                "sort": uris[1],
+                "sortdesc": uris[2],
             }, callback, true);
             break;
         case 'album':

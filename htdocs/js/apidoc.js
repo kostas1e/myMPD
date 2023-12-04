@@ -418,6 +418,8 @@ const APImethods = {
             "expression": APIparams.expression,
             "to": APIparams.to,
             "whence": APIparams.whence,
+            "sort": APIparams.sort,
+            "sortdesc": APIparams.sortdesc,
             "play": APIparams.play
         }
     },
@@ -458,6 +460,8 @@ const APImethods = {
         "desc": "Appends the search result to the queue.",
         "params": {
             "expression": APIparams.expression,
+            "sort": APIparams.sort,
+            "sortdesc": APIparams.sortdesc,
             "play": APIparams.play
         }
     },
@@ -494,6 +498,8 @@ const APImethods = {
         "desc": "Replaces the queue with search result.",
         "params": {
             "expression": APIparams.expression,
+            "sort": APIparams.sort,
+            "sortdesc": APIparams.sortdesc,
             "play": APIparams.play
         }
     },
@@ -692,21 +698,27 @@ const APImethods = {
         "params": {
             "plist": APIparams.plist,
             "expression": APIparams.expression,
-            "to": APIparams.to
+            "to": APIparams.to,
+            "sort": APIparams.sort,
+            "sortdesc": APIparams.sortdesc
         }
     },
     "MYMPD_API_PLAYLIST_CONTENT_APPEND_SEARCH": {
         "desc": "Appends the search result to the playlist.",
         "params": {
             "plist": APIparams.plist,
-            "expression": APIparams.expression
+            "expression": APIparams.expression,
+            "sort": APIparams.sort,
+            "sortdesc": APIparams.sortdesc
         }
     },
     "MYMPD_API_PLAYLIST_CONTENT_REPLACE_SEARCH": {
         "desc": "Replaces the playlist content with the search result",
         "params": {
             "plist": APIparams.plist,
-            "expression": APIparams.expression
+            "expression": APIparams.expression,
+            "sort": APIparams.sort,
+            "sortdesc": APIparams.sortdesc
         }
     },
     "MYMPD_API_PLAYLIST_CONTENT_RM_POSITIONS": {
@@ -780,7 +792,8 @@ const APImethods = {
                 "type": APItypes.string,
                 "example": "Artist",
                 "desc": "Tag to sort"
-            }
+            },
+            "sortdesc": APIparams.sortdesc
         }
     },
     "MYMPD_API_PLAYLIST_CONTENT_DEDUP": {
@@ -873,7 +886,8 @@ const APImethods = {
                 "example": 604800,
                 "desc": "timerange in seconds"
             },
-            "sort": APIparams.sortShuffle
+            "sort": APIparams.sortShuffle,
+            "sortdesc": APIparams.sortdesc
         }
     },
     "MYMPD_API_SMARTPLS_STICKER_SAVE": {
@@ -895,7 +909,8 @@ const APImethods = {
                 "example": 2,
                 "desc": "minimum integer value"
             },
-            "sort": APIparams.sortShuffle
+            "sort": APIparams.sortShuffle,
+            "sortdesc": APIparams.sortdesc
         }
     },
     "MYMPD_API_SMARTPLS_SEARCH_SAVE": {
@@ -903,7 +918,8 @@ const APImethods = {
         "params": {
             "plist": APIparams.plist,
             "expression": APIparams.expression,
-            "sort": APIparams.sortShuffle
+            "sort": APIparams.sortShuffle,
+            "sortdesc": APIparams.sortdesc
         }
     },
     "MYMPD_API_SMARTPLS_GET": {
@@ -1086,6 +1102,21 @@ const APImethods = {
                 "example": 6600,
                 "desc": "MPD port to use"
             },
+            "mpdPass": {
+                "type": APItypes.string,
+                "example": "dontsetpassword",
+                "desc": "MPD password to use, set it to 'dontsetpassword' to not change the password"
+            },
+            "mpdTimeout": {
+                "type": APItypes.uint,
+                "example": 120000,
+                "desc": "MPD timeout in ms"
+            },
+            "mpdKeepalive": {
+                "type": APItypes.bool,
+                "example": true,
+                "desc": "Enables tcp keepalives"
+            },
             "musicDirectory": {
                 "type": APItypes.string,
                 "example": "auto",
@@ -1107,10 +1138,30 @@ const APImethods = {
                 "example": 8192,
                 "desc": "chunk size in bytes for binary data"
             },
-            "mpdTimeout": {
+            "stickerdbMpdHost": {
+                "type": APItypes.string,
+                "example": "/run/mpd/socket",
+                "desc": "MPD host or socket (sticker database)"
+            },
+            "stickerdbMpdPort": {
+                "type": APItypes.uint,
+                "example": 6600,
+                "desc": "MPD port to use (sticker database)"
+            },
+            "stickerdbMpdPass": {
+                "type": APItypes.string,
+                "example": "dontsetpassword",
+                "desc": "MPD password to use, set it to 'dontsetpassword' to not change the password (sticker database)"
+            },
+            "stickerdbMpdTimeout": {
                 "type": APItypes.uint,
                 "example": 120000,
-                "desc": "MPD timeout in ms"
+                "desc": "MPD timeout in ms (sticker database)"
+            },
+            "stickerdbMpdKeepalive": {
+                "type": APItypes.bool,
+                "example": true,
+                "desc": "Enables tcp keepalives (sticker database)"
             }
         }
     },
@@ -1455,7 +1506,7 @@ const APImethods = {
             "consume": {
                 "type": APItypes.string,
                 "example": "1",
-                "desc": "MPD consume mode: 0, 1, oneshot"
+                "desc": "MPD consume mode: \"0\", \"1\", \"oneshot\""
             },
             "random": {
                 "type": APItypes.bool,
@@ -1465,7 +1516,7 @@ const APImethods = {
             "single": {
                 "type": APItypes.string,
                 "example": "1",
-                "desc": "MPD single mode: 0, 1, oneshot"
+                "desc": "MPD single mode: \"0\", \"1\", \"oneshot\""
             },
             "repeat": {
                 "type": APItypes.bool,
@@ -1495,7 +1546,7 @@ const APImethods = {
             "jukeboxMode": {
                 "type": APItypes.string,
                 "example": "off",
-                "desc": "Jukebox modes: off, song, album"
+                "desc": "Jukebox modes: \"off\", \"song\", \"album\""
             },
             "jukeboxPlaylist": {
                 "type": APItypes.string,
@@ -1515,17 +1566,24 @@ const APImethods = {
             "jukeboxUniqueTag": {
                 "type": APItypes.string,
                 "example": "Album",
-                "desc": "Tag to maintain unique values in internal jukebox queue."
+                "desc": "Tag for which unique values are enforced in the queue."
             },
             "jukeboxIgnoreHated": {
                 "type": APItypes.bool,
                 "example": true,
                 "desc": "Ignores hated songs."
             },
+            "jukeboxFilterInclude": APIparams.expression,
+            "jukeboxFilterExclude": APIparams.expression,
+            "jukeboxMinSongDuration": {
+                "type": APItypes.uint,
+                "example": 60,
+                "desc": "Only songs with this minimum length will be considered."
+            },
             "autoPlay": {
                 "type": APItypes.bool,
                 "example": false,
-                "desc": "Start playing if a song is adder to queue."
+                "desc": "Start playing if a song is added to the queue."
             }
         }
     },
@@ -1910,7 +1968,7 @@ const APImethods = {
                 "example": "[\"plist\",\"nas/Webradios/swr1.m3u\",\"swr1.m3u\"]",
                 "desc": "Array of cmd options" +
                         "for replaceQueue: [\"plist\",\"nas/Webradios/swr1.m3u\",\"swr1.m3u\"], " +
-                        "for appGoto: [\"Browse\",\"Database\",\"List\",\"0\",\"AlbumArtist\",\"-LastModified\",\"Album\",\"\"], "+
+                        "for appGoto: [\"Browse\",\"Database\",\"List\",\"0\",\"AlbumArtist\",\"-Last-Modified\",\"Album\",\"\"], "+
                         "for execScriptFromOptions: [\"Scriptname\",\"scriptarg1\"]"
             }
         }

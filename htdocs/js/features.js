@@ -11,29 +11,45 @@
  */
 function setFeatures() {
     //web ui features
+    features.featAdvAlbum = settings.albumMode === 'adv';
     features.featCacert = settings.features.featCacert;
     features.featHome = settings.webuiSettings.enableHome;
     features.featVolumeLevel = settings.webuiSettings.footerVolumeLevel;
-    features.featLocalPlayback = settings.webuiSettings.enableLocalPlayback === true ?
-        (settings.partition.mpdStreamPort > 0 || settings.partition.streamUri.length > 0 ? true : false) : false;
-    features.featScripting = settings.webuiSettings.enableScripting === true ?
-        settings.features.featScripting : false;
-    features.featTimer = settings.webuiSettings.enableTimer;
+    features.featLocalPlayback = settings.webuiSettings.enableLocalPlayback
+        ? settings.partition.mpdStreamPort > 0 || settings.partition.streamUri.length > 0
+            ? true
+            : false
+        : false;
+    features.featScripting = settings.webuiSettings.enableScripting
+        ? settings.features.featScripting
+        : false;
+    features.featTimer = settings.features.featTimer && settings.webuiSettings.enableTimer;
     features.featTrigger = settings.webuiSettings.enableTrigger;
     features.featMediaSession = checkMediaSessionSupport();
     features.featFooterNotifications = settings.webuiSettings.footerNotifications;
     features.featSession = settings.pin;
+    features.featStickersEnabled = settings.features.featStickersEnabled;
 
     //mpd features
     if (settings.partition.mpdConnected === true) {
         features.featLibrary = settings.features.featLibrary;
-        features.featLyrics = settings.webuiSettings.enableLyrics === true ? settings.features.featLibrary : false;
-        features.featMounts = settings.webuiSettings.enableMounts === true ? settings.features.featMounts : false;
-        features.featNeighbors = settings.webuiSettings.enableMounts === true ? settings.features.featNeighbors : false;
-        features.featPartitions = settings.webuiSettings.enablePartitions === true ? settings.features.featPartitions : false;
+        features.featLyrics = settings.webuiSettings.enableLyrics
+            ? settings.features.featLibrary
+            : false;
+        features.featMounts = settings.webuiSettings.enableMounts
+            ? settings.features.featMounts
+            : false;
+        features.featNeighbors = settings.webuiSettings.enableMounts
+            ? settings.features.featNeighbors
+            : false;
+        features.featPartitions = settings.webuiSettings.enablePartitions
+            ? settings.features.featPartitions
+            : false;
         features.featPlaylists = settings.features.featPlaylists;
-        features.featSmartplsAvailable = settings.features.featPlaylists === true && settings.features.featTags === true ? settings.smartpls : false;
-        features.featSmartpls = settings.features.featPlaylists === true && settings.features.featTags === true ? settings.smartpls : false;
+        features.featSmartplsAvailable = settings.features.featPlaylists && settings.features.featTags;
+        features.featSmartpls = settings.features.featPlaylists && settings.features.featTags
+            ? settings.smartpls
+            : false;
         features.featStickers = settings.features.featStickers;
         features.featTags = settings.features.featTags;
         features.featBinarylimit = settings.features.featBinarylimit;
@@ -57,12 +73,16 @@ function applyFeatures() {
     //show or hide elements
     for (const feature in features) {
         const featureEls = document.querySelectorAll('.' + feature);
-        let displayValue = features[feature] === true ? '' : 'none';
+        let displayValue = features[feature] === true
+            ? ''
+            : 'none';
         for (const el of featureEls) {
             el.style.display = displayValue;
         }
         const notfeatureEls = document.querySelectorAll('.not' + feature);
-        displayValue = features[feature] === true ? 'none' : '';
+        displayValue = features[feature] === true
+            ? 'none'
+            : '';
         for (const el of notfeatureEls) {
             el.style.display = displayValue;
         }

@@ -165,30 +165,45 @@ function checkConsume() {
  */
 function toggleJukeboxSettings() {
     const value = getBtnGroupValueId('modalPlaybackJukeboxModeGroup');
-    if (value === 'off') {
-        elDisableId('modalPlaybackJukeboxQueueLengthInput');
-        elDisableId('modalPlaybackJukeboxPlaylistInput');
-        elDisableId('modalPlaybackJukeboxIgnoreHatedInput');
-    }
-    else if (value === 'album') {
-        elDisableId('modalPlaybackJukeboxQueueLengthInput');
+    const songOnlyInputs = elGetById('modalPlaybackJukeboxCollapse').querySelectorAll('.jukeboxSongOnly');
+    if (value === 'album') {
         elGetById('modalPlaybackJukeboxQueueLengthInput').value = '1';
-        elDisableId('modalPlaybackJukeboxPlaylistInput');
-        elDisableId('modalPlaybackJukeboxIgnoreHatedInput');
         toggleBtnChkId('modalPlaybackJukeboxIgnoreHatedInput', false);
-        elDisable(elGetById('modalPlaybackJukeboxPlaylistInput').nextElementSibling);
         elGetById('modalPlaybackJukeboxPlaylistInput').value = tn('Database');
         setDataId('modalPlaybackJukeboxPlaylistInput', 'value', 'Database');
+        const select = elGetById('modalPlaybackJukeboxUniqueTagInput');
+        elClear(select);
+        for (const tag of ['Album', tagAlbumArtist]) {
+            select.appendChild(
+                elCreateTextTn('option', {"value": tag}, tag)
+            );
+        }
+        // hide rows that are not configurable in jukebox album mode
+        for (const input of songOnlyInputs) {
+            elHide(input.closest('.row'));
+        }
     }
     else if (value === 'song') {
-        elEnableId('modalPlaybackJukeboxQueueLengthInput');
-        elEnableId('modalPlaybackJukeboxPlaylistInput');
-        elEnableId('modalPlaybackJukeboxIgnoreHatedInput');
-        elEnable(elGetById('modalPlaybackJukeboxPlaylistInput').nextElementSibling);
+        addTagListSelect('modalPlaybackJukeboxUniqueTagInput', 'tagListBrowse');
+        // show rows that are configurable in jukebox song mode only
+        for (const input of songOnlyInputs) {
+            elShow(input.closest('.row'));
+        }
     }
     if (value !== 'off') {
         toggleBtnGroupValueId('modalPlaybackConsumeGroup', '1');
         toggleBtnGroupValueId('modalPlaybackSingleGroup', '0');
+    }
+
+    if (features.featStickers === false) {
+        elShowId('modalPlaybackPlaybackStatisticsWarn');
+        elHide(elGetById('modalPlaybackJukeboxLastPlayedInput').closest('.row'));
+        elHide(elGetById('modalPlaybackJukeboxIgnoreHatedInput').closest('.row'));
+        toggleBtnChkId('modalPlaybackJukeboxIgnoreHatedInput', false);
+    }
+    else {
+        elHideId('modalPlaybackPlaybackStatisticsWarn');
+        elShow(elGetById('modalPlaybackJukeboxLastPlayedInput').closest('.row'));
     }
 }
 
@@ -216,8 +231,8 @@ function populatePlaybackFrm() {
     jsonToForm(settings.partition, settingsPlaybackFields, 'modalPlayback');
 
     toggleBtnGroupValueCollapse(elGetById('modalPlaybackJukeboxModeGroup'), 'modalPlaybackJukeboxCollapse', settings.partition.jukeboxMode);
-    addTagListSelect('modalPlaybackJukeboxUniqueTagInput', 'tagListBrowse');
     toggleJukeboxSettings();
+    elGetById('modalPlaybackJukeboxUniqueTagInput').value = settings.partition.jukeboxUniqueTag;
 
     populateListPresets();
 
@@ -233,13 +248,11 @@ function populatePlaybackFrm() {
         toggleBtnGroupValueId('modalPlaybackConsumeGroup', settings.partition.consume);
         toggleBtnGroupValueId('modalPlaybackSingleGroup', settings.partition.single);
         toggleBtnGroupValueId('modalPlaybackReplaygainGroup', settings.partition.replaygain);
-        if (features.featStickers === false) {
-            elShowId('modalPlaybackPlaybackStatisticsWarn');
-            elDisableId('modalPlaybackJukeboxLastPlayedInput');
+        if (features.featTags === false) {
+            elGetById('modalPlaybackJukeboxModeGroup').children[1].classList.add('rounded-end');
         }
         else {
-            elHideId('modalPlaybackPlaybackStatisticsWarn');
-            elEnableId('modalPlaybackJukeboxLastPlayedInput');
+            elGetById('modalPlaybackJukeboxModeGroup').children[1].classList.remove('rounded-end');
         }
     }
     checkConsume();
@@ -259,10 +272,6 @@ function saveSettingsPlayback(target) {
         params.consume = getBtnGroupValueId('modalPlaybackConsumeGroup');
         params.single = getBtnGroupValueId('modalPlaybackSingleGroup');
         params.replaygain = getBtnGroupValueId('modalPlaybackReplaygainGroup');
-        // enforce uniq tag for jukebox album mode
-        params.jukeboxUniqueTag = params.jukeboxMode === 'album'
-            ? 'Album'
-            : getSelectValueId('modalPlaybackJukeboxUniqueTagInput');
         //set preset name to blank string if not defined, else it is not send to the api
         params.name = getDataId('modalPlaybackNameInput', 'value');
         if (params.name === undefined) {

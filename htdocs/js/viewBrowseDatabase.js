@@ -64,9 +64,28 @@ function initViewBrowseDatabase() {
             return;
         }
         app.current.search = '';
-        elGetById('BrowseDatabaseTagSearchStr').value = '';
-        appGoto(app.current.card, app.current.tab, 'AlbumList', 0, undefined, 'Album', {'tag': tagAlbumArtist, 'desc': false}, 'Album',
-            '((' + app.current.tag + ' == \'' + escapeMPD(getData(event.target.parentNode, 'tag')) + '\'))');
+        if (event.target.nodeName === 'DIV') {
+            elGetById('BrowseDatabaseTagSearchStr').value = '';
+            // clear album search input
+            elGetById('BrowseDatabaseAlbumListSearchStr').value = '';
+            gotoBrowse(event);
+        }
+        else if (event.target.nodeName === 'A') {
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.target.getAttribute('data-list') === 'song') {
+                elGetById('SearchSearchStr').value = '';
+                const tag = getData(event.target.parentNode.parentNode, 'tag');
+                const value = getData(event.target.parentNode.parentNode, 'name');
+                gotoSearch(tag, value);
+            }
+            else {
+                elGetById('BrowseDatabaseTagSearchStr').value = '';
+                // clear album search input
+                elGetById('BrowseDatabaseAlbumListSearchStr').value = '';
+                gotoBrowse(event);
+            }
+        }
     }, false);
 
     initSearchSimple('BrowseDatabaseTag');
@@ -163,16 +182,10 @@ function parseDatabaseAlbumList(obj) {
     }
     let cols = cardContainer.querySelectorAll('.col');
     for (let i = 0; i < nrItems; i++) {
-        if (cols[i] !== undefined &&
-            getData(cols[i].firstChild, 'AlbumId') === obj.result.data[i].AlbumId)
-        {
-            continue;
-        }
-
-        let image = '';
         const card = elCreateEmpty('div', {"data-contextmenu": "album", "class": ["card", "card-grid", "clickable"]});
-
-        image = '/albumart-thumb?offset=0&uri=' + myEncodeURIComponent(obj.result.data[i].FirstSongUri);
+        const image = obj.result.data[i].FirstSongUri !== 'albumid'
+            ? '/albumart-thumb?offset=0&uri=' + myEncodeURIComponent(obj.result.data[i].FirstSongUri)
+            : '/albumart-thumb/' + obj.result.data[i].AlbumId;
         card.appendChild(
             elCreateEmpty('div', {"class": ["card-body", "album-cover-loading", "album-cover-grid", "d-flex"]})
         );
@@ -267,6 +280,8 @@ function saveColsDatabaseAlbumList() {
         return;
     }
 
+    const listAlbums = settings.tagListAlbum.includes(obj.result.tag);
+
     if (cardContainer.querySelector('.not-clickable') !== null) {
         elClear(cardContainer);
     }
@@ -278,21 +293,28 @@ function saveColsDatabaseAlbumList() {
             continue;
         }
 
-        let image = '';
         const card = elCreateEmpty('div', {"data-contextmenu": "album", "class": ["card", "card-grid", "clickable"]});
-
-        image = '/tagart?uri=' + myEncodeURIComponent(obj.result.tag + '/' + obj.result.data[i].value);
+        const image = '/tagart?tag=' + myEncodeURIComponent(obj.result.tag) + '&value=' + myEncodeURIComponent(obj.result.data[i].value);
         if (obj.result.pics === true) {
             card.appendChild(
                 elCreateEmpty('div', {"class": ["card-body", "album-cover-loading", "album-cover-grid", "d-flex"]})
             );
         }
+        const footerElements = [
+            elCreateText('div', {}, obj.result.data[i].value)
+        ];
+        if (listAlbums === true) {
+            footerElements.push(
+                elCreateText('a', {"class": ["mi", "mi-sm"], "href": "#", "data-list": "song", "data-title-phrase": "Show songs", "title": tn("Show songs")}, 'music_note'),
+                elCreateText('a', {"class": ["mi", "mi-sm"], "href": "#", "data-list": "album", "data-title-phrase": "Show albums", "title": tn("Show albums")}, 'album')
+            );
+        }
         card.appendChild(
-            elCreateText('div', {"class": ["card-footer", "card-footer-grid", "p-2"],
-                "title": obj.result.data[i].value}, obj.result.data[i].value)
+            elCreateNodes('div', {"class": ["card-footer", "card-footer-grid", "card-footer-tags", "text-center", "p-2"], "title": obj.result.data[i].value}, footerElements)
         );
         setData(card, 'image', image);
-        setData(card, 'tag', obj.result.data[i].value);
+        setData(card, 'tag', obj.result.tag);
+        setData(card, 'name', obj.result.data[i].value);
 
         const col = elCreateNode('div', {"class": ["col", "px-0", "mb-2", "flex-grow-0"]}, card);
 
@@ -302,13 +324,14 @@ function saveColsDatabaseAlbumList() {
         else {
             cardContainer.append(col);
         }
-
-        if (userAgentData.hasIO === true) {
-            const observer = new IntersectionObserver(setGridImage, {root: null, rootMargin: '0px'});
-            observer.observe(col);
-        }
-        else {
-            col.firstChild.firstChild.style.backgroundImage = getCssImageUri(image);
+        if (obj.result.pics === true) {
+            if (userAgentData.hasIO === true) {
+                const observer = new IntersectionObserver(setGridImage, {root: null, rootMargin: '0px'});
+                observer.observe(col);
+            }
+            else {
+                col.firstChild.firstChild.style.backgroundImage = getCssImageUri(image);
+            }
         }
     }
     //remove obsolete cards
@@ -402,7 +425,7 @@ function parseAlbumDetails(obj) {
         elCreateNode('tr', {"class": ["not-clickable"]},
             elCreateNode('td', {"colspan": colspan + 1},
                 elCreateNodes('small', {}, [
-                    elCreateTextTnNr('span', {}, 'Num songs', obj.result.SongCount),
+                    elCreateTextTnNr('span', {}, 'Num songs', obj.result.returnedEntities),
                     elCreateText('span', {}, smallSpace + nDash + smallSpace + fmtDuration(obj.result.Duration))
                 ])
             )

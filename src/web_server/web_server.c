@@ -5,16 +5,17 @@
 */
 
 #include "compile_time.h"
-#include "dist/sds/sds.h"
 #include "src/web_server/web_server.h"
 
 #include "src/lib/api.h"
+#include "src/lib/filehandler.h"
 #include "src/lib/http_client.h"
 #include "src/lib/jsonrpc.h"
 #include "src/lib/log.h"
 #include "src/lib/mem.h"
 #include "src/lib/msg_queue.h"
 #include "src/lib/sds_extras.h"
+#include "src/lib/thread.h"
 #include "src/web_server/albumart.h"
 #include "src/web_server/proxy.h"
 #include "src/web_server/request_handler.h"
@@ -22,7 +23,6 @@
 
 #include <inttypes.h>
 #include <libgen.h>
-#include <sys/prctl.h>
 
 /**
  * Private definitions
@@ -35,7 +35,8 @@ static void ev_handler_redirect(struct mg_connection *nc_http, int ev, void *ev_
 static void send_ws_notify(struct mg_mgr *mgr, struct t_work_response *response);
 static void send_ws_notify_client(struct mg_mgr *mgr, struct t_work_response *response);
 static void send_api_response(struct mg_mgr *mgr, struct t_work_response *response);
-static bool check_acl(struct mg_connection *nc, sds acl);
+static bool enforce_acl(struct mg_connection *nc, sds acl);
+static bool enforce_conn_limit(struct mg_connection *nc, int connection_count);
 static void mongoose_log(char ch, void *param);
 
 /**
@@ -71,6 +72,10 @@ bool web_server_init(struct mg_mgr *mgr, struct t_config *config, struct t_mg_us
     list_init(&mg_user_data->stream_uris);
     list_init(&mg_user_data->session_list);
     mg_user_data->mympd_api_started = false;
+    mg_user_data->cert_content = sdsempty();
+    mg_user_data->cert = mg_str("");
+    mg_user_data->key_content = sdsempty();
+    mg_user_data->key = mg_str("");
 
     //init monogoose mgr
     mg_mgr_init(mgr);
@@ -118,6 +123,27 @@ bool web_server_init(struct mg_mgr *mgr, struct t_config *config, struct t_mg_us
 }
 
 /**
+ * Reads the ssl key and certificate from disc
+ * @param mg_user_data pointer to mongoose user data
+ * @param config pointer to myMPD config
+ * @return true on success, else false
+ */
+bool webserver_read_certs(struct t_mg_user_data *mg_user_data, struct t_config *config) {
+    if (config->ssl == false) {
+        return true;
+    }
+    if (sds_getfile(&mg_user_data->cert_content, config->ssl_cert, SSL_FILE_MAX, false, true) <= 0 ||
+        sds_getfile(&mg_user_data->key_content, config->ssl_key, SSL_FILE_MAX, false, true) <= 0)
+    {
+        MYMPD_LOG_ERROR(NULL, "Failure reading ssl key and cert from disc");
+        return false;
+    }
+    mg_user_data->cert = mg_str(mg_user_data->cert_content);
+    mg_user_data->key = mg_str(mg_user_data->key_content);
+    return true;
+}
+
+/**
  * Frees the mongoose mgr
  * @param mgr mongoose mgr to free
  * @return NULL
@@ -137,7 +163,7 @@ void *web_server_free(struct mg_mgr *mgr) {
  */
 void *web_server_loop(void *arg_mgr) {
     thread_logname = sds_replace(thread_logname, "webserver");
-    prctl(PR_SET_NAME, thread_logname, 0, 0, 0);
+    set_threadname(thread_logname);
     struct mg_mgr *mgr = (struct mg_mgr *) arg_mgr;
     struct t_mg_user_data *mg_user_data = (struct t_mg_user_data *) mgr->userdata;
 
@@ -291,9 +317,9 @@ static void get_placeholder_image(sds workdir, const char *name, sds *result) {
     file = webserver_find_image_file(file);
     sdsclear(*result);
     if (sdslen(file) > 0) {
-        const char *filename = basename(file);
-        MYMPD_LOG_INFO(NULL, "Setting custom placeholder image for na to \"%s\"", filename);
-        *result = sdscat(*result, filename);
+        file = sds_basename(file);
+        MYMPD_LOG_INFO(NULL, "Setting custom placeholder image for na to \"%s\"", file);
+        *result = sdscatsds(*result, file);
     }
     FREE_SDS(file);
 }
@@ -372,8 +398,11 @@ static void send_api_response(struct mg_mgr *mgr, struct t_work_response *respon
         if ((int)nc->is_websocket == 0 &&
             nc->id == (long unsigned)response->conn_id)
         {
-            if (response->cmd_id == INTERNAL_API_ALBUMART) {
+            if (response->cmd_id == INTERNAL_API_ALBUMART_BY_URI) {
                 webserver_send_albumart(nc, response->data, response->binary);
+            }
+            else if (response->cmd_id == INTERNAL_API_ALBUMART_BY_ALBUMID) {
+                webserver_send_albumart_redirect(nc, response->data);
             }
             else {
                 MYMPD_LOG_DEBUG(response->partition, "Sending response to conn_id %lu (length: %lu): %s", nc->id, (unsigned long)sdslen(response->data), response->data);
@@ -393,7 +422,7 @@ static void send_api_response(struct mg_mgr *mgr, struct t_work_response *respon
  * @param acl acl string to check
  * @return true if acl matches, else false
  */
-static bool check_acl(struct mg_connection *nc, sds acl) {
+static bool enforce_acl(struct mg_connection *nc, sds acl) {
     if (sdslen(acl) == 0) {
         return true;
     }
@@ -426,7 +455,7 @@ static bool check_acl(struct mg_connection *nc, sds acl) {
  * @param connection_count connection count
  * @return true if connection count is not exceeded, else false
  */
-static bool check_conn_limit(struct mg_connection *nc, int connection_count) {
+static bool enforce_conn_limit(struct mg_connection *nc, int connection_count) {
     if (connection_count > HTTP_CONNECTIONS_MAX) {
         MYMPD_LOG_DEBUG(NULL, "Connections: %d", connection_count);
         MYMPD_LOG_ERROR(NULL, "Concurrent connections limit exceeded: %d", connection_count);
@@ -465,9 +494,9 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data, void *fn
             frontend_nc_data->backend_nc = NULL; // used for reverse proxy function
             nc->fn_data = frontend_nc_data;
             //set labels
-            nc->data[0] = 'F';
-            nc->data[1] = '-';
-            nc->data[2] = 'C';
+            nc->data[0] = 'F'; // connection type
+            nc->data[1] = '-'; // http method
+            nc->data[2] = 'C'; // connection header
             break;
         }
         case MG_EV_ACCEPT:
@@ -480,17 +509,17 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data, void *fn
             if (config->ssl == true) {
                 MYMPD_LOG_DEBUG(NULL, "Init tls with cert \"%s\" and key \"%s\" for connection \"%lu\"", config->ssl_cert, config->ssl_key, nc->id);
                 struct mg_tls_opts tls_opts = {
-                    .cert = config->ssl_cert,
-                    .certkey = config->ssl_key
+                    .cert = mg_user_data->cert,
+                    .key = mg_user_data->key
                 };
                 mg_tls_init(nc, &tls_opts);
             }
-            //check connection count
-            if (check_conn_limit(nc, mg_user_data->connection_count) == false) {
+            //enforce connection limit
+            if (enforce_conn_limit(nc, mg_user_data->connection_count) == false) {
                 break;
             }
-            //check acl
-            if (check_acl(nc, config->acl) == false) {
+            //enforce acl
+            if (enforce_acl(nc, config->acl) == false) {
                 break;
             }
             break;
@@ -498,7 +527,9 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data, void *fn
             struct mg_ws_message *wm = (struct mg_ws_message *) ev_data;
             struct mg_str matches[1];
             size_t sent = 0;
-            MYMPD_LOG_DEBUG(frontend_nc_data->partition, "Websocket message (%lu): %.*s", nc->id, (int)wm->data.len, wm->data.ptr);
+            #ifdef MYMPD_DEBUG
+                MYMPD_LOG_DEBUG(frontend_nc_data->partition, "Websocket message (%lu): %.*s", nc->id, (int)wm->data.len, wm->data.ptr);
+            #endif
             if (wm->data.len > 9) {
                 MYMPD_LOG_ERROR(frontend_nc_data->partition, "Websocket message too long: %lu", (long unsigned)wm->data.len);
                 sent = mg_ws_send(nc, "too long", 8, WEBSOCKET_OP_TEXT);
@@ -608,11 +639,17 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data, void *fn
                     FREE_SDS(response);
                 }
             }
+            else if (mg_http_match_uri(hm, "/albumart-thumb/*") == true) {
+                request_handler_albumart_by_album_id(hm, (long long)nc->id, ALBUMART_THUMBNAIL);
+            }
+            else if (mg_http_match_uri(hm, "/albumart/*") == true) {
+                request_handler_albumart_by_album_id(hm, (long long)nc->id, ALBUMART_FULL);
+            }
             else if (mg_http_match_uri(hm, "/albumart-thumb") == true) {
-                request_handler_albumart(nc, hm, mg_user_data, (long long)nc->id, ALBUMART_THUMBNAIL);
+                request_handler_albumart_by_uri(nc, hm, mg_user_data, (long long)nc->id, ALBUMART_THUMBNAIL);
             }
             else if (mg_http_match_uri(hm, "/albumart") == true) {
-                request_handler_albumart(nc, hm, mg_user_data, (long long)nc->id, ALBUMART_FULL);
+                request_handler_albumart_by_uri(nc, hm, mg_user_data, (long long)nc->id, ALBUMART_FULL);
             }
             else if (mg_http_match_uri(hm, "/tagart") == true) {
                 request_handler_tagart(nc, hm, mg_user_data);
@@ -656,8 +693,8 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data, void *fn
                 request_handler_serverinfo(nc);
             }
             else if (mg_http_match_uri(hm, "/script-api/*") == true) {
-                //check acl
-                if (check_acl(nc, config->scriptacl) == false) {
+                //enforce script acl
+                if (enforce_acl(nc, config->scriptacl) == false) {
                     break;
                 }
                 //check partition
@@ -761,19 +798,19 @@ static void ev_handler_redirect(struct mg_connection *nc, int ev, void *ev_data,
             mg_user_data->connection_count++;
             break;
         case MG_EV_ACCEPT:
-            //check connection count
-            if (check_conn_limit(nc, mg_user_data->connection_count) == false) {
+            //enforce connection limit
+            if (enforce_conn_limit(nc, mg_user_data->connection_count) == false) {
                 break;
             }
-            //check acl
-            if (check_acl(nc, config->acl) == false) {
+            //enforce acl
+            if (enforce_acl(nc, config->acl) == false) {
                 break;
             }
             break;
         case MG_EV_HTTP_MSG: {
             struct mg_http_message *hm = (struct mg_http_message *) ev_data;
             if (mg_http_match_uri(hm, "/browse/webradios/*") == true) {
-                //we serve the webradio directory without https to avoid ssl configuration for the mpd curl plugin
+                //we serve the webradio directory without https to avoid the required ssl configuration for the mpd curl plugin
                 static struct mg_http_serve_opts s_http_server_opts;
                 s_http_server_opts.extra_headers = EXTRA_HEADERS_UNSAFE;
                 s_http_server_opts.mime_types = EXTRA_MIME_TYPES;

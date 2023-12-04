@@ -547,6 +547,13 @@
                 <div class="dropdown-menu px-2">
                   <h2 class="dropdown-header" data-phrase="Sort playlist"></h2>
                   <div id="BrowsePlaylistDetailSortTagsDropdown"></div>
+                  <div class="dropdown-divider"></div>
+                  <form>
+                    <div class="form-check">
+                      <button class="btn btn-secondary btn-xs mi mi-sm" id="BrowsePlaylistDetailSortDesc" data-href='{"cmd": "toggleBtnChk", "options": ["target"]}'>radio_button_unchecked</button>&nbsp;
+                      <label class="form-check-label" for="BrowsePlaylistDetailSortDesc" data-phrase="Descending"></label>
+                    </div>
+                  </form>
                 </div>
               </div>
             </div>
@@ -741,7 +748,7 @@
           <div class="table-responsive scrollContainer">
             <div class="row me-0">
               <div class="col-12 col-sm-6 col-xl-4 mb-3">
-                <div id="viewDatabaseAlbumDetailCover" class="mb-3 album-cover album-cover-loading clickable carousel" data-href='{"cmd": "zoomPicture", "options": []}'></div>
+                <div id="viewDatabaseAlbumDetailCover" class="mb-3 album-cover album-cover-loading clickable carousel" data-href='{"cmd": "zoomPicture", "options": ["target"]}'></div>
               </div>
               <div id="viewDatabaseAlbumDetailInfo" class="text-break col-12 col-sm-6 col-xl-8 mb-3">
                 <div id="viewDatabaseAlbumDetailInfoTags" class="row"></div>
@@ -774,17 +781,17 @@
             <input data-is="mympd-input-clear" data-clear-event="keyup" data-placeholder-phrase="Search" class="form-control rounded-end" id="BrowseFilesystemSearchStr"/>
           </div>
           <div class="btn-group me-2" id="BrowseFilesystemAddAllSongsGrp">
-            <button data-title-phrase="Append to queue" data-href='{"cmd": "addAllFromSearch", "options": ["append", "dir"]}' id="BrowseFilesystemAddAllSongs" class="btn btn-secondary mi">library_add</button>
+            <button data-title-phrase="Append to queue" data-href='{"cmd": "addAllFromFilesystem", "options": ["append"]}' id="BrowseFilesystemAddAllSongs" class="btn btn-secondary mi">library_add</button>
             <button id="BrowseFilesystemAddAllSongsBtn" class="btn btn-secondary dropdown-toggle dropdown-toggle-split rounded-end" type="button" data-bs-toggle="dropdown"></button>
             <div class="dropdown-menu px-2 dropdownWide" id="BrowseFilesystemAddAllSongsDropdown">
               <div class="d-grid gap-2">
-                <button data-href='{"cmd": "addAllFromSearch", "options": ["append", "dir"]}' data-phrase="Append to queue" type="button" class="btn btn-secondary btn-sm"></button>
-                <button data-href='{"cmd": "addAllFromSearch", "options": ["appendPlay", "dir"]}' data-phrase="Append to queue and play" type="button" class="btn btn-secondary btn-sm"></button>
-                <button data-href='{"cmd": "addAllFromSearch", "options": ["insertAfterCurrent", "dir"]}' data-phrase="Insert after current playing song" type="button" class="featWhence btn btn-secondary btn-sm"></button>
-                <button data-href='{"cmd": "addAllFromSearch", "options": ["replace", "dir"]}' data-phrase="Replace queue" type="button" class="btn btn-secondary btn-sm"></button>
-                <button data-href='{"cmd": "addAllFromSearch", "options": ["replacePlay", "dir"]}' data-phrase="Replace queue and play" type="button" class="btn btn-secondary btn-sm"></button>
+                <button data-href='{"cmd": "addAllFromFilesystem", "options": ["append"]}' data-phrase="Append to queue" type="button" class="btn btn-secondary btn-sm"></button>
+                <button data-href='{"cmd": "addAllFromFilesystem", "options": ["appendPlay"]}' data-phrase="Append to queue and play" type="button" class="btn btn-secondary btn-sm"></button>
+                <button data-href='{"cmd": "addAllFromFilesystem", "options": ["insertAfterCurrent"]}' data-phrase="Insert after current playing song" type="button" class="featWhence btn btn-secondary btn-sm"></button>
+                <button data-href='{"cmd": "addAllFromFilesystem", "options": ["replace"]}' data-phrase="Replace queue" type="button" class="btn btn-secondary btn-sm"></button>
+                <button data-href='{"cmd": "addAllFromFilesystem", "options": ["replacePlay"]}' data-phrase="Replace queue and play" type="button" class="btn btn-secondary btn-sm"></button>
                 <button data-href='{"cmd": "showAddToPlaylistFromFilesystem", "options": []}' data-phrase="Add to playlist" type="button" class="btn btn-secondary btn-sm featPlaylists"></button>
-                <button data-href='{"cmd": "addDirToHome", "options": []}' data-phrase="Add to homescreen" type="button" class="btn btn-secondary btn-sm featHome"></button>
+                <button data-href='{"cmd": "addSearchDirToHome", "options": []}' data-phrase="Add to homescreen" type="button" class="btn btn-secondary btn-sm featHome"></button>
               </div>
             </div>
           </div>
@@ -801,7 +808,7 @@
           <div id="BrowseFilesystemPaginationTop" class="btn-group me-2 pagination"></div>
         </div>
         <ol id="BrowseBreadcrumb" class="breadcrumb p-2 rounded-2 overflow-auto nowrap"></ol>
-        <div id="BrowseFilesystemImages" class="featLibrary not-clickable" data-href='{"cmd": "zoomPicture", "options": []}'></div>
+        <div id="BrowseFilesystemImages" class="featLibrary not-clickable" data-href='{"cmd": "zoomPicture", "options": ["target"]}'></div>
         <div class="table-responsive scrollContainer">
           <table id="BrowseFilesystemList" class="table table-hover table-sm">
             <thead>
@@ -996,15 +1003,15 @@
             <input data-is="mympd-input-clear" data-clear-event="keyup" data-placeholder-phrase="Search" class="form-control rounded-end" id="SearchSearchStr"/>
           </div>
           <div class="btn-group me-2">
-            <button data-title-phrase="Append to queue" id="SearchAddAllSongsBtn" class="btn btn-secondary mi" data-href='{"cmd": "addAllFromSearch", "options": ["append", "search"]}'>library_add</button>
+            <button data-title-phrase="Append to queue" id="SearchAddAllSongsBtn" class="btn btn-secondary mi" data-href='{"cmd": "addAllFromSearch", "options": ["append"]}'>library_add</button>
             <button id="SearchAddAllSongsDropdownBtn" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" type="button" data-bs-toggle="dropdown"></button>
             <div class="dropdown-menu px-2 dropdownWide">
               <div class="d-grid gap-2">
-                <button data-href='{"cmd": "addAllFromSearch", "options": ["append", "search"]}' data-phrase="Append to queue" type="button" class="btn btn-secondary btn-sm"></button>
-                <button data-href='{"cmd": "addAllFromSearch", "options": ["appendPlay", "search"]}' data-phrase="Append to queue and play" type="button" class="btn btn-secondary btn-sm"></button>
-                <button data-href='{"cmd": "addAllFromSearch", "options": ["insertAfterCurrent", "search"]}' data-phrase="Insert after current playing song" type="button" class="featWhence btn btn-secondary btn-sm"></button>
-                <button data-href='{"cmd": "addAllFromSearch", "options": ["replace", "search"]}' data-phrase="Replace queue" type="button" class="btn btn-secondary btn-sm"></button>
-                <button data-href='{"cmd": "addAllFromSearch", "options": ["replacePlay", "search"]}' data-phrase="Replace queue and play" type="button" class="btn btn-secondary btn-sm"></button>
+                <button data-href='{"cmd": "addAllFromSearch", "options": ["append"]}' data-phrase="Append to queue" type="button" class="btn btn-secondary btn-sm"></button>
+                <button data-href='{"cmd": "addAllFromSearch", "options": ["appendPlay"]}' data-phrase="Append to queue and play" type="button" class="btn btn-secondary btn-sm"></button>
+                <button data-href='{"cmd": "addAllFromSearch", "options": ["insertAfterCurrent"]}' data-phrase="Insert after current playing song" type="button" class="featWhence btn btn-secondary btn-sm"></button>
+                <button data-href='{"cmd": "addAllFromSearch", "options": ["replace"]}' data-phrase="Replace queue" type="button" class="btn btn-secondary btn-sm"></button>
+                <button data-href='{"cmd": "addAllFromSearch", "options": ["replacePlay"]}' data-phrase="Replace queue and play" type="button" class="btn btn-secondary btn-sm"></button>
                 <button data-href='{"cmd": "showAddToPlaylistCurrentSearch", "options": []}' data-phrase="Add to playlist" type="button" class="btn btn-secondary btn-sm featPlaylists"></button>
                 <button data-href='{"cmd": "saveSearchAsSmartPlaylist", "options": []}' data-phrase="Save as smart playlist" type="button" class="btn btn-secondary btn-sm featSmartpls"></button>
                 <button data-href='{"cmd": "addSearchToHome", "options": []}' data-phrase="Add to homescreen" type="button" class="btn btn-secondary btn-sm featHome"></button>
@@ -1043,7 +1050,7 @@
   </main>
 <!-- Main content end -->
 <!-- Footer start -->
-  <footer class="fixed-bottom">
+  <footer class="fixed-bottom" data-contextmenu="footer">
     <div id="footerProgressPos" class="px-2 py-1 rounded-sm"></div>
     <div id="footerProgress" class="progress clickable align-items-center">
       <div id="footerProgressBar" class="progress-bar highlight-bg"></div>
@@ -1052,16 +1059,19 @@
       <div class="btn-toolbar nav-item flex-nowrap">
         <div class="btn-group me-2">
           <button data-title-phrase="Previous" data-href='{"cmd": "clickPrev", "options": []}' id="footerPrevBtn" type="button" class="btn px-2 mi rounded-2">skip_previous</button>
+          <button data-title-phrase="Fast rewind" data-href='{"cmd": "clickFastRewind", "options": []}' id="footerFastRewindBtn" type="button" class="btn px-2 mi rounded-2 d-none">fast_rewind</button>
           <button data-title-phrase="Stop" data-href='{"cmd": "clickStop", "options": []}' id="footerStopBtn" type="button" class="btn px-2 mi rounded-2 d-none">stop</button>
           <button data-title-phrase="Toggle play" data-href='{"cmd": "clickPlay", "options": []}' id="footerPlayBtn" type="button" class="footerPlayBtn btn btn-lg px-1 mi mi-lg rounded-2">pause</button>
+          <button data-title-phrase="Fast forward" data-href='{"cmd": "clickFastForward", "options": []}' id="footerFastForwardBtn" type="button" class="btn px-2 mi rounded-2 d-none">fast_forward</button>
           <button data-title-phrase="Next" data-href='{"cmd": "clickNext", "options": []}' id="footerNextBtn" type="button" class="btn px-2 mi rounded-2">skip_next</button>
+          <button data-title-phrase="Advanced playback controls" data-href='{"cmd": "toggleAdvPlaycontrolsPopover", "options": ["event"]}' id="advPlaybackControlsBtn" type="button" class="btn px-2 mi rounded-2">drag_indicator</button>
         </div>
         <div class="align-self-center footerCounter">
           <small id="counter"></small>
         </div>
       </div>
       <div class="d-flex flex-fill navbar-nav ms-3 text-truncate" id="footerInfo">
-        <div data-title-phrase="Show cover" id="footerCover" class="album-cover-loading rounded me-3 clickable carousel" data-href='{"cmd": "zoomPicture", "options": []}'></div>
+        <div data-title-phrase="Show cover" id="footerCover" class="album-cover-loading rounded me-3 clickable carousel" data-href='{"cmd": "zoomPicture", "options": ["target"]}'></div>
         <div id="footerPlaying">
           <span id="footerTitle" class="not-clickable d-block" data-href='{"cmd": "clickTitle", "options": []}'>Title</span>
           <span data-tag="Artist" id="footerArtist" data-href='{"cmd": "gotoBrowse", "options": ["event"]}'>Artist</span><span id="footerDivider">&nbsp;&ndash;&nbsp;</span><span data-tag="Album" id="footerAlbum" data-href='{"cmd": "gotoBrowse", "options": ["event"]}'>Album</span>
@@ -1116,7 +1126,7 @@
               <div class="btn-group">
                 <button data-href='{"cmd": "localPlaybackVolumeStep", "options": ["down"]}' class="btn btn-secondary">&minus;</button>
                 <div class="bg-secondary volumeRangeDiv">
-                  <input type="range" min="0" max="1" step="0.1" class="form-range" id="localPlaybackVolumeBar"/>
+                  <input type="range" min="0" max="1" step="0.01" class="form-range" id="localPlaybackVolumeBar"/>
                 </div>
                 <button data-href='{"cmd": "localPlaybackVolumeStep", "options": ["up"]}' class="btn btn-secondary">+</button>
               </div>
@@ -1375,6 +1385,12 @@
               <select id="modalSmartPlaylistEditSortInput" class="form-select"></select>
             </div>
           </div>
+          <div class="mb-3 row">
+            <label class="col-sm-4 col-form-label" for="modalSmartPlaylistEditSortdescInput" data-phrase="Descending"></label>
+            <div class="col-sm-8">
+              <button class="btn btn-secondary mi" id="modalSmartPlaylistEditSortdescInput" data-href='{"cmd": "toggleBtnChk", "options": ["target"]}'>radio_button_unchecked</button>
+            </div>
+          </div>
           <hr/>
           <div class="d-none" id="modalSmartPlaylistEditTypeSearch">
             <div class="mb-3 row">
@@ -1599,6 +1615,9 @@
               <hr/>
               <h4 data-phrase="Volume control"></h4>
               <div id="modalSettingsVolumeFrm"></div>
+              <hr/>
+              <h4 data-phrase="Seek"></h4>
+              <div id="modalSettingsSeekFrm"></div>
               <div class="featLibrary">
                 <hr/>
                 <h4 data-phrase="Booklet"></h4>
@@ -1697,7 +1716,7 @@
                   <div class="btn-group" id="modalPlaybackJukeboxModeGroup">
                     <button data-collapse="d-none" data-value="off" class="btn btn-secondary" data-href='{"cmd": "toggleBtnGroupCollapse", "options": ["target", "modalPlaybackJukeboxCollapse"]}' type="button" data-phrase="Off"></button>
                     <button data-collapse="show" data-value="song" class="btn btn-secondary" data-href='{"cmd": "toggleBtnGroupCollapse", "options": ["target", "modalPlaybackJukeboxCollapse"]}' type="button" data-phrase="Song"></button>
-                    <button data-collapse="show" data-value="album" class="btn btn-secondary" data-href='{"cmd": "toggleBtnGroupCollapse", "options": ["target", "modalPlaybackJukeboxCollapse"]}' type="button" data-phrase="Album"></button>
+                    <button data-collapse="show" data-value="album" class="btn btn-secondary featTags" data-href='{"cmd": "toggleBtnGroupCollapse", "options": ["target", "modalPlaybackJukeboxCollapse"]}' type="button" data-phrase="Album"></button>
                   </div>
                   <small class="help" data-phrase="helpJukeboxMode"></small>
                   <div id="modalPlaybackConsumeWarn" class="alert alert-warning mt-2" data-phrase="Consume must be enabled"></div>
@@ -1761,7 +1780,6 @@
             </div>
           </div>
           <div id="modalConnectionMusicDirectoryWarn" class="alert alert-warning d-none" data-phrase="Music directory not found"></div>
-          <hr/>
           <div class="mb-3 row">
             <div class="col-sm-4"></div>
             <div class="col-sm-8">
@@ -1785,6 +1803,16 @@
             </div>
             <div id="modalConnectionPlaylistDirectoryWarn" class="alert alert-warning d-none" data-phrase="Playlist directory not found"></div>
             <div id="modalConnectionAdvFrm2"></div>
+          </div>
+          <hr class="featStickersEnabled"/>
+          <div class="mb-3 row featStickersEnabled">
+            <div class="col-sm-4" data-phrase="Use different MPD host for sticker database"></div>
+            <div class="col-sm-8">
+              <button data-href='{"cmd":"toggleBtnChk", "options": ["target"]}' id="modalConnectionStickerdbToggleBtn" data-bs-toggle="collapse" data-bs-target="#modalConnectionStickerdbCollapse" type="button" class="btn btn-secondary btn-sm mi alwaysEnabled">radio_button_unchecked</button>
+            </div>
+          </div>
+          <div id="modalConnectionStickerdbCollapse" class="collapse featStickersEnabled">
+            <div id="modalConnectionStickerdbFrm"></div>
           </div>
         </div>
         <div class="modal-footer justify-content-between">

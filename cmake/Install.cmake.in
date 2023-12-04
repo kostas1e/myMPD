@@ -23,6 +23,13 @@ if("@MYMPD_STARTUP_SCRIPT@" STREQUAL "ON")
     file(INSTALL "@CMAKE_CURRENT_BINARY_DIR@/contrib/initscripts/mympd"
         DESTINATION "/etc/init.d"
         FILE_PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+  elseif(EXISTS "/bin/freebsd-version")
+    #Install FreeBSD rc script
+    file(RENAME "@CMAKE_CURRENT_BINARY_DIR@/contrib/initscripts/mympd.freebsdrc"
+                "@CMAKE_CURRENT_BINARY_DIR@/contrib/initscripts/mympd")
+    file(INSTALL "@CMAKE_CURRENT_BINARY_DIR@/contrib/initscripts/mympd"
+        DESTINATION "/usr/local/etc/rc.d"
+        FILE_PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
   else()
     message("No supported init system found, no startup script was installed")
   endif()
@@ -38,5 +45,19 @@ if("@MYMPD_MANPAGES@" STREQUAL "ON")
   execute_process(COMMAND gzip -n -c -9 "@CMAKE_SOURCE_DIR@/contrib/man/mympd-script.1" OUTPUT_FILE "@CMAKE_CURRENT_BINARY_DIR@/contrib/mympd-script.1.gz")
   file(INSTALL "@CMAKE_CURRENT_BINARY_DIR@/contrib/mympd-script.1.gz"
        DESTINATION "@CMAKE_INSTALL_FULL_MANDIR@/man1"
+       FILE_PERMISSIONS PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ)
+endif()
+
+# Install documentation
+if("@MYMPD_DOC@" STREQUAL "ON")
+  file(INSTALL "@CMAKE_SOURCE_DIR@/CHANGELOG.md" "@CMAKE_SOURCE_DIR@/LICENSE.md" "@CMAKE_SOURCE_DIR@/README.md" "@CMAKE_SOURCE_DIR@/SECURITY.md"
+       DESTINATION "@CMAKE_INSTALL_FULL_DOCDIR@"
+       FILE_PERMISSIONS PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ)
+endif()
+
+# Install html documentation
+if("@MYMPD_DOC_HTML@" STREQUAL "ON")
+  file(INSTALL "@CMAKE_CURRENT_BINARY_DIR@/htmldoc"
+       DESTINATION "@CMAKE_INSTALL_FULL_DOCDIR@/html"
        FILE_PERMISSIONS PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ)
 endif()

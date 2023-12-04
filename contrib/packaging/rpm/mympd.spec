@@ -4,7 +4,7 @@
 # (c) 2018-2023 Juergen Mang <mail@jcgames.de>
 
 Name:           mympd
-Version:        12.0.2
+Version:        13.0.5
 Release:        0
 License:        GPL-3.0-or-later
 Group:          Productivity/Multimedia/Sound/Players
@@ -40,11 +40,16 @@ Therefore myMPD is ideal for raspberry pis and similar devices.
 %setup -q -n %{name}-%{version}
 
 %build
-cmake -B release -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_BUILD_TYPE=Release -DMYMPD_STRIP_BINARY=OFF .
+cmake -B release -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_BUILD_TYPE=RelWithDebInfo .
 make -C release
 
 %install
 make -C release install DESTDIR=%{buildroot}
+if [ "%{_defaultdocdir}" == "/usr/share/doc/packages" ]
+then
+  install -d "%{buildroot}%{_defaultdocdir}"
+  mv -v "%{buildroot}/usr/share/doc/mympd" "%{buildroot}%{_defaultdocdir}/mympd"
+fi
 
 %files
 %defattr(-,root,root,-)
@@ -54,8 +59,12 @@ make -C release install DESTDIR=%{buildroot}
 /usr/lib/systemd/system/mympd.service
 %{_mandir}/man1/mympd.1.gz
 %{_mandir}/man1/mympd-script.1.gz
+%{_defaultdocdir}/mympd/CHANGELOG.md
+%{_defaultdocdir}/mympd/LICENSE.md
+%{_defaultdocdir}/mympd/README.md
+%{_defaultdocdir}/mympd/SECURITY.md
 %license LICENSE.md
 
 %changelog
-* Fri Sep 15 2023 Juergen Mang <mail@jcgames.de> 12.0.2-0
+* Sun Nov 19 2023 Juergen Mang <mail@jcgames.de> 13.0.5-0
 - Version from master

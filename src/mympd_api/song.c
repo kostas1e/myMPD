@@ -30,7 +30,8 @@ sds mympd_api_song_details(struct t_partition_state *partition_state, sds buffer
             const struct mpd_audio_format *audioformat = mpd_song_get_audio_format(song);
             buffer = printAudioFormat(buffer, audioformat);
             buffer = sdscatlen(buffer, ",", 1);
-            buffer = print_song_tags(buffer, partition_state->mpd_state->feat_tags, &partition_state->mpd_state->tags_mympd, song);
+            buffer = print_song_tags(buffer, partition_state->mpd_state->feat_tags, &partition_state->mpd_state->tags_mympd,
+                song, &partition_state->mympd_state->config->albums);
             mpd_song_free(song);
         }
     }
@@ -39,9 +40,11 @@ sds mympd_api_song_details(struct t_partition_state *partition_state, sds buffer
         return buffer;
     }
 
-    if (partition_state->mpd_state->feat_stickers) {
-        buffer = sdscatlen(buffer, ",", 1);
-        buffer = mympd_api_sticker_get_print(buffer, &partition_state->mpd_state->sticker_cache, uri);
+    if (partition_state->mpd_state->feat_stickers == true) {
+        struct t_tags tagcols;
+        reset_t_tags(&tagcols);
+        tags_enable_all_stickers(&tagcols);
+        buffer = mympd_api_sticker_get_print(buffer, partition_state->mympd_state->stickerdb, uri, &tagcols);
     }
 
     buffer = sdscatlen(buffer, ",", 1);

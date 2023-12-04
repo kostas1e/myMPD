@@ -496,6 +496,17 @@ div#homeActions {
   text-overflow: ellipsis;
 }
 
+.card-footer-tags a {
+  margin-top: 1rem;
+  display: inline-block;
+  width: 50%;
+  text-align: center;
+}
+
+.card-footer-tags a:last-child {
+  text-align: center;
+}
+
 .album-cover-grid {
   background-size: cover;
   background-position: center center;
@@ -836,8 +847,7 @@ div#modalPictureImg {
 div#BrowseFilesystemImages {
   height: calc(var(--mympd-thumbnail-size, 175px) + 1rem);
   margin-bottom: 1rem;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: auto hidden;
   white-space: nowrap;
 }
 
@@ -1060,6 +1070,7 @@ button.weekday {
   max-width: 80vw;
 
   --bs-dropdown-zindex: 1050;
+  --bs-dropdown-min-width: 12rem;
 }
 
 .dropdown-item {
@@ -1214,6 +1225,14 @@ h4.offcanvas-title-stream::before {
 .btnHelp {
   min-width: fit-content !important;
   display: var(--mympd-show-help-btn);
+}
+
+.playbackPopoverBtns button {
+  width: 3rem;
+}
+
+.playbackPopoverBtns input {
+  max-width: 6rem;
 }
 
 /* ideon */

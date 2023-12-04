@@ -20,13 +20,16 @@ bool enable_all_mpd_tags(struct t_partition_state *partition_state);
 bool enable_mpd_tags(struct t_partition_state *partition_state, const struct t_tags *enable_tags);
 enum mpd_tag_type get_sort_tag(enum mpd_tag_type tag, const struct t_tags *available_tags);
 sds print_song_tags(sds buffer, bool tags_enabled, const struct t_tags *tagcols,
-        const struct mpd_song *song);
+        const struct mpd_song *song, const struct t_albums_config *album_config);
 sds print_album_tags(sds buffer, const struct t_tags *tagcols,
-        const struct mpd_song *album);
+        const struct mpd_song *album, const struct t_albums_config *album_config);
 void check_tags(sds taglist, const char *taglistname, struct t_tags *tagtypes,
         const struct t_tags *allowed_tag_types);
 bool mpd_client_tag_exists(const struct t_tags *tagtypes, enum mpd_tag_type tag);
 sds mpd_client_get_tag_values(const struct mpd_song *song, enum mpd_tag_type tag, sds tag_values);
 sds mpd_client_get_tag_value_string(const struct mpd_song *song, enum mpd_tag_type tag, sds tag_values);
 sds print_tags_array(sds buffer, const char *tagsname, const struct t_tags *tags);
+sds mpd_client_get_tag_value_padded(const struct mpd_song *song, enum mpd_tag_type tag, const char pad, size_t len, sds tag_values);
+int mpd_client_get_tag_value_int(const struct mpd_song *song, enum mpd_tag_type tag);
+
 #endif

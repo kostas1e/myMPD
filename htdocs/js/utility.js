@@ -282,7 +282,7 @@ function parseCmdFromJSON(event, str) {
 /**
  * Executes a javascript command object
  * @param {Event} event triggering event
- * @param {object} cmd string to parse
+ * @param {object} cmd cmd object
  * @returns {void}
  */
 function parseCmd(event, cmd) {
@@ -293,20 +293,22 @@ function parseCmd(event, cmd) {
     }
     const func = getFunctionByName(cmd.cmd);
     if (typeof func === 'function') {
-        for (let i = 0, j = cmd.options.length; i < j; i++) {
-            if (cmd.options[i] === 'event') {
-                cmd.options[i] = event;
-            }
-            else if (cmd.options[i] === 'target') {
-                cmd.options[i] = event.target;
-            }
-        }
         if (cmd.cmd === 'sendAPI') {
             sendAPI(cmd.options[0].cmd, {}, null, false);
         }
         else {
+            // copy - we do not want to modify the original object
+            const options = cmd.options.slice();
+            for (let i = 0, j = options.length; i < j; i++) {
+                if (options[i] === 'event') {
+                    options[i] = event;
+                }
+                else if (options[i] === 'target') {
+                    options[i] = event.target;
+                }
+            }
             // @ts-ignore
-            func(... cmd.options);
+            func(... options);
         }
     }
     else {
@@ -489,9 +491,75 @@ async function httpGet(uri, callback, json) {
  */
 function getMyMPDuri(proto) {
     const protocol = proto === 'ws'
-        ? window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+        ? window.location.protocol === 'https:'
+            ? 'wss:'
+            : 'ws:'
         : window.location.protocol;
-    return protocol + window.location.hostname +
-            (window.location.port !== '' ? ':' + window.location.port : '') +
-            subdir;
+    return protocol + '//' + window.location.hostname +
+        (window.location.port !== '' ? ':' + window.location.port : '') +
+        subdir;
+}
+
+/**
+ * Parses a string to seconds
+ * @param {string} value [hh:]mm:ss value to parse
+ * @returns {number} value in seconds
+ */
+function parseToSeconds(value) {
+    let match = value.match(/(\d+):(\d+):(\d+)/);
+    if (match) {
+        return Number(match[1]) * 60 * 60 +
+            Number(match[1]) * 60 +
+            Number(match[2]);
+    }
+    match = value.match(/(\d+):(\d+)/);
+    if (match) {
+        return Number(match[1]) * 60 +
+            Number(match[2]);
+    }
+    return Number(value);
+}
+
+/**
+ * Initializes elements with data-href attribute
+ * @param {Node} root root of the elements to initialize
+ * @returns {void}
+ */
+function initLinks(root) {
+    const hrefs = root.querySelectorAll('[data-href]');
+    for (const href of hrefs) {
+        if (href.nodeName !== 'A' &&
+            href.nodeName !== 'BUTTON' &&
+            href.classList.contains('not-clickable') === false)
+        {
+            href.classList.add('clickable');
+        }
+        if (href.parentNode.classList.contains('noInitChilds') ||
+            href.parentNode.parentNode.classList.contains('noInitChilds'))
+        {
+            //handler on parentnode
+            continue;
+        }
+        href.addEventListener('click', function(event) {
+            parseCmdFromJSON(event, getData(this, 'href'));
+        }, false);
+    }
+}
+
+/**
+ * Tries to convert a strint to number or bool
+ * @param {string} str string to convert
+ * @returns {string|number|boolean} parsed string
+ */
+function convertType(str) {
+    if (str === 'true') {
+        return true;
+    }
+    if (str === 'false') {
+        return false;
+    }
+    if (str.match(/^(-)?[\d.]+$/)) {
+        return Number(str);
+    }
+    return str;
 }

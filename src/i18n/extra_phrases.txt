@@ -106,7 +106,7 @@ Label
 language
 lastchangetime
 lastcheckok
-LastModified
+Last-Modified
 Last played list count
 Light
 Location
@@ -216,12 +216,12 @@ SongCount
 Startup view
 state
 sticker
-stickerElapsed
-stickerLastPlayed
-stickerLastSkipped
-stickerLike
-stickerPlayCount
-stickerSkipCount
+elapsed
+lastPlayed
+lastSkipped
+like
+playCount
+skipCount
 stop only
 Stop playback after current song
 Stream
@@ -263,3 +263,4 @@ Value length for JSON path \"$.params.newName\" is too short
 Value length for JSON path \"$.params.plist\" is too short
 Number is out of valid range
 Can not parse script arguments
+Sortdesc

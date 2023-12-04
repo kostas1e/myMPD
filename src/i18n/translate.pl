@@ -98,7 +98,7 @@ for my $filename (@files) {
             while ($line =~ /(elCreateTextTnNr|elCreateTextTn)\('\w+', \{[^}]*\}, '([^']+)'/g) {
                 add_phrase($2);
             }
-            while ($line =~ /"(title|help|invalid|unit|hintText)":\s+"([^"]+)"/g) {
+            while ($line =~ /"(title|help|invalid|unit|hintText|warn)":\s+"([^"]+)"/g) {
                 add_phrase($2);
             }
         }
@@ -142,7 +142,7 @@ for my $lang (@langs) {
 #read language descriptions
 open my $descfile, "src/i18n/i18n.txt"  or die "Can not open src/i18n/i18n.txt: $!";
 while (my $line = <$descfile>) {
-    if ($line =~ /^(\w+-\w+):(.*)$/) {
+    if ($line =~ /^[\w+-]+:(\w+-\w+):(.*)$/) {
         $desc->{$1} = $2;
     }
 }
@@ -191,3 +191,17 @@ for my $key (sort keys %$i18n) {
         warn "Obsolete translation \"".$key."\" for lang ".join(", ", keys %{$i18n->{$key}})."\n" if $verbose eq 1;
     }
 }
+
+open my $phrasesfile, ">src/i18n/json/phrases.json" or die "Can not open \"src/i18n/json/phrases.json\": $!";
+print $phrasesfile "[\n";
+$i = 0;
+for my $key (sort keys %$phrases) {
+    #$key =~ s/"/\\"/g;
+    if ($i > 0) {
+        print $phrasesfile ",\n";
+    }
+    print $phrasesfile "{\"term\":\"$key\"}";
+    $i++;
+}
+print $phrasesfile "\n]\n";
+close $phrasesfile;

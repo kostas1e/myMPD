@@ -79,9 +79,7 @@ sds mympd_api_status_print(struct t_partition_state *partition_state, sds buffer
     buffer = printAudioFormat(buffer, audioformat);
     buffer = sdscatlen(buffer, ",", 1);
     buffer = tojson_uint(buffer, "updateState", mpd_status_get_update_id(status), true);
-    const bool updateCacheState = partition_state->mpd_state->album_cache.building ||
-        partition_state->mpd_state->sticker_cache.building;
-    buffer = tojson_bool(buffer, "updateCacheState", updateCacheState, true);
+    buffer = tojson_bool(buffer, "updateCacheState", partition_state->mpd_state->album_cache.building, true);
     buffer = tojson_char(buffer, "lastError", mpd_status_get_error(status), false);
     return buffer;
 }
@@ -369,10 +367,16 @@ sds mympd_api_status_current_song(struct t_partition_state *partition_state, sds
         buffer = jsonrpc_respond_start(buffer, cmd_id, request_id);
         buffer = tojson_uint(buffer, "pos", mpd_song_get_pos(song), true);
         buffer = tojson_long(buffer, "currentSongId", partition_state->song_id, true);
-        buffer = print_song_tags(buffer, partition_state->mpd_state->feat_tags, &partition_state->mpd_state->tags_mympd, song);
+        buffer = print_song_tags(buffer, partition_state->mpd_state->feat_tags, &partition_state->mpd_state->tags_mympd,
+            song, &partition_state->mympd_state->config->albums);
         buffer = sdscatlen(buffer, ",", 1);
-        buffer = mympd_api_sticker_get_print(buffer, &partition_state->mpd_state->sticker_cache, uri);
-        buffer = sdscatlen(buffer, ",", 1);
+        if (partition_state->mpd_state->feat_stickers == true) {
+            struct t_tags tagcols;
+            reset_t_tags(&tagcols);
+            tags_enable_all_stickers(&tagcols);
+            buffer = mympd_api_sticker_get_print(buffer, partition_state->mympd_state->stickerdb, uri, &tagcols);
+        }
+        buffer = json_comma(buffer);
         buffer = mympd_api_get_extra_media(partition_state->mpd_state, buffer, uri, false);
         if (is_streamuri(uri) == true) {
             sds webradio = get_webradio_from_uri(partition_state->mympd_state->config->workdir, uri);

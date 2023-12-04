@@ -24,8 +24,8 @@ static const char *invalid_name_chars = "\a\b\f\n\r\t\v";
 static const char *invalid_filename_chars = "\a\b\f\n\r\t\v/\\";
 static const char *invalid_filepath_chars = "\a\b\f\n\r\t\v";
 
-static const char *mympd_cols[]={"Pos", "Duration", "Type", "Priority", "LastPlayed", "Filename", "Filetype", "AudioFormat", "LastModified",
-    "Lyrics", "stickerPlayCount", "stickerSkipCount", "stickerLastPlayed", "stickerLastSkipped", "stickerLike", "stickerElapsed",
+static const char *mympd_cols[]={"Pos", "Duration", "Type", "Priority", "LastPlayed", "Filename", "Filetype", "AudioFormat", "Last-Modified",
+    "Lyrics", "playCount", "skipCount", "lastPlayed", "lastSkipped", "like", "elapsed",
     "Country", "Description", "Genre", "Homepage", "Language", "Name", "StreamUri", "Codec", "Bitrate", //Columns for webradiodb
     "clickcount", "country", "homepage", "language", "lastchangetime", "lastcheckok", "tags", "url_resolved", "votes", //Columns for radiobrowser
     "Discs", "SongCount", //Columns for albums
@@ -210,7 +210,7 @@ bool vcb_isfilename(sds data) {
 }
 
 /**
- * Checks if string is a valid filepath
+ * Checks if string is a valid filename with path or path only
  * @param data sds string to check
  * @return true on success else false
  */
@@ -236,6 +236,21 @@ bool vcb_isfilepath(sds data) {
         MYMPD_LOG_WARN(NULL, "Found illegal character in file path");
     }
     return rc;
+}
+
+/**
+ * Checks if string is a valid path + filename
+ * @param data sds string to check
+ * @return true on success else false
+ */
+bool vcb_ispathfilename(sds data) {
+    bool rc = vcb_isfilepath(data);
+    if (rc == true) {
+        return data[sdslen(data) - 1] == '/'
+            ? false
+            : true;
+    }
+    return false;
 }
 
 /**
@@ -312,7 +327,7 @@ bool vcb_ismpdsort(sds data) {
     if (tag == MPD_TAG_UNKNOWN &&
         strcmp(data, "filename") != 0 &&
         strcmp(data, "shuffle") != 0 &&
-        strcmp(data, "LastModified") != 0 &&
+        strcmp(data, "Last-Modified") != 0 &&
         strcmp(data, "Date") != 0 &&
         strcmp(data, "Priority") != 0)
     {
@@ -320,6 +335,32 @@ bool vcb_ismpdsort(sds data) {
         return false;
     }
     return true;
+}
+
+/**
+ * Checks if string is a valid mpd search expression
+ * @param data sds string to check
+ * @return true on success else false
+ */
+bool vcb_issearchexpression(sds data) {
+    size_t len = sdslen(data);
+    if (len == 0) {
+        return true;
+    }
+    //check if it is valid utf8
+    if (utf8valid(data) != 0) {
+        MYMPD_LOG_ERROR(NULL, "String is not valid utf8");
+        return false;
+    }
+    //only some basic checks
+    if (len < 2 ||
+        data[0] != '(' ||
+        data[len - 1] != ')')
+    {
+        MYMPD_LOG_ERROR(NULL, "String is not a valid search expression");
+        return false;
+    }
+    return check_for_invalid_chars(data, invalid_name_chars);
 }
 
 /**

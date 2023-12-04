@@ -99,6 +99,22 @@ function addDirToHome(uri, name) {
 }
 
 /**
+ * Adds the current directory search to the homescreen
+ * @returns {void}
+ */
+//eslint-disable-next-line no-unused-vars
+function addSearchDirToHome() {
+    if (app.current.search === '') {
+        // Search is empty, add a dir to home screen
+        return addDirToHome(undefined, undefined);
+    }
+    // Add a saved search to home screen
+    const expression = createBaseSearchExpression(app.current.filter, app.current.search);
+    const name = basename(app.current.filter, false) + ' (' + app.current.search + ')';
+    _addHomeIcon('replaceQueue', name, 'saved_search', '', ['search', expression]);
+}
+
+/**
  * Adds a song or stream to the homescreen
  * @param {string} uri song or stream uri
  * @param {string} type one of song, stream
@@ -145,18 +161,8 @@ function addAlbumToHome(albumId, name, image) {
  */
 //eslint-disable-next-line no-unused-vars
 function addStreamToHome() {
-    const mode = getRadioBoxValueId('modalPlaylistAddToPos');
+    const action = getRadioBoxValueId('modalPlaylistAddToPos') + 'Queue';
     const uri = elGetById('modalPlaylistAddToUrisInput').value;
-    let action;
-    switch(mode) {
-        case 'append': action = 'appendQueue'; break;
-        case 'appendPlay': action = 'appendPlayQueue'; break;
-        case 'insertAfterCurrent': action = 'insertAfterCurrentQueue'; break;
-        case 'insertPlayAfterCurrent': action = 'insertPlayAfterCurrentQueue'; break;
-        case 'replace': action = 'replaceQueue'; break;
-        case 'replacePlay': action = 'replacePlayQueue'; break;
-        default: logError('Invalid mode: ' + mode);
-    }
     _addHomeIcon(action, '', 'stream', '', ['stream', uri]);
 }
 
@@ -203,27 +209,28 @@ function openExternalLink(link) {
 /**
  * Goto handler for home icons
  * @param {string} type one of dir, search, album, plist, smartpls
- * @param {string} uri type = search: search expression,
- *                     type = album: album id,
- *                     else uri of directory or playlist
+ * @param {Array} options type = search: search expression, sort, sortdec
+ *                        type = album: albumId,
+ *                        else uri of directory or playlist
  * @returns {void}
  */
 //eslint-disable-next-line no-unused-vars
-function homeIconGoto(type, uri) {
+function homeIconGoto(type, options) {
     switch(type) {
         case 'dir':
-            gotoFilesystem(uri[0], type);
+            gotoFilesystem(options[0], type);
             break;
         case 'search':
-            appGoto('Search', undefined, undefined, 0, undefined, 'any', {'tag': 'Title', 'desc': false}, '', uri[0]);
+            elGetById('SearchSearchStr').value = '';
+            appGoto('Search', undefined, undefined, 0, undefined, 'any', {'tag': options[1], 'desc': options[2]}, '', options[0]);
             break;
         case 'album':
             //uri = AlbumId
-            gotoAlbum(uri[0]);
+            gotoAlbum(options[0]);
             break;
         case 'plist':
         case 'smartpls':
-            playlistDetails(uri[0]);
+            playlistDetails(options[0]);
             break;
         default:
             logError('Invalid type: ' + type);
