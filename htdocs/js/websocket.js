@@ -274,7 +274,7 @@ function websocketKeepAlive() {
             socket.send('ping');
         }
         catch(error) {
-            showNotification(tn('myMPD connection failed, trying to reconnect'), 'general', 'error');
+            showNotification(tn('Ideon connection failed, trying to reconnect'), 'general', 'error');
             logError(error);
             webSocketClose();
             webSocketConnect();
@@ -282,7 +282,7 @@ function websocketKeepAlive() {
     }
     else {
         logDebug('Reconnecting websocket');
-        toggleAlert('alertMympdState', true, tn('myMPD connection failed, trying to reconnect'));
+        toggleAlert('alertMympdState', true, tn('Ideon connection failed, trying to reconnect'));
         webSocketConnect();
     }
 }

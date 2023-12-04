@@ -127,7 +127,7 @@ static void mpd_client_idle_partition(struct t_partition_state *partition_state,
             if (request->conn_id > -1) {
                 struct t_work_response *response = create_response(request);
                 response->data = jsonrpc_respond_message(response->data, request->cmd_id, request->id,
-                    JSONRPC_FACILITY_MPD, JSONRPC_SEVERITY_ERROR, "MPD disconnected");
+                    JSONRPC_FACILITY_MPD, JSONRPC_SEVERITY_ERROR, "Streamer disconnected");
                 MYMPD_LOG_DEBUG(partition_state->name, "Send http response to connection %lld: %s", request->conn_id, response->data);
                 mympd_queue_push(web_server_queue, response, 0);
             }

@@ -143,11 +143,11 @@ static bool check_error_and_recover(struct t_partition_state *partition_state, s
             switch(response_type) {
                 case RESPONSE_TYPE_JSONRPC_RESPONSE:
                     *buffer = jsonrpc_respond_message_phrase(*buffer, cmd_id, request_id,
-                        JSONRPC_FACILITY_MPD, JSONRPC_SEVERITY_ERROR, "MPD error for command %{cmd}: %{msg}", 4, "cmd", command, "msg", error_msg);
+                        JSONRPC_FACILITY_MPD, JSONRPC_SEVERITY_ERROR, "Streamer error for command %{cmd}: %{msg}", 4, "cmd", command, "msg", error_msg);
                     break;
                 case RESPONSE_TYPE_JSONRPC_NOTIFY:
                     *buffer = jsonrpc_notify_phrase(*buffer,
-                        JSONRPC_FACILITY_MPD, JSONRPC_SEVERITY_ERROR, "MPD error for command %{cmd}: %{msg}", 4, "cmd", command, "msg", error_msg);
+                        JSONRPC_FACILITY_MPD, JSONRPC_SEVERITY_ERROR, "Streamer error for command %{cmd}: %{msg}", 4, "cmd", command, "msg", error_msg);
                     break;
                 default:
                     *buffer = sdscat(*buffer, error_msg);
