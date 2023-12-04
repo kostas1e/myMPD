@@ -153,6 +153,8 @@ void mympd_config_defaults(struct t_config *config) {
     FREE_SDS(album_group_tag_str);
     config->qobuz_app_id = startup_getenv_string("QOBUZ_APP_ID", CFG_IDEON_QOBUZ_APP_ID, vcb_isname, config->first_startup);
     config->qobuz_app_secret = startup_getenv_string("QOBUZ_APP_SECRET", CFG_IDEON_QOBUZ_APP_SECRET, vcb_isname, config->first_startup);
+    config->qobuz_username = startup_getenv_string("QOBUZ_USERNAME", CFG_IDEON_QOBUZ_USERNAME, vcb_isname, config->first_startup);
+    config->qobuz_password = startup_getenv_string("QOBUZ_PASSWORD", CFG_IDEON_QOBUZ_PASSWORD, vcb_isname, config->first_startup);
 }
 
 /**
