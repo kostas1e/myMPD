@@ -4,9 +4,10 @@
 #include <curl/curl.h>
 #include <openssl/md5.h>
 #include <openssl/evp.h>
-#include <stdbool.h>
 #include <stdlib.h>
+// #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "dist/mjson/mjson.h"
 #include "dist/sds/sds.h"
@@ -16,7 +17,7 @@
 #include "src/lib/sds_extras.h"
 #include "src/lib/validate.h"
 
-// FIXME
+// FIXME API_ENDPOINT BASE_URL
 #define QOBUZ_API "https://www.qobuz.com/api.json/0.2/"
 
 static int curl_cleanup = 1;
@@ -27,51 +28,19 @@ static const char *qobuz_password;
 static int qobuz_format_id;
 static sds cache_dir;
 static CURL *qobuz_handle;
-static struct memory_struct chunk;
+// static struct memory_struct chunk;
 
-static int user_id;
-static char *user_auth_token = NULL;
-
-//private definitions
-static bool user_login(const char *username, const char *password);
-
-static sds parse_tracks(sds buffer, sds res, unsigned *cnt, unsigned *ret);
-static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp);
-char *calculateMD5(const char *input);
-
-//public functions
-
-// TODO write qobuz params to mpd config
-
-bool qobuz_init(struct t_config *config) {
-    qobuz_app_id = config->qobuz_app_id;
-    qobuz_app_secret = config->qobuz_app_secret;
-    qobuz_username = config->qobuz_username;
-    qobuz_password = config->qobuz_password;
-    // qobuz_format_id = config->qobuz_format_id;
-    qobuz_format_id = 5;
-    cache_dir = sdscatfmt(sdsempty(), "%s/covercache", config->cachedir); // FIXME covercache directory
-    qobuz_handle = curl_easy_init();
-    if (qobuz_handle) {
-        curl_cleanup++;
-        curl_easy_setopt(qobuz_handle, CURLOPT_WRITEFUNCTION, write_memory_callback);
-        curl_easy_setopt(qobuz_handle, CURLOPT_WRITEDATA, &chunk);
-        
-        char *md5Result = calculateMD5(qobuz_password);
-
-        user_login(qobuz_username, md5Result);
-        free(md5Result);
-
-        return true;
-    }
-    else { // NULL
-        MYMPD_LOG_ERROR(NULL, "curl_easy_init");
-        return false;
-    }
-}
+// size_t write_memory_callback(void *ptr, size_t size, size_t nmemb, void *userdata) {
+//     struct t_memory *chunk = (struct t_memory *)userdata;
+//     size_t totalSize = size * nmemb;
+//     chunk->memory = sdscatlen(chunk->memory, (const char *)ptr, totalSize);
+//     chunk->size += totalSize;
+//     return totalSize;
+// }
 
 static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp) {
     // FIXME same in ideon.c, move this and memory_struct from ideon.h to utilities
+    // maybe use sds here
     size_t realsize = size * nmemb;
     struct memory_struct *mem = (struct memory_struct *)userp;
 
@@ -88,6 +57,225 @@ static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, v
     mem->memory[mem->size] = 0;
 
     return realsize;
+}
+
+// FIXME rename, private vs public approach, t_qobuz_client
+struct t_qobuz {
+    // base url
+    const char* app_id;
+    const char* app_secret;
+    const char* username;
+    const char* password;
+    char* user_auth_token;
+    // format_id
+    // cache_dir
+    CURL *curl_handle;
+};
+
+static struct t_qobuz api;
+
+static bool authenticate(const char *user, const char* pass);
+
+sds qobuz_track_get_file_url(sds url, int track_id, int format_id);
+
+bool qobuz_init2(struct t_config *config) {
+    // FIXME void
+    MYMPD_LOG_WARN(NULL, "qobuz init 2");
+    api.app_id = config->qobuz_app_id;
+    api.app_secret = config->qobuz_app_secret;
+    api.username = config->qobuz_username;
+    api.password = config->qobuz_password;
+    api.user_auth_token = NULL;
+    api.curl_handle = curl_easy_init();
+    if (api.curl_handle == NULL) {
+        MYMPD_LOG_ERROR(NULL, "curl_easy_init");
+        return false;
+    }
+    curl_easy_setopt(api.curl_handle, CURLOPT_WRITEFUNCTION, write_memory_callback);
+    // set app id header
+    // set user agent header
+    // calling authenitcate will be moved from here when front end is impl
+    authenticate(api.username, api.password);
+
+    return true;
+}
+
+// TODO return struct response rc,response_code,header,body
+void request2(void) {
+    struct t_memory chunk = {0};
+    CURLcode res;
+    curl_easy_setopt(api.curl_handle, CURLOPT_HTTPGET, 1L);
+    // options
+    // headers
+    res = curl_easy_perform(api.curl_handle);
+    if (res == CURLE_OK) {
+        long response_code;
+        curl_easy_getinfo(api.curl_handle, CURLINFO_RESPONSE_CODE, &response_code);
+        MYMPD_LOG_WARN(NULL, "%ld", response_code);
+        // sdscat
+    }
+
+    free(chunk.memory);
+}
+
+static bool authenticate(const char *username, const char *password) {
+    MYMPD_LOG_WARN(NULL, "authenticate");
+    // perform authentication ans set user auth token
+    struct t_memory chunk = {0};
+    if (username == NULL || password == NULL || username[0] == '\0' || password[0] == '\0') {
+        MYMPD_LOG_WARN(NULL, "empty user/pass");
+        return false;
+    }
+    char *username_encoded = curl_easy_escape(api.curl_handle, username, (int)strlen(username));
+    // if null
+    struct t_jsonrpc_parse_error parse_error;
+    jsonrpc_parse_error_init(&parse_error);
+    // sds params = sdscatfmt(sdsempty(), "?username=%s&password=%s", username_encoded, password);
+    sds url = sdscatfmt(sdsnew(QOBUZ_API), "user/login?username=%s&password=%s", username_encoded, password);
+    // url = sdscatsds(url, params);
+    MYMPD_LOG_WARN(NULL, "%s", url);
+    curl_easy_setopt(api.curl_handle, CURLOPT_HTTPGET, 1L);
+    curl_easy_setopt(api.curl_handle, CURLOPT_URL, url);
+
+    curl_easy_setopt(api.curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
+
+    struct curl_slist *headers = NULL;
+    sds h = sdscat(sdsnew("x-app-id: "), qobuz_app_id); // FIXME
+    headers = curl_slist_append(headers, h);
+    sdsfree(h);
+    curl_easy_setopt(api.curl_handle, CURLOPT_HTTPHEADER, headers);
+    
+    CURLcode res = curl_easy_perform(api.curl_handle);
+    curl_slist_free_all(headers);
+    
+    // sdsfree(params); // FIXME change to FREE_SDS from sds_extras.h move up
+    sdsfree(url);
+    if (res != CURLE_OK) {
+        // strerror
+        MYMPD_LOG_ERROR(NULL, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        free(chunk.memory);
+        return false;
+    }
+    // FIXME block based on status code of http request
+    else { // 0
+        // FIXME use vcb in_name, is_alnum, pass empty/none
+        // TODO use enums for limits
+        // TODO check the response code of curl instead to verify success or failure
+        sds cm = sdsnew(chunk.memory);
+        // TODO free chunk memory here
+        int user_id;
+        if (json_get_string(cm, "$.user_auth_token", 1, 200, &api.user_auth_token, vcb_isalnum, &parse_error) == true &&
+            json_get_int_max(cm, "$.user.id", &user_id, NULL) == true) {
+            // FIXME change user id to uint max
+            MYMPD_LOG_INFO(NULL, "login successful\n%s", cm);
+            free(chunk.memory);
+            FREE_SDS(cm);
+            return true;
+        }
+        else {
+            // status code message
+            sds message = NULL;
+            // FIXME if else
+            json_get_string(cm, "$.message", 1, 200, &message, vcb_istext, &parse_error);
+            MYMPD_LOG_ERROR(NULL, "%s", message);
+            FREE_SDS(message);
+            free(chunk.memory);
+            FREE_SDS(cm);
+            return false;
+        }
+    }
+}
+
+void qobuz_cleanup2(void) {
+    MYMPD_LOG_WARN(NULL, "qobuz cleanup 2");
+    if (api.user_auth_token != NULL) {
+        free(api.user_auth_token);
+    }
+
+    if (api.curl_handle != NULL) {
+        curl_easy_cleanup(api.curl_handle);
+    }
+}
+
+static int user_id;
+static char *user_auth_token = NULL;
+
+//private definitions
+static bool user_login(const char *username, const char *password);
+
+static sds parse_tracks(sds buffer, sds res, unsigned *cnt, unsigned *ret);
+// static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp);
+char *calculateMD5(const char *input);
+
+sds request(sds buffer, const char* endpoint) {
+    sds url = sdscat(sdsnew(QOBUZ_API), endpoint);
+
+    curl_easy_setopt(qobuz_handle, CURLOPT_HTTPGET, 1L);
+
+    struct curl_slist *headers = NULL;
+    // TODO keep this header for reuse
+    sds x_app_id = sdscatfmt(sdsempty(), "x-app-id: %s", qobuz_app_id);
+    headers = curl_slist_append(headers, x_app_id);
+    curl_easy_setopt(qobuz_handle, CURLOPT_HTTPHEADER, headers);
+
+    struct t_memory chunk = {0};
+    // curl_easy_setopt(qobuz_handle, CURLOPT_WRITEFUNCTION, write_memory_callback);
+    curl_easy_setopt(qobuz_handle, CURLOPT_WRITEDATA, (void *)&chunk);
+
+    curl_easy_setopt(qobuz_handle, CURLOPT_URL, url);
+
+    CURLcode res = curl_easy_perform(qobuz_handle);
+
+    curl_slist_free_all(headers);
+
+    if (res != CURLE_OK) {
+        MYMPD_LOG_ERROR(NULL, "curl_easy_perform() failed: %s", curl_easy_strerror(res));
+        // TODO is this needed ?
+        free(chunk.memory);
+        return buffer;  // sdsempty()
+    }
+
+    buffer = sdscpy(buffer, chunk.memory);
+
+    free(chunk.memory);
+
+    FREE_SDS(x_app_id);
+    FREE_SDS(url);
+
+    return buffer;
+}
+
+// TODO write qobuz params to mpd config
+
+bool qobuz_init(struct t_config *config) {
+    // struct t_memory_struct chunk = {0};
+    // struct t_memory_struct chunk;
+    // chunk.memory = malloc(1);
+    // chunk.size = 0;
+    qobuz_app_id = config->qobuz_app_id;
+    qobuz_app_secret = config->qobuz_app_secret;
+    qobuz_username = config->qobuz_username;
+    qobuz_password = config->qobuz_password;
+    // qobuz_format_id = config->qobuz_format_id;
+    qobuz_format_id = 5;
+    cache_dir = sdscatfmt(sdsempty(), "%s/covercache", config->cachedir); // FIXME covercache directory
+    qobuz_handle = curl_easy_init();
+    if (qobuz_handle) {
+        curl_cleanup++;
+        curl_easy_setopt(qobuz_handle, CURLOPT_WRITEFUNCTION, write_memory_callback);
+        // curl_easy_setopt(qobuz_handle, CURLOPT_WRITEDATA, &chunk);
+        
+        // char *md5Result = calculateMD5(qobuz_password);
+        // user_login(qobuz_username, md5Result);
+        user_login(qobuz_username, qobuz_password);
+        // free(md5Result);
+
+        return true;
+    }
+    else { // NULL
+        MYMPD_LOG_ERROR(NULL, "curl_easy_init");
+        return false;
+    }
 }
 
 void qobuz_cleanup(void) {
@@ -107,28 +295,29 @@ sds qobuz_track_search(sds buffer, enum mympd_cmd_ids cmd_id, long request_id, c
     unsigned total = 0; // entity_count
     unsigned items = 0; // entities_returned
 
-    chunk.memory = malloc(1);
-    chunk.size = 0;
+    struct t_memory chunk = {0};
+    // chunk.memory = malloc(1);
+    // chunk.size = 0;
 
     buffer = jsonrpc_respond_start(buffer, cmd_id, request_id);
     buffer = sdscat(buffer, "\"data\":[");
     
     // FIXME use existing handler
-    CURL *hnd = curl_easy_init();
-    char *query_encoded = curl_easy_escape(hnd, query, (int)strlen(query));
+    // CURL *qobuz_handle = curl_easy_init();
+    char *query_encoded = curl_easy_escape(qobuz_handle, query, (int)strlen(query));
     if (query_encoded) {
-        curl_easy_setopt(hnd, CURLOPT_HTTPGET, 1L);
+        curl_easy_setopt(qobuz_handle, CURLOPT_HTTPGET, 1L);
         sds url = sdscatfmt(sdsnew(QOBUZ_API), "track/search?query=%s&offset=%u&limit=%u", query_encoded, offset, limit);
-        curl_easy_setopt(hnd, CURLOPT_URL, url);
+        curl_easy_setopt(qobuz_handle, CURLOPT_URL, url);
         struct curl_slist *headers = NULL;
         sds x_app_id = sdscatfmt(sdsempty(), "x-app-id: %s", qobuz_app_id);
         headers = curl_slist_append(headers, x_app_id);
         sds x_user_auth_token = sdscatfmt(sdsempty(), "x-user-auth-token: %s", user_auth_token);
         headers = curl_slist_append(headers, x_user_auth_token);
-        curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, headers);
-        curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, write_memory_callback);
-        curl_easy_setopt(hnd, CURLOPT_WRITEDATA, &chunk);
-        CURLcode ret = curl_easy_perform(hnd);
+        curl_easy_setopt(qobuz_handle, CURLOPT_HTTPHEADER, headers);
+        // curl_easy_setopt(qobuz_handle, CURLOPT_WRITEFUNCTION, write_memory_callback);
+        curl_easy_setopt(qobuz_handle, CURLOPT_WRITEDATA, (void *)&chunk);
+        CURLcode ret = curl_easy_perform(qobuz_handle);
         curl_slist_free_all(headers);
 
         sds res = sdsempty();
@@ -162,7 +351,7 @@ sds qobuz_track_search(sds buffer, enum mympd_cmd_ids cmd_id, long request_id, c
     buffer = tojson_char(buffer, "query", query, false);
     buffer = jsonrpc_end(buffer);
 
-    curl_easy_cleanup(hnd);
+    // curl_easy_cleanup(qobuz_handle);
 
     return buffer;
 }
@@ -186,8 +375,9 @@ sds qobuz_track_get_list(sds buffer, enum mympd_cmd_ids cmd_id, long request_id,
     unsigned total = 0; // entity_count
     unsigned items = 0; // entities_returned
 
-    chunk.memory = malloc(1);
-    chunk.size = 0;
+    struct t_memory chunk = {0};
+    // chunk.memory = malloc(1);
+    // chunk.size = 0;
 
     buffer = jsonrpc_respond_start(buffer, cmd_id, request_id);
     buffer = sdscat(buffer, "\"data\":[");
@@ -209,8 +399,8 @@ sds qobuz_track_get_list(sds buffer, enum mympd_cmd_ids cmd_id, long request_id,
         sds url = sdscatfmt(sdsnew(QOBUZ_API), "track/getList");
         curl_easy_setopt(curl, CURLOPT_URL, url);
 
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &chunk);
+        // curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
 
         curl_easy_setopt(curl, CURLOPT_POST, 1L);
         /* pass in a pointer to the data - libcurl does not copy */
@@ -258,24 +448,26 @@ sds qobuz_track_get_list(sds buffer, enum mympd_cmd_ids cmd_id, long request_id,
 
 char* calculateMD5(const char *input) {
     // FIXME
-    EVP_MD_CTX *mdctx;
-    const EVP_MD *md;
+    // const EVP_MD* md = EVP_get_digestbyname("md5");
+    const EVP_MD* md = EVP_md5();
+    EVP_MD_CTX* mdContext = EVP_MD_CTX_new();
+    EVP_DigestInit_ex(mdContext, md, NULL);
+    EVP_DigestUpdate(mdContext, input, strlen(input));
+    
     unsigned char md5sum[EVP_MAX_MD_SIZE];
-
-    OpenSSL_add_all_digests();
-    md = EVP_get_digestbyname("md5");
-    mdctx = EVP_MD_CTX_new();
-    EVP_DigestInit_ex(mdctx, md, NULL);
-    EVP_DigestUpdate(mdctx, input, strlen(input));
-    EVP_DigestFinal_ex(mdctx, md5sum, NULL);
-    EVP_MD_CTX_free(mdctx);
+    EVP_DigestFinal_ex(mdContext, md5sum, NULL);
+    // unsigned int md5_hash_len;
+    // EVP_DigestFinal_ex(md_ctx, md5_hash, &md5_hash_len);
+    EVP_MD_CTX_free(mdContext);
 
     // Allocate memory for the hexadecimal representation of the MD5 hash
-    char *md5String = (char *)malloc((size_t)(2 * EVP_MD_size(md) + 1));
+    char *md5String = malloc((size_t)(2 * EVP_MD_size(md) + 1));
+    // sds md5_hash_str = sdsempty();
 
     // Convert the binary MD5 hash to a hexadecimal string
     for (int i = 0; i < EVP_MD_size(md); i++) {
-        sprintf(&md5String[i * 2], "%02x", md5sum[i]);
+        snprintf(&md5String[i * 2], 3, "%02x", md5sum[i]);
+        // md5_hash_str = sdscatprintf(md5_hash_str, "%02x", md5_hash[i]);
     }
 
     // Null-terminate the string
@@ -288,25 +480,7 @@ static bool user_login(const char *username, const char *password) {
     // TODO: use oauth2
     // GET user/login
 
-    // params
-    // app_id - required
-    // username - required
-    // password - required md5 hash
-    // device_manufacturer_id opt
-    // device_model
-    // device_os_version
-    // email
-    // extra
-    // facebook_access_token
-    // facebook_access_token_expired
-    // facebook_user_id
-    // session_id
-    // 
-    // ok 200
-    // error 400 invalid or missing app_id parameter
-    // error 401 invalid username/email and password combination
-    chunk.memory = malloc(1);
-    chunk.size = 0;
+    struct t_memory chunk = {0};
 
     if (username == NULL || password == NULL || username[0] == '\0' || password[0] == '\0') {
         MYMPD_LOG_WARN(NULL, "empty user/pass");
@@ -329,6 +503,8 @@ static bool user_login(const char *username, const char *password) {
 
     curl_easy_setopt(qobuz_handle, CURLOPT_HTTPGET, 1L);
     curl_easy_setopt(qobuz_handle, CURLOPT_URL, url);
+
+    curl_easy_setopt(qobuz_handle, CURLOPT_WRITEDATA, (void *)&chunk);
 
     struct curl_slist *headers = NULL;
     sds h = sdscat(sdsnew("x-app-id: "), qobuz_app_id); // FIXME
@@ -502,25 +678,27 @@ sds qobuz_track_get(sds buffer, enum mympd_cmd_ids cmd_id, long request_id, cons
     int track_id = extract_track_id(uri);
     MYMPD_LOG_WARN(NULL, "GET track/get %s - %u", uri, track_id);
     
-    chunk.memory = malloc(1);
-    chunk.size = 0;
+    struct t_memory chunk = {0};
+    // struct t_memory_struct chunk;
+    // chunk.memory = malloc(1);
+    // chunk.size = 0;
 
     buffer = jsonrpc_respond_start(buffer, cmd_id, request_id);
     
-    CURL *curl = curl_easy_init();
-    curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+    // CURL *curl = curl_easy_init();
+    curl_easy_setopt(qobuz_handle, CURLOPT_HTTPGET, 1L);
     sds url = sdscatfmt(sdsnew(QOBUZ_API), "track/get?track_id=%i", track_id);
     MYMPD_LOG_WARN(NULL, "url %s", url);
-    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(qobuz_handle, CURLOPT_URL, url);
     struct curl_slist *headers = NULL;
     sds x_app_id = sdscatfmt(sdsempty(), "x-app-id: %s", qobuz_app_id);
     headers = curl_slist_append(headers, x_app_id);
     sds x_user_auth_token = sdscatfmt(sdsempty(), "x-user-auth-token: %s", user_auth_token);
     headers = curl_slist_append(headers, x_user_auth_token);
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &chunk);
-    CURLcode ret = curl_easy_perform(curl);
+    curl_easy_setopt(qobuz_handle, CURLOPT_HTTPHEADER, headers);
+    // curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
+    curl_easy_setopt(qobuz_handle, CURLOPT_WRITEDATA, (void *)&chunk);
+    CURLcode ret = curl_easy_perform(qobuz_handle);
     curl_slist_free_all(headers);
 
     sds res = sdsempty();
@@ -549,7 +727,112 @@ sds qobuz_track_get(sds buffer, enum mympd_cmd_ids cmd_id, long request_id, cons
     FREE_SDS(x_app_id);
     FREE_SDS(x_user_auth_token);
 
-    curl_easy_cleanup(curl);
+    // curl_easy_cleanup(curl);
+
+    return buffer;
+}
+
+sds request_with_token(sds buffer, const sds endpoint) {
+    // FIXME
+
+    // set url
+    sds url = sdscatsds(sdsnew(QOBUZ_API), endpoint);
+    curl_easy_setopt(qobuz_handle, CURLOPT_URL, url);
+
+    // set method
+    curl_easy_setopt(qobuz_handle, CURLOPT_HTTPGET, 1L);
+
+    // set headers
+    struct curl_slist *headers = NULL;
+    // TODO keep this header for reuse
+    // use sds_replacelen()
+    sds x_app_id = sdscatfmt(sdsempty(), "x-app-id: %s", qobuz_app_id);
+    headers = curl_slist_append(headers, x_app_id);
+    sds x_user_auth_token = sdscatfmt(sdsempty(), "x-user-auth-token: %s", user_auth_token);
+    headers = curl_slist_append(headers, x_user_auth_token);
+    curl_easy_setopt(qobuz_handle, CURLOPT_HTTPHEADER, headers);
+
+    struct t_memory chunk = {0};
+    // curl_easy_setopt(qobuz_handle, CURLOPT_WRITEFUNCTION, write_memory_callback);
+    curl_easy_setopt(qobuz_handle, CURLOPT_WRITEDATA, (void *)&chunk);
+
+    CURLcode res = curl_easy_perform(qobuz_handle);
+
+    curl_slist_free_all(headers);
+
+    if (res != CURLE_OK) {
+        MYMPD_LOG_ERROR(NULL, "curl_easy_perform() failed: %s", curl_easy_strerror(res));
+        // TODO is this needed ?
+        // free(chunk.memory);
+        // return buffer;
+    }
+    else {
+        buffer = sdscpylen(buffer, chunk.memory, chunk.size);
+        MYMPD_LOG_DEBUG(NULL, "response: %s", buffer);
+    }
+
+    free(chunk.memory);
+
+    FREE_SDS(x_app_id);
+    FREE_SDS(x_user_auth_token);
+    FREE_SDS(url);
+
+    return buffer;
+}
+
+sds generate_request_sig(int track_id, int format_id, time_t timestamp) {
+    MYMPD_LOG_WARN(NULL, "generate_request_sig(%d, %d)", track_id, format_id);
+    sds string_to_hash = sdscatfmt(sdsnew("trackgetFileUrl"), "format_id%itrack_id%i%l%s", format_id, track_id, timestamp, qobuz_app_secret);
+    MYMPD_LOG_WARN(NULL, "request_sig_unhashed = %s", string_to_hash);
+    sds md5_hash_str = calculateMD5(string_to_hash);
+    MYMPD_LOG_WARN(NULL, "request_sig_hashed = %s", md5_hash_str);
+    sdsfree(string_to_hash);
+    return md5_hash_str;
+}
+
+sds qobuz_track_get_file_url(sds url, int track_id, int format_id) {
+    MYMPD_LOG_DEBUG(NULL, "qobuz_track_get_file_url(%d, %d)", track_id, format_id);
+    // flow
+    // format id check
+    time_t request_ts = time(NULL);
+    sds request_sig = generate_request_sig(track_id, format_id, request_ts);
+    MYMPD_LOG_WARN(NULL, "request_sig=%s", request_sig);
+
+    // update request url
+    sds endpoint = sdscatfmt(sdsempty(), "track/getFileUrl?request_sig=%s&request_ts=%l&format_id=%i&track_id=%i", request_sig, request_ts, format_id, track_id);
+    MYMPD_LOG_WARN(NULL, "endpoint = %s", endpoint);
+    sds answer = sdsempty();
+    answer = request_with_token(answer, endpoint);
+    MYMPD_LOG_WARN(NULL, "response = %s", answer);
+
+    // get stream url
+    sds stream_url = NULL;
+    json_get_string(answer, "$.url", 0, 1000, &stream_url, vcb_istext, NULL);
+    char* un = curl_unescape(stream_url, 0);
+    // curl_easy_unescape()
+    url = sdscpy(url, un);
+    MYMPD_LOG_WARN(NULL, "un = %s", url);
+    curl_free(un);
+    FREE_SDS(stream_url);
+    FREE_SDS(answer);
+    FREE_SDS(endpoint);
+    free(request_sig);
+    return url;
+}
+sds qobuz_track_get_stream_url(sds buffer, enum mympd_cmd_ids cmd_id, long request_id, int track_id) {
+    MYMPD_LOG_WARN(NULL, "get stream uri for %d", track_id);
+
+    // sds stream_url = qobuz_track_get_file_url(track_id, 5);
+    
+    sds stream_url = sdsempty();
+    stream_url = qobuz_track_get_file_url(stream_url, track_id, 5);
+    MYMPD_LOG_WARN(NULL, "stream_url = %s", stream_url);
+
+    buffer = jsonrpc_respond_start(buffer, cmd_id, request_id);
+    buffer = sdscatfmt(buffer, "\"url\":\"%S\"", stream_url);
+    buffer = jsonrpc_end(buffer);
+
+    FREE_SDS(stream_url);
 
     return buffer;
 }

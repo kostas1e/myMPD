@@ -7,6 +7,7 @@
 
 extern pthread_mutex_t lock;
 
+// TODO change to struct t_memory_struct
 typedef struct memory_struct {
     char *memory;
     size_t size;

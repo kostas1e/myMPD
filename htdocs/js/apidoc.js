@@ -2204,6 +2204,13 @@ const APImethods = {
             "tracksId": APIparams.songIds
         }
     },
+    // FIXME temp
+    "MYMPD_API_IDEON_QOBUZ_TRACK_GET_STREAM_URL": {
+        "desc": "",
+        "params": {
+            "trackId": APIparams.songId
+        }
+    },
     // TODO rename track-search, vs db-search
     "MYMPD_API_IDEON_QOBUZ_TRACK_SEARCH": {
         "desc": "",

@@ -537,6 +537,7 @@ int main(int argc, char **argv) {
     //curl global, mutex lock, output name
     ideon_init();
     qobuz_init(config);
+    // qobuz_init2(config);
 
     //Create working threads
     //mympd api
@@ -585,6 +586,7 @@ int main(int argc, char **argv) {
     }
 
     //curl global, mutex lock
+    // qobuz_cleanup2();
     qobuz_cleanup();
     ideon_cleanup();
 

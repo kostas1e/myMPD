@@ -1567,6 +1567,13 @@ void mympd_api_handler(struct t_partition_state *partition_state, struct t_work_
             list_clear(&tracks_id);
             break;
         }
+        // FIXME temp
+        case MYMPD_API_IDEON_QOBUZ_TRACK_GET_STREAM_URL: {
+            if (json_get_int_max(request->data, "$.params.trackId", &int_buf1, &parse_error) == true) {
+                response->data = qobuz_track_get_stream_url(response->data, request->cmd_id, request->id, int_buf1);
+            }
+            break;
+        }
         case MYMPD_API_IDEON_QOBUZ_TRACK_SEARCH:
             // FIXME check vs MYMPD_API_DATABASE_SEARCH, rename, reorder, use constants/defines, add more params
             if (json_get_string(request->data, "$.params.query", 0, EXPRESSION_LEN_MAX, &sds_buf1, vcb_isname, &parse_error) == true &&

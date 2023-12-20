@@ -125,10 +125,25 @@ function _appendQueue(type, uris, play, callback) {
         case 'song':
         case 'dir':
         case 'stream':
-            sendAPI("MYMPD_API_QUEUE_APPEND_URIS", {
-                "uris": uris,
-                "play": play
-            }, callback, true);
+            // FIXME temp
+            if (uris[0].startsWith("qobuz://track/")) {
+                const track_id = parseInt(uris[0].split("/").pop());
+                sendAPI("MYMPD_API_IDEON_QOBUZ_TRACK_GET_STREAM_URL", {
+                    "trackId": track_id
+                }, function (response) {
+                    uris[0] = response.result.url
+                    sendAPI("MYMPD_API_QUEUE_APPEND_URIS", {
+                        "uris": uris,
+                        "play": play
+                    }, callback, true);    
+                }, false);
+            }
+            else {
+                sendAPI("MYMPD_API_QUEUE_APPEND_URIS", {
+                    "uris": uris,
+                    "play": play
+                }, callback, true);
+            }
             break;
         case 'plist':
         case 'smartpls':

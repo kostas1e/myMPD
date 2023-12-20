@@ -53,6 +53,7 @@ void ideon_cleanup(void)
     pthread_mutex_destroy(&lock);
 }
 
+// TODO lock might be unecessary now
 void ideon_dc_handle(int *dc) // TODO: change return type to bool
 {
     static bool handled = false;
