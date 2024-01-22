@@ -125,11 +125,11 @@ function _appendQueue(type, uris, play, callback) {
         case 'song':
         case 'dir':
         case 'stream':
-            // FIXME temp
+            // FIXME
             if (uris[0].startsWith("qobuz://track/")) {
-                const track_id = parseInt(uris[0].split("/").pop());
+                const trackId = parseInt(uris[0].split("/").pop());
                 sendAPI("MYMPD_API_IDEON_QOBUZ_TRACK_GET_STREAM_URL", {
-                    "trackId": track_id
+                    "trackId": trackId
                 }, function (response) {
                     uris[0] = response.result.url
                     sendAPI("MYMPD_API_QUEUE_APPEND_URIS", {
@@ -233,12 +233,29 @@ function insertQueue(type, uris, to, whence, play, callback) {
         case 'song':
         case 'dir':
         case 'stream':
-            sendAPI("MYMPD_API_QUEUE_INSERT_URIS", {
-                "uris": uris,
-                "to": to,
-                "whence": whence,
-                "play": play
-            }, callback, true);
+            // FIXME
+            if (uris[0].startsWith("qobuz://track/")) {
+                const trackId = parseInt(uris[0].split("/").pop());
+                sendAPI("MYMPD_API_IDEON_QOBUZ_TRACK_GET_STREAM_URL", {
+                    "trackId": trackId
+                }, function (response) {
+                    uris[0] = response.result.url
+                    sendAPI("MYMPD_API_QUEUE_INSERT_URIS", {
+                        "uris": uris,
+                        "to": to,
+                        "whence": whence,
+                        "play": play
+                    }, callback, true);
+                }, false);
+            }
+            else {
+                sendAPI("MYMPD_API_QUEUE_INSERT_URIS", {
+                    "uris": uris,
+                    "to": to,
+                    "whence": whence,
+                    "play": play
+                }, callback, true);
+            }
             break;
         case 'plist':
         case 'smartpls':
@@ -329,10 +346,25 @@ function _replaceQueue(type, uris, play, callback) {
         case 'song':
         case 'stream':
         case 'dir':
-            sendAPI("MYMPD_API_QUEUE_REPLACE_URIS", {
-                "uris": uris,
-                "play": play
-            }, callback, true);
+            // FIXME
+            if (uris[0].startsWith("qobuz://track/")) {
+                const trackId = parseInt(uris[0].split("/").pop());
+                sendAPI("MYMPD_API_IDEON_QOBUZ_TRACK_GET_STREAM_URL", {
+                    "trackId": trackId
+                }, function (response) {
+                    uris[0] = response.result.url
+                    sendAPI("MYMPD_API_QUEUE_REPLACE_URIS", {
+                        "uris": uris,
+                        "play": play
+                    }, callback, true);
+                }, false);
+            }
+            else {
+                sendAPI("MYMPD_API_QUEUE_REPLACE_URIS", {
+                    "uris": uris,
+                    "play": play
+                }, callback, true);
+            }
             break;
         case 'plist':
         case 'smartpls':
