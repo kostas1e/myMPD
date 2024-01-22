@@ -1577,8 +1577,8 @@ void mympd_api_handler(struct t_partition_state *partition_state, struct t_work_
         case MYMPD_API_IDEON_QOBUZ_TRACK_SEARCH:
             // FIXME check vs MYMPD_API_DATABASE_SEARCH, rename, reorder, use constants/defines, add more params
             if (json_get_string(request->data, "$.params.query", 0, EXPRESSION_LEN_MAX, &sds_buf1, vcb_isname, &parse_error) == true &&
-                json_get_uint(request->data, "$.params.offset", 0, 1000, &uint_buf1, &parse_error) == true &&
-                json_get_uint(request->data, "$.params.limit", 0, 500, &uint_buf2, &parse_error) == true)
+                json_get_uint(request->data, "$.params.limit", 0, 500, &uint_buf1, &parse_error) == true &&
+                json_get_uint(request->data, "$.params.offset", 0, 1000, &uint_buf2, &parse_error) == true)
             {
                 // TODO set returncode
                 response->data = qobuz_track_search(response->data, request->cmd_id, request->id, sds_buf1, uint_buf1, uint_buf2);
