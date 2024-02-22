@@ -535,9 +535,11 @@ int main(int argc, char **argv) {
     }
 
     //curl global, mutex lock, output name
-    ideon_init();
-    qobuz_init(config);
-    // qobuz_init2(config);
+    ideon_init();  // FIXME 1. goto cleanup if curl global fails, 2. no need for mutex anymore
+    if (qobuz_init(config) == false) {  // FIXME move qobuz inside ideon
+        MYMPD_LOG_ERROR(NULL, "qobuz_init");
+        goto cleanup;
+    }
 
     //Create working threads
     //mympd api
@@ -586,8 +588,7 @@ int main(int argc, char **argv) {
     }
 
     //curl global, mutex lock
-    // qobuz_cleanup2();
-    qobuz_cleanup();
+    qobuz_cleanup();  // TODO move qobuz inside ideon
     ideon_cleanup();
 
     //free queues

@@ -299,13 +299,20 @@ function addMenuItemsSongActions(dataNode, contextMenuBody, uri, type, name) {
         addMenuItem(contextMenuBody, {"cmd": "appendPlayQueue", "options": [type, [uri]]}, 'Append to queue and play');
         if (features.featWhence === true &&
             currentState.currentSongId !== -1)
-        {
-            addMenuItem(contextMenuBody, {"cmd": "insertAfterCurrentQueue", "options": [type, [uri], 0, 1, false]}, 'Insert after current playing song');
+            {
+                addMenuItem(contextMenuBody, {"cmd": "insertAfterCurrentQueue", "options": [type, [uri], 0, 1, false]}, 'Insert after current playing song');
+            }
+            addMenuItem(contextMenuBody, {"cmd": "replaceQueue", "options": [type, [uri]]}, 'Replace queue');
+            addMenuItem(contextMenuBody, {"cmd": "replacePlayQueue", "options": [type, [uri]]}, 'Replace queue and play');
         }
-        addMenuItem(contextMenuBody, {"cmd": "replaceQueue", "options": [type, [uri]]}, 'Replace queue');
-        addMenuItem(contextMenuBody, {"cmd": "replacePlayQueue", "options": [type, [uri]]}, 'Replace queue and play');
-    }
-    if (features.featPlaylists === true) {
+        if (app.id.startsWith('Qobuz')) {
+            // FIXME
+            // dataNode
+            // addDivider(contextMenuBody);
+            // addMenuItem(contextMenuBody, {"cmd": "addQobuzFavorite", "options": [name, [uri]]}, 'Add to favorites');
+            return;
+        }
+    if (features.featPlaylists === true && app.id.startsWith('Qobuz') === false) {
         addDivider(contextMenuBody);
         addMenuItem(contextMenuBody, {"cmd": "showAddToPlaylist", "options": [type, [uri]]}, 'Add to playlist');
         if (app.id === 'BrowsePlaylistDetail' &&
@@ -320,8 +327,9 @@ function addMenuItemsSongActions(dataNode, contextMenuBody, uri, type, name) {
         addDivider(contextMenuBody);
         addMenuItem(contextMenuBody, {"cmd": "songDetails", "options": [uri]}, 'Song details');
     }
+    // TODO qobuz stream
     if (features.featHome === true &&
-        app.id !== 'Home')
+        app.id !== 'Home' && app.id.startsWith('Qobuz') === false)
     {
         addDivider(contextMenuBody);
         if (app.id === 'BrowseRadioWebradiodb') {
@@ -537,7 +545,11 @@ function createMenuLists(target, contextMenuTitle, contextMenuBody) {
         case 'Search':
         case 'BrowseRadioRadiobrowser':
         case 'BrowseRadioWebradiodb':
-        case 'BrowseDatabaseAlbumDetail': {
+        case 'BrowseDatabaseAlbumDetail':
+        case 'QobuzLibraryAlbumDetail':
+        // case 'QobuzSearch2AlbumDetail':
+        case 'QobuzAlbumDetail':
+        case 'QobuzSearch': {
             switch(type) {
                 case 'song':
                 case 'stream':
@@ -674,7 +686,10 @@ function createMenuListsSecondary(target, contextMenuTitle, contextMenuBody) {
         case 'QueueJukeboxAlbum':
         case 'BrowseFilesystem':
         case 'BrowseDatabaseAlbumDetail':
-        case 'BrowsePlaylistDetail': {
+        case 'BrowsePlaylistDetail':
+        case 'QobuzLibraryAlbumDetail':
+        case 'QobuzAlbumDetail':
+        case 'QobuzSearch': {
             const dataNode = target.parentNode.parentNode;
             const type = getData(dataNode, 'type');
             const uri = getData(dataNode, 'uri');

@@ -1551,12 +1551,72 @@ void mympd_api_handler(struct t_partition_state *partition_state, struct t_work_
         case MYMPD_API_IDEON_NS_SERVER_LIST:
             response->data = ideon_ns_server_list(response->data, request->cmd_id, request->id);
             break;
-        case MYMPD_API_IDEON_QOBUZ_SONG_DETAILS:
-            if (json_get_string(request->data, "$.params.uri", 1, FILEPATH_LEN_MAX, &sds_buf1, vcb_isstreamuri, &parse_error) == true) {
-                response->data = qobuz_track_get(response->data, request->cmd_id, request->id, sds_buf1);
+        case MYMPD_API_IDEON_UPDATE_CHECK:
+            response->data = ideon_update_check(response->data, request->cmd_id, request->id);
+            break;
+        case MYMPD_API_IDEON_UPDATE_INSTALL:
+            response->data = ideon_update_install(response->data, request->cmd_id, request->id);
+            break;
+        case MYMPD_API_QOBUZ_ALBUM_DETAIL:
+            // struct t_tags tagcols;
+            // reset_t_tags(&tagcols);
+            if (json_get_string(request->data, "$.params.albumid", 1, NAME_LEN_MAX, &sds_buf1, vcb_isalnum, &parse_error) == true) // &&
+                // json_get_tags(request->data, "$.params.cols", &tagcols, COLS_MAX, &parse_error) == true)
+            {
+                // response->data = mympd_api_browse_album_detail(partition_state, response->data, request->id, sds_buf1, &tagcols);
+                response->data = qobuz_library_album_detail(response->data, request->cmd_id, request->id, sds_buf1);
             }
             break;
-        case MYMPD_API_IDEON_QOBUZ_TRACK_GET_LIST: {
+        case MYMPD_API_QOBUZ_LOGIN:
+            if (json_get_string_max(request->data, "$.params.username", &sds_buf1, vcb_isprint, &parse_error) == true &&
+                json_get_string_max(request->data, "$.params.password", &sds_buf2, vcb_isprint, &parse_error) == true)
+            {
+                rc = qobuz_login(sds_buf1, sds_buf2, config, &error);
+                // write state files here
+                mympd_state->qobuz_logged_in = rc;
+                response->data = jsonrpc_respond_with_message_or_error(response->data, request->cmd_id, request->id, rc,
+                        JSONRPC_FACILITY_GENERAL, "Log in successful", error);            
+            }
+            break;
+        case MYMPD_API_QOBUZ_LOGOUT:
+            // response->data = jsonrpc_respond_ok(response->data, request->cmd_id, request->id, JSONRPC_FACILITY_MPD);
+            // response->data = jsonrpc_respond_message(response->data, request->cmd_id, request->id,
+            //                 JSONRPC_FACILITY_PLAYLIST, JSONRPC_SEVERITY_ERROR, error);
+            mympd_state->qobuz_logged_in = false;
+            qobuz_logout2();
+            
+            response->data = jsonrpc_respond_ok(response->data, request->cmd_id, request->id, JSONRPC_FACILITY_GENERAL);
+            // response->data = qobuz_logout(response->data, request->cmd_id, request->id, config);
+            break;
+        case MYMPD_API_QOBUZ_FAVORITES:
+            // FIXME min max values
+            if (json_get_string(request->data, "$.params.type", 1, 10, &sds_buf1, vcb_isname, &parse_error) == true &&
+                json_get_uint(request->data, "$.params.limit", 1, 500, &uint_buf1, &parse_error) == true &&
+                json_get_uint(request->data, "$.params.offset", 0, 1000, &uint_buf2, &parse_error) == true)
+            {
+                // browse album list
+                response->data = qobuz_user_library_favorites(response->data, request->cmd_id, request->id, sds_buf1, uint_buf1, uint_buf2);
+            }
+            break;
+        case MYMPD_API_QOBUZ_FAVORITE_IDS:
+            // FIXME limit 5000
+            response->data = qobuz_favorite_ids(response->data, request->cmd_id, request->id);
+            break;
+        case MYMPD_API_QOBUZ_FAVORITE_TOGGLE:
+            // FIXME
+            if (json_get_string(request->data, "$.params.type", 1, 10, &sds_buf1, vcb_isname, &parse_error) == true &&
+                json_get_string(request->data, "$.params.item_id", 1, 100, &sds_buf2, vcb_isname, &parse_error) == true)
+            {
+                response->data = qobuz_favorite_toggle(response->data, request->cmd_id, request->id, sds_buf1, sds_buf2);
+            }
+            break;
+        case MYMPD_API_QOBUZ_SONG_DETAILS:
+            // if (json_get_string(request->data, "$.params.uri", 1, FILEPATH_LEN_MAX, &sds_buf1, vcb_isstreamuri, &parse_error) == true) {
+            if (json_get_int_max(request->data, "$.params.trackId", &int_buf1, &parse_error) == true) {
+                response->data = qobuz_track_get(response->data, request->cmd_id, request->id, int_buf1);
+            }
+            break;
+        case MYMPD_API_QOBUZ_TRACK_GET_LIST: {
             struct t_list tracks_id;
             list_init(&tracks_id);
             if (json_get_array_llong(request->data, "$.params.tracksId", &tracks_id, 100, &parse_error) == true) {
@@ -1568,28 +1628,81 @@ void mympd_api_handler(struct t_partition_state *partition_state, struct t_work_
             break;
         }
         // FIXME temp
-        case MYMPD_API_IDEON_QOBUZ_TRACK_GET_STREAM_URL: {
+        case MYMPD_API_QOBUZ_TRACK_GET_STREAM_URL:
             if (json_get_int_max(request->data, "$.params.trackId", &int_buf1, &parse_error) == true) {
                 response->data = qobuz_track_get_stream_url(response->data, request->cmd_id, request->id, int_buf1);
             }
             break;
-        }
-        case MYMPD_API_IDEON_QOBUZ_TRACK_SEARCH:
+        case MYMPD_API_QOBUZ_SEARCH:
             // FIXME check vs MYMPD_API_DATABASE_SEARCH, rename, reorder, use constants/defines, add more params
-            if (json_get_string(request->data, "$.params.query", 0, EXPRESSION_LEN_MAX, &sds_buf1, vcb_isname, &parse_error) == true &&
-                json_get_uint(request->data, "$.params.limit", 0, 500, &uint_buf1, &parse_error) == true &&
-                json_get_uint(request->data, "$.params.offset", 0, 1000, &uint_buf2, &parse_error) == true)
+            if (json_get_string(request->data, "$.params.query", 0, NAME_LEN_MAX, &sds_buf1, vcb_isname, &parse_error) == true &&
+                json_get_string(request->data, "$.params.type", 0, 12, &sds_buf2, vcb_isname, &parse_error) == true &&
+                json_get_uint(request->data, "$.params.offset", 0, 1000, &uint_buf1, &parse_error) == true &&
+                json_get_uint(request->data, "$.params.limit", 1, 500, &uint_buf2, &parse_error) == true)
             {
                 // TODO set returncode
-                response->data = qobuz_track_search(response->data, request->cmd_id, request->id, sds_buf1, uint_buf1, uint_buf2);
+                // response->data = qobuz_track_search(response->data, request->cmd_id, request->id, sds_buf1, uint_buf1, uint_buf2);
+                response->data = qobuz_search(response->data, request->cmd_id, request->id, sds_buf1, sds_buf2, uint_buf1, uint_buf2);
             }
             break;
-        case MYMPD_API_IDEON_UPDATE_CHECK:
-            response->data = ideon_update_check(response->data, request->cmd_id, request->id);
+        case MYMPD_API_QOBUZ_QUEUE_REPLACE_ALBUMS: {
+            // struct t_list albumids;
+            // list_init(&albumids);
+            struct t_list uris; // move inside
+            list_init(&uris);
+            if (json_get_string(request->data, "$.params.albumids", 0, NAME_LEN_MAX, &sds_buf1, vcb_isalnum, &parse_error) == true &&
+                json_get_bool(request->data, "$.params.play", &bool_buf1, &parse_error) == true)
+            {
+
+                // FIXME
+                qobuz_get_album_streams(sds_buf1, &uris);
+                // temp print to verify the stream urls
+                struct t_list_node *current = uris.head;
+                while (current != NULL) {
+                    MYMPD_LOG_WARN(NULL, "%s %lld %s", current->key, current->value_i, current->value_p);
+                    current = current->next;
+                }
+
+                rc = mympd_api_queue_replace(partition_state, &uris, &error) &&
+                    mpd_client_queue_check_start_play(partition_state, bool_buf1, &error);
+                response->data = jsonrpc_respond_with_message_or_error(response->data, request->cmd_id, request->id, rc,
+                    JSONRPC_FACILITY_QUEUE, "Queue updated", error);
+            }
+            list_clear(&uris);
             break;
-        case MYMPD_API_IDEON_UPDATE_INSTALL:
-            response->data = ideon_update_install(response->data, request->cmd_id, request->id);
+        }
+        // FIXME
+        case MYMPD_API_QOBUZ_QUEUE_NEXT_FETCH: {
+            if (json_get_uint_max(request->data, "$.params.nextSongId", &uint_buf1, &parse_error) == true) {
+                // if (uint_buf1 > -1) {
+                bool myrc = mpd_send_get_queue_song_id(partition_state->conn, (unsigned)uint_buf1);
+                if (myrc == true) {
+                    struct mpd_song *song = mpd_recv_song(partition_state->conn);
+                    if (song != NULL) {
+                        const char* uri = mpd_song_get_uri(song);
+                        MYMPD_LOG_WARN(NULL, "%s", uri);
+
+                        extract_info(uri);
+
+
+
+                        mpd_song_free(song);
+                        MYMPD_LOG_WARN(NULL, "%s", uri); // crap
+                    }
+                }
+        // mpd_response_finish(partition_state->conn);
+        // if (mympd_check_error_and_recover(partition_state, error, "mpd_send_get_queue_song_id") == false) {
+        //     return false;
+        // }
+        // }
+            }
             break;
+            // if (json_get_uint_max(request->data, "$.params.songId", &uint_buf1, &parse_error) == true) {
+            //     mpd_run_play_id(partition_state->conn, uint_buf1);
+            //     response->data = mympd_respond_with_error_or_ok(partition_state, response->data, request->cmd_id, request->id, "mpd_run_play_id", &rc);
+            // }
+            // break;
+        }
     // unhandled method
         default:
             response->data = jsonrpc_respond_message(response->data, request->cmd_id, request->id,

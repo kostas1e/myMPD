@@ -1278,6 +1278,58 @@ h4.offcanvas-title-stream::before {
   min-width: 12rem;
 }
 
+/* TODO same as data-col="Actions", rm on merge, mv Favorite */
+[data-col="Fav"] {
+  width: 2rem;
+  text-align: right;
+  word-break: keep-all;
+}
+
+/* td[data-col="Fav"] {
+  pointer-events: auto;
+} */
+
+td.explicit {
+  position: relative;
+  padding-right: 0.5rem;
+}
+
+td.explicit::after {
+  font-family: "Material Icons";
+  content: "explicit";
+  padding-left: 0.25rem;
+  color: darkgray;
+  /* font-feature-settings: "liga"; */
+  /* font-weight: normal;
+  font-style: normal;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  text-rendering: optimizelegibility; */
+
+  /* background: #939393;
+  border-radius: 3px;
+  color: #fff;
+  content: 'E' !important;
+  display: flex;
+  font-size: 11px;
+  font-weight: 500;
+  height: 18px;
+  position: absolute;
+  right: 0px;
+  text-align: center;
+  text-transform: uppercase;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  justify-content: center;
+  align-items: center; */
+}
+
+/* .ListItem.isExplicit .ListItem__titleLink::after {
+} */
 /* TODO replace with bs d-none class */
 .hide {
   display: none !important;

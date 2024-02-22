@@ -203,7 +203,8 @@ extern struct t_mympd_queue *mympd_script_queue;
     "{\"ligature\":\"equalizer\",\"title\":\"Playback\",\"options\":[\"Playback\"]},"\
     "{\"ligature\":\"queue_music\",\"title\":\"Queue\",\"options\":[\"Queue\"]},"\
     "{\"ligature\":\"library_music\",\"title\":\"Browse\",\"options\":[\"Browse\"]},"\
-    "{\"ligature\":\"search\",\"title\":\"Search\",\"options\":[\"Search\"]}]"
+    "{\"ligature\":\"search\",\"title\":\"Search\",\"options\":[\"Search\"]},"\
+    "{\"ligature\":\"Q\",\"title\":\"Qobuz\",\"options\":[\"Qobuz\"]}]"
 #define MYMPD_TAG_DISC_EMPTY_IS_FIRST true
 
 //http headers

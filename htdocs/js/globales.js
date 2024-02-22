@@ -1380,6 +1380,107 @@ app.cards = {
         "tag": "",
         "search": "",
         "scrollPos": 0
+    },
+    // FIXME
+    "Qobuz": {
+        "active": "Login",
+        "tabs": {
+            "Login": { // FIXME
+                "offset": 0,
+                // "limit": 100,
+                // "filter": "",
+                // "tag": "",
+                // "search": "",
+                // "scrollPos": 0
+            },
+            "AlbumDetail": {
+                "offset": 0,
+                "limit": 25,
+                "filter": "",
+                "tag": "",
+                "search": "",
+                "scrollPos": 0
+            },
+            "Library": { // user library
+                // views favorites purchases playlists
+                "active": "AlbumList",
+                "views": {
+                    "AlbumList": {
+                        "offset": 0,
+                        "limit": 25,
+                        // "filter": "any",
+                        // "sort": {
+                        //     "tag": tagAlbumArtist,
+                        //     "desc": false
+                        // },
+                        "tag": "Album",
+                        // "search": "",
+                        "scrollPos": 0
+                    },
+                    // "AlbumDetail": {
+                    //     "offset": 0,
+                    //     "limit": 25,
+                    //     "filter": "",
+                    //     // "sort": {
+                    //     //     "tag": "",
+                    //     //     "desc": false
+                    //     // },
+                    //     "tag": "",
+                    //     "search": "",
+                    //     "scrollPos": 0
+                    // },
+                    "TrackList": {
+                        "offset": 0,
+                        "limit": 25,
+                        // "filter": "any",
+                        // "sort": {
+                        //     "tag": tagAlbumArtist,
+                        //     "desc": false
+                        // },
+                        "tag": "Album",
+                        // "search": "",
+                        "scrollPos": 0
+                    },
+                }
+            },
+            "Search": {
+                "offset": 0,
+                "limit": 25,
+                "filter": "albums",
+                "tag": "",
+                "search": "",
+                "scrollPos": 0
+            },
+            // "Search2": {
+            //     "active": "AlbumList",
+            //     "views": {
+            //         "AlbumList": {
+            //             "offset": 0,
+            //             "limit": 25,
+            //             "filter": "Album",
+            //             // "sort": {
+            //             //     "tag": tagAlbumArtist,
+            //             //     "desc": false
+            //             // },
+            //             "tag": "Album",
+            //             "search": "",
+            //             "scrollPos": 0
+            //         },
+            //         "AlbumDetail": {
+            //             "offset": 0,
+            //             "limit": 25,
+            //             "filter": "",
+            //             // "sort": {
+            //             //     "tag": "",
+            //             //     "desc": false
+            //             // },
+            //             "tag": "",
+            //             "search": "",
+            //             "scrollPos": 0
+            //         }
+            //     }
+            // }
+        }
     }
 };
 

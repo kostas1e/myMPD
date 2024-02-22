@@ -115,7 +115,7 @@ function parseState(obj) {
     //Get current song if songid or queueVersion has changed
     //On stream updates only the queue version will change
     if (currentState.currentSongId !== obj.result.currentSongId ||
-        currentState.queueVersion !== obj.result.queueVersion)
+        currentState.queueVersion !== obj.result.queueVersion) // FIXME
     {
         sendAPI("MYMPD_API_PLAYER_CURRENT_SONG", {}, updateSongDetails, false);
     }
@@ -170,6 +170,30 @@ function parseState(obj) {
 
     //handle error from mpd status response
     toggleAlert('alertMpdStatusError', (obj.result.lastError === '' ? false : true), obj.result.lastError);
+    // if (obj.result.lastError.includes("streaming-qobuz-std.akamaized.net") === true) {
+    //     clearMPDerror();
+    //     const eid = getEid(obj.result.lastError)
+    //     sendAPI("MYMPD_API_IDEON_QOBUZ_TRACK_GET_STREAM_URL", {
+    //         "trackId": eid
+    //     }, function (response) {
+    //             const uris = [response.result.url];
+    //             // sendAPI("MYMPD_API_QUEUE_INSERT_URIS", {
+    //             //     "uris": uris,
+    //             //     "to": to,
+    //             //     "whence": whence,
+    //             //     "play": play
+    //             // }, callback, true);
+    //             sendAPI("MYMPD_API_QUEUE_APPEND_URIS", {
+    //                 "uris": uris,
+    //                 "play": true
+    //             }, function () {
+    //                 console.log('appended', uris[0]);
+    //             }, true);
+    //         }, false);
+    // }
+    // else {
+    //     // 
+    // }
 
     //handle mpd update status
     toggleAlert('alertUpdateDBState', (obj.result.updateState === 0 ? false : true), tn('Updating MPD database'));
@@ -290,7 +314,14 @@ function setBackgroundImage(el, url) {
         clearBackgroundImage(el);
         return;
     }
-    const bgImageUrl = subdir + '/albumart?offset=0&uri=' + myEncodeURIComponent(url);
+    let bgImageUrl;
+    if (url.includes("static.qobuz.com") === true) { // TODO use validate function
+        bgImageUrl = subdir + '/proxy-covercache?uri=' + myEncodeURIComponent(url);
+    }
+    else {
+        bgImageUrl = subdir + '/albumart?offset=0&uri=' + myEncodeURIComponent(url);
+    }
+    // const bgImageUrl = subdir + '/albumart?offset=0&uri=' + myEncodeURIComponent(url);
     const old = el.parentNode.querySelectorAll(el.tagName + '> div.albumartbg');
     //do not update if url is the same
     if (old[0] &&
@@ -429,6 +460,7 @@ function mediaSessionSetMetadata(title, artist, album, url) {
     if (features.featMediaSession === false) {
         return;
     }
+    // TODO handle qobuz artworks
     const artwork = getMyMPDuri() + '/albumart-thumb?offset=0&uri=' + myEncodeURIComponent(url);
     navigator.mediaSession.metadata = new MediaMetadata({
         title: title,

@@ -350,6 +350,7 @@ function dragAndDropTableHeader(tableName) {
  * @returns {object} array of available columns
  */
 function setColTags(tableName) {
+    // FIXME
     switch(tableName) {
         case 'BrowseRadioWebradiodb':
             return ["Country", "Description", "Genre", "Homepage", "Languages", "Name", "StreamUri", "Codec", "Bitrate"];
@@ -1056,6 +1057,10 @@ function tableClickHandler(event) {
     if (event.target.nodeName === 'A') {
         if (event.target.parentNode.getAttribute('data-col') === 'Action') {
             handleActionTdClick(event);
+        }
+        else if (event.target.parentNode.getAttribute('data-col') === 'Fav') {
+            event.preventDefault();
+            toggleFavorite(event.target);
         }
         else {
             // allow default link action

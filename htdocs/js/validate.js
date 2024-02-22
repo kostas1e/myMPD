@@ -265,3 +265,20 @@ function validateNotBlank(el) {
     el.classList.remove('is-invalid');
     return true;
 }
+
+// FIXME
+// function isValidEmail(email) {
+//     // Use a regular expression to validate the email format
+//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//     return emailRegex.test(email);
+// }
+
+function isQobuzUri(uri) {
+    if (uri.startsWith('qobuz://') ||
+        uri.startsWith('https://streaming-qobuz-std.akamaized.net') ||
+        uri.startsWith('https://static.qobuz.com'))
+    {
+        return true;
+    }
+    return false;
+}

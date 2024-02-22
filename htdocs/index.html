@@ -93,7 +93,7 @@
       <div id="scripts" class="featScripting noInitChilds"></div>
     </div>
     <div class="offcanvas-footer px-3 py-2">
-      <a class="external" rel="noreferrer" target="_blank" href="https://github.com/jcorporation/myMPD/discussions/167" data-phrase="Help to improve myMPD"></a>
+      <a class="external d-none" rel="noreferrer" target="_blank" href="https://github.com/jcorporation/myMPD/discussions/167" data-phrase="Help to improve myMPD"></a>
     </div>
   </div>
 <!-- Main menu end -->
@@ -763,7 +763,6 @@
             </table>
           </div>
         </div>
-        </div>
       </div>
 <!-- Album detail end -->
 <!-- Filesystem start -->
@@ -1044,6 +1043,338 @@
       </div>
     </div>
 <!-- Search end -->
+    <div class="card d-none" id="cardQobuz">
+<!-- Qobuz login start -->
+      <div class="card-body" id="tabQobuzLogin">
+        <form id="qobuzLoginFrm">
+          <div class="container">
+            <div class="row m-5"></div>
+            <div class="row justify-content-center">
+              <div class="col-md-4">
+                <div class="form-group mb-3">
+                  <label class="form-label" for="qobuzEmailInput">Email address</label>
+                  <input type="email" class="form-control" id="qobuzEmailInput" placeholder="Email address">
+                  <div class="invalid-feedback" data-phrase="Please enter your email address"></div>
+                </div>
+                <br>
+                <div class="form-group mb-3">
+                  <label class="form-label" for="qobuzPasswordInput">Password</label>
+                  <input type="password" class="form-control" id="qobuzPasswordInput" placeholder="Password">
+                  <div class="invalid-feedback" data-phrase="Enter your password"></div>
+                </div>
+                <!-- FIXME protected ? icon left, text center, required inputs, autocomplete/save -->
+                <button type="button" class="btn btn-success mt-4 mb-2 p-3 protected w-100" data-href='{"cmd": "qobuzLogin", "options": ["target"]}'>
+                  <span class="mi me-2">login</span>
+                  <span data-phrase="Log in"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+<!-- Qobuz login end -->
+<!-- Qobuz album detail start -->
+      <div class="card-body d-none" id="tabQobuzAlbumDetail">
+        <div class="btn-toolbar card-toolbar">
+          <div class="input-group me-2">
+            <button class="btn btn-secondary mi" data-title-phrase="Back to album list" data-href='{"cmd": "backToQobuzAlbumGrid", "options": []}'>apps</button>
+          </div>
+          <div class="btn-group me-2 d-none">
+            <button data-title-phrase="Append to queue" class="btn btn-secondary mi" data-href='{"cmd": "currentAlbumAdd", "options": ["appendQueue"]}'>library_add</button>
+            <button class="btn btn-secondary dropdown-toggle dropdown-toggle-split rounded-end" type="button" data-bs-toggle="dropdown"></button>
+            <div class="dropdown-menu px-2 dropdownWide">
+              <div class="d-grid gap-2">
+                <button data-phrase="Append to queue" data-href='{"cmd": "currentAlbumAdd", "options": ["appendQueue"]}' type="button" class="btn btn-secondary btn-sm"></button>
+                <button data-phrase="Append to queue and play" data-href='{"cmd": "currentAlbumAdd", "options": ["appendPlayQueue"]}' type="button" class="btn btn-secondary btn-sm"></button>
+                <button data-phrase="Insert after current playing song" data-href='{"cmd": "currentAlbumAdd", "options": ["insertAfterCurrentQueue"]}' type="button" class="featWhence btn btn-secondary btn-sm"></button>
+                <button data-phrase="Replace queue" data-href='{"cmd": "currentAlbumAdd", "options": ["replaceQueue"]}' type="button" class="btn btn-secondary btn-sm"></button>
+                <button data-phrase="Replace queue and play" data-href='{"cmd": "currentAlbumAdd", "options": ["replacePlayQueue"]}' type="button" class="btn btn-secondary btn-sm"></button>
+                <button data-phrase="Add to playlist" data-href='{"cmd": "currentAlbumAdd", "options": ["addPlaylist"]}' type="button" class="btn btn-secondary btn-sm featPlaylists"></button>
+                <button data-phrase="Add to homescreen" data-href='{"cmd": "currentAlbumAdd", "options": ["addAlbumToHome"]}' type="button" class="btn btn-secondary btn-sm featHome"></button>
+              </div>
+            </div>
+          </div>
+          <!-- <div class="btn-group me-2">
+            <button data-title-phrase="Select" id="QobuzLibraryAlbumDetailSelectModeBtn" data-href='{"cmd": "switchTableMode", "options": ["target"]}' type="button" class="btn btn-secondary mi rounded-end">checklist_rtl</button>
+            <button data-title-phrase="Action for selection" class="btn btn-secondary dropdown-toggle mi d-none" type="button" data-bs-toggle="dropdown">add_task</button>
+            <div class="dropdown-menu px-2 dropdownWide" id="QobuzLibraryAlbumDetailSelectionDropdown">
+              <h2 data-phrase="Action for selection" class="dropdown-header"></h2>
+              <div class="d-grid gap-2"></div>
+              <div class="dropdown-divider"></div>
+              <small class="mb-0 px-2"></small>
+            </div>
+          </div> -->
+          <!-- <div class="btn-group me-2 featTags">
+            <button data-title-phrase="Display tags" id="DatabaseAlbumDetailInfoColsBtn" class="btn btn-secondary dropdown-toggle mi" type="button" data-bs-toggle="dropdown">settings</button>
+            <div class="dropdown-menu px-2" id="QobuzLibraryAlbumDetailInfoColsDropdown">
+              <h2 class="dropdown-header" data-phrase="Tags"></h2>
+              <form></form>
+              <button data-phrase="Apply" data-href='{"cmd": "saveColsDropdown", "options": ["colsQobuzLibraryAlbumDetailInfo", "QobuzLibraryAlbumDetailInfoColsDropdown"]}' class="btn btn-success w-100 btn-sm mt-2"></button>
+            </div>
+          </div> -->
+        </div>
+        <div class="table-responsive scrollContainer">
+          <div class="row me-0">
+            <div class="col-12 col-sm-6 col-xl-4 mb-3">
+              <div id="tabQobuzAlbumDetailCover" class="mb-3 album-cover album-cover-loading clickable" data-href='{"cmd": "zoomPicture", "options": ["target"]}'></div>
+            </div>
+            <div id="tabQobuzAlbumDetailInfo" class="text-break col-12 col-sm-6 col-xl-8 mb-3">
+              <div id="tabQobuzAlbumDetailInfoTags" class="row"></div>
+            </div>
+          </div>
+          <table id="QobuzAlbumDetailList" class="table table-hover table-sm">
+            <thead>
+              <tr>
+                <th data-col="Track" data-phrase="Track"></th>
+                <th data-col="Title" data-phrase="Title"></th>
+                <!-- artist -->
+                <th data-col="Duration" data-phrase="Duration"></th>
+                <th data-col="Fav" data-phrase="Fav"></th>
+                <!-- info -->
+                <th data-col="Action"></th>
+              </tr>
+            </thead>
+            <tbody class="clickable"></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+      </div>
+<!-- Qobuz album detail end -->
+      <div class="card-body d-none" id="tabQobuzLibrary">
+<!-- Qobuz album list start -->
+        <div id="viewQobuzLibraryAlbumList">
+          <div class="btn-toolbar card-toolbar">
+            <div class="btn-group me-2">
+              <button data-title-phrase="Select view" id="btnQobuzLibraryAlbumListTag" class="btn btn-secondary dropdown-toggle mi" type="button" data-bs-toggle="dropdown">layers</button>
+              <div class="dropdown-menu px-2" id="QobuzLibraryAlbumListTagDropdown"></div>
+            </div>
+            <!-- <div class="input-group me-2 flex-grow-1">
+              <div class="btn-group">
+                <button data-title-phrase="Select tag to search" class="btn btn-secondary dropdown-toggle rounded-end-0" type="button" data-bs-toggle="dropdown">
+                  <span class="mi">search</span>
+                  <span data-phrase="AlbumArtist" id="QobuzLibraryAlbumListSearchTagsDesc"></span>
+                </button>
+                <div class="dropdown-menu px-2" id="QobuzLibraryAlbumListSearchTags"></div>
+              </div>
+              <select class="form-select rounded-0 no-flex" id="QobuzLibraryAlbumListSearchMatch">
+                <option data-phrase="contains" value="contains"></option>
+                <option data-phrase="starts_with" value="starts_with"></option>
+                <option value="==">==</option>
+                <option value="=~">=~</option>
+                <option value="!=">!=</option>
+                <option value="!~">!~</option>
+              </select>
+              <input data-is="mympd-input-clear" data-clear-event="keyup" data-placeholder-phrase="Search" class="form-control rounded-end" id="QobuzLibraryAlbumListSearchStr"/>
+            </div> -->
+            <!-- <div class="btn-group me-2">
+              <button id="btnDatabaseAlbumListSortDropdown" data-title-phrase="Sort by" class="btn btn-secondary dropdown-toggle mi" type="button" data-bs-toggle="dropdown">sort</button>
+              <div class="dropdown-menu px-2" id="QobuzLibraryAlbumListSortTags">
+                <div id="QobuzLibraryAlbumListSortTagsList"></div>
+                <div class="dropdown-divider"></div>
+                <div class="form-check">
+                  <button class="btn btn-secondary btn-xs mi mi-sm" id="QobuzLibraryAlbumListSortDesc">radio_button_unchecked</button>&nbsp;
+                  <label class="form-check-label" for="QobuzLibraryAlbumListSortDesc" data-phrase="Descending"></label>
+                </div>
+              </div>
+            </div> -->
+            <!-- <div class="btn-group me-2 featTags">
+              <button data-title-phrase="Display tags" id="DatabaseAlbumListColsBtn" class="btn btn-secondary dropdown-toggle mi" type="button" data-bs-toggle="dropdown">settings</button>
+              <div class="dropdown-menu px-2" id="QobuzLibraryAlbumListColsDropdown">
+                <h2 class="dropdown-header" data-phrase="Tags"></h2>
+                <form></form>
+                <button data-phrase="Apply" data-href='{"cmd": "saveColsDatabaseAlbumList", "options": []}' class="btn btn-success w-100 btn-sm mt-2"></button>
+              </div>
+            </div> -->
+            <!-- <div class="btn-group me-2 featHome">
+              <button data-title-phrase="Add view to homescreen" data-href='{"cmd": "addViewToHome", "options": []}' type="button" class="btn btn-secondary mi">add_to_home_screen</button>
+            </div> -->
+            <!-- <div class="btn-group me-2">
+              <button data-title-phrase="Select" id="QobuzLibraryAlbumListSelectModeBtn" data-href='{"cmd": "switchGridMode", "options": ["target"]}' type="button" class="btn btn-secondary mi rounded-end">checklist_rtl</button>
+              <button data-title-phrase="Action for selection" class="btn btn-secondary dropdown-toggle mi d-none" type="button" data-bs-toggle="dropdown">add_task</button>
+              <div class="dropdown-menu px-2 dropdownWide" id="QobuzLibraryAlbumListSelectionDropdown">
+                <h2 data-phrase="Action for selection" class="dropdown-header"></h2>
+                <div class="d-grid gap-2"></div>
+                <div class="dropdown-divider"></div>
+                <small class="mb-0 px-2"></small>
+              </div>
+            </div> -->
+            <div id="QobuzLibraryAlbumListPaginationTop" class="btn-group me-2 pagination"></div>
+          </div>
+          <ol class="breadcrumb p-2 rounded-2 d-none" id="QobuzLibraryAlbumListSearchCrumb"></ol>
+          <div class="container-fluid cardsContainer scrollContainer">
+            <div id="QobuzLibraryAlbumListList" class="row mympd-grid"></div>
+          </div>
+          <div class="btn-toolbar d-none justify-content-between" id="QobuzLibraryAlbumListButtonsBottom"></div>
+        </div>
+<!-- Qobuz album list end -->
+<!-- Qobuz album detail start -->
+        <!-- <div id="viewQobuzLibraryAlbumDetail">
+          <div class="btn-toolbar card-toolbar">
+            <div class="input-group me-2">
+              <button class="btn btn-secondary mi" data-title-phrase="Back to album list" data-href='{"cmd": "backToQobuzAlbumGrid3", "options": []}'>apps</button>
+            </div>
+            <div class="btn-group me-2 d-none">
+              <button data-title-phrase="Append to queue" class="btn btn-secondary mi" data-href='{"cmd": "currentAlbumAdd", "options": ["appendQueue"]}'>library_add</button>
+              <button class="btn btn-secondary dropdown-toggle dropdown-toggle-split rounded-end" type="button" data-bs-toggle="dropdown"></button>
+              <div class="dropdown-menu px-2 dropdownWide">
+                <div class="d-grid gap-2">
+                  <button data-phrase="Append to queue" data-href='{"cmd": "currentAlbumAdd", "options": ["appendQueue"]}' type="button" class="btn btn-secondary btn-sm"></button>
+                  <button data-phrase="Append to queue and play" data-href='{"cmd": "currentAlbumAdd", "options": ["appendPlayQueue"]}' type="button" class="btn btn-secondary btn-sm"></button>
+                  <button data-phrase="Insert after current playing song" data-href='{"cmd": "currentAlbumAdd", "options": ["insertAfterCurrentQueue"]}' type="button" class="featWhence btn btn-secondary btn-sm"></button>
+                  <button data-phrase="Replace queue" data-href='{"cmd": "currentAlbumAdd", "options": ["replaceQueue"]}' type="button" class="btn btn-secondary btn-sm"></button>
+                  <button data-phrase="Replace queue and play" data-href='{"cmd": "currentAlbumAdd", "options": ["replacePlayQueue"]}' type="button" class="btn btn-secondary btn-sm"></button>
+                  <button data-phrase="Add to playlist" data-href='{"cmd": "currentAlbumAdd", "options": ["addPlaylist"]}' type="button" class="btn btn-secondary btn-sm featPlaylists"></button>
+                  <button data-phrase="Add to homescreen" data-href='{"cmd": "currentAlbumAdd", "options": ["addAlbumToHome"]}' type="button" class="btn btn-secondary btn-sm featHome"></button>
+                </div>
+              </div>
+            </div> -->
+            <!-- <div class="btn-group me-2">
+              <button data-title-phrase="Select" id="QobuzLibraryAlbumDetailSelectModeBtn" data-href='{"cmd": "switchTableMode", "options": ["target"]}' type="button" class="btn btn-secondary mi rounded-end">checklist_rtl</button>
+              <button data-title-phrase="Action for selection" class="btn btn-secondary dropdown-toggle mi d-none" type="button" data-bs-toggle="dropdown">add_task</button>
+              <div class="dropdown-menu px-2 dropdownWide" id="QobuzLibraryAlbumDetailSelectionDropdown">
+                <h2 data-phrase="Action for selection" class="dropdown-header"></h2>
+                <div class="d-grid gap-2"></div>
+                <div class="dropdown-divider"></div>
+                <small class="mb-0 px-2"></small>
+              </div>
+            </div> -->
+            <!-- <div class="btn-group me-2 featTags">
+              <button data-title-phrase="Display tags" id="DatabaseAlbumDetailInfoColsBtn" class="btn btn-secondary dropdown-toggle mi" type="button" data-bs-toggle="dropdown">settings</button>
+              <div class="dropdown-menu px-2" id="QobuzLibraryAlbumDetailInfoColsDropdown">
+                <h2 class="dropdown-header" data-phrase="Tags"></h2>
+                <form></form>
+                <button data-phrase="Apply" data-href='{"cmd": "saveColsDropdown", "options": ["colsQobuzLibraryAlbumDetailInfo", "QobuzLibraryAlbumDetailInfoColsDropdown"]}' class="btn btn-success w-100 btn-sm mt-2"></button>
+              </div>
+            </div> -->
+          <!-- </div>
+          <div class="table-responsive scrollContainer">
+            <div class="row me-0">
+              <div class="col-12 col-sm-6 col-xl-4 mb-3">
+                <div id="viewLibraryAlbumDetailCover" class="mb-3 album-cover album-cover-loading clickable" data-href='{"cmd": "zoomPicture", "options": ["target"]}'></div>
+              </div>
+              <div id="viewLibraryAlbumDetailInfo" class="text-break col-12 col-sm-6 col-xl-8 mb-3">
+                <div id="viewLibraryAlbumDetailInfoTags" class="row"></div>
+              </div>
+            </div>
+            <table id="QobuzLibraryAlbumDetailList" class="table table-hover table-sm">
+              <thead>
+                <tr></tr>
+              </thead>
+              <tbody class="clickable"></tbody>
+              <tfoot></tfoot>
+            </table>
+          </div>
+        </div> -->
+<!-- Qobuz album detail end -->
+<!-- Qobuz track list start -->
+        <div id="viewQobuzLibraryTrackList">
+          <div class="btn-toolbar card-toolbar">
+            <div class="btn-group me-2">
+              <button data-title-phrase="Select view" id="btnQobuzLibraryTrackListTag" class="btn btn-secondary dropdown-toggle mi" type="button" data-bs-toggle="dropdown">layers</button>
+              <div class="dropdown-menu px-2" id="QobuzLibraryTrackListTagDropdown"></div>
+            </div>
+            <!-- <div class="input-group me-2 flex-grow-1">
+              <span class="input-group-text bg-secondary">
+                <span class="mi me-2">search</span>
+                <span id="BrowseDatabaseTagSearchTagDesc"></span>
+              </span>
+              <input data-is="mympd-input-clear" data-clear-event="keyup" data-placeholder-phrase="Search" class="form-control rounded-end" id="BrowseDatabaseTagSearchStr"/>
+            </div>
+            <div class="btn-group me-2">
+              <button class="btn btn-secondary mi" id="QobuzLibraryTraclListSortDesc" data-title-phrase="Sort">sort</button>
+            </div>
+            <div class="btn-group me-2 featHome">
+              <button data-title-phrase="Add view to homescreen" data-href='{"cmd": "addViewToHome", "options": []}' type="button" class="btn btn-secondary mi">add_to_home_screen</button>
+            </div> -->
+            <div id="QobuzLibraryTrackListPaginationTop" class="btn-group me-2 pagination"></div>
+          </div>
+          <!-- <div class="container-fluid cardsContainer scrollContainer">
+            <div id="QobuzLibraryTrackListList" class="row mympd-grid"></div>
+          </div> -->
+          <div class="table-responsive scrollContainer">
+            <table id="QobuzLibraryTrackListList" class="table table-hover table-sm">
+              <thead>
+                <tr>
+                  <th data-col="Title" data-phrase="Title"></th>
+                  <th data-col="Artist" data-phrase="Artist"></th>
+                  <th data-col="Album" data-phrase="Album"></th>
+                  <!-- <th data-col="Fav" data-phrase="Fav"></th> -->
+                  <th data-col="Duration" data-phrase="Duration"></th>
+                  <th data-col="Fav" data-phrase="Fav"></th>
+                  <th data-col="Action"></th>
+                </tr>
+              </thead>
+              <tbody class="clickable"></tbody>
+              <tfoot></tfoot>
+            </table>
+          </div>
+          <div class="btn-toolbar d-none justify-content-between" id="QobuzLibraryTrackListButtonsBottom"></div>
+        </div>
+<!-- Qobuz track list end -->
+      </div>
+<!-- Qobuz search start -->
+      <div class="card-body d-none" id="tabQobuzSearch">
+        <div class="btn-toolbar card-toolbar">
+          <div class="btn-group me-2">
+            <button data-title-phrase="Select view" class="btn btn-secondary dropdown-toggle mi" type="button" data-bs-toggle="dropdown">layers</button>
+            <div class="dropdown-menu px-2" id="QobuzSearchNavDropdown"></div>
+          </div>
+          <div class="input-group me-2 flex-grow-1">
+            <div class="btn-group">
+              <button data-title-phrase="Select tag to search" class="btn btn-secondary dropdown-toggle rounded-end-0" type="button" data-bs-toggle="dropdown">
+                <span class="mi">search</span>
+                <!-- FIXME -->
+                <span data-phrase="Album" id="QobuzSearchSearchTagsDesc"></span>
+              </button>
+              <div class="dropdown-menu px-2" id="QobuzSearchSearchTags">
+                <div class="d-grid gap-2">
+                  <button type="button" class="btn btn-secondary btn-sm" data-tag="albums" data-phrase="Album"></button>
+                  <button type="button" class="btn btn-secondary btn-sm" data-tag="tracks" data-phrase="Title"></button>
+                  <!-- <button type="button" class="btn btn-secondary btn-sm" data-tag="albums" data-phrase="Append to queue" data-href='{"cmd": "", "options": [""]}'></button> -->
+                </div>
+              </div>
+            </div>
+            <!-- FIXME searchmatch, sort, cols, home, select -->
+            <input data-is="mympd-input-clear" data-clear-event="keyup" data-placeholder-phrase="Search" class="form-control rounded-end" id="QobuzSearchSearchStr"/>
+          </div>
+          <!-- FIXME add all -->
+          <div class="btn-group me-2 d-none">
+            <button data-title-phrase="Select" id="QobuzSearchSelectModeBtn" data-href='{"cmd": "switchTableMode", "options": ["target"]}' type="button" class="btn btn-secondary mi rounded-end">checklist_rtl</button>
+            <button data-title-phrase="Action for selection" class="btn btn-secondary dropdown-toggle mi d-none" type="button" data-bs-toggle="dropdown">add_task</button>
+            <div class="dropdown-menu px-2 dropdownWide" id="QobuzSearchSelectionDropdown">
+              <h2 data-phrase="Action for selection" class="dropdown-header"></h2>
+              <div class="d-grid gap-2"></div>
+              <div class="dropdown-divider"></div>
+              <small class="mb-0 px-2"></small>
+            </div>
+          </div>
+          <div id="QobuzSearchPaginationTop" class="btn-group me-2 pagination"></div>
+        </div>
+        <!-- FIXME breadcrumb -->
+        <div class="table-responsive scrollContainer">
+          <table id="QobuzSearchList" class="table table-hover table-sm d-none">
+            <thead>
+              <tr>
+                <th data-col="Title" data-phrase="Title"></th>
+                <th data-col="Artist" data-phrase="Artist"></th>
+                <th data-col="Album" data-phrase="Album"></th>
+                <!-- <th data-col="Fav" data-phrase="Fav"></th> -->
+                <th data-col="Duration" data-phrase="Duration"></th>
+                <th data-col="Fav" data-phrase="Fav"></th>
+                <th data-col="Action"></th>
+              </tr>
+            </thead>
+            <tbody class="clickable"></tbody>
+            <tfoot></tfoot>
+          </table>
+        </div>
+        <div class="container-fluid cardsContainer scrollContainer">
+          <div id="QobuzSearchAlbumList" class="row mympd-grid"></div>
+        </div>
+        <div class="btn-toolbar d-none justify-content-between" id="QobuzSearchButtonsBottom"></div>
+      </div>
+<!-- Qobuz search end -->
+    </div>
 <!-- Notifications start -->
     <div id="alertBox"></div>
 <!-- Notifications end -->
@@ -3356,6 +3687,7 @@
 <!--debug-->  <script src="js/pagination.js"></script>
 <!--debug-->  <script src="js/playlists.js"></script>
 <!--debug-->  <script src="js/presets.js"></script>
+<!--debug-->  <script src="js/qobuz.js"></script>
 <!--debug-->  <script src="js/queue.js"></script>
 <!--debug-->  <script src="js/radioFavorites.js"></script>
 <!--debug-->  <script src="js/router.js"></script>
@@ -3380,6 +3712,10 @@
 <!--debug-->  <script src="js/viewBrowseRadioWebradiodb.js"></script>
 <!--debug-->  <script src="js/viewHome.js"></script>
 <!--debug-->  <script src="js/viewPlayback.js"></script>
+<!--debug-->  <script src="js/viewQobuzAlbum.js"></script>
+<!--debug-->  <script src="js/viewQobuzLibrary.js"></script>
+<!--debug-->  <script src="js/viewQobuzSearch.js"></script>
+<!-- debug  <script src="js/viewQobuzSearch2.js"></script> -->
 <!--debug-->  <script src="js/viewQueueCurrent.js"></script>
 <!--debug-->  <script src="js/viewQueueJukebox.js"></script>
 <!--debug-->  <script src="js/viewQueueLastPlayed.js"></script>

@@ -52,9 +52,6 @@ function addTagList(elId, list) {
             stack.appendChild(
                 elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "base"}, 'Path')
             );
-            stack.appendChild(
-                elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "qobuz"}, 'Qobuz')
-            );
         }
     }
     if (elId === 'BrowseDatabaseAlbumListSearchTags') {
@@ -77,6 +74,21 @@ function addTagList(elId, list) {
         stack.appendChild(
             elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "Database"}, 'Database')
         );
+    }
+    if (elId === 'QobuzSearchNavDropdown') {
+        elClear(stack);
+        stack.appendChild(
+            elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "Library"}, 'Library')
+        );
+        // stack.appendChild(
+        //     elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "Search"}, 'Search')
+        // );
+        // stack.appendChild(
+        //     elCreateEmpty('div', {"class": ["dropdown-divider"]})
+        // );
+        // stack.appendChild(
+        //     elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "Log-out"}, 'Log out')
+        // );
     }
     if (elId === 'BrowseDatabaseAlbumListTagDropdown' ||
         elId === 'BrowseDatabaseTagListTagDropdown' ||
@@ -138,6 +150,38 @@ function addTagList(elId, list) {
                 elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "prio"}, 'Priority')
             );
         }
+    }
+    else if (elId === 'QobuzLibraryAlbumListTagDropdown' ||
+             elId === 'QobuzLibraryTrackListTagDropdown' ||
+             elId === 'QobuzSearchNavDropdown')
+    {
+        if (elId === 'QobuzLibraryAlbumListTagDropdown' ||
+            elId === 'QobuzLibraryTrackListTagDropdown') {
+            stack.appendChild(
+                elCreateEmpty('div', {"class": ["dropdown-divider"]})
+                );
+        }
+        stack.appendChild(
+            elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "Search"}, 'Search')
+        );
+        if (elId === 'QobuzSearchNavDropdown') {
+            stack.lastChild.classList.add('active');
+        }
+        // FIXME temp
+        // stack.appendChild(
+        //     elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "SearchAlbum"}, 'SearchAlbum')
+        // );
+        // if (elId === 'QobuzSearch2AlbumListTagDropdown') {
+        //     stack.lastChild.classList.add('active');
+        // }
+        stack.appendChild(
+            elCreateEmpty('div', {"class": ["dropdown-divider"]})
+        );
+        stack.appendChild(
+            // FIXME rm
+            // elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "Logout", "data-href": '{"cmd": "qobuzLogout", "options": []}'}, 'Logout')
+            elCreateTextTn('button', {"class": ["btn", "btn-secondary", "btn-sm"], "data-tag": "Log-out"}, 'Log out')
+        );
     }
     const el = elGetById(elId);
     elReplaceChild(el, stack);

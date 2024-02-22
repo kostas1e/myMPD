@@ -69,6 +69,10 @@ function navBrowseHandler(event) {
  * @returns {void}
  */
 function gotoBrowse(event) {
+    // FIXME tmp fix to disable footer nav, use new function instead of this and redirect accordingly
+    if (isQobuzUri(currentSongObj.uri) === true && (event.target.id === 'footerArtist' || event.target.id === 'footerAlbum'))
+        return;
+
     let target = event.target;
     let tag = getData(target, 'tag');
     if (tag === 'undefined') {

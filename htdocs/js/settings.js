@@ -39,6 +39,10 @@ function parseSettings(obj) {
         return false;
     }
     settings = obj.result;
+    // FIXME temp fixed cols to use provided functions
+    settings.tagListQobuzLibrary = ['Album', 'Title']
+    // settings.colsQobuzSearch = ['Title', 'Artist', 'Album', 'Duration']
+    // settings.colsQobuzLibraryTrackList = ['Title', 'Artist', 'Album', 'Duration']
 
     //check for old cached javascript
     // if ('serviceWorker' in navigator && settings.mympdVersion !== myMPDversion) {
@@ -297,7 +301,7 @@ function parseSettings(obj) {
     }
 
     //parse ideon settings
-    parseIdeonSettings();
+    parseIdeonSettings(); // TODO move up
 
     //finished parse setting, set ui state
     toggleUI();
@@ -346,6 +350,7 @@ function parseMPDSettings() {
     }
     setCols('BrowseRadioWebradiodb');
     setCols('BrowseRadioRadiobrowser');
+    // setCols('QobuzLibraryTrackList'); // TODO move to html and rm
 
     //tagselect dropdowns
     for (const table of ['BrowseDatabaseAlbumList', 'BrowseDatabaseAlbumDetailInfo']) {
@@ -453,6 +458,10 @@ function parseMPDSettings() {
     addTagList('QueueJukeboxAlbumSearchTags', 'tagListSearch');
     addTagList('BrowsePlaylistDetailSearchTags', 'tagListSearch');
     addTagList('SearchSearchTags', 'tagListSearch');
+    // FIXME
+    addTagList('QobuzLibraryAlbumListTagDropdown', 'tagListQobuzLibrary');
+    addTagList('QobuzLibraryTrackListTagDropdown', 'tagListQobuzLibrary');
+    addTagList('QobuzSearchNavDropdown', 'tagListQobuzLibrary');
     if (settings.albumMode === 'adv') {
         addTagList('BrowseDatabaseAlbumListSearchTags', 'tagListBrowse');
     }
@@ -533,6 +542,7 @@ function setNavbarIcons() {
         if (icon.options.length === 1 &&
             (icon.options[0] === 'Browse' ||
              icon.options[0] === 'Queue' ||
+            // FIXME icon.options[0] === 'Qobuz' ||
              icon.options[0] === 'Playback'))
         {
             a.setAttribute('data-contextmenu', 'Navbar' + icon.options.join(''));

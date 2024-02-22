@@ -85,7 +85,7 @@ function webSocketConnect() {
         // notification
         switch (obj.method) {
             case 'welcome':
-                showNotification(tn('Connected to myMPD') + ': ' +
+                showNotification(tn('Connected to Ideon') + ': ' +
                     tn('Partition') + ' ' + localSettings.partition, 'general', 'info');
                 getState();
                 if (session.token !== '') {
@@ -104,6 +104,11 @@ function webSocketConnect() {
                     execSearchExpression(elGetById('QueueCurrentSearchStr').value);
                 }
                 parseState(obj);
+                // FIXME
+                if (obj.result.state === 'play') {
+                    // TODO add timeout of 1h(2h) for now
+                    qobuzFetch(obj.result.nextSongId);
+                }
                 break;
             case 'mpd_disconnected':
                 if (progressTimer) {
@@ -114,7 +119,7 @@ function webSocketConnect() {
                 break;
             case 'mpd_connected':
                 //MPD connection established get state and settings
-                showNotification(tn('Connected to MPD'), 'general', 'info');
+                showNotification(tn('Connected to Streamer'), 'general', 'info');
                 getState();
                 getSettings(parseSettings);
                 break;
@@ -126,7 +131,7 @@ function webSocketConnect() {
                 break;
             case 'update_started':
                 showNotification(tn('Database update started'), 'database', 'info');
-                toggleAlert('alertUpdateDBState', true, tn('Updating MPD database'));
+                toggleAlert('alertUpdateDBState', true, tn('Updating Streamer database'));
                 break;
             case 'update_database':
             case 'update_finished':

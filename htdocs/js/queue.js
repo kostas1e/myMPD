@@ -124,18 +124,19 @@ function _appendQueue(type, uris, play, callback) {
             break;
         case 'song':
         case 'dir':
-        case 'stream':
-            // FIXME
+        case 'stream': // TODO spit stream case
+            // TODO use getId
             if (uris[0].startsWith("qobuz://track/")) {
-                const trackId = parseInt(uris[0].split("/").pop());
-                sendAPI("MYMPD_API_IDEON_QOBUZ_TRACK_GET_STREAM_URL", {
+                // const trackId = parseInt(uris[0].split("/").pop());
+                const trackId = getId(uris[0]);
+                sendAPI("MYMPD_API_QOBUZ_TRACK_GET_STREAM_URL", {
                     "trackId": trackId
                 }, function (response) {
                     uris[0] = response.result.url
                     sendAPI("MYMPD_API_QUEUE_APPEND_URIS", {
                         "uris": uris,
                         "play": play
-                    }, callback, true);    
+                    }, callback, true);
                 }, false);
             }
             else {
@@ -233,10 +234,10 @@ function insertQueue(type, uris, to, whence, play, callback) {
         case 'song':
         case 'dir':
         case 'stream':
-            // FIXME
+            // FIXME use getId
             if (uris[0].startsWith("qobuz://track/")) {
                 const trackId = parseInt(uris[0].split("/").pop());
-                sendAPI("MYMPD_API_IDEON_QOBUZ_TRACK_GET_STREAM_URL", {
+                sendAPI("MYMPD_API_QOBUZ_TRACK_GET_STREAM_URL", {
                     "trackId": trackId
                 }, function (response) {
                     uris[0] = response.result.url
@@ -346,10 +347,10 @@ function _replaceQueue(type, uris, play, callback) {
         case 'song':
         case 'stream':
         case 'dir':
-            // FIXME
+            // FIXME use getId
             if (uris[0].startsWith("qobuz://track/")) {
                 const trackId = parseInt(uris[0].split("/").pop());
-                sendAPI("MYMPD_API_IDEON_QOBUZ_TRACK_GET_STREAM_URL", {
+                sendAPI("MYMPD_API_QOBUZ_TRACK_GET_STREAM_URL", {
                     "trackId": trackId
                 }, function (response) {
                     uris[0] = response.result.url
@@ -384,6 +385,7 @@ function _replaceQueue(type, uris, play, callback) {
             }, callback, true);
             break;
         case 'album':
+            // FIXME move to separate case
             sendAPI("MYMPD_API_QUEUE_REPLACE_ALBUMS", {
                 "albumids": uris,
                 "play": play

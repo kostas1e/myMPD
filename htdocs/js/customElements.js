@@ -18,6 +18,7 @@ function createPreGeneratedElements() {
     pEl.playBtn = elCreateText('a', {"data-action": "quickPlay", "href": "#", "class": ["mi", "color-darkgrey", "me-1"], "data-title-phrase": "Quick play"}, 'play_arrow');
     pEl.columnsBtn = elCreateText('a', {"href": "#", "data-action": "popover", "data-contextmenu": "columns",
         "class": ["align-middle", "mi", "mi-sm", "me-1"], "data-title-phrase": "Columns"}, 'settings');
+    pEl.favoriteBtn = elCreateText('a', {"data-action": "toggleFavorite", "href": "#", "class": ["mi", "color-darkgrey", "me-1"], "data-title-phrase": "Favorite"}, 'favorite_border');
 
     pEl.actionTdMenu = elCreateNodes('td', {"data-col": "Action"}, [
         pEl.actionsBtn.cloneNode(true),
@@ -39,6 +40,10 @@ function createPreGeneratedElements() {
         pEl.actionsBtn.cloneNode(true),
         pEl.selectBtn.cloneNode(true)
     ]);
+    // pEl.actionQobuzTd = elCreateNodes('td', {"data-col": "Action"}, [
+    //     pEl.favoriteBtn.cloneNode(true),
+    //     pEl.actionsBtn.cloneNode(true)
+    // ]);
     pEl.actionTd = pEl.actionTdMenu;
     pEl.actionQueueTd = pEl.actionTdMenu;
     pEl.actionJukeboxTd = pEl.actionTdMenu;
@@ -46,6 +51,9 @@ function createPreGeneratedElements() {
     pEl.actionPlaylistTd = pEl.actionTdMenu;
     pEl.coverPlayBtn = elCreateText('div', {"class": ["align-self-end", "album-grid-mouseover", "mi", "rounded-circle", "clickable"],
         "data-title-phrase": "Quick play"}, 'play_arrow');
+    // pEl.actionQobuzTd = pEl.actionTdMenu; // TODO create custom
+    pEl.coverFavoriteBtn = elCreateText('div', {"class": ["align-self-end", "album-grid-mouseover", "mi", "rounded-circle", "clickable", "ms-2"],
+        "data-title-phrase": "Favorite"}, 'favorite_border');
 }
 
 /**

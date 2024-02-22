@@ -24,7 +24,9 @@ function appPrepare() {
             'cardBrowse', 'tabBrowseFilesystem',
             'tabBrowseRadio', 'viewBrowseRadioFavorites', 'viewBrowseRadioWebradiodb', 'viewBrowseRadioRadiobrowser',
             'tabBrowsePlaylist', 'viewBrowsePlaylistDetail', 'viewBrowsePlaylistList',
-            'tabBrowseDatabase', 'viewBrowseDatabaseTagList', 'viewBrowseDatabaseAlbumDetail', 'viewBrowseDatabaseAlbumList'];
+            'tabBrowseDatabase', 'viewBrowseDatabaseTagList', 'viewBrowseDatabaseAlbumDetail', 'viewBrowseDatabaseAlbumList',
+            'cardQobuz', 'tabQobuzLogin', 'tabQobuzAlbumDetail', 'tabQobuzLibrary', 'viewQobuzLibraryAlbumList',
+            'viewQobuzLibraryTrackList', 'tabQobuzSearch']; //, 'tabQobuzSearch2', 'viewQobuzSearch2AlbumList', 'viewQobuzSearch2AlbumDetail'];
         for (const card of cards) {
             elHideId(card);
         }
@@ -268,15 +270,17 @@ function appRoute(card, tab, view, offset, limit, filter, sort, tag, search) {
         case 'BrowseRadioFavorites':      handleBrowseRadioFavorites(); break;
         case 'BrowseRadioWebradiodb':     handleBrowseRadioWebradiodb(); break;
         case 'BrowseRadioRadiobrowser':   handleBrowseRadioRadiobrowser(); break;
-        case 'Search':                    
-            if (app.current.filter === 'qobuz') {
-                // FIXME tmp
-                handleQobuzSearch();
-            }
-            else {
-                handleSearch();
-            }
-            break;
+        case 'Search':                    handleSearch(); break;
+        case 'QobuzLogin':                handleQobuzLogin(); break;
+        case 'QobuzLibraryAlbumList':     handleQobuzLibraryAlbumList(); break;
+        case 'QobuzLibraryAlbumDetail':   handleQobuzLibraryAlbumDetail(); break;
+        case 'QobuzLibraryTrackList':     handleQobuzLibraryTrackList(); break;
+        case 'QobuzSearch':               handleQobuzSearch(); break;
+        // case 'QobuzSearch2AlbumList':     handleQobuzSearch2AlbumList(); break;
+        // case 'QobuzSearch2AlbumDetail':   handleQobuzSearch2AlbumDetail(); break;
+        case 'QobuzAlbumDetail':          handleQobuzAlbumDetail(); break;
+        // case 'QobuzFavoritesAlbums':      handleQobuzFavoritesAlbums(); break;
+        // case 'QobuzFavoritesTracks':      handleQobuzFavoritesTracks(); break;
         default: {
             let initialStartupView = settings.webuiSettings.startupView;
             if (initialStartupView === undefined ||

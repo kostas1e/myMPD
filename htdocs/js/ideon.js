@@ -1,5 +1,9 @@
 "use strict";
 
+// const qobuzFetchTimeout = 
+// setTimeout(() => {
+    
+// }, timeout);
 function initModalIdeonSettings() {
     document.getElementById('modalIdeonSettings').addEventListener('shown.bs.modal', function () {
         // TODO pass callback to parse only ideon settings
@@ -189,7 +193,10 @@ function saveIdeonSettings() {
         }
     }
     if (selectNsTypeValue === '2') {
-        if (!validateNotBlank(inputNsUsername) || !validateNotBlank(inputNsPassword)) {
+        if (!validateNotBlank(inputNsUsername)) {
+            formOK = false;
+        }
+        if (!validateNotBlank(inputNsPassword)) {
             formOK = false;
         }
     }
@@ -222,38 +229,39 @@ function saveIdeonSettings() {
 //     });
 // }
 
-function handleQobuzSearch() {
-    // FIXME
-    // mv, timeout / wds, encodeURIComponent()
-    // support for sort/sortdesc/expression of app.current.search/cols
-    handleSearchExpression('Search');
-    const searchStrEl = elGetById(app.id + 'SearchStr');
-    const searchCrumbEl = elGetById(app.id + 'SearchCrumb');
-    if (searchStrEl.value.length >= 2 ||
-        searchCrumbEl.children.length > 0)
-    {
-        if (app.current.sort.tag === '') {
-            app.current.sort.tag = settings.tagList.includes('Title')
-                ? 'Title'
-                : '';
-        }
-        sendAPI("MYMPD_API_IDEON_QOBUZ_TRACK_SEARCH", {
-            "offset": app.current.offset,
-            "limit": app.current.limit,
-            "query": searchStrEl.value
-        }, parseSearch, true);
-    }
-    else {
-        // clear list if no search is defined
-        const SearchListEl = elGetById('SearchList');
-        elClear(SearchListEl.querySelector('tbody'));
-        elClear(SearchListEl.querySelector('tfoot'));
-        elDisableId('SearchAddAllSongsBtn');
-        elDisableId('SearchAddAllSongsDropdownBtn');
-        unsetUpdateViewId('SearchList');
-        setPagination(0, 0);
-    }
-}
+// function handleQobuzSearch() {
+//     // FIXME
+//     // mv, timeout / wds, encodeURIComponent()
+//     // support for sort/sortdesc/expression of app.current.search/cols
+//     handleSearchExpression('Search');
+//     const searchStrEl = elGetById(app.id + 'SearchStr');
+//     const searchCrumbEl = elGetById(app.id + 'SearchCrumb');
+//     if (searchStrEl.value.length >= 2 ||
+//         searchCrumbEl.children.length > 0)
+//     {
+//         if (app.current.sort.tag === '') {
+//             app.current.sort.tag = settings.tagList.includes('Title')
+//                 ? 'Title'
+//                 : '';
+//         }
+//         sendAPI("MYMPD_API_QOBUZ_SEARCH", {
+//             "offset": app.current.offset,
+//             "limit": app.current.limit,
+//             "query": searchStrEl.value
+//         }, parseSearch, true);
+//     }
+//     else {
+//         // clear list if no search is defined
+//         const SearchListEl = elGetById('SearchList');
+//         elClear(SearchListEl.querySelector('tbody'));
+//         elClear(SearchListEl.querySelector('tfoot'));
+//         elDisableId('SearchAddAllSongsBtn');
+//         elDisableId('SearchAddAllSongsDropdownBtn');
+//         unsetUpdateViewId('SearchList');
+//         setPagination(0, 0);
+//     }
+//     // elDisableId('SearchSelectModeBtn');
+// }
 
 function updateArray(firstArray, secondArray) {
     const updatedArray = firstArray.map(item => {
@@ -261,6 +269,40 @@ function updateArray(firstArray, secondArray) {
         return matchingItem ? { ...item, ...matchingItem } : item;
     });
     return updatedArray;
+}
+
+function updateArray3(queueItems, qobuzItems) {
+    // FIXME
+    let extraDuration = 0;
+    const updatedArray = queueItems.map(item => {
+        const eid = getEid(item.uri);
+        if (eid === null) {
+            return item;
+        }
+
+        const matchingQobuzItem = qobuzItems.find(obj => getId(obj.uri) === eid);
+        if (matchingQobuzItem === undefined) {
+            return item;
+        }
+
+        const updatedItem = { ...item };
+        // for each queue/stream item
+        Object.keys(updatedItem).forEach(key => {
+            if (matchingQobuzItem[key] === undefined || key === 'uri') {
+                return;
+            }
+            if (key === 'Title') {
+                updatedItem[key] = '[Qobuz] ' + matchingQobuzItem[key];
+            } else {
+                updatedItem[key] = matchingQobuzItem[key];
+            }
+        });
+
+        extraDuration += matchingQobuzItem.Duration;
+        return updatedItem;
+    });
+
+    return { updatedArray, extraDuration };
 }
 
 function updateArray2(firstArray, secondArray) {
@@ -305,23 +347,33 @@ function updateObject(obj1, obj2) {
 
 function updateObject2(result1, result2) {
     Object.keys(result2).forEach(key => {
+        // TODO for all keys in 2 update 1
         if (result1.hasOwnProperty(key)) {
             // FIXME ignore method only
             if (key === 'Title') {
                 result1[key] = '[Qobuz] ' + result2[key];
             }
-            else if (key === 'Duration') {
+            else {
                 result1[key] = result2[key];
             }
+            // else if (key === 'Duration') {
+            //     result1[key] = result2[key];
+            // }
+        }
+        else if (key === 'ImageSmall' || key === 'ImageLarge') {
+            result1[key] = result2[key];
         }
     });
 }
 
 function updateSongDetails(obj) {
     const uri = obj.result.uri;
-    if (uri.startsWith("qobuz://track/")) {
-        sendAPI("MYMPD_API_IDEON_QOBUZ_SONG_DETAILS", {
-            "uri": uri
+    const trackId = getEid(uri);
+    // if (uri && uri.startsWith("qobuz://track/")) {
+    if (uri && uri.includes("streaming-qobuz-std.akamaized.net")) {
+        sendAPI("MYMPD_API_QOBUZ_SONG_DETAILS", {
+            "trackId": trackId
+            // "uri": uri
         }, function (qobuz_obj) {
             updateObject2(obj.result, qobuz_obj.result);
             parseCurrentSong(obj);
@@ -330,4 +382,12 @@ function updateSongDetails(obj) {
     else {
         parseCurrentSong(obj);
     }
+}
+
+function qobuzFetch(nextSongId) {
+    // TODO add timeout of 1h
+    console.log("🚀 ~ qobuzFetch ~ nextSongId:", nextSongId)
+    sendAPI("MYMPD_API_QOBUZ_QUEUE_NEXT_FETCH", {
+        "nextSongId": nextSongId
+    }, console.log, false);
 }

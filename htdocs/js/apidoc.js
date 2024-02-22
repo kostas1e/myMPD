@@ -2190,36 +2190,6 @@ const APImethods = {
         "desc": "",
         "params": {}
     },
-    // TODO reorder, rename, vs song-details
-    "MYMPD_API_IDEON_QOBUZ_SONG_DETAILS": {
-        "desc": "",
-        "params": {
-            "uri": APIparams.uri
-        }
-    },
-    // TODO use list songIds
-    "MYMPD_API_IDEON_QOBUZ_TRACK_GET_LIST": {
-        "desc": "",
-        "params": {
-            "tracksId": APIparams.songIds
-        }
-    },
-    // FIXME temp
-    "MYMPD_API_IDEON_QOBUZ_TRACK_GET_STREAM_URL": {
-        "desc": "",
-        "params": {
-            "trackId": APIparams.songId
-        }
-    },
-    // TODO rename track-search, vs db-search
-    "MYMPD_API_IDEON_QOBUZ_TRACK_SEARCH": {
-        "desc": "",
-        "params": {
-            "offset": APIparams.offset,
-            "limit": APIparams.limit,
-            "query": APIparams.expression
-        }
-    },
     "MYMPD_API_IDEON_UPDATE_CHECK": {
         "desc": "",
         "params": {}
@@ -2227,5 +2197,83 @@ const APImethods = {
     "MYMPD_API_IDEON_UPDATE_INSTALL": {
         "desc": "",
         "params": {}
+    },
+    "MYMPD_API_QOBUZ_LOGIN": {
+        "desc": "",
+        "params": {
+            "username": APItypes.string,
+            "password": APItypes.string
+        }
+    },
+    "MYMPD_API_QOBUZ_LOGOUT": {
+        "desc": "",
+        "params": {}
+    },
+    "MYMPD_API_QOBUZ_ALBUM_DETAIL": {
+        "desc": "",
+        "params": {
+            "albumid": APIparams.albumid
+        }
+    },
+    "MYMPD_API_QOBUZ_FAVORITES": {
+        "desc": "",
+        "params": {
+            "type": APItypes.string,
+            "limit": APIparams.limit,
+            "offset": APIparams.offset
+        }
+    },
+    "MYMPD_API_QOBUZ_FAVORITE_IDS": {
+        "desc": "",
+        "params": {}
+    },
+    "MYMPD_API_QOBUZ_FAVORITE_TOGGLE": {
+        "desc": "",
+        "params": {
+            "type": APItypes.string,
+            "item_id": APItypes.string
+        }
+    },
+    "MYMPD_API_QOBUZ_SONG_DETAILS": {
+        "desc": "",
+        "params": {
+            "trackId": APIparams.songId
+            // "uri": APIparams.uri
+        }
+    },
+    "MYMPD_API_QOBUZ_TRACK_GET_LIST": {
+        "desc": "",
+        "params": {
+            "tracksId": APIparams.songIds
+        }
+    },
+    "MYMPD_API_QOBUZ_TRACK_GET_STREAM_URL": {
+        "desc": "",
+        "params": {
+            "trackId": APIparams.songId
+        }
+    },
+    "MYMPD_API_QOBUZ_SEARCH": {
+        "desc": "Searches for songs in the qobuz catalogue.",
+        "params": {
+            "query": APIparams.searchstr,
+            "type": APIparams.filter,
+            "offset": APIparams.offset,
+            "limit": APIparams.limit
+        }
+    },
+    "MYMPD_API_QOBUZ_QUEUE_REPLACE_ALBUMS": {
+        "desc": "Replaces the qobuz queue with albums.",
+        "params": {
+            // "albumids": APIparams.albumids,
+            "albumids": APIparams.albumid,
+            "play": APIparams.play
+        }
+    },
+    "MYMPD_API_QOBUZ_QUEUE_NEXT_FETCH": {
+        "desc": "",
+        "params": {
+            "nextSongId": APIparams.songId
+        }
     },
 };

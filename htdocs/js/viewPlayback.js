@@ -43,6 +43,8 @@ function handlePlayback() {
  * @returns {void}
  */
 function parseCurrentSong(obj) {
+    // console.log("🚀 ~ parseCurrentSong ~ obj:", obj)
+    const qobuzTrack = isQobuzUri(obj.result.uri) ? true : false;
     const list = elGetById('PlaybackList');
     unsetUpdateView(list);
 
@@ -54,7 +56,13 @@ function parseCurrentSong(obj) {
     }
 
     mediaSessionSetMetadata(obj.result.Title, obj.result.Artist, obj.result.Album, obj.result.uri);
-    setCurrentCover(obj.result.uri);
+    if (obj.result.uri.startsWith("qobuz://track/") === true) {
+        // console.log("🚀 ~ parseCurrentSong ~ obj.result.uri:", obj.result.uri)
+        setCurrentCover(obj.result.ImageLarge);
+    }
+    else {
+        setCurrentCover(obj.result.uri);
+    }
 
     const footerAlbumEl = elGetById('footerAlbum');
     const footerArtistEl = elGetById('footerArtist');
@@ -76,7 +84,8 @@ function parseCurrentSong(obj) {
         pageTitle.push(artists);
         footerArtistEl.textContent = artists;
         setData(footerArtistEl, 'name', obj.result.Artist);
-        footerArtistEl.classList.add('clickable');
+        if (qobuzTrack === false) // FIXME
+            footerArtistEl.classList.add('clickable');
     }
     else {
         elClear(footerArtistEl);
@@ -88,7 +97,8 @@ function parseCurrentSong(obj) {
         footerAlbumEl.textContent = obj.result.Album;
         setData(footerAlbumEl, 'name', obj.result.Album);
         setData(footerAlbumEl, 'AlbumId', obj.result.AlbumId);
-        footerAlbumEl.classList.add('clickable');
+        if (qobuzTrack === false) // FIXME
+            footerAlbumEl.classList.add('clickable');
         footerAlbumEl.setAttribute('data-tag', 'Album');
         footerDividerEl.classList.remove('d-none');
     }
@@ -174,6 +184,7 @@ function parseCurrentSong(obj) {
     const playingTr = elGetById('queueSongId' + obj.result.currentSongId);
     if (playingTr !== null) {
         const titleCol = playingTr.querySelector('[data-col=Title');
+        // console.log("🚀 ~ parseCurrentSong ~ titleCol:", titleCol)
         if (titleCol !== null) {
             titleCol.textContent = getDisplayTitle(obj.result.Name, obj.result.Title);
         }

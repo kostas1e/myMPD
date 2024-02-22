@@ -10,6 +10,7 @@
  * @returns {void}
  */
 function handleQueueCurrent() {
+    // TODO handle qobuz streams
     handleSearchExpression('QueueCurrent');
     const searchMatchEl = elGetById(app.id + 'SearchMatch');
 
@@ -27,27 +28,23 @@ function handleQueueCurrent() {
         "expression": app.current.search,
         "cols": settings.colsQueueCurrentFetch
     }, function (response) {
-        // FIXME: alt call parsequeue again to update qobuz tracks, time it
-        // const tracks = response.result.data;
-        // const qobuzTracksId = new Set(
-        //     tracks
-        //         .filter(track => track.uri.startsWith("qobuz://track/"))
-        //         .map(track => parseInt(track.uri.split("/").pop()))
-        // );
-
-        // if (qobuzTracksId.size > 0) {
-        //     sendAPI("MYMPD_API_IDEON_QOBUZ_TRACK_GET_LIST", {
-        //         "tracksId": Array.from(qobuzTracksId)
-        //     }, function (qobuz_response) {
-        //         const { updatedArray, totalDuration } = updateArray2(response.result.data, qobuz_response.result.data);
-        //         response.result.data = updatedArray;
-        //         response.result.totalTime += totalDuration;
-        //         parseQueue(response);
-        //     }, true);
-        // }
-        // else {
+        // FIXME alt call parsequeue again (async) to update qobuz tracks, time it
+        const data = response.result.data;
+        const tracksId = [...new Set(data.filter(obj => obj.uri.includes("streaming-qobuz-std.akamaized.net")).map(obj => getEid(obj.uri)))];
+        
+        if (tracksId.length > 0) {
+            sendAPI("MYMPD_API_QOBUZ_TRACK_GET_LIST", {
+                "tracksId": tracksId
+            }, function (qobuz_response) {
+                const { updatedArray, extraDuration } = updateArray3(response.result.data, qobuz_response.result.data);
+                response.result.data = updatedArray;
+                response.result.totalTime += extraDuration;
+                parseQueue(response);
+            }, true);
+        }
+        else {
             parseQueue(response);
-        // }
+        }
     }, true);
 
     if (app.current.filter === 'prio') {

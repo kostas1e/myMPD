@@ -120,6 +120,8 @@ target_sources(mympd PRIVATE
   mympd_api/trigger.c
   mympd_api/volume.c
   mympd_api/webradios.c
+  # qobuz.c
+  # qobuz_api.c
   web_server/web_server.c
   web_server/albumart.c
   web_server/request_handler.c

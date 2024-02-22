@@ -175,7 +175,8 @@ function gridClickHandler(event) {
     if (target === null) {
         return null;
     }
-    if (target.classList.contains('card-footer')){
+    if (target.classList.contains('card-footer') &&
+        app.current.card !== 'Qobuz') { // FIXME tmp fix to disable context menu for qobuz cards, use different type and create correct lists for context menu
         showContextMenu(event);
         return null;
     }

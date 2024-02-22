@@ -261,6 +261,7 @@ struct t_mympd_state {
     bool roon;
     bool spotify;
     bool init;
+    bool qobuz_logged_in;
 };
 
 /**

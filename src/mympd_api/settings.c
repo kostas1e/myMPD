@@ -615,6 +615,19 @@ bool mympd_api_settings_set(const char *path, sds key, sds value, int vtype, val
             return false;
         }
     }
+    // TODO rm
+    // else if (strcmp(key, "qobuz_logged_in") == 0) {
+    //     if (vtype == MJSON_TOK_TRUE) {
+    //         mympd_state->qobuz_logged_in = true;
+    //     }
+    //     else if (vtype == MJSON_TOK_FALSE) {
+    //         mympd_state->qobuz_logged_in = false;
+    //     }
+    //     else {
+    //         set_invalid_value(error, path, key, value, "Must be a boolean value");
+    //         return false;
+    //     }
+    // }
     else {
         set_invalid_field(error, path, key);
         return false;
@@ -622,6 +635,7 @@ bool mympd_api_settings_set(const char *path, sds key, sds value, int vtype, val
     sds state_filename = camel_to_snake(key);
     bool rc = state_file_write(mympd_state->config->workdir, DIR_WORK_STATE, state_filename, value);
     FREE_SDS(state_filename);
+    // FIXME rm
     MYMPD_LOG_DEBUG(NULL, "%d%d%d%d%d", mpd_conf_changed, airplay_changed, roon_changed, spotify_changed, ns_changed);
     return rc;
 }
@@ -986,6 +1000,8 @@ void mympd_api_settings_statefiles_global_read(struct t_mympd_state *mympd_state
     mympd_state->roon = state_file_rw_bool(workdir, DIR_WORK_STATE, "roon", mympd_state->roon, true);
     mympd_state->spotify = state_file_rw_bool(workdir, DIR_WORK_STATE, "spotify", mympd_state->spotify, true);
     mympd_state->init = state_file_rw_bool(workdir, DIR_WORK_STATE, "init", mympd_state->init, true);
+    // TODO rm handle in fe
+    mympd_state->qobuz_logged_in = state_file_rw_bool(workdir, DIR_WORK_STATE, "qobuz_logged_in", mympd_state->qobuz_logged_in, true);
 
     strip_slash(mympd_state->music_directory);
     strip_slash(mympd_state->playlist_directory);
@@ -1100,6 +1116,7 @@ sds mympd_api_settings_get(struct t_partition_state *partition_state, sds buffer
     buffer = tojson_bool(buffer, "roon", mympd_state->roon, true);
     buffer = tojson_bool(buffer, "spotify", mympd_state->spotify, true);
     buffer = tojson_bool(buffer, "init", mympd_state->init, true);
+    buffer = tojson_bool(buffer, "qobuz_logged_in", mympd_state->qobuz_logged_in, true);
     //partition specific settings
     buffer = sdscat(buffer, "\"partition\":{");
     const char *jukebox_mode_str = jukebox_mode_lookup(partition_state->jukebox_mode);

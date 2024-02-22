@@ -121,6 +121,7 @@ void mympd_state_default(struct t_mympd_state *mympd_state, struct t_config *con
     mympd_state->spotify = false;
     // FIXME
     // mympd_state->init = false;
+    mympd_state->qobuz_logged_in = false;
 }
 
 /**

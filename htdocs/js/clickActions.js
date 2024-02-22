@@ -150,6 +150,7 @@ function clickRadioFavorites(uri, event) {
  * @returns {void}
  */
 function clickQueueSong(songid, uri, event) {
+    // TODO fetch stream url
     switch(settings.webuiSettings.clickQueueSong) {
         case 'play':
             if (songid === null) {

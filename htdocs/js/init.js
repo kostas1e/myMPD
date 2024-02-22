@@ -238,6 +238,11 @@ function appInit() {
     initViewQueueJukebox('QueueJukeboxAlbum');
     initViewQueueLastPlayed();
     initViewSearch();
+    initQobuz();
+    initViewQobuzAlbum();
+    initViewQobuzLibrary();
+    initViewQobuzSearch();
+    // initViewQobuzSearch2();
     //init drag and drop
     for (const table of ['QueueCurrentList', 'BrowsePlaylistDetailList']) {
         dragAndDropTable(table);
@@ -253,6 +258,7 @@ function appInit() {
         'BrowseDatabaseAlbumDetail',
         'BrowseRadioWebradiodb',
         'BrowseRadioRadiobrowser'
+        // TODO qobuz tables
     ];
     for (const table of dndTableHeader) {
         dragAndDropTableHeader(table);
@@ -325,6 +331,7 @@ function appInit() {
         }
     }, false);
     //contextmenu for tables
+    // FIXME qobuz tables
     const tables = ['BrowseFilesystemList', 'BrowseDatabaseAlbumDetailList', 'QueueCurrentList', 'QueueLastPlayedList',
         'QueueJukeboxSongList', 'QueueJukeboxAlbumList', 'SearchList', 'BrowsePlaylistListList', 'BrowsePlaylistDetailList',
         'BrowseRadioRadiobrowserList', 'BrowseRadioWebradiodbList'];
