@@ -1,6 +1,6 @@
 "use strict";
 // SPDX-License-Identifier: GPL-3.0-or-later
-// myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+// myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
 /** @module customElements_js */
@@ -128,7 +128,7 @@ function setInputClear(el) {
         event.target.previousElementSibling.value = '';
         const dataClearEvent = event.target.previousElementSibling.getAttribute('data-clear-event');
         if (dataClearEvent !== null) {
-            const clearEvent = new KeyboardEvent(dataClearEvent, {key: 'Backspace'});
+            const clearEvent = new KeyboardEvent(dataClearEvent, {key: 'Enter'});
             event.target.previousElementSibling.dispatchEvent(clearEvent);
         }
     }, false);

@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-3.0-or-later
- myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -90,6 +90,9 @@ void mympd_config_defaults_initial(struct t_config *config) {
  * @param config pointer to config struct
  */
 void mympd_config_defaults(struct t_config *config) {
+    if (config->bootstrap == true) {
+        config->first_startup = true;
+    }
     if (config->first_startup == true) {
         MYMPD_LOG_INFO(NULL, "Reading environment variables");
     }
@@ -135,6 +138,7 @@ void mympd_config_defaults(struct t_config *config) {
     config->save_caches = startup_getenv_bool("MYMPD_SAVE_CACHES", CFG_MYMPD_SAVE_CACHES, config->first_startup);
     config->mympd_uri = startup_getenv_string("MYMPD_URI", CFG_MYMPD_URI, vcb_isname, config->first_startup);
     config->stickers = startup_getenv_bool("MYMPD_STICKERS", CFG_MYMPD_STICKERS, config->first_startup);
+    config->stickers_pad_int = startup_getenv_bool("MYMPD_STICKERS_PAD_INT", CFG_MYMPD_STICKERS_PAD_INT, config->first_startup);
 
     sds album_mode_str = startup_getenv_string("MYMPD_ALBUM_MODE", CFG_MYMPD_ALBUM_MODE, vcb_isname, config->first_startup);
     config->albums.mode = parse_album_mode(album_mode_str);
@@ -181,6 +185,7 @@ bool mympd_config_rw(struct t_config *config, bool write) {
     config->save_caches = state_file_rw_bool(config->workdir, DIR_WORK_CONFIG, "save_caches", config->save_caches, write);
     config->mympd_uri = state_file_rw_string_sds(config->workdir, DIR_WORK_CONFIG, "mympd_uri", config->mympd_uri, vcb_isname, write);
     config->stickers = state_file_rw_bool(config->workdir, DIR_WORK_CONFIG, "stickers", config->stickers, write);
+    config->stickers_pad_int = state_file_rw_bool(config->workdir, DIR_WORK_CONFIG, "stickers_pad_int", config->stickers_pad_int, write);
 
     sds album_mode_str = state_file_rw_string(config->workdir, DIR_WORK_CONFIG, "album_mode", lookup_album_mode(config->albums.mode), vcb_isname, write);
     config->albums.mode = parse_album_mode(album_mode_str);
@@ -215,9 +220,9 @@ bool mympd_version_set(sds workdir) {
  * @return true if version has not changed, else false
  */
 bool mympd_version_check(sds workdir) {
-    sds version = sdsempty();
     sds filepath = sdscatfmt(sdsempty(), "%S/%s/version", workdir, DIR_WORK_CONFIG);
-    sds_getfile(&version, filepath, 10, true, false);
+    int nread = 0;
+    sds version = sds_getfile(sdsempty(), filepath, 10, true, false, &nread);
     bool rc = strcmp(version, MYMPD_VERSION) == 0
         ? true
         : false;

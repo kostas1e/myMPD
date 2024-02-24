@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-3.0-or-later
- myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -11,10 +11,13 @@
 
 bool mpd_client_search_add_to_plist(struct t_partition_state *partition_state, const char *expression,
         const char *plist, unsigned to, const char *sort, bool sortdesc, sds *error);
+bool mpd_client_search_add_to_plist_window(struct t_partition_state *partition_state, const char *expression,
+        const char *plist, unsigned to, const char *sort, bool sortdesc, unsigned start, unsigned end, sds *error);
 bool mpd_client_search_add_to_queue(struct t_partition_state *partition_state, const char *expression,
         unsigned to, enum mpd_position_whence whence, const char *sort, bool sortdesc, sds *error);
 
 bool mpd_client_add_search_sort_param(struct t_partition_state *partition_state, const char *sort, bool sortdesc, bool check_version);
+bool mpd_client_add_search_group_param(struct mpd_connection *conn, enum mpd_tag_type tag);
 sds get_search_expression_album(enum mpd_tag_type tag_albumartist, struct mpd_song *album,
         const struct t_albums_config *album_config);
 sds get_search_expression_album_disc(enum mpd_tag_type tag_albumartist, struct mpd_song *album,

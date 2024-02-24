@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 #SPDX-License-Identifier: GPL-3.0-or-later
-#myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+#myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
 #https://github.com/jcorporation/mympd
 
 #exit on error
@@ -36,24 +36,6 @@ echo_warn() {
   printf "\e[m"
 }
 
-#clang tidy options
-CLANG_TIDY_CHECKS="*"
-CLANG_TIDY_CHECKS="$CLANG_TIDY_CHECKS,-altera-id-dependent-backward-branch"
-CLANG_TIDY_CHECKS="$CLANG_TIDY_CHECKS,-altera-unroll-loops"
-CLANG_TIDY_CHECKS="$CLANG_TIDY_CHECKS,-altera-struct-pack-align,-clang-analyzer-optin.performance.Padding"
-CLANG_TIDY_CHECKS="$CLANG_TIDY_CHECKS,-bugprone-easily-swappable-parameters"
-CLANG_TIDY_CHECKS="$CLANG_TIDY_CHECKS,-bugprone-assignment-in-if-condition"
-CLANG_TIDY_CHECKS="$CLANG_TIDY_CHECKS,-clang-diagnostic-invalid-command-line-argument"
-CLANG_TIDY_CHECKS="$CLANG_TIDY_CHECKS,-concurrency-mt-unsafe"
-CLANG_TIDY_CHECKS="$CLANG_TIDY_CHECKS,-cppcoreguidelines*"
-CLANG_TIDY_CHECKS="$CLANG_TIDY_CHECKS,-hicpp-*"
-CLANG_TIDY_CHECKS="$CLANG_TIDY_CHECKS,-llvmlibc-restrict-system-libc-headers"
-CLANG_TIDY_CHECKS="$CLANG_TIDY_CHECKS,-readability-identifier-length"
-CLANG_TIDY_CHECKS="$CLANG_TIDY_CHECKS,-readability-function-cognitive-complexity,-google-readability-function-size,-readability-function-size"
-CLANG_TIDY_CHECKS="$CLANG_TIDY_CHECKS,-readability-magic-numbers"
-CLANG_TIDY_CHECKS="$CLANG_TIDY_CHECKS,-readability-non-const-parameter"
-CLANG_TIDY_CHECKS="$CLANG_TIDY_CHECKS,-google-readability-todo"
-
 #save script path and change to it
 STARTPATH=$(dirname "$(realpath "$0")")
 cd "$STARTPATH" || exit 1
@@ -63,7 +45,7 @@ umask 0022
 
 #get myMPD version
 VERSION=$(grep "  VERSION" CMakeLists.txt | sed 's/  VERSION //')
-COPYRIGHT="myMPD ${VERSION} | (c) 2018-2023 Juergen Mang <mail@jcgames.de> | SPDX-License-Identifier: GPL-3.0-or-later | https://github.com/jcorporation/mympd"
+COPYRIGHT="myMPD ${VERSION} | (c) 2018-2024 Juergen Mang <mail@jcgames.de> | SPDX-License-Identifier: GPL-3.0-or-later | https://github.com/jcorporation/mympd"
 
 #get Ideon version
 IDEON_VERSION=$(grep IDEON_VERSION CMakeLists.txt | cut -d\" -f2)
@@ -115,8 +97,8 @@ setversion() {
 
   for F in contrib/packaging/alpine/APKBUILD contrib/packaging/arch/PKGBUILD \
       contrib/packaging/rpm/mympd.spec contrib/packaging/debian/changelog \
-      contrib/packaging/openwrt/Makefile contrib/man/mympd.1 contrib/man/mympd-script.1 \
-      contrib/packaging/freebsd/multimedia/mympd/Makefile
+      contrib/packaging/openwrt/Makefile contrib/man/mympd.1 contrib/man/mympd-config.1 \
+      contrib/man/mympd-script.1 contrib/packaging/freebsd/multimedia/mympd/Makefile
   do
     echo "$F"
     sed -e "s/__VERSION__/${VERSION}/g" -e "s/__DATE_F1__/$DATE_F1/g" -e "s/__DATE_F2__/$DATE_F2/g" \
@@ -548,9 +530,8 @@ check_file() {
   then
     echo "Running clang-tidy"
     rm -f clang-tidy.out
-    clang-tidy --checks="$CLANG_TIDY_CHECKS" \
-      "$FILE" > ../clang-tidy.out 2>/dev/null
-    grep -v -E "(/usr/include/|memset|memcpy|\^)" ../clang-tidy.out
+    clang-tidy --config-file="$STARTPATH/.clang-tidy" "$FILE" > ../clang-tidy.out 2>/dev/null
+    grep -v -E "(/usr/include/|memset|memcpy|_XOPEN_SOURCE|\^)" ../clang-tidy.out
   else
     echo_warn "clang-tidy not found"
   fi
@@ -627,8 +608,8 @@ check() {
     rm -f clang-tidy.out
     cd src || exit 1
     find ./ -name '*.c' -exec clang-tidy \
-      --checks="$CLANG_TIDY_CHECKS" {} \; >> ../clang-tidy.out 2>/dev/null
-    ERRORS=$(grep -v -E "(/usr/include/|memset|memcpy|\^)" ../clang-tidy.out)
+      --config-file="$STARTPATH/.clang-tidy" {} \; >> ../clang-tidy.out 2>/dev/null
+    ERRORS=$(grep -v -E "(/usr/include/|memset|memcpy|_XOPEN_SOURCE|\^)" ../clang-tidy.out)
     if [ -n "$ERRORS" ]
     then
       echo "$ERRORS"
@@ -856,34 +837,35 @@ installdeps() {
     fi
     apt-get install -y --no-install-recommends \
       gcc cmake perl libssl-dev libid3tag0-dev libflac-dev \
-      build-essential pkg-config libpcre2-dev gzip jq libcurl4-openssl-dev
+      build-essential pkg-config libpcre2-dev gzip jq whiptail libcurl4-openssl-dev
   elif [ -f /etc/arch-release ]
   then
     #arch
-    pacman -Sy gcc base-devel cmake perl openssl libid3tag flac lua pkgconf pcre2 gzip jq curl
+    pacman -Sy gcc base-devel cmake perl openssl libid3tag flac lua pkgconf pcre2 gzip jq libnewt curl
   elif [ -f /etc/alpine-release ]
   then
     #alpine
     apk add cmake perl openssl-dev libid3tag-dev flac-dev lua5.4-dev \
-      alpine-sdk linux-headers pkgconf pcre2-dev gzip jq curl-dev
+      alpine-sdk linux-headers pkgconf pcre2-dev gzip jq newt curl-dev
   elif [ -f /etc/SuSE-release ]
   then
     #suse
     zypper install gcc cmake pkgconfig perl openssl-devel libid3tag-devel flac-devel \
-      lua-devel unzip pcre2-devel gzip jq libcurl-devel
+      lua-devel unzip pcre2-devel gzip jq whiptail libcurl-devel
   elif [ -f /etc/redhat-release ]
   then
     #fedora
     yum install gcc cmake pkgconfig perl openssl-devel libid3tag-devel flac-devel \
-      lua-devel unzip pcre2-devel gzip jq libcurl-devel
+      lua-devel unzip pcre2-devel gzip jq whiptail libcurl-devel
   else
     echo_warn "Unsupported distribution detected."
     echo "You should manually install:"
-    echo "  - gcc"
+    echo "  - gcc or clang"
     echo "  - cmake"
     echo "  - perl"
     echo "  - gzip"
     echo "  - jq"
+    echo "  - whiptail"
     echo "  - openssl (devel)"
     echo "  - flac (devel)"
     echo "  - libid3tag (devel)"
@@ -902,19 +884,20 @@ updatelibmympdclient() {
   cd "$TMPDIR" || exit 1
   git clone --depth=1 -b libmympdclient https://github.com/jcorporation/libmympdclient.git
   cd libmympdclient || exit 1
-  meson . output -Dbuffer_size=8192
+  meson setup . output -Dbuffer_size=8192
 
   cd "$STARTPATH/dist/libmympdclient" || exit 1
   install -d src
-  install -d include/mpd/
+  install -d include/mpd
+  install -d LICENSES
 
   rsync -av --delete "$TMPDIR/libmympdclient/src/" ./src/
   rsync -av --delete "$TMPDIR/libmympdclient/include/mpd/" ./include/mpd/
 
-  rsync -av "$TMPDIR/libmympdclient/output/version.h" include/mpd/version.h
+  rsync -av "$TMPDIR/libmympdclient/output/include/mpd/version.h" include/mpd/version.h
   rsync -av "$TMPDIR/libmympdclient/output/config.h" include/config.h
 
-  rsync -av "$TMPDIR/libmympdclient/LICENSE.md" LICENSE.md
+  rsync -av "$TMPDIR/libmympdclient/LICENSES/" LICENSES/
 
   rm -rf "$TMPDIR"
 }
@@ -1392,7 +1375,7 @@ create_doc() {
 
 translation_import() {
   #shellcheck disable=SC1091
-  . secrets
+  . "$STARTPATH/.secrets"
   if [ -z "${POEDITOR_TOKEN+x}" ]
   then
     echo_error "POEDITOR_TOKEN variable not set."
@@ -1425,7 +1408,7 @@ translation_import() {
 
 translation_import_all() {
   #shellcheck disable=SC1091
-  . secrets
+  . "$STARTPATH/.secrets"
   if [ -z "${POEDITOR_TOKEN+x}" ]
   then
     echo_error "POEDITOR_TOKEN variable not set."
@@ -1441,7 +1424,7 @@ translation_import_all() {
 
 terms_export() {
   #shellcheck disable=SC1091
-  . secrets
+  . "$STARTPATH/.secrets"
   if [ -z "${POEDITOR_TOKEN+x}" ]
   then
     echo_error "POEDITOR_TOKEN variable not set."
@@ -1458,7 +1441,7 @@ terms_export() {
 
 translation_export() {
   #shellcheck disable=SC1091
-  . secrets
+  . "$STARTPATH/.secrets"
   if [ -z "${POEDITOR_TOKEN+x}" ]
   then
     echo_error "POEDITOR_TOKEN variable not set."

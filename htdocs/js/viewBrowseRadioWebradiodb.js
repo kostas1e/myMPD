@@ -1,6 +1,6 @@
 "use strict";
 // SPDX-License-Identifier: GPL-3.0-or-later
-// myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+// myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
 /** @module viewBrowseRadioWebradiodb_js */
@@ -38,8 +38,9 @@ function handleBrowseRadioWebradiodb() {
  * @returns {void}
  */
 function initViewBrowseRadioWebradiodb() {
-    elGetById('BrowseRadioWebradiodbSearchStr').addEventListener('keyup', function(event) {
-        if (ignoreKeys(event) === true) {
+    elGetById('BrowseRadioWebradiodbSearchStr').addEventListener('keydown', function(event) {
+        //handle Enter key on keydown for IME composing compatibility
+        if (event.key !== 'Enter') {
             return;
         }
         clearSearchTimer();
@@ -47,6 +48,19 @@ function initViewBrowseRadioWebradiodb() {
             doSearchWebradiodb();
         }, searchTimerTimeout);
     }, false);
+
+    // Android does not support search on type
+    if (userAgentData.isAndroid === false) {
+        elGetById('BrowseRadioWebradiodbSearchStr').addEventListener('keyup', function(event) {
+            if (ignoreKeys(event) === true) {
+                return;
+            }
+            clearSearchTimer();
+            searchTimer = setTimeout(function() {
+                doSearchWebradiodb();
+            }, searchTimerTimeout);
+        }, false);
+    }
 
     elGetById('BrowseRadioWebradiodbFilter').addEventListener('shown.bs.collapse', function() {
         elGetById('BrowseRadioWebradiodbFilterBtn').classList.add('active');
@@ -288,6 +302,7 @@ function parseSearchWebradiodb(obj) {
         setData(row, 'image', webradioDbPicsUri + data.Image);
         setData(row, 'homepage', data.Homepage);
         setData(row, 'country', data.Country);
+        setData(row, 'state', data.State);
         setData(row, 'language', data.Languages);
         setData(row, 'description', data.Description);
         setData(row, 'codec', data.Codec);

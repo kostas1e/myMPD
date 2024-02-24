@@ -1,6 +1,6 @@
 "use strict";
 // SPDX-License-Identifier: GPL-3.0-or-later
-// myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+// myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
 /** @module searchSimple_js */
@@ -26,15 +26,39 @@ function handleSearchSimple(appid) {
  * @returns {void}
  */
 function initSearchSimple(appid) {
-    elGetById(appid + 'SearchStr').addEventListener('keyup', function(event) {
-        if (ignoreKeys(event) === true) {
+    elGetById(appid + 'SearchStr').addEventListener('keydown', function(event) {
+        //handle Enter key on keydown for IME composing compatibility
+        if (event.key !== 'Enter') {
             return;
         }
         clearSearchTimer();
         const value = this.value;
         searchTimer = setTimeout(function() {
-            appGoto(app.current.card, app.current.tab, app.current.view,
-                0, app.current.limit, app.current.filter, app.current.sort, app.current.tag, value);
+            execSearchSimple(value);
         }, searchTimerTimeout);
     }, false);
+
+    // Android does not support search on type
+    if (userAgentData.isAndroid === false) {
+        elGetById(appid + 'SearchStr').addEventListener('keyup', function(event) {
+            if (ignoreKeys(event) === true) {
+                return;
+            }
+            clearSearchTimer();
+            const value = this.value;
+            searchTimer = setTimeout(function() {
+                execSearchSimple(value);
+            }, searchTimerTimeout);
+        }, false);
+    }
+}
+
+/**
+ * Executes the simple search for the current displayed view
+ * @param {string} value search string
+ * @returns {void}
+ */
+function execSearchSimple(value) {
+    appGoto(app.current.card, app.current.tab, app.current.view,
+        0, app.current.limit, app.current.filter, app.current.sort, app.current.tag, value);
 }

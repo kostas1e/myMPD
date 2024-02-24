@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-3.0-or-later
- myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -10,6 +10,7 @@
 #include "dist/mongoose/mongoose.h"
 #include "src/lib/filehandler.h"
 #include "src/lib/log.h"
+#include "src/lib/mg_str_utils.h"
 #include "src/lib/sds_extras.h"
 
 #include <errno.h>
@@ -18,8 +19,7 @@
 /**
  * Private definitions
  */
-static void http_client_ev_handler(struct mg_connection *nc, int ev, void *ev_data,
-    void *fn_data);
+static void http_client_ev_handler(struct mg_connection *nc, int ev, void *ev_data);
 
 /**
  * Public functions
@@ -41,7 +41,8 @@ sds get_dnsserver(void) {
     }
     sds line = sdsempty();
     sds nameserver = sdsempty();
-    while (sds_getline(&line, fp, LINE_LENGTH_MAX) >= 0) {
+    int nread = 0;
+    while ((line = sds_getline(line, fp, LINE_LENGTH_MAX, &nread)) && nread >= 0) {
         if (sdslen(line) > 10 &&
             strncmp(line, "nameserver", 10) == 0 &&
             isspace(line[10]))
@@ -111,11 +112,8 @@ void http_client_request(struct mg_client_request_t *mg_client_request,
  * @param nc mongoose network connection
  * @param ev event id
  * @param ev_data event data (http response)
- * @param fn_data struct mg_client_response
  */
-static void http_client_ev_handler(struct mg_connection *nc, int ev, void *ev_data,
-    void *fn_data)
-{
+static void http_client_ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
     struct mg_client_request_t *mg_client_request = (struct mg_client_request_t *) nc->mgr->userdata;
     if (ev == MG_EV_CONNECT) {
         //Connected to server. Extract host name from URL
@@ -159,7 +157,7 @@ static void http_client_ev_handler(struct mg_connection *nc, int ev, void *ev_da
     else if (ev == MG_EV_HTTP_MSG) {
         //Response is received. Return it
         struct mg_http_message *hm = (struct mg_http_message *) ev_data;
-        struct mg_client_response_t *mg_client_response = (struct mg_client_response_t *) fn_data;
+        struct mg_client_response_t *mg_client_response = (struct mg_client_response_t *) nc->fn_data;
         mg_client_response->body = sdscatlen(mg_client_response->body, hm->body.ptr, hm->body.len);
         //headers string
         for (int i = 0; i < MG_MAX_HTTP_HEADERS; i++) {
@@ -172,11 +170,11 @@ static void http_client_ev_handler(struct mg_connection *nc, int ev, void *ev_da
             mg_client_response->header = sdscatlen(mg_client_response->header, "\n", 1);
         }
         //http response code
-        sds response_code = sdsnewlen(hm->uri.ptr, hm->uri.len);
-        mg_client_response->response_code = (int)strtoimax(response_code, NULL, 10);
-        FREE_SDS(response_code);
+        mg_client_response->response_code = mg_str_to_int(&hm->uri);
         //set response code
-        mg_client_response->rc =  mg_client_response->response_code == 200 ? 0: 1;
+        mg_client_response->rc = mg_client_response->response_code == 200
+            ? 0
+            : 1;
 
         MYMPD_LOG_DEBUG(NULL, "HTTP client response code \"%d\"", mg_client_response->response_code);
         MYMPD_LOG_DEBUG(NULL, "HTTP client received body \"%s\"", mg_client_response->body);
@@ -184,7 +182,7 @@ static void http_client_ev_handler(struct mg_connection *nc, int ev, void *ev_da
         nc->is_closing = 1;
     }
     else if (ev == MG_EV_ERROR) {
-        struct mg_client_response_t *mg_client_response = (struct mg_client_response_t *) fn_data;
+        struct mg_client_response_t *mg_client_response = (struct mg_client_response_t *) nc->fn_data;
         mg_client_response->body = sdscat(mg_client_response->body, "HTTP connection failed");
         mg_client_response->rc = 2;
         MYMPD_LOG_ERROR(NULL, "HTTP connection to \"%s\" failed", mg_client_request->uri);

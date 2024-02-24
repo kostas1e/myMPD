@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-3.0-or-later
- myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -34,7 +34,7 @@ static sds get_local_ip(void);
  * Sleep function that is interuptable
  * @param msec milliseconds to sleep
  */
-void my_msleep(long msec) {
+void my_msleep(int msec) {
     struct timespec ts = {
         .tv_sec = (time_t)(msec / 1000),
         .tv_nsec = (msec % 1000L) * 1000000L
@@ -185,7 +185,7 @@ sds replace_file_extension(sds filename, const char *ext) {
     return newname;
 }
 
-static const char *invalid_filename_chars = "<>/.:?&$!#=;\a\b\f\n\r\t\v\\|";
+static const char *invalid_filename_chars = "<>/.:?&$%!#=;\a\b\f\n\r\t\v\\|";
 
 /**
  * Replaces invalid and uncommon filename characters with "_"

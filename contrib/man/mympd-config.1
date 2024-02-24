@@ -1,0 +1,31 @@
+.\" Manpage for mympd-config.
+.\" Contact <mail@jcgames.de> to correct errors or typos.
+.TH man 1 "18 Feb 2024" "14.0.4" "mympd-config man page"
+
+.SH NAME
+mympd-config \- mympd configuration tool
+
+.SH SYNOPSIS
+mympd-config [-c </path/to/config/dir>] [SETTING VALUE ...]
+
+.SH DESCRIPTION
+mympd-config is a small commandline tool to configure basic myMPD settings.
+
+.SH OPTIONS
+.TP
+\fB-c </path/to/config/dir>\fR
+Set's the path to the myMPD config directory.
+.TP
+\fBSETTING VALUE\fR
+Valid settings are the environment variables respected by "mympd -c".
+
+Reference: https://jcorporation.github.io/myMPD/configuration/configuration-files
+
+.SH AUTHOR
+Juergen Mang (mail@jcgames.de)
+
+.SH BUGS
+If you find a bug, please report it at https://github.com/jcorporation/myMPD/issues
+
+.SH SEE ALSO
+https://github.com/jcorporation/myMPD

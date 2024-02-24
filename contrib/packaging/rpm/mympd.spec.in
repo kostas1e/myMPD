@@ -1,7 +1,7 @@
 #
 # spec file for package myMPD
 #
-# (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+# (c) 2018-2024 Juergen Mang <mail@jcgames.de>
 
 Name:           mympd
 Version:        __VERSION__
@@ -24,6 +24,7 @@ BuildRequires:  pkgconfig
 BuildRequires:  unzip
 BuildRequires:  gzip
 BuildRequires:  jq
+Requires: whiptail
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 %description
@@ -55,9 +56,11 @@ fi
 %defattr(-,root,root,-)
 %doc README.md
 /usr/bin/mympd
+/usr/bin/mympd-config
 /usr/bin/mympd-script
 /usr/lib/systemd/system/mympd.service
 %{_mandir}/man1/mympd.1.gz
+%{_mandir}/man1/mympd-config.1.gz
 %{_mandir}/man1/mympd-script.1.gz
 %{_defaultdocdir}/mympd/CHANGELOG.md
 %{_defaultdocdir}/mympd/LICENSE.md

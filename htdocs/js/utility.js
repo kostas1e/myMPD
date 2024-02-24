@@ -1,6 +1,6 @@
 "use strict";
 // SPDX-License-Identifier: GPL-3.0-or-later
-// myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+// myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
 /** @module utility_js */
@@ -11,12 +11,13 @@
  * @returns {boolean} true if key event should be ignored, else false
  */
 function ignoreKeys(event) {
-    if (event === undefined ||
-        event.key === undefined)
-    {
+    if (event === undefined) {
         return true;
     }
     switch (event.key) {
+        case undefined:
+        case 'Unidentified':
+            return true;
         case 'Escape':
             // @ts-ignore
             event.target.blur();
@@ -332,14 +333,6 @@ function parseCmd(event, cmd) {
 }
 
 /**
- * Gets a unix timestamp
- * @returns {number} the unix timestamp
- */
-function getTimestamp() {
-    return Math.floor(Date.now() / 1000);
-}
-
-/**
  * Checks for support of the media session api
  * @returns {boolean} true if media session api is supported, else false
  */
@@ -470,18 +463,20 @@ async function httpGet(uri, callback, json) {
         return;
     }
 
+    let data;
     try {
-        const data = json === true
+        data = json === true
             ? await response.json()
             : await response.text();
-        callback(data);
     }
     catch(error) {
         showNotification(tn('API error') + '\n' + tn('Can not parse response from %{uri}', {"uri": uri}), 'general', 'error');
         logError('Can not parse response from ' + uri);
         logError(error);
         callback(null);
+        return;
     }
+    callback(data);
 }
 
 /**
@@ -562,4 +557,25 @@ function convertType(str) {
         return Number(str);
     }
     return str;
+}
+
+/**
+ * Gets a unix timestamp
+ * @returns {number} the unix timestamp
+ */
+function getTimestamp() {
+    return Math.floor(Date.now() / 1000);
+}
+
+/**
+ * Parses a YYYY-MM-DD string to unix timestamp
+ * @param {string} value string to parses
+ * @returns {number} unix timestamp
+ */
+function parseDateFromText(value) {
+    const m = value.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (m !== null) {
+        return Date.parse(value) / 1000;
+    }
+    return NaN;
 }

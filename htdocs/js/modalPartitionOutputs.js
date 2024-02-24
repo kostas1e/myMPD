@@ -1,6 +1,6 @@
 "use strict";
 // SPDX-License-Identifier: GPL-3.0-or-later
-// myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+// myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
 /** @module modalPartitionOutputs_js */
@@ -80,23 +80,22 @@ function moveOutputsCheckError(obj) {
  */
 function parsePartitionOutputsList(allOutputs, partitionOutputs) {
     const outputList = elGetById('modalPartitionOutputsList');
-    if (checkResult(partitionOutputs, outputList) === false) {
+    elClear(outputList);
+    if (partitionOutputs.error) {
+        outputList.appendChild(errorRow(partitionOutputs, 1));
         return;
     }
-
-    elClear(outputList);
     /** @type {object} */
     const curOutputs = [];
-    for (let i = 0; i < partitionOutputs.result.numOutputs; i++) {
+    for (let i = 0; i < partitionOutputs.result.returnedEntities; i++) {
         if (partitionOutputs.result.data[i].plugin !== 'dummy') {
             curOutputs.push(partitionOutputs.result.data[i].name);
         }
     }
 
     const selBtn = elCreateText('button', {"class": ["btn", "btn-secondary", "btn-xs", "mi", "mi-sm", "me-3"]}, 'radio_button_unchecked');
-
-    let nr = 0;
-    for (let i = 0; i < allOutputs.result.numOutputs; i++) {
+    let count = 0;
+    for (let i = 0; i < allOutputs.result.returnedEntities; i++) {
         if (curOutputs.includes(allOutputs.result.data[i].name) === false) {
             const tr = elCreateNode('tr', {},
                 elCreateNodes('td', {}, [
@@ -106,10 +105,10 @@ function parsePartitionOutputsList(allOutputs, partitionOutputs) {
             );
             setData(tr, 'output', allOutputs.result.data[i].name);
             outputList.appendChild(tr);
-            nr++;
+            count++;
         }
     }
-    if (nr === 0) {
+    if (count === 0) {
         outputList.appendChild(emptyRow(1));
     }
 }

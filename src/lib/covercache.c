@@ -1,12 +1,13 @@
 /*
  SPDX-License-Identifier: GPL-3.0-or-later
- myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
 #include "compile_time.h"
 #include "src/lib/covercache.h"
 
+#include "src/lib/datetime.h"
 #include "src/lib/filehandler.h"
 #include "src/lib/log.h"
 #include "src/lib/mimetype.h"
@@ -16,7 +17,6 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <time.h>
-
 
 /**
  * Writes the coverimage (as binary buffer) to the covercache,
@@ -60,8 +60,9 @@ int covercache_clear(sds cachedir, int keepdays) {
     time_t expire_time = time(NULL) - (time_t)(keepdays * 24 * 60 * 60);
 
     sds covercache = sdscatfmt(sdsempty(), "%S/%s", cachedir, DIR_CACHE_COVER);
-    MYMPD_LOG_NOTICE(NULL, "Cleaning covercache \"%s\"", covercache);
-    MYMPD_LOG_DEBUG(NULL, "Remove files older than %lld sec", (long long)expire_time);
+    char fmt_time[32];
+    readable_time(fmt_time, expire_time);
+    MYMPD_LOG_INFO(NULL, "Cleaning covercache \"%s\", removing files older than %s ", covercache, fmt_time);
     errno = 0;
     DIR *covercache_dir = opendir(covercache);
     if (covercache_dir == NULL) {
@@ -81,7 +82,7 @@ int covercache_clear(sds cachedir, int keepdays) {
         filepath = sdscatfmt(filepath, "%S/%s", covercache, next_file->d_name);
         time_t mtime = get_mtime(filepath);
         if (mtime < expire_time) {
-            MYMPD_LOG_DEBUG(NULL, "Deleting \"%s\": %lld", filepath, (long long)mtime);
+            MYMPD_LOG_DEBUG(NULL, "Deleting \"%s\"", filepath);
             rc = rm_file(filepath);
             if (rc == true) {
                 num_deleted++;

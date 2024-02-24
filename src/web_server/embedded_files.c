@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-3.0-or-later
- myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -69,6 +69,9 @@ INCBIN(ligatures_json, "../htdocs/assets/ligatures.json.gz");
 #endif
 #ifdef I18N_zh_Hans
     INCBIN(i18n_zh_Hans_json, "../htdocs/assets/i18n/zh-Hans.json.gz");
+#endif
+#ifdef I18N_zh_Hant
+    INCBIN(i18n_zh_Hant_json, "../htdocs/assets/i18n/zh-Hant.json.gz");
 #endif
 //uncompressed assets
 INCBIN(appicon_192_png, "../htdocs/assets/appicon-192.png");

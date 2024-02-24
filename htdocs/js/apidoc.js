@@ -1,6 +1,6 @@
 "use strict";
 // SPDX-License-Identifier: GPL-3.0-or-later
-// myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+// myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
 /** @module apidoc_js */
@@ -178,6 +178,11 @@ const APIparams = {
         "type": APItypes.string,
         "example": "1",
         "desc": "album disc"
+    },
+    "maxentries": {
+        "type": APItypes.uint,
+        "example": 200,
+        "desc": "Maximum entries"
     }
 };
 
@@ -314,6 +319,7 @@ const APImethods = {
     },
     "MYMPD_API_QUEUE_ADD_RANDOM": {
         "desc": "Adds random songs or albums to the queue.",
+        "async": true,
         "params": {
             "plist": {
                 "type": APItypes.string,
@@ -778,6 +784,12 @@ const APImethods = {
             "cols": APIparams.cols
         }
     },
+    "MYMPD_API_PLAYLIST_CONTENT_ENUMERATE": {
+        "desc": "Enumerates the playlist and returns the count and total length.",
+        "params": {
+            "plist": APIparams.plist
+        }
+    },
     "MYMPD_API_PLAYLIST_CONTENT_SHUFFLE": {
         "desc": "Shuffles the playlist.",
         "params": {
@@ -887,7 +899,8 @@ const APImethods = {
                 "desc": "timerange in seconds"
             },
             "sort": APIparams.sortShuffle,
-            "sortdesc": APIparams.sortdesc
+            "sortdesc": APIparams.sortdesc,
+            "maxentries": APIparams.maxentries
         }
     },
     "MYMPD_API_SMARTPLS_STICKER_SAVE": {
@@ -899,18 +912,19 @@ const APImethods = {
                 "example": "like",
                 "desc": "Sticker name"
             },
-            "maxentries": {
-                "type": APItypes.uint,
-                "example": 200,
-                "desc": "maximum entries"
+            "value": {
+                "type": APItypes.string,
+                "example": "2",
+                "desc": "Sticker value"
             },
-            "minvalue": {
-                "type": APItypes.uint,
-                "example": 2,
-                "desc": "minimum integer value"
+            "op": {
+                "type": APItypes.string,
+                "example": "=",
+                "desc": "Compare operator: =, <, >"
             },
             "sort": APIparams.sortShuffle,
-            "sortdesc": APIparams.sortdesc
+            "sortdesc": APIparams.sortdesc,
+            "maxentries": APIparams.maxentries
         }
     },
     "MYMPD_API_SMARTPLS_SEARCH_SAVE": {
@@ -919,7 +933,8 @@ const APImethods = {
             "plist": APIparams.plist,
             "expression": APIparams.expression,
             "sort": APIparams.sortShuffle,
-            "sortdesc": APIparams.sortdesc
+            "sortdesc": APIparams.sortdesc,
+            "maxentries": APIparams.maxentries
         }
     },
     "MYMPD_API_SMARTPLS_GET": {
@@ -1046,6 +1061,17 @@ const APImethods = {
                 "type": APItypes.uint,
                 "example": 1,
                 "desc": "0 = dislike, 1 = neutral, 2 = like"
+            }
+        }
+    },
+    "MYMPD_API_RATING": {
+        "desc": "Sets the stars rating of a song.",
+        "params": {
+            "uri": APIparams.uri,
+            "rating": {
+                "type": APItypes.uint,
+                "example": 5,
+                "desc": "0 - 10 stars"
             }
         }
     },
@@ -2002,6 +2028,14 @@ const APImethods = {
         "desc": "Clears the jukebox queue.",
         "params": {}
     },
+    "MYMPD_API_JUKEBOX_CLEARERROR": {
+        "desc": "Clears the jukebox error state.",
+        "params": {}
+    },
+    "MYMPD_API_JUKEBOX_RESTART": {
+        "desc": "Restarts the jukebox.",
+        "params": {}
+    },
     "MYMPD_API_LYRICS_GET": {
         "desc": "Gets all lyrics from uri.",
         "params": {
@@ -2092,6 +2126,11 @@ const APImethods = {
                 "type": APItypes.string,
                 "example": "Germany",
                 "desc": "Country"
+            },
+            "state": {
+                "type": APItypes.string,
+                "example": "Bayern",
+                "desc": "State or Region"
             },
             "language": {
                 "type": APItypes.string,

@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-3.0-or-later
- myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -8,6 +8,10 @@
 #define MYMPD_RANDOM_H
 
 #include <inttypes.h>
+#include <stddef.h>
 
-long randrange(long lower, long upper);
+unsigned randrange(unsigned lower, unsigned upper);
+char randchar(void);
+void randstring(char *buffer, size_t len);
+
 #endif

@@ -4,7 +4,7 @@ permalink: /references/sticker
 title: Sticker
 ---
 
-myMPD uses stickers to save statistics and votes of songs.
+myMPD uses the MPD stickers to save song states, playback statistics and votes of songs.
 
 | STICKER | DESCRIPTION |
 | ------- | ----------- |
@@ -13,6 +13,7 @@ myMPD uses stickers to save statistics and votes of songs.
 | lastSkipped | last skipped time of songs (unix timestamp) |
 | like | 0 - dislike, 1 - neutral, 2 - like |
 | playCount | How often the song was played |
+| rating | 0 - 10 stars rating |
 | skipCount | How often the song was skipped |
 {: .table .table-sm }
 
@@ -24,6 +25,12 @@ myMPD uses stickers to save statistics and votes of songs.
 **skipCount is updated:**
 
 - The song has been played for at least 10 seconds
+
+## Padding of sticker values
+
+You can enable the padding of sticker values that should be treated as integers. Stickers are padded to 12 digits. Padding is useful, because MPD saves all sticker values as strings.
+
+Run `mympd-config MYMPD_STICKERS_PAD_INT true` and restart myMPD.
 
 ## Central sticker database
 

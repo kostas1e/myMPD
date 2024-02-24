@@ -17,7 +17,7 @@ KEYWORDS="~amd64 ~x86 ~arm ~arm64"
 IUSE="+flac +id3tag +lua systemd"
 
 BDEPEND="
-    >=dev-util/cmake-3.13
+    >=dev-build/cmake-3.13
     dev-lang/perl
     app-misc/jq"
 
@@ -51,6 +51,7 @@ src_compile() {
 src_install() {
     cd release
     dobin bin/mympd
+    dobin ../cli_tools/mympd-config/mympd-config
     if use lua; then
         dobin bin/mympd-script
     fi

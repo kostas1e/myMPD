@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-3.0-or-later
- myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -9,6 +9,7 @@
 
 #include "src/lib/jsonrpc.h"
 #include "src/lib/log.h"
+#include "src/lib/mg_str_utils.h"
 #include "src/lib/sds_extras.h"
 #include "src/web_server/proxy.h"
 #include "src/web_server/utility.h"
@@ -18,7 +19,7 @@
  */
 static bool radiobrowser_send(struct mg_connection *nc, struct mg_connection *backend_nc,
         enum mympd_cmd_ids cmd_id, const char *path);
-static void radiobrowser_handler(struct mg_connection *nc, int ev, void *ev_data, void *fn_data);
+static void radiobrowser_handler(struct mg_connection *nc, int ev, void *ev_data);
 
 /**
  * Public functions
@@ -33,10 +34,10 @@ static void radiobrowser_handler(struct mg_connection *nc, int ev, void *ev_data
  * @param request_id jsonrpc request id
  */
 void radiobrowser_api(struct mg_connection *nc, struct mg_connection *backend_nc,
-        enum mympd_cmd_ids cmd_id, sds body, int request_id)
+        enum mympd_cmd_ids cmd_id, sds body, unsigned request_id)
 {
-    long offset;
-    long limit;
+    unsigned offset;
+    unsigned limit;
     sds tags = NULL;
     sds country = NULL;
     sds language = NULL;
@@ -56,15 +57,15 @@ void radiobrowser_api(struct mg_connection *nc, struct mg_connection *backend_nc
             }
             break;
         case MYMPD_API_CLOUD_RADIOBROWSER_NEWEST:
-            if (json_get_long(body, "$.params.offset", 0, MPD_PLAYLIST_LENGTH_MAX, &offset, &parse_error) == true &&
-                json_get_long(body, "$.params.limit", MPD_RESULTS_MIN, MPD_RESULTS_MAX, &limit, &parse_error) == true)
+            if (json_get_uint(body, "$.params.offset", 0, MPD_PLAYLIST_LENGTH_MAX, &offset, &parse_error) == true &&
+                json_get_uint(body, "$.params.limit", MPD_RESULTS_MIN, MPD_RESULTS_MAX, &limit, &parse_error) == true)
             {
                 uri = sdscatfmt(uri, "/json/stations/lastchange?hidebroken=true&offset=%l&limit=%l", offset, limit);
             }
             break;
         case MYMPD_API_CLOUD_RADIOBROWSER_SEARCH:
-            if (json_get_long(body, "$.params.offset", 0, MPD_PLAYLIST_LENGTH_MAX, &offset, &parse_error) == true &&
-                json_get_long(body, "$.params.limit", MPD_RESULTS_MIN, MPD_RESULTS_MAX, &limit, &parse_error) == true &&
+            if (json_get_uint(body, "$.params.offset", 0, MPD_PLAYLIST_LENGTH_MAX, &offset, &parse_error) == true &&
+                json_get_uint(body, "$.params.limit", MPD_RESULTS_MIN, MPD_RESULTS_MAX, &limit, &parse_error) == true &&
                 json_get_string(body, "$.params.tags", 0, NAME_LEN_MAX, &tags, vcb_isname, &parse_error) == true &&
                 json_get_string(body, "$.params.country", 0, NAME_LEN_MAX, &country, vcb_isname, &parse_error) == true &&
                 json_get_string(body, "$.params.language", 0, NAME_LEN_MAX, &language, vcb_isname, &parse_error) == true &&
@@ -138,7 +139,7 @@ static bool radiobrowser_send(struct mg_connection *nc, struct mg_connection *ba
 {
     const char *host = RADIOBROWSER_HOST;
     sds uri = sdscatfmt(sdsempty(), "https://%s%s", host, path);
-    backend_nc = create_backend_connection(nc, backend_nc, uri, radiobrowser_handler);
+    backend_nc = create_backend_connection(nc, backend_nc, uri, radiobrowser_handler, false);
     FREE_SDS(uri);
     if (backend_nc != NULL) {
         struct t_backend_nc_data *backend_nc_data = (struct t_backend_nc_data *)backend_nc->fn_data;
@@ -153,17 +154,16 @@ static bool radiobrowser_send(struct mg_connection *nc, struct mg_connection *ba
  * @param nc mongoose backend connection
  * @param ev mongoose event
  * @param ev_data mongoose ev_data (http response)
- * @param fn_data mongoose fn_data (t_backend_nc_data)
  */
-static void radiobrowser_handler(struct mg_connection *nc, int ev, void *ev_data, void *fn_data) {
-    struct t_backend_nc_data *backend_nc_data = (struct t_backend_nc_data *)fn_data;
+static void radiobrowser_handler(struct mg_connection *nc, int ev, void *ev_data) {
+    struct t_backend_nc_data *backend_nc_data = (struct t_backend_nc_data *)nc->fn_data;
     switch(ev) {
         case MG_EV_CONNECT: {
-            send_backend_request(nc, fn_data);
+            send_backend_request(nc);
             break;
         }
         case MG_EV_ERROR:
-            MYMPD_LOG_ERROR(NULL, "HTTP connection to \"%s\", connection %lu failed", backend_nc_data->uri, nc->id);
+            MYMPD_LOG_ERROR(NULL, "HTTP connection to \"%s\", connection \"%lu\" failed", backend_nc_data->uri, nc->id);
             if (backend_nc_data->frontend_nc != NULL) {
                 sds response = jsonrpc_respond_message_phrase(sdsempty(), backend_nc_data->cmd_id, 0,
                         JSONRPC_FACILITY_GENERAL, JSONRPC_SEVERITY_ERROR, "Could not connect to %{host}", 2, "host", RADIOBROWSER_HOST);
@@ -197,7 +197,7 @@ static void radiobrowser_handler(struct mg_connection *nc, int ev, void *ev_data
             break;
         }
         case MG_EV_CLOSE: {
-            handle_backend_close(nc, backend_nc_data);
+            handle_backend_close(nc);
             break;
         }
     }

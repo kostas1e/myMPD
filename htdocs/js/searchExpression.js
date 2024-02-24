@@ -1,9 +1,24 @@
 "use strict";
 // SPDX-License-Identifier: GPL-3.0-or-later
-// myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+// myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
 /** @module searchExpression_js */
+
+//list of search tags that need no operator
+/** @type {Array} */
+const searchTagsNoOp = [
+    'base',
+    'modified-since',
+    'added-since'
+];
+
+//list of search tags that compare against an unix timestamp
+/** @type {Array} */
+const searchTagsTimestamp = [
+    'modified-since',
+    'added-since'
+];
 
 /**
  * Parses search expressions and update the ui for specified appid
@@ -29,7 +44,8 @@ function handleSearchExpression(appid) {
  */
 function selectSearchMatch(appid) {
     const searchMatchEl = elGetById(appid + 'SearchMatch');
-    if (app.current.filter === 'base') {
+    //@ts-ignore
+    if (searchTagsNoOp.includes(app.current.filter)) {
         elDisable(searchMatchEl);
         searchMatchEl.value = '';
     }
@@ -72,7 +88,7 @@ function initSearchExpression(appid) {
             return;
         }
         clearSearchTimer();
-        const value = this.value;
+        let value = this.value;
         if (value !== '') {
             const op = getSelectValueId(appid + 'SearchMatch');
             const crumbEl = elGetById(appid + 'SearchCrumb');
@@ -80,26 +96,39 @@ function initSearchExpression(appid) {
             elShow(crumbEl);
             this.value = '';
         }
-        else {
+        if (userAgentData.isAndroid === true) {
+            value = '';
+        }
+        if (value === '') {
             searchTimer = setTimeout(function() {
                 execSearchExpression(value);
             }, searchTimerTimeout);
         }
     }, false);
 
-    elGetById(appid + 'SearchStr').addEventListener('keyup', function(event) {
-        if (ignoreKeys(event) === true) {
-            return;
-        }
-        clearSearchTimer();
-        const value = this.value;
-        searchTimer = setTimeout(function() {
-            execSearchExpression(value);
-        }, searchTimerTimeout);
-    }, false);
+    // Android does not support search on type
+    if (userAgentData.isAndroid === false) {
+        elGetById(appid + 'SearchStr').addEventListener('keyup', function(event) {
+            if (ignoreKeys(event) === true) {
+                return;
+            }
+            //@ts-ignore
+            if (searchTagsTimestamp.includes(app.current.filter) &&
+                isNaN(parseDateFromText(this.value)) === true)
+            {
+                // disable search on type for timestamps
+                return;
+            }
+            clearSearchTimer();
+            const value = this.value;
+            searchTimer = setTimeout(function() {
+                execSearchExpression(value);
+            }, searchTimerTimeout);
+        }, false);
+    }
 
     elGetById(appid + 'SearchCrumb').addEventListener('click', function(event) {
-        if (event.target.nodeName === 'SPAN') {
+        if (event.target.classList.contains('badge')) {
             //remove search expression
             event.preventDefault();
             event.stopPropagation();
@@ -107,7 +136,7 @@ function initSearchExpression(appid) {
             execSearchExpression('');
             elGetById(appid + 'SearchStr').updateBtn();
         }
-        else if (event.target.nodeName === 'BUTTON') {
+        else if (event.target.classList.contains('btn')) {
             //edit search expression
             event.preventDefault();
             event.stopPropagation();
@@ -160,7 +189,7 @@ function parseExpression(expression) {
         };
     }
     // support expressions without operator, e.g. base
-    fields = expression.match(/^\((\w+)\s+'(.*)'\)$/);
+    fields = expression.match(/^\(([\w-]+)\s+'(.*)'\)$/);
     if (fields !== null &&
         fields.length === 3)
     {
@@ -216,9 +245,9 @@ function createSearchCrumb(filter, op, value) {
     if (op === undefined) {
         op = '';
     }
-    const btn = elCreateNodes('button', {"class": ["btn", "btn-dark", "me-2"]}, [
+    const btn = elCreateNodes('div', {"class": ["btn", "btn-dark", "me-2"]}, [
         document.createTextNode(tn(filter) + ' ' + tn(op) + ' \'' + value + '\''),
-        elCreateText('span', {"class": ["ml-2", "badge", "bg-secondary"]}, '×')
+        elCreateText('div', {"class": ["ml-2", "badge", "bg-secondary", "clickable"]}, '×')
     ]);
     setData(btn, 'filter-tag', filter);
     setData(btn, 'filter-op', op);
@@ -227,13 +256,13 @@ function createSearchCrumb(filter, op, value) {
 }
 
 /**
- * Creates a MPD search expression
+ * Creates a MPD search expression component
  * @param {string} tag tag to search
  * @param {string} op search operator
  * @param {string} value value to search
  * @returns {string} the search expression in parenthesis
  */
-function _createSearchExpression(tag, op, value) {
+function createSearchExpressionComponent(tag, op, value) {
     if (op === 'starts_with' &&
         app.id !== 'BrowseDatabaseList' &&
         features.featStartsWith === false)
@@ -249,9 +278,10 @@ function _createSearchExpression(tag, op, value) {
             op = 'contains';
         }
     }
-    if (tag === 'base') {
-        //this tag allows no operator
-        op = '';
+    //@ts-ignore
+    if (searchTagsNoOp.includes(tag)) {
+        //this tags needs no operator
+        return '(' + tag + ' \'' + escapeMPD(value) + '\')';
     }
     return '(' + tag + ' ' + op + ' ' +
         (op === '>='
@@ -275,7 +305,7 @@ function createSearchExpression(crumbsEl, tag, op, value) {
         if (i > 0) {
             expression += ' AND ';
         }
-        expression += _createSearchExpression(
+        expression += createSearchExpressionComponent(
             getData(crumbs[i], 'filter-tag'),
             getData(crumbs[i], 'filter-op'),
             getData(crumbs[i], 'filter-value')
@@ -285,7 +315,7 @@ function createSearchExpression(crumbsEl, tag, op, value) {
         if (expression.length > 1) {
             expression += ' AND ';
         }
-        expression += _createSearchExpression(tag, op, value);
+        expression += createSearchExpressionComponent(tag, op, value);
     }
     expression += ')';
     if (expression.length <= 2) {
@@ -303,7 +333,7 @@ function createSearchExpression(crumbsEl, tag, op, value) {
 function createBaseSearchExpression(base, value) {
     let expression = '(base \'' + escapeMPD(base) + '\')';
     if (isEmptyTag(value) === false) {
-        expression += ' AND ' + _createSearchExpression('any', 'contains', value);
+        expression += ' AND ' + createSearchExpressionComponent('any', 'contains', value);
     }
     return '(' + expression + ')';
 }

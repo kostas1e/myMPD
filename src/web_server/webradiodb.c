@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-3.0-or-later
- myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -10,6 +10,7 @@
 #include "src/lib/filehandler.h"
 #include "src/lib/jsonrpc.h"
 #include "src/lib/log.h"
+#include "src/lib/mg_str_utils.h"
 #include "src/lib/sds_extras.h"
 #include "src/web_server/proxy.h"
 #include "src/web_server/utility.h"
@@ -20,7 +21,7 @@
 
 static bool webradiodb_send(struct mg_connection *nc, struct mg_connection *backend_nc,
         enum mympd_cmd_ids cmd_id, const char *path);
-static void webradiodb_handler(struct mg_connection *nc, int ev, void *ev_data, void *fn_data);
+static void webradiodb_handler(struct mg_connection *nc, int ev, void *ev_data);
 static sds webradiodb_cache_check(sds cachedir, const char *cache_file);
 static bool webradiodb_cache_write(sds cachedir, const char *cache_file, const char *data, size_t data_len);
 
@@ -36,7 +37,7 @@ static bool webradiodb_cache_write(sds cachedir, const char *cache_file, const c
  * @param request_id jsonrpc request id
  */
 void webradiodb_api(struct mg_connection *nc, struct mg_connection *backend_nc,
-    enum mympd_cmd_ids cmd_id, int request_id)
+    enum mympd_cmd_ids cmd_id, unsigned request_id)
 {
     sds error = sdsempty();
     sds uri = sdsempty();
@@ -98,15 +99,15 @@ static sds webradiodb_cache_check(sds cachedir, const char *cache_file) {
     time_t mtime = get_mtime(filepath);
     if (mtime > 0) {
         //cache it one day
-        time_t expire_time = time(NULL) - (long)(24 * 60 * 60);
+        time_t expire_time = time(NULL) - (time_t)(24 * 60 * 60);
         if (mtime < expire_time) {
-            MYMPD_LOG_DEBUG(NULL, "Expiring cache file \"%s\": %lld", filepath, (long long)mtime);
+            MYMPD_LOG_DEBUG(NULL, "Expiring cache file \"%s\"", filepath);
             rm_file(filepath);
         }
         else {
-            sds data = sdsempty();
-            int rc = sds_getfile(&data, filepath, WEBRADIODB_SIZE_MAX, true, true);
-            if (rc <= 0) {
+            int nread = 0;
+            sds data = sds_getfile(sdsempty(), filepath, WEBRADIODB_SIZE_MAX, true, true, &nread);
+            if (nread <= 0) {
                 FREE_SDS(data);
                 FREE_SDS(filepath);
                 return NULL;
@@ -147,7 +148,7 @@ static bool webradiodb_send(struct mg_connection *nc, struct mg_connection *back
         enum mympd_cmd_ids cmd_id, const char *path)
 {
     sds uri = sdscatfmt(sdsempty(), "https://%s%s", WEBRADIODB_HOST, path);
-    backend_nc = create_backend_connection(nc, backend_nc, uri, webradiodb_handler);
+    backend_nc = create_backend_connection(nc, backend_nc, uri, webradiodb_handler, false);
     FREE_SDS(uri);
     if (backend_nc != NULL) {
         struct t_backend_nc_data *backend_nc_data = (struct t_backend_nc_data *)backend_nc->fn_data;
@@ -162,19 +163,18 @@ static bool webradiodb_send(struct mg_connection *nc, struct mg_connection *back
  * @param nc mongoose backend connection
  * @param ev mongoose event
  * @param ev_data mongoose ev_data (http response)
- * @param fn_data mongoose fn_data (t_backend_nc_data)
  */
-static void webradiodb_handler(struct mg_connection *nc, int ev, void *ev_data, void *fn_data) {
+static void webradiodb_handler(struct mg_connection *nc, int ev, void *ev_data) {
     struct t_mg_user_data *mg_user_data = (struct t_mg_user_data *) nc->mgr->userdata;
-    struct t_backend_nc_data *backend_nc_data = (struct t_backend_nc_data *)fn_data;
+    struct t_backend_nc_data *backend_nc_data = (struct t_backend_nc_data *)nc->fn_data;
     struct t_config *config = mg_user_data->config;
     switch(ev) {
         case MG_EV_CONNECT: {
-            send_backend_request(nc, fn_data);
+            send_backend_request(nc);
             break;
         }
         case MG_EV_ERROR:
-            MYMPD_LOG_ERROR(NULL, "HTTP connection to \"%s\", connection %lu failed", backend_nc_data->uri, nc->id);
+            MYMPD_LOG_ERROR(NULL, "HTTP connection to \"%s\", connection \"%lu\" failed", backend_nc_data->uri, nc->id);
             if (backend_nc_data->frontend_nc != NULL) {
                 sds response = jsonrpc_respond_message_phrase(sdsempty(), backend_nc_data->cmd_id, 0,
                         JSONRPC_FACILITY_GENERAL, JSONRPC_SEVERITY_ERROR, "Could not connect to %{host}", 2, "host", WEBRADIODB_HOST);
@@ -212,7 +212,7 @@ static void webradiodb_handler(struct mg_connection *nc, int ev, void *ev_data, 
             break;
         }
         case MG_EV_CLOSE: {
-            handle_backend_close(nc, backend_nc_data);
+            handle_backend_close(nc);
             break;
         }
     }

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+# myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
 # https://github.com/jcorporation/mympd
 
 # minimal cmake version needed for new option handling
@@ -9,7 +9,7 @@ cmake_policy(SET CMP0003 NEW)
 # myMPD is written in C
 # supported compilers: gcc, clang
 project(mympd
-  VERSION 13.0.5
+  VERSION 14.0.4
   LANGUAGES C
 )
 
@@ -47,6 +47,7 @@ option(MYMPD_BUILD_TESTING "Enables building of unit tests" "OFF")
 option(MYMPD_DOC "Installs documentation, default ON" "ON")
 option(MYMPD_DOC_HTML "Creates and installs the html documentation, default OFF" "OFF")
 option(MYMPD_EMBEDDED_ASSETS "Embed assets in binary, default ON, OFF for Debug" "ON")
+option(MYMPD_ENABLE_EXPERIMENTAL "Enable experimental features" "OFF")
 option(MYMPD_ENABLE_FLAC "Enables flac support, default ON" "ON")
 option(MYMPD_ENABLE_IPV6 "Enables IPv6, default ON" "ON")
 option(MYMPD_ENABLE_LIBID3TAG "Enables libid3tag support, default ON" "ON")
@@ -64,6 +65,10 @@ if(MYMPD_MINIMAL)
   set(MYMPD_ENABLE_IPV6 "OFF")
   set(MYMPD_ENABLE_LUA "OFF")
   set(MYMPD_ENABLE_LIBID3TAG "OFF")
+endif()
+
+if(MYMPD_ENABLE_EXPERIMENTAL)
+  message("Experimental features enabled")
 endif()
 
 # cmake modules
@@ -225,6 +230,9 @@ if(MYMPD_EMBEDDED_ASSETS)
   endif()
   if(EXISTS "${PROJECT_BINARY_DIR}/htdocs/assets/i18n/zh-Hans.json.gz")
     set(I18N_zh_Hans "ON")
+  endif()
+  if(EXISTS "${PROJECT_BINARY_DIR}/htdocs/assets/i18n/zh-Hant.json.gz")
+    set(I18N_zh_Hant "ON")
   endif()
 endif()
 
@@ -420,6 +428,7 @@ endif()
 # install
 install(TARGETS mympd DESTINATION ${CMAKE_INSTALL_FULL_BINDIR})
 install(SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/cmake/Install.cmake)
+install(PROGRAMS ${PROJECT_SOURCE_DIR}/cli_tools/mympd-config/mympd-config DESTINATION ${CMAKE_INSTALL_FULL_BINDIR})
 
 # test
 if(MYMPD_BUILD_TESTING)

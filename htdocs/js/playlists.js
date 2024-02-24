@@ -1,6 +1,6 @@
 "use strict";
 // SPDX-License-Identifier: GPL-3.0-or-later
-// myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+// myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
 /** @module playlists_js */
@@ -76,11 +76,11 @@ function playlistValidateDedupCheckError(obj) {
  */
 //eslint-disable-next-line no-unused-vars
 function removeFromPlaylistPositions(plist, positions) {
+    setUpdateViewId('BrowsePlaylistDetailList');
     sendAPI("MYMPD_API_PLAYLIST_CONTENT_RM_POSITIONS", {
         "plist": plist,
         "positions": positions
     }, null, false);
-    setUpdateViewId('BrowsePlaylistDetailList');
 }
 
 /**
@@ -92,12 +92,12 @@ function removeFromPlaylistPositions(plist, positions) {
  */
 //eslint-disable-next-line no-unused-vars
 function removeFromPlaylistRange(plist, start, end) {
+    setUpdateViewId('BrowsePlaylistDetailList');
     sendAPI("MYMPD_API_PLAYLIST_CONTENT_RM_RANGE", {
         "plist": plist,
         "start": start,
         "end": end
     }, null, false);
-    setUpdateViewId('BrowsePlaylistDetailList');
 }
 
 /**
@@ -130,6 +130,9 @@ function filterPlaylistsSelect(type, elId, searchstr, selectedPlaylist) {
  * @returns {void}
  */
 function populatePlaylistSelect(obj, playlistSelectId, selectedPlaylist) {
+    if (selectedPlaylist === undefined) {
+        selectedPlaylist = '';
+    }
     const selectEl = elGetById(playlistSelectId);
     //set input element values
     selectEl.value = selectedPlaylist === 'Database'

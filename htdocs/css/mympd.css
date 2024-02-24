@@ -1,6 +1,6 @@
 /*
  SPDX-License-Identifier: GPL-3.0-or-later
- myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+ myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
  https://github.com/jcorporation/mympd
 */
 
@@ -287,7 +287,13 @@ div > .albumartbg {
 }
 
 div.footerCounter {
-  width: 7rem;
+  min-width: 8rem;
+  max-width: 12rem;
+}
+
+#footerAudioFormat {
+  font-size: 80%;
+  width: 12rem;
 }
 
 #footerCover {
@@ -613,9 +619,12 @@ button.mi::after {
 }
 
 .form-range::-webkit-slider-thumb,
-.form-range::-webkit-slider-thumb:active,
+.form-range::-webkit-slider-thumb:active {
+  background-color: var(--mympd-highlightcolor);
+}
+
 .form-range::-moz-range-thumb,
-.form-range::-moz-range-thumb:active{
+.form-range::-moz-range-thumb:active {
   background-color: var(--mympd-highlightcolor);
 }
 
@@ -776,6 +785,20 @@ button.active > a {
   z-index: 2;
   padding: 0.25rem 1.25rem;
   background: transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23FFF'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") center/1em auto no-repeat;
+}
+
+.top-alert-dismissible .btn-retry {
+  position: absolute;
+  top: 0.25rem;
+  right: 0;
+  z-index: 2;
+  padding: 0 1.25rem;
+  border: 0;
+  box-sizing: content-box;
+  width: 1em;
+  height: 1em;
+  color: var(--bs-danger-text-emphasis);
+  background: transparent;
 }
 
 .alert-dismissible .btn-close {

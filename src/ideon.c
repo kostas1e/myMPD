@@ -81,50 +81,10 @@ void ideon_dc_handle(int *dc) // TODO: change return type to bool
     pthread_mutex_unlock(&lock);
 }
 
-// int ideon_settings_set(struct t_mympd_state *mympd_state, bool mpd_conf_changed, bool ns_changed, bool airplay_changed,
-//                        bool roon_changed, bool spotify_changed)
-int ideon_settings_set(struct t_mympd_state *mympd_state, struct t_mympd_state *old_mympd_state)
+int ideon_settings_set(struct t_mympd_state *mympd_state, bool mpd_conf_changed, bool ns_changed, bool airplay_changed, bool roon_changed, bool spotify_changed)
 {
     // TODO: error checking, revert to old values on fail
     int dc = 0;
-
-    // FIXME
-    bool mpd_conf_changed = false;
-    bool ns_changed = false;
-    bool airplay_changed = false;
-    bool roon_changed = false;
-    bool spotify_changed = false;
-
-    if (mympd_state->mixer_type != old_mympd_state->mixer_type || mympd_state->dop != old_mympd_state->dop) {
-        mpd_conf_changed = true;
-    }
-    if (mympd_state->ns_type != old_mympd_state->ns_type) {
-        ns_changed = true;
-    }
-    if (mympd_state->ns_server != old_mympd_state->ns_server) {
-        ns_changed = true;
-    }
-    if (mympd_state->ns_share != old_mympd_state->ns_share) {
-        ns_changed = true;
-    }
-    if (mympd_state->samba_version != old_mympd_state->samba_version) {
-        ns_changed = true;
-    }
-    if (mympd_state->ns_username != old_mympd_state->ns_password) {
-        ns_changed = true;
-    }
-    if (mympd_state->ns_password != old_mympd_state->ns_password) {
-        ns_changed = true;
-    }
-    if (mympd_state->airplay != old_mympd_state->airplay) {
-        airplay_changed = true;
-    }
-    if (mympd_state->roon != old_mympd_state->roon) {
-        roon_changed = true;
-    }
-    if (mympd_state->spotify != old_mympd_state->spotify) {
-        spotify_changed = true;
-    }
 
     if (ns_changed == true)
     {
@@ -162,6 +122,7 @@ int ideon_settings_set(struct t_mympd_state *mympd_state, struct t_mympd_state *
 
     if (airplay_changed == true)
     {
+        MYMPD_LOG_DEBUG(NULL, "airplay changed");
         if (mympd_state->airplay == true)
         {
             syscmd("systemctl enable shairport-sync && systemctl start shairport-sync");
@@ -174,6 +135,7 @@ int ideon_settings_set(struct t_mympd_state *mympd_state, struct t_mympd_state *
 
     if (roon_changed == true)
     {
+        MYMPD_LOG_DEBUG(NULL, "roon changed");
         if (mympd_state->roon == true)
         {
             syscmd("systemctl enable roonbridge && systemctl start roonbridge");
@@ -186,6 +148,7 @@ int ideon_settings_set(struct t_mympd_state *mympd_state, struct t_mympd_state *
 
     if (spotify_changed == true)
     {
+        MYMPD_LOG_DEBUG(NULL, "spotify changed");
         if (mympd_state->spotify == true)
         {
             syscmd("systemctl enable spotifyd && systemctl start spotifyd");
@@ -199,7 +162,7 @@ int ideon_settings_set(struct t_mympd_state *mympd_state, struct t_mympd_state *
     return dc;
 }
 
-sds ideon_ns_server_list(sds buffer, enum mympd_cmd_ids cmd_id, long request_id)
+sds ideon_ns_server_list(sds buffer, enum mympd_cmd_ids cmd_id, unsigned request_id)
 {
     FILE *fp = popen("/usr/bin/nmblookup -S '*' | grep \"<00>\" | awk '{print $1}'", "r");
     // returns three lines per server found - 1st line ip address 2nd line name 3rd line workgroup
@@ -246,8 +209,8 @@ sds ideon_ns_server_list(sds buffer, enum mympd_cmd_ids cmd_id, long request_id)
             buffer = sdscat(buffer, "}");
         }
         buffer = sdscat(buffer, "],");
-        buffer = tojson_long(buffer, "totalEntities", entity_count, true);
-        buffer = tojson_long(buffer, "returnedEntities", entity_count, false);
+        buffer = tojson_uint(buffer, "totalEntities", entity_count, true);
+        buffer = tojson_uint(buffer, "returnedEntities", entity_count, false);
         buffer = jsonrpc_end(buffer);
         if (line != NULL)
         {
@@ -261,7 +224,7 @@ sds ideon_ns_server_list(sds buffer, enum mympd_cmd_ids cmd_id, long request_id)
     return buffer;
 }
 
-sds ideon_update_check(sds buffer, enum mympd_cmd_ids cmd_id, long request_id)
+sds ideon_update_check(sds buffer, enum mympd_cmd_ids cmd_id, unsigned request_id)
 {
     sds latest_version = web_version_get(sdsempty());
     sdstrim(latest_version, " \n");
@@ -288,7 +251,7 @@ sds ideon_update_check(sds buffer, enum mympd_cmd_ids cmd_id, long request_id)
     return buffer;
 }
 
-sds ideon_update_install(sds buffer, enum mympd_cmd_ids cmd_id, long request_id)
+sds ideon_update_install(sds buffer, enum mympd_cmd_ids cmd_id, unsigned request_id)
 {
     bool service = syscmd("systemctl start ideon_update");
 

@@ -1,6 +1,6 @@
 "use strict";
 // SPDX-License-Identifier: GPL-3.0-or-later
-// myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+// myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
 /** @module websocket_js */
@@ -19,8 +19,11 @@ function getWebsocketState() {
  * @returns {void}
  */
 function webSocketConnect() {
-    if (getWebsocketState() === true)
-    {
+    if (websocketKeepAliveTimer === null) {
+        websocketKeepAliveTimer = setInterval(websocketKeepAlive, 30000);
+    }
+
+    if (getWebsocketState() === true) {
         logDebug('Socket already connected');
         return;
     }
@@ -44,10 +47,7 @@ function webSocketConnect() {
     socket.onopen = function() {
         logDebug('Websocket is connected');
         socket.send('id:' + jsonrpcClientId);
-        if (websocketKeepAliveTimer === null) {
-            websocketKeepAliveTimer = setInterval(websocketKeepAlive, 30000);
-            websocketLastPong = getTimestamp();
-        }
+        websocketLastPong = getTimestamp();
     };
 
     socket.onmessage = function(msg) {
@@ -244,15 +244,15 @@ function webSocketClose() {
     }
     if (socket !== null) {
         //disable onclose handler first
-        socket.onclose = function() {};
         try {
+            socket.onclose = function() {};
             socket.close();
         }
         catch(error) {
             logError(error);
         }
-        socket = null;
     }
+    socket = null;
 }
 
 /**
@@ -261,7 +261,7 @@ function webSocketClose() {
  * @returns {void}
  */
 function websocketKeepAlive() {
-    const awaitedTime = getTimestamp() - 65;
+    const awaitedTime = getTimestamp() - 32;
     if (websocketLastPong <  awaitedTime) {
         // stale websocket connection
         logError('Stale websocket connection, reconnecting');
@@ -270,19 +270,22 @@ function websocketKeepAlive() {
         webSocketConnect();
     }
     else if (getWebsocketState() === true) {
+        // websocket is connected
         try {
             socket.send('ping');
         }
         catch(error) {
-            showNotification(tn('myMPD connection failed, trying to reconnect'), 'general', 'error');
+            toggleAlert('alertMympdState', true, tn('myMPD connection failed, trying to reconnect'));
             logError(error);
             webSocketClose();
             webSocketConnect();
         }
     }
     else {
+        // websocket is not connected
         logDebug('Reconnecting websocket');
         toggleAlert('alertMympdState', true, tn('myMPD connection failed, trying to reconnect'));
+        webSocketClose();
         webSocketConnect();
     }
 }

@@ -1,6 +1,6 @@
 "use strict";
 // SPDX-License-Identifier: GPL-3.0-or-later
-// myMPD (c) 2018-2023 Juergen Mang <mail@jcgames.de>
+// myMPD (c) 2018-2024 Juergen Mang <mail@jcgames.de>
 // https://github.com/jcorporation/mympd
 
 /** @module init_js */
@@ -293,12 +293,10 @@ function appInit() {
     }
     //update state on window focus - browser pauses javascript
     window.addEventListener('focus', function() {
-        logDebug('Browser tab gots the focus -> update player state');
-        getState();
-        if (app.id === 'QueueCurrent') {
-            execSearchExpression(elGetById('QueueCurrentSearchStr').value);
-        }
-        websocketKeepAlive();
+        onShow();
+    }, false);
+    window.addEventListener('pageshow', function() {
+        onShow();
     }, false);
     //global keymap
     document.addEventListener('keydown', function(event) {
@@ -378,6 +376,19 @@ function appInit() {
 
     //ideon
     checkInit();
+}
+
+/**
+ * Checks the connection state and reconnects the websocket on demand
+ * @returns {void}
+ */
+function onShow() {
+    logDebug('Browser focused, update player state');
+    getState();
+    if (app.id === 'QueueCurrent') {
+        execSearchExpression(elGetById('QueueCurrentSearchStr').value);
+    }
+    websocketKeepAlive();
 }
 
 /**
