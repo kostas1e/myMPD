@@ -1301,6 +1301,10 @@ h4.offcanvas-title-stream::before {
   min-width: 12rem;
 }
 
+div#alertIdeonUpdateState::before {
+  content: "autorenew";
+}
+
 /* TODO replace with bs d-none class */
 .hide {
   display: none !important;

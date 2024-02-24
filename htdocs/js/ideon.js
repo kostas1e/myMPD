@@ -117,18 +117,20 @@ function parseUpdateCheck(obj) {
 }
 
 function installUpdate() {
-    sendAPI("MYMPD_API_IDEON_UPDATE_INSTALL", {}, parseUpdateInstall, false);
-
-    elGetById('updateMsg').innerText = 'System will automatically reboot after installation.';
-
     btnWaiting(elGetById('btnInstallUpdate'), true);
+    sendAPI("MYMPD_API_IDEON_UPDATE_INSTALL", {}, parseUpdateInstall, false);
+    elGetById('updateMsg').innerText = 'System will automatically reboot after installation.';
+    showNotification(tn('Ideon update started'), 'general', 'info');
+    toggleAlert('alertIdeonUpdateState', true, tn('Updating'));
 }
 
 function parseUpdateInstall(obj) {
+    btnWaiting(elGetById('btnInstallUpdate'), false);
     if (obj.result.service === false) {
         elGetById('updateMsg').innerText = 'Update error, please try again later.';
-        btnWaiting(elGetById('btnInstallUpdate'), false);
+        showNotification(tn('Ideon update failed'), 'general', 'error');
     }
+    toggleAlert('alertIdeonUpdateState', false, '');
 }
 
 function parseIdeonSettings() {

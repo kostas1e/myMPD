@@ -82,6 +82,10 @@ function toggleAlert(alertBoxId, state, msg) {
                 }, false);
                 break;
             }
+            case 'alertIdeonUpdateState': {
+                alertBoxEl.classList.add('alert-success');
+                break;
+            }
             default:
                 alertBoxEl.classList.add('alert-danger');
         }
