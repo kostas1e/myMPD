@@ -1,13 +1,13 @@
 "use strict";
 
 function initModalIdeonSettings() {
-    document.getElementById('modalIdeonSettings').addEventListener('shown.bs.modal', function () {
+    elGetById('modalIdeonSettings').addEventListener('shown.bs.modal', function () {
         // TODO pass callback to parse only ideon settings
         getSettings();
-        removeIsInvalid(document.getElementById('modalIdeonSettings'));
+        removeIsInvalid(elGetById('modalIdeonSettings'));
     });
 
-    // document.getElementById('modalIdeonSettings').addEventListener('keydown', function (event) {
+    // elGetById('modalIdeonSettings').addEventListener('keydown', function (event) {
     //     if (event.key === 'Enter') {
     //         saveIdeonSettings();
     //         event.stopPropagation();
@@ -15,47 +15,47 @@ function initModalIdeonSettings() {
     //     }
     // });
 
-    document.getElementById('selectNsType').addEventListener('change', function () {
+    elGetById('selectNsType').addEventListener('change', function () {
         const value = this.options[this.selectedIndex].value;
         if (value === '0') {
-            document.getElementById('nsServerShare').classList.add('hide');
-            document.getElementById('sambaVersion').classList.add('hide');
-            document.getElementById('nsCredentials').classList.add('hide');
-            document.getElementById('inputNsServer').value = '';
-            document.getElementById('inputNsShare').value = '';
-            document.getElementById('inputNsUsername').value = '';
-            document.getElementById('inputNsPassword').value = '';
+            elGetById('nsServerShare').classList.add('hide');
+            elGetById('sambaVersion').classList.add('hide');
+            elGetById('nsCredentials').classList.add('hide');
+            elGetById('inputNsServer').value = '';
+            elGetById('inputNsShare').value = '';
+            elGetById('inputNsUsername').value = '';
+            elGetById('inputNsPassword').value = '';
         }
         else if (value === '2') {
-            document.getElementById('nsServerShare').classList.remove('hide');
-            document.getElementById('sambaVersion').classList.remove('hide');
-            document.getElementById('nsCredentials').classList.remove('hide');
+            elGetById('nsServerShare').classList.remove('hide');
+            elGetById('sambaVersion').classList.remove('hide');
+            elGetById('nsCredentials').classList.remove('hide');
         }
         else {
-            document.getElementById('nsServerShare').classList.remove('hide');
+            elGetById('nsServerShare').classList.remove('hide');
             if (value === '1') {
-                document.getElementById('sambaVersion').classList.remove('hide');
+                elGetById('sambaVersion').classList.remove('hide');
             }
             else {
-                document.getElementById('sambaVersion').classList.add('hide');
+                elGetById('sambaVersion').classList.add('hide');
             }
-            document.getElementById('nsCredentials').classList.add('hide');
-            document.getElementById('inputNsUsername').value = '';
-            document.getElementById('inputNsPassword').value = '';
+            elGetById('nsCredentials').classList.add('hide');
+            elGetById('inputNsUsername').value = '';
+            elGetById('inputNsPassword').value = '';
         }
     }, false);
 
-    document.getElementById('btnDropdownServers').parentNode.addEventListener('show.bs.dropdown', function () {
+    elGetById('btnDropdownServers').parentNode.addEventListener('show.bs.dropdown', function () {
         sendAPI("MYMPD_API_IDEON_NS_SERVER_LIST", {}, parseListServers, true);
     }, false);
 
-    document.getElementById('dropdownServers').addEventListener('click', function (event) {
+    elGetById('dropdownServers').addEventListener('click', function (event) {
         event.preventDefault();
         const target = event.target.nodeName === 'A'
             ? event.target
             : event.target.parentNode;
         if (target.nodeName === 'A') {
-            document.getElementById('inputNsServer').value = getData(target, 'value');
+            elGetById('inputNsServer').value = getData(target, 'value');
             uiElements.dropdownServers.hide();
         }
     }, false);
@@ -83,84 +83,84 @@ function parseListServers(obj) {
     const id = settings.init !== true ? 'dropdownServers1' : 'dropdownServers';
     // TODO replace
     // const id = document.querySelectorAll('#modalIdeonSetup.show').length > 0 ? 'dropdownServers1' : 'dropdownServers';
-    document.getElementById(id).innerHTML = list;
+    elGetById(id).innerHTML = list;
 }
 
 function checkUpdate() {
     sendAPI("MYMPD_API_IDEON_UPDATE_CHECK", {}, parseUpdateCheck, false);
 
-    btnWaiting(document.getElementById('btnCheckUpdate'), true);
+    btnWaiting(elGetById('btnCheckUpdate'), true);
 }
 
 function parseUpdateCheck(obj) {
-    document.getElementById('currentVersion').innerText = obj.result.currentVersion;
-    document.getElementById('latestVersion').innerText = obj.result.latestVersion;
+    elGetById('currentVersion').innerText = obj.result.currentVersion;
+    elGetById('latestVersion').innerText = obj.result.latestVersion;
 
     if (obj.result.latestVersion !== '') {
         if (obj.result.updateAvailable === true) {
-            document.getElementById('lblInstallUpdate').innerText = 'New version available.';
-            document.getElementById('btnInstallUpdate').classList.remove('hide');
+            elGetById('lblInstallUpdate').innerText = 'New version available.';
+            elGetById('btnInstallUpdate').classList.remove('hide');
         }
         else {
-            document.getElementById('lblInstallUpdate').innerText = 'System is up to date.';
-            document.getElementById('btnInstallUpdate').classList.add('hide');
+            elGetById('lblInstallUpdate').innerText = 'System is up to date.';
+            elGetById('btnInstallUpdate').classList.add('hide');
         }
-        document.getElementById('updateMsg').innerText = '';
+        elGetById('updateMsg').innerText = '';
     }
     else {
-        document.getElementById('lblInstallUpdate').innerText = '';
-        document.getElementById('btnInstallUpdate').classList.add('hide');
-        document.getElementById('updateMsg').innerText = 'Cannot get latest version, please try again later.';
+        elGetById('lblInstallUpdate').innerText = '';
+        elGetById('btnInstallUpdate').classList.add('hide');
+        elGetById('updateMsg').innerText = 'Cannot get latest version, please try again later.';
     }
 
-    btnWaiting(document.getElementById('btnCheckUpdate'), false);
+    btnWaiting(elGetById('btnCheckUpdate'), false);
 }
 
 function installUpdate() {
     sendAPI("MYMPD_API_IDEON_UPDATE_INSTALL", {}, parseUpdateInstall, false);
 
-    document.getElementById('updateMsg').innerText = 'System will automatically reboot after installation.';
+    elGetById('updateMsg').innerText = 'System will automatically reboot after installation.';
 
-    btnWaiting(document.getElementById('btnInstallUpdate'), true);
+    btnWaiting(elGetById('btnInstallUpdate'), true);
 }
 
 function parseUpdateInstall(obj) {
     if (obj.result.service === false) {
-        document.getElementById('updateMsg').innerText = 'Update error, please try again later.';
-        btnWaiting(document.getElementById('btnInstallUpdate'), false);
+        elGetById('updateMsg').innerText = 'Update error, please try again later.';
+        btnWaiting(elGetById('btnInstallUpdate'), false);
     }
 }
 
 function parseIdeonSettings() {
-    document.getElementById('selectMixerType').value = settings.mixerType;
+    elGetById('selectMixerType').value = settings.mixerType;
     toggleBtnChkId('btnDop', settings.dop);
 
-    document.getElementById('selectNsType').value = settings.nsType;
-    document.getElementById('inputNsServer').value = settings.nsServer;
-    document.getElementById('inputNsShare').value = settings.nsShare;
-    document.getElementById('selectSambaVersion').value = settings.sambaVersion;
-    document.getElementById('inputNsUsername').value = settings.nsUsername;
-    document.getElementById('inputNsPassword').value = settings.nsPassword;
+    elGetById('selectNsType').value = settings.nsType;
+    elGetById('inputNsServer').value = settings.nsServer;
+    elGetById('inputNsShare').value = settings.nsShare;
+    elGetById('selectSambaVersion').value = settings.sambaVersion;
+    elGetById('inputNsUsername').value = settings.nsUsername;
+    elGetById('inputNsPassword').value = settings.nsPassword;
 
     if (settings.nsType === 0) {
-        document.getElementById('nsServerShare').classList.add('hide');
-        document.getElementById('sambaVersion').classList.add('hide');
-        document.getElementById('nsCredentials').classList.add('hide');
+        elGetById('nsServerShare').classList.add('hide');
+        elGetById('sambaVersion').classList.add('hide');
+        elGetById('nsCredentials').classList.add('hide');
     }
     else if (settings.nsType === 2) {
-        document.getElementById('nsServerShare').classList.remove('hide');
-        document.getElementById('sambaVersion').classList.remove('hide');
-        document.getElementById('nsCredentials').classList.remove('hide');
+        elGetById('nsServerShare').classList.remove('hide');
+        elGetById('sambaVersion').classList.remove('hide');
+        elGetById('nsCredentials').classList.remove('hide');
     }
     else {
-        document.getElementById('nsServerShare').classList.remove('hide');
+        elGetById('nsServerShare').classList.remove('hide');
         if (settings.nsType === 1) {
-            document.getElementById('sambaVersion').classList.remove('hide');
+            elGetById('sambaVersion').classList.remove('hide');
         }
         else {
-            document.getElementById('sambaVersion').classList.add('hide');
+            elGetById('sambaVersion').classList.add('hide');
         }
-        document.getElementById('nsCredentials').classList.add('hide');
+        elGetById('nsCredentials').classList.add('hide');
     }
 
     toggleBtnChkId('btnAirplay', settings.airplay);
@@ -172,12 +172,12 @@ function saveIdeonSettings() {
     // TODO use cleanupModalId, formToJson, modalClose, btnWaiting
     let formOK = true;
 
-    const selectNsType = document.getElementById('selectNsType');
+    const selectNsType = elGetById('selectNsType');
     const selectNsTypeValue = selectNsType.options[selectNsType.selectedIndex].value;
-    const inputNsServer = document.getElementById('inputNsServer');
-    const inputNsShare = document.getElementById('inputNsShare');
-    const inputNsUsername = document.getElementById('inputNsUsername');
-    const inputNsPassword = document.getElementById('inputNsPassword');
+    const inputNsServer = elGetById('inputNsServer');
+    const inputNsShare = elGetById('inputNsShare');
+    const inputNsUsername = elGetById('inputNsUsername');
+    const inputNsPassword = elGetById('inputNsPassword');
 
     // TODO use new validate methods
     if (selectNsTypeValue !== '0') {
@@ -195,20 +195,20 @@ function saveIdeonSettings() {
     }
 
     if (formOK === true) {
-        const selectMixerType = document.getElementById('selectMixerType');
-        const selectSambaVersion = document.getElementById('selectSambaVersion');
+        const selectMixerType = elGetById('selectMixerType');
+        const selectSambaVersion = elGetById('selectSambaVersion');
         sendAPI("MYMPD_API_SETTINGS_SET", {
             "mixerType": selectMixerType.options[selectMixerType.selectedIndex].value,
-            "dop": (document.getElementById('btnDop').classList.contains('active') ? true : false),
+            "dop": (elGetById('btnDop').classList.contains('active') ? true : false),
             "nsType": parseInt(selectNsTypeValue),
             "nsServer": inputNsServer.value,
             "nsShare": inputNsShare.value,
             "sambaVersion": selectSambaVersion.options[selectSambaVersion.selectedIndex].value,
             "nsUsername": inputNsUsername.value,
             "nsPassword": inputNsPassword.value,
-            "airplay": (document.getElementById('btnAirplay').classList.contains('active') ? true : false),
-            "roon": (document.getElementById('btnRoon').classList.contains('active') ? true : false),
-            "spotify": (document.getElementById('btnSpotify').classList.contains('active') ? true : false)
+            "airplay": (elGetById('btnAirplay').classList.contains('active') ? true : false),
+            "roon": (elGetById('btnRoon').classList.contains('active') ? true : false),
+            "spotify": (elGetById('btnSpotify').classList.contains('active') ? true : false)
         }, getSettings, true);
         // TODO add spinner, support apply
         uiElements.modalIdeonSettings.hide();
