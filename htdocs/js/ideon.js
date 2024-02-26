@@ -62,28 +62,37 @@ function initModalIdeonSettings() {
 }
 
 /**
- * Parses the MYMPD_API_IDEON_NS_SERVER_LIST
+ * Parses the MYMPD_API_IDEON_NS_SERVER_LIST response
  * @param {object} obj jsonrpc response object
+ * @returns {void}
  */
 function parseListServers(obj) {
-    let list = '';
+    const serverDropdownId = document.querySelectorAll('#modalIdeonSetup.show').length > 0 ? 'dropdownServers1' : 'dropdownServers';
+    const serverDropdown = elGetById(serverDropdownId);
+    elClear(serverDropdown);
+
     if (obj.error) {
-        list = '<div class="list-group-item"><span class="mi">error_outline</span> ' + tn(obj.error.message) + '</div>';
+        serverDropdown.appendChild(
+            elCreateTextTn('div', {"class": ["list-group-item", "alert", "alert-danger"]}, obj.error.message, obj.error.data)
+        );
+        return;
     }
-    else {
-        for (let i = 0; i < obj.result.returnedEntities; i++) {
-            list += '<a href="#" class="list-group-item list-group-item-action" data-value="' + obj.result.data[i].ipAddress + '">' +
-                obj.result.data[i].ipAddress + '<br/><small>' + obj.result.data[i].name + '</small></a>';
-        }
-        if (obj.result.returnedEntities === 0) {
-            list = '<div class="list-group-item"><span class="mi">error_outline</span>&nbsp;' + tn('Empty list') + '</div>';
-        }
+    if (obj.result.returnedEntities === 0) {
+        serverDropdown.appendChild(
+            elCreateTextTn('div', {"class": ["list-group-item", "alert", "alert-secondary"]}, 'Empty list')
+        );
+        return;
     }
 
-    const id = settings.init !== true ? 'dropdownServers1' : 'dropdownServers';
-    // TODO replace
-    // const id = document.querySelectorAll('#modalIdeonSetup.show').length > 0 ? 'dropdownServers1' : 'dropdownServers';
-    elGetById(id).innerHTML = list;
+    for (let i = 0; i < obj.result.returnedEntities; i++) {
+        const a = elCreateNodes('a', {"href": "#", "class": ["list-group-item", "list-group-item-action"]}, [
+            elCreateText('span', {}, obj.result.data[i].ipAddress),
+            elCreateEmpty('br', {}),
+            elCreateText('small', {}, obj.result.data[i].name)
+        ]);
+        setData(a, 'value', obj.result.data[i].ipAddress);
+        serverDropdown.appendChild(a);
+    }
 }
 
 function checkUpdate() {
