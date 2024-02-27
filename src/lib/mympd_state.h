@@ -273,9 +273,10 @@ struct t_mympd_state {
     sds ns_username;
     sds ns_password;
     bool airplay;
-    bool roon;
+    bool roon; // TODO roonbridge
+    bool roonserver;
     bool spotify;
-    bool init; // TODO ideon_init / first startup
+    bool init; // TODO ideon_inited / first startup
 };
 
 /**

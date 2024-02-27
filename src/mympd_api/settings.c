@@ -567,6 +567,18 @@ bool mympd_api_settings_set(const char *path, sds key, sds value, int vtype, val
             return false;
         }
     }
+    else if (strcmp(key, "roonServer") == 0) {
+        if (vtype == MJSON_TOK_TRUE) {
+            mympd_state->roonserver = true;
+        }
+        else if (vtype == MJSON_TOK_FALSE) {
+            mympd_state->roonserver = false;
+        }
+        else {
+            set_invalid_value(error, path, key, value, "Must be a boolean value");
+            return false;
+        }
+    }
     else if (strcmp(key, "spotify") == 0) {
         if (vtype == MJSON_TOK_TRUE) {
             mympd_state->spotify = true;
@@ -979,6 +991,7 @@ void mympd_api_settings_statefiles_global_read(struct t_mympd_state *mympd_state
     mympd_state->ns_password = state_file_rw_string_sds(workdir, DIR_WORK_STATE, "ns_password", mympd_state->ns_password, vcb_isname, true);
     mympd_state->airplay = state_file_rw_bool(workdir, DIR_WORK_STATE, "airplay", mympd_state->airplay, true);
     mympd_state->roon = state_file_rw_bool(workdir, DIR_WORK_STATE, "roon", mympd_state->roon, true);
+    mympd_state->roonserver = state_file_rw_bool(workdir, DIR_WORK_STATE, "roonserver", mympd_state->roonserver, true);
     mympd_state->spotify = state_file_rw_bool(workdir, DIR_WORK_STATE, "spotify", mympd_state->spotify, true);
     mympd_state->init = state_file_rw_bool(workdir, DIR_WORK_STATE, "init", mympd_state->init, true);
 
@@ -1095,6 +1108,7 @@ sds mympd_api_settings_get(struct t_mympd_state *mympd_state, struct t_partition
     buffer = tojson_char(buffer, "nsPassword", mympd_state->ns_password, true);
     buffer = tojson_bool(buffer, "airplay", mympd_state->airplay, true);
     buffer = tojson_bool(buffer, "roon", mympd_state->roon, true);
+    buffer = tojson_bool(buffer, "roonserver", mympd_state->roonserver, true);
     buffer = tojson_bool(buffer, "spotify", mympd_state->spotify, true);
     buffer = tojson_bool(buffer, "init", mympd_state->init, true);
     //partition specific settings

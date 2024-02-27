@@ -176,6 +176,7 @@ function parseIdeonSettings() {
 
     toggleBtnChkId('btnAirplay', settings.airplay);
     toggleBtnChkId('btnRoon', settings.roon);
+    toggleBtnChkId('btnRoonServer', settings.roonserver);
     toggleBtnChkId('btnSpotify', settings.spotify);
 }
 
@@ -219,6 +220,7 @@ function saveIdeonSettings() {
             "nsPassword": inputNsPassword.value,
             "airplay": (elGetById('btnAirplay').classList.contains('active') ? true : false),
             "roon": (elGetById('btnRoon').classList.contains('active') ? true : false),
+            "roonServer": (elGetById('btnRoonServer').classList.contains('active') ? true : false),
             "spotify": (elGetById('btnSpotify').classList.contains('active') ? true : false)
         }, getSettings, true);
         // TODO add spinner, support apply

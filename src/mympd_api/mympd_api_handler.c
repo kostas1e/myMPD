@@ -404,6 +404,7 @@ void mympd_api_handler(struct t_mympd_state *mympd_state, struct t_partition_sta
             sds old_ns_settings = sdscatfmt(sdsempty(), "%i%S%S%S%S%S", mympd_state->ns_type, mympd_state->ns_server, mympd_state->ns_share, mympd_state->samba_version, mympd_state->ns_username, mympd_state->ns_password);
             bool old_airplay = mympd_state->airplay;
             bool old_roon = mympd_state->roon;
+            bool old_roonserver = mympd_state->roonserver;
             bool old_spotify = mympd_state->spotify;
             if (json_iterate_object(request->data, "$.params", mympd_api_settings_set, mympd_state, NULL, 1000, &parse_error) == true) {
                 // FIXME
@@ -413,8 +414,9 @@ void mympd_api_handler(struct t_mympd_state *mympd_state, struct t_partition_sta
                 bool ns_changed = (strcmp(old_ns_settings, new_ns_settings) != 0) ? true : false;
                 bool airplay_changed = (old_airplay != mympd_state->airplay) ? true : false;
                 bool roon_changed = (old_roon != mympd_state->roon) ? true : false;
+                bool roonserver_changed = (old_roonserver != mympd_state->roonserver) ? true : false;
                 bool spotify_changed = (old_spotify != mympd_state->spotify) ? true : false;
-                int dc = ideon_settings_set(mympd_state, mpd_conf_changed, ns_changed, airplay_changed, roon_changed, spotify_changed);
+                int dc = ideon_settings_set(mympd_state, mpd_conf_changed, ns_changed, airplay_changed, roon_changed, roonserver_changed, spotify_changed);
                 mympd_state->mpd_state->dc = dc;
                 if (dc != 0) {
                     MYMPD_LOG_DEBUG(partition_state->name, "Ideon settings have changed (%d), disconnecting", dc);

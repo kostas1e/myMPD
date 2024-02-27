@@ -81,7 +81,7 @@ void ideon_dc_handle(int *dc) // TODO: change return type to bool
     pthread_mutex_unlock(&lock);
 }
 
-int ideon_settings_set(struct t_mympd_state *mympd_state, bool mpd_conf_changed, bool ns_changed, bool airplay_changed, bool roon_changed, bool spotify_changed)
+int ideon_settings_set(struct t_mympd_state *mympd_state, bool mpd_conf_changed, bool ns_changed, bool airplay_changed, bool roon_changed, bool roonserver_changed, bool spotify_changed)
 {
     // TODO: error checking, revert to old values on fail
     int dc = 0;
@@ -143,6 +143,19 @@ int ideon_settings_set(struct t_mympd_state *mympd_state, bool mpd_conf_changed,
         else
         {
             syscmd("systemctl disable roonbridge && systemctl stop roonbridge");
+        }
+    }
+
+    if (roonserver_changed == true)
+    {
+        MYMPD_LOG_DEBUG(NULL, "roonserver changed");
+        if (mympd_state->roon == true)
+        {
+            syscmd("systemctl enable roonserver && systemctl start roonserver");
+        }
+        else
+        {
+            syscmd("systemctl disable roonserver && systemctl stop roonserver");
         }
     }
 
