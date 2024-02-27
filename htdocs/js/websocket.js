@@ -85,7 +85,7 @@ function webSocketConnect() {
         // notification
         switch (obj.method) {
             case 'welcome':
-                showNotification(tn('Connected to myMPD') + ': ' +
+                showNotification(tn('Connected to Ideon') + ': ' +
                     tn('Partition') + ' ' + localSettings.partition, 'general', 'info');
                 getState();
                 if (session.token !== '') {
@@ -114,7 +114,7 @@ function webSocketConnect() {
                 break;
             case 'mpd_connected':
                 //MPD connection established get state and settings
-                showNotification(tn('Connected to MPD'), 'general', 'info');
+                showNotification(tn('Connected to Streamer'), 'general', 'info');
                 getState();
                 getSettings(parseSettings);
                 break;
@@ -126,7 +126,7 @@ function webSocketConnect() {
                 break;
             case 'update_started':
                 showNotification(tn('Database update started'), 'database', 'info');
-                toggleAlert('alertUpdateDBState', true, tn('Updating MPD database'));
+                toggleAlert('alertUpdateDBState', true, tn('Updating Streamer database'));
                 break;
             case 'update_database':
             case 'update_finished':
@@ -215,7 +215,7 @@ function webSocketConnect() {
             }
         }
         else {
-            showAppInitAlert(tn('myMPD connection closed'));
+            showAppInitAlert(tn('Ideon connection closed'));
         }
         socket = null;
     };
@@ -265,7 +265,7 @@ function websocketKeepAlive() {
     if (websocketLastPong <  awaitedTime) {
         // stale websocket connection
         logError('Stale websocket connection, reconnecting');
-        toggleAlert('alertMympdState', true, tn('myMPD connection failed, trying to reconnect'));
+        toggleAlert('alertMympdState', true, tn('Ideon connection failed, trying to reconnect'));
         webSocketClose();
         webSocketConnect();
     }
@@ -275,7 +275,7 @@ function websocketKeepAlive() {
             socket.send('ping');
         }
         catch(error) {
-            toggleAlert('alertMympdState', true, tn('myMPD connection failed, trying to reconnect'));
+            toggleAlert('alertMympdState', true, tn('Ideon connection failed, trying to reconnect'));
             logError(error);
             webSocketClose();
             webSocketConnect();
@@ -284,7 +284,7 @@ function websocketKeepAlive() {
     else {
         // websocket is not connected
         logDebug('Reconnecting websocket');
-        toggleAlert('alertMympdState', true, tn('myMPD connection failed, trying to reconnect'));
+        toggleAlert('alertMympdState', true, tn('Ideon connection failed, trying to reconnect'));
         webSocketClose();
         webSocketConnect();
     }

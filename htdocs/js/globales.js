@@ -141,7 +141,8 @@ const webradioDbPicsUri = 'https://jcorporation.github.io/webradiodb/db/pics/';
 const imageExtensions = ['webp', 'png', 'jpg', 'jpeg', 'svg', 'avif'];
 
 /** @type {string} */
-let locale = navigator.language || navigator.userLanguage;
+// let locale = navigator.language || navigator.userLanguage;
+let locale = 'en-US';
 
 const localeMap = {
     'de': 'de-DE',
@@ -799,16 +800,16 @@ const settingsWebuiFields = {
         "invalid": "Must be a valid filename"
     },
     "locale": {
-        "defaultValue": "default",
+        "defaultValue": "en-US",
         "inputType": "select",
         "title": "Locale",
         "form": "modalSettingsLocaleFrm",
         "onChange": "eventChangeLocale"
     },
     "startupView": {
-        "defaultValue": "Home",
+        "defaultValue": "Playback",
         "validValues": {
-            "Home": "Home",
+            // "Home": "Home",
             "Playback": "Playback",
             "Queue/Current": "Queue",
             "Queue/LastPlayed": "LastPlayed",
@@ -1490,8 +1491,8 @@ const keymap = {
         "p": {"order": 9, "cmd": "togglePlaymode", "options": ["repeat"], "desc": "Toggle repeat"},
         "i": {"order": 9, "cmd": "togglePlaymode", "options": ["single"], "desc": "Toggle single mode"},
     "modals": {"order": 200, "desc": "Dialogs"},
-        "A": {"order": 201, "cmd": "showAddToPlaylist", "options": ["stream", []], "desc": "Add stream"},
-        "C": {"order": 202, "cmd": "openModal", "options": ["modalConnection"], "desc": "Open MPD connection"},
+        // "A": {"order": 201, "cmd": "showAddToPlaylist", "options": ["stream", []], "desc": "Add stream"},
+        // "C": {"order": 202, "cmd": "openModal", "options": ["modalConnection"], "desc": "Open MPD connection"},
         "G": {"order": 207, "cmd": "openModal", "options": ["modalTrigger"], "desc": "Open trigger", "feature": "featTrigger"},
         "I": {"order": 207, "cmd": "openModal", "options": ["modalTimer"], "desc": "Open timer", "feature": "featTimer"},
         "L": {"order": 207, "cmd": "loginOrLogout", "options": [], "desc": "Login or logout", "feature": "featSession"},

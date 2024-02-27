@@ -826,7 +826,7 @@ static bool stickerdb_connect_mpd(struct t_stickerdb_state *stickerdb) {
     if (mpd_connection_get_error(stickerdb->conn) != MPD_ERROR_SUCCESS) {
         MYMPD_LOG_ERROR(stickerdb->name, "Connection: %s", mpd_connection_get_error_message(stickerdb->conn));
         sds buffer = jsonrpc_notify_phrase(sdsempty(), JSONRPC_FACILITY_MPD,
-            JSONRPC_SEVERITY_ERROR, "MPD connection error: %{error}", 2,
+            JSONRPC_SEVERITY_ERROR, "Streamer connection error: %{error}", 2,
             "error", mpd_connection_get_error_message(stickerdb->conn));
         ws_notify(buffer, MPD_PARTITION_ALL);
         FREE_SDS(buffer);
@@ -841,7 +841,7 @@ static bool stickerdb_connect_mpd(struct t_stickerdb_state *stickerdb) {
             MYMPD_LOG_ERROR(stickerdb->name, "MPD connection: %s", mpd_connection_get_error_message(stickerdb->conn));
             stickerdb->conn_state = MPD_FAILURE;
             sds buffer = jsonrpc_notify_phrase(sdsempty(), JSONRPC_FACILITY_MPD,
-                JSONRPC_SEVERITY_ERROR, "MPD connection error: %{error}", 2,
+                JSONRPC_SEVERITY_ERROR, "Streamer connection error: %{error}", 2,
                 "error", mpd_connection_get_error_message(stickerdb->conn));
             ws_notify(buffer, MPD_PARTITION_ALL);
             FREE_SDS(buffer);

@@ -147,7 +147,7 @@ function populateSettingsFrm() {
     bgImageInput.value = getBgImageText(settings.webuiSettings.bgImage);
 
     // home
-    elGetById('modalSettingsStartupViewInput').options[0].classList.add('featHome');
+    // elGetById('modalSettingsStartupViewInput').options[0].classList.add('featHome'); // Home option is removed from dropdown
 
     // theme
     toggleThemeInputs(settings.webuiSettings.theme);

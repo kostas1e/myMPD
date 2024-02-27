@@ -40,7 +40,7 @@ bool mpd_client_connect(struct t_partition_state *partition_state) {
     if (mpd_connection_get_error(partition_state->conn) != MPD_ERROR_SUCCESS) {
         MYMPD_LOG_ERROR(partition_state->name, "Connection: %s", mpd_connection_get_error_message(partition_state->conn));
         sds buffer = jsonrpc_notify_phrase(sdsempty(), JSONRPC_FACILITY_MPD,
-            JSONRPC_SEVERITY_ERROR, "MPD connection error: %{error}", 2,
+            JSONRPC_SEVERITY_ERROR, "Streamer connection error: %{error}", 2,
             "error", mpd_connection_get_error_message(partition_state->conn));
         ws_notify(buffer, partition_state->name);
         FREE_SDS(buffer);
@@ -55,7 +55,7 @@ bool mpd_client_connect(struct t_partition_state *partition_state) {
             MYMPD_LOG_ERROR(partition_state->name, "MPD connection: %s", mpd_connection_get_error_message(partition_state->conn));
             partition_state->conn_state = MPD_FAILURE;
             sds buffer = jsonrpc_notify_phrase(sdsempty(), JSONRPC_FACILITY_MPD,
-                JSONRPC_SEVERITY_ERROR, "MPD connection error: %{error}", 2,
+                JSONRPC_SEVERITY_ERROR, "Streamer connection error: %{error}", 2,
                 "error", mpd_connection_get_error_message(partition_state->conn));
             ws_notify(buffer, partition_state->name);
             FREE_SDS(buffer);

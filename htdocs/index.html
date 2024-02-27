@@ -39,7 +39,7 @@
   <header>
     <nav id="header" class="navbar navbar-expand fixed-top d-flex justify-content-between">
       <div id="headerLeft">
-        <a class="alwaysEnabled" href="#offcanvasMenu" id="mainMenu" data-bs-toggle="offcanvas" data-title-phrase="myMPD menu">
+        <a class="alwaysEnabled" href="#offcanvasMenu" id="mainMenu" data-bs-toggle="offcanvas" data-title-phrase="Ideon menu">
           <svg class="d-none" version="1.1" viewBox="0 0 8.4666665 8.4666669" xmlns="http://www.w3.org/2000/svg">
             <ellipse class="logoBg" cx="4.2333" cy="4.2333" rx="4.2333" ry="4.2333" fill="#6c757d"/>
             <path class="logoFg" d="m1.5772 4.8257h0.59026v-1.1847h-0.59026z" fill="#fff" stroke-width=".26458"/>
@@ -71,9 +71,9 @@
       <button type="button" class="btn-close alwaysEnabled" data-bs-dismiss="offcanvas"></button>
     </div>
     <div class="offcanvas-body">
-      <a class="dropdown-item py-2" data-title-phrase="Shortcut: A" href="#" data-href='{"cmd": "showAddToPlaylist", "options": ["stream", []]}'><span class="mi me-2">playlist_add</span><span data-phrase="Add stream"></span></a>
+      <!-- <a class="dropdown-item py-2" data-title-phrase="Shortcut: A" href="#" data-href='{"cmd": "showAddToPlaylist", "options": ["stream", []]}'><span class="mi me-2">playlist_add</span><span data-phrase="Add stream"></span></a>
       <div class="dropdown-divider"></div>
-      <a class="dropdown-item py-2 alwaysEnabled" data-title-phrase="Shortcut: C" data-bs-toggle="modal" href="#modalConnection"><span class="mi me-2">settings_ethernet</span><span data-phrase="MPD connection"></span></a>
+      <a class="dropdown-item py-2 alwaysEnabled" data-title-phrase="Shortcut: C" data-bs-toggle="modal" href="#modalConnection"><span class="mi me-2">settings_ethernet</span><span data-phrase="MPD connection"></span></a> -->
       <a class="dropdown-item py-2" data-title-phrase="Shortcut: T" data-bs-toggle="modal" href="#modalSettings"><span class="mi me-2">settings</span><span data-phrase="Settings"></span></a>
       <a class="dropdown-item py-2" data-title-phrase="" data-bs-toggle="modal" href="#modalIdeonSettings"><span class="mi me-2">settings</span><span data-phrase="Ideon settings"></span></a>
       <a class="dropdown-item py-2 featScripting" data-title-phrase="Shortcut: S" href="#" data-href='{"cmd": "showListScriptModal", "options": []}'><span class="mi me-2">code</span><span data-phrase="Scripts"></span></a>
@@ -83,7 +83,7 @@
       <a class="dropdown-item py-2 featPartitions" data-title-phrase="Shortcut: P" data-bs-toggle="modal" href="#modalPartitions"><span class="mi me-2">dashboard</span><span data-phrase="Partitions"></span></a>
       <div class="dropdown-divider"></div>
       <a class="dropdown-item py-2" data-title-phrase="Shortcut: M" data-bs-toggle="modal" href="#modalMaintenance"><span class="mi me-2">build</span><span data-phrase="Maintenance"></span></a>
-      <a class="dropdown-item py-2 featLibrary" href="browse/" target="_blank"><span class="mi me-2">folder_open</span><span data-phrase="Browse directories"></span></a>
+      <!-- <a class="dropdown-item py-2 featLibrary" href="browse/" target="_blank"><span class="mi me-2">folder_open</span><span data-phrase="Browse directories"></span></a> -->
       <a class="dropdown-item py-2" data-title-phrase="Shortcut: N" data-bs-toggle="modal" href="#modalNotifications"><span class="mi me-2">chat_bubble_outline</span><span data-phrase="Notifications"></span></a>
       <a class="dropdown-item py-2" data-title-phrase="Shortcut: ?" data-bs-toggle="modal" href="#modalAbout"><span class="mi me-2">help_outline</span><span data-phrase="About"></span></a>
       <div class="dropdown-divider" id="mmLoginLogoutDivider"></div>
@@ -1595,10 +1595,12 @@
               </div>
             </div>
             <div class="tab-pane" id="modalSettingsAppearanceTab">
+              <div class="d-none"> <!-- Hide locale -->
               <h4 data-phrase="Locale"></h4>
               <div id="modalSettingsLocaleFrm"></div>
               <div id="modalSettingsMissingPhrasesWarn" class="alert alert-warning d-none mt-2"></div>
               <hr/>
+              </div>
               <h4 data-phrase="Theme"></h4>
               <div id="modalSettingsThemeFrm1"></div>
               <div id="modalSettingsThemeFrm2"></div>
@@ -1636,6 +1638,7 @@
               <div class="collapse" id="modalSettingsLyricsCollapse"></div>
               <div id="modalSettingsEnableLyricsInputWarn" class="alert alert-warning" data-phrase="Music directory not available"></div>
               <hr/>
+              <div class="d-none"> <!-- Hide local playback and furhter features -->
               <h4 data-phrase="Local playback"></h4>
               <div class="mb-3 row">
                 <label class="col-sm-4 col-form-label" for="modalSettingsEnableLocalPlaybackInput" data-phrase="Enable"></label>
@@ -1648,6 +1651,7 @@
               <hr/>
               <h4 data-phrase="Further Features"></h4>
               <div id="modalSettingsFurtherFeaturesFrm"></div>
+              </div>
             </div>
             <div class="tab-pane" id="modalSettingsAdvancedTab">
               <h4 data-phrase="Default actions"></h4>
